@@ -9,6 +9,8 @@ source: ""
 
 공통 개념, 공통 템플릿, 인제스트 운영 규칙을 모아두는 허브입니다.
 
+- [[Wiki/index]]: 위키 전역 진입점
+- [[Wiki/log]]: 위키 운영의 시간 순 로그
 - [[Wiki/Common/Evidence_Candidate_Map]]: 공개 Slack 증적을 프로젝트 후보와 첨부파일 기준으로 시각화한 후보맵
 - [[Wiki/Common/Collection_Coverage_Assessment]]: 현재까지 만든 프로젝트 문서의 수집량 평가와 남은 공개 채널 탐색 결과
 - [[Wiki/Common/Project_Deepening_TODO]]: 생성된 프로젝트 폴더를 실제 위키 지식으로 심화하기 위한 남은 작업 목록

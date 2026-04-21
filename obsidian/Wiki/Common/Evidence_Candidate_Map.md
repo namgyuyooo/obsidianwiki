@@ -27,7 +27,7 @@ graph TD
     A["Public Slack Evidence (2024-04-21 ~ 2026-04-21)"]
 
     A --> B["확정 / 고밀도"]
-    A --> C["1차 분리 후보"]
+    A --> C["보조 채널 / 하위 workstream 후보"]
     A --> D["2차 탐색 후보"]
     A --> E["공통 보조 채널"]
 
@@ -40,19 +40,19 @@ graph TD
     B --> B7["한국알박"]
     B --> B8["LG엔솔 이미지분석"]
     B --> B9["서울바이오시스"]
+    B --> B10["금호타이어 CMS"]
+    B --> B11["Advanced Electric Korea"]
+    B --> B12["Daeduck AFVI"]
+    B --> B13["대한전선 공정혁신과제"]
+    B --> B14["BGF에코스페셜티(구 FLK)"]
+    B --> B15["나노텍 정출연과제"]
+    B --> B16["ZEUS AI바우처"]
+    B --> B17["픽셀 AI바우처"]
 
-    C --> C1["금호타이어 CMS"]
-    C --> C2["Advanced Electric Korea"]
-    C --> C3["Daeduck AFVI"]
-    C --> C4["대한전선 공정혁신과제"]
-    C --> C5["BGF에코스페셜티(구 FLK)"]
-    C --> C6["나노텍 정출연과제"]
+    C --> C1["DMT"]
 
-    D --> D1["ZEUS AI바우처"]
-    D --> D2["픽셀 AI바우처"]
-    D --> D3["DMT"]
-    D --> D4["PSK 온도예측task"]
-    D --> D5["한맥-pjt"]
+    D --> D1["PSK 온도예측task"]
+    D --> D2["한맥-pjt"]
 
     E --> E1["#tf_cross_team_sales"]
     E --> E2["#sales_team"]
@@ -68,6 +68,14 @@ graph TD
     B7 --> B7F["데모 추진계획 / 최종리뷰 / 견적서 / PoC 제안서 v2"]
     B8 --> B8F["과제 범위 / XRM 샘플 / 인프라 요구 / 자료 경로"]
     B9 --> B9F["EHM 소개 / 데모 POC 결과 / 2차 결과보고 / AI agent 인사이트"]
+    B10 --> B10F["result.zip / raw-overlay / 배포 테스트"]
+    B11 --> B11F["세금계산서 / 하자이행보증증권 / recipes.zip"]
+    B12 --> B12F["AFVI 제안서 / ODB feature / 구성도"]
+    B13 --> B13F["Daily csv / 불량이미지 zip / user guide"]
+    B14 --> B14F["운영 리뷰 / 장애처리보고 / 성능 이슈"]
+    B15 --> B15F["OES 활용사례 / 협업Item / 과제서류"]
+    B16 --> B16F["중간보고 / 사업계획서 / 결과보고 / 협업 제안"]
+    B17 --> B17F["중간보고 / 협력모델안 / 판정기준 / 도메인 정의"]
 ```
 
 ## 후보별 판정 요약
@@ -89,8 +97,9 @@ graph TD
 | 대한전선 공정혁신과제 | `#pjt-대한전선-공정혁신과제-호반혁신기술공모전` | Daily csv, 불량이미지.zip, `ADV user guide.pdf` | 독립 폴더 확정 |
 | BGF에코스페셜티(구 FLK) | `#pjt-비지에프에코스페셜티-구-flk` | 운영 리뷰 ppt/pdf, 장애처리보고서.xlsx | 독립 폴더 확정 |
 | 나노텍 정출연과제 | `#pjt_나노텍_정출연과제` | OES 활용사례, 협업Item, 초회미팅.docx | 독립 폴더 확정 |
-| 픽셀 AI바우처 | `#pjt_픽셀_ai바우처` | 패키지/이미지 샘플 위주 파일 | 2차 탐색 후보 |
-| ZEUS AI바우처 | `#pjt_zeus_ai바우처` | 이번 라운드에서 고가치 파일 미확인 | 2차 탐색 후보 |
+| 픽셀 AI바우처 | `#pjt_픽셀_ai바우처` | 중간보고, 협력모델안, 판정기준 정리 | 독립 폴더 확정 |
+| ZEUS AI바우처 | `#pjt_zeus_ai바우처` | 사업계획서, 중간보고, 결과보고, 협업 제안 | 독립 폴더 확정 |
+| DMT | `#pjt_dmt` | 배포 가이드, PoC 결과보고 미팅, CSV/JSON 결과, 모델 업데이트, 배포 환경 명세 | 보조 채널 |
 
 ## 확장 후보맵
 
@@ -111,10 +120,11 @@ graph TD
 | 대한전선 공정혁신과제 | 센서 데이터 / 외관검사 제안 | `#pjt-대한전선-공정혁신과제-호반혁신기술공모전` | `#tf_cross_team_sales` | Daily csv, 불량이미지 zip, user guide, SCADA 설명 | 데이터 분석, 과제 제안, 센서/설비 진단 | 높음 | 확정 / 문서 생성 완료 | [[Wiki/DaehanCable_ProcessInnovation_Project/hub]] 기준으로 데이터 정의 리스크 고도화 |
 | BGF에코스페셜티(구 FLK) | 운영 리뷰 / 품질 이슈 대응 | `#pjt-비지에프에코스페셜티-구-flk` | `#tf_cross_team_sales` | 운영 리뷰, 장애처리보고서, 성능/변색 이슈 | 운영형, 이슈 대응, 안정화 | 높음 | 확정 / 문서 생성 완료 | [[Wiki/BGF_EcoSpecialty_Project/hub]] 기준으로 운영 기준과 로그 구조 고도화 |
 | 나노텍 정출연과제 | OES / 협업 과제 | `#pjt_나노텍_정출연과제` | `#tf_cross_team_sales` | OES 활용사례, 협업Item, 초회 미팅, 신청 서류 | 과제 제안, 협업 검토, 발표자료 | 높음 | 확정 / 문서 생성 완료 | [[Wiki/Nanotech_RnD_Project/hub]] 기준으로 협업 구조와 차별성 리스크 고도화 |
-| ZEUS AI바우처 | AI바우처 | `#pjt_zeus_ai바우처` | `#tf_cross_team_sales` | 이번 라운드 고가치 파일 미확인 | 채널 존재 수준 | 낮음 | 2차 후보 | 고객명/과제명 변형 키워드 재탐색 |
-| 픽셀 AI바우처 | 패키지/이미지 검사 | `#pjt_픽셀_ai바우처` | `#tf_cross_team_sales` | 이미지 샘플, 패키지/도메인 논의 | 이미지 검토, 도메인 정의 | 중간 | 2차 후보 | 제안서/견적/결과 자료 확인 필요 |
-| DMT | 기술 운영 / 배포 | `#pjt_dmt` | 없음 | 배포 가이드, 스크립트, 도커/DB 메시지 | 기술 운영, 배포 | 낮음 | 2차 후보 | 고객 프로젝트 여부부터 판별 |
-| PSK 온도예측task | 온도 예측 | `#pjt_psk_온도예측task` | `#tf_psk-업무대응` | 이번 검색에서 파일 미확인 | task 채널 가능성 | 낮음 | 2차 후보 | 메시지 중심 재탐색 |
+| ZEUS AI바우처 | AI바우처 / 이중 솔루션 인프라 검토 | `#pjt_zeus_ai바우처` | `#tf_cross_team_sales` | 사업계획서, 중간보고, 결과보고, 협업 제안 | AI바우처, 인프라 검토, 후속 협업 | 높음 | 확정 / 문서 생성 완료 | [[Wiki/ZEUS_AIVoucher_Project/hub]] 기준으로 결과지표와 인프라안 고도화 |
+| 픽셀 AI바우처 | 패키지/이미지 검사 | `#pjt_픽셀_ai바우처` | `#tf_cross_team_sales`, `#pjt_dmt` | 중간보고, 협력 모델안, 판정기준 정리, 패키지 도메인 논의 | AI바우처, 도메인 정의, 후속 협업 | 높음 | 확정 / 문서 생성 완료 | [[Wiki/Pixel_AIVoucher_Project/hub]] 기준으로 최종 결과와 DMT 경계 고도화 |
+| DMT | 기술 운영 / PIXEL 연동 PoC | `#pjt_dmt` | `#pjt_픽셀_ai바우처` | 배포 가이드, CSV/JSON 결과, 모델 업데이트, 데모 PC 사양, PoC 보고 회의 문맥 | 기술 운영, 배포, 검증 지원 | 중간 | 보조 채널 | 픽셀 후속 협업의 하위 workstream 또는 보조 채널로 유지 |
+| PSK 온도예측task | 온도 예측 / IR 센서 협업 | `#pjt_psk_온도예측task` | `#tf_psk-업무대응` | 파일 미확인, 초회 미팅 조율 메시지 | 초회 협업 조율 | 낮음 | 2차 후보 | 독립 프로젝트보다는 PSK 하위 workstream 가능성 검토 |
+| 한맥-pjt | 런타임/스튜디오 요구사항 검토 | `#한맥-pjt` | 없음 | 2023 일정/로드맵 메시지, 외부 위키 링크 | 초기 일정 검토 | 낮음 | 2차 후보 | 현재로서는 독립 프로젝트 승격 보류 |
 
 ## 수집 레인
 
@@ -182,7 +192,7 @@ graph TD
 | --- | --- | --- |
 | Level 3 | 파일 3종 이상 + 프로젝트 채널 + 일정/수치/결정 확인 | PSK, 서울세미콘, 금호타이어 |
 | Level 2 | 파일 2종 이상 + 회의/견적/제안 흐름 확인 | 현대모비스, 화승, 메카로, 한국알박, 금호타이어 CMS, Advanced Electric Korea, Daeduck AFVI, 대한전선, BGF, 나노텍 |
-| Level 1 | 채널과 메시지는 있으나 파일 근거 부족 | LG엔솔, ZEUS AI바우처, 서울바이오시스, 픽셀 AI바우처, DMT, PSK 온도예측task |
+| Level 1 | 채널과 메시지는 있으나 파일 근거 부족 또는 협업 초기 단계 | PSK 온도예측task, 한맥-pjt |
 
 ## 다음 확장 방향
 
@@ -209,12 +219,12 @@ graph TD
 - 대한전선 공정혁신과제
 - BGF에코스페셜티(구 FLK)
 - 나노텍 정출연과제
-
-### 2. 신규 탐색 후보
 - ZEUS AI바우처
 - 픽셀 AI바우처
-- DMT
+
+### 2. 신규 탐색 후보
 - PSK 온도예측task
+- 한맥-pjt
 
 ## 파일 기준 판별 규칙
 
@@ -246,3 +256,5 @@ graph TD
 - [[Wiki/DaehanCable_ProcessInnovation_Project/hub]]
 - [[Wiki/BGF_EcoSpecialty_Project/hub]]
 - [[Wiki/Nanotech_RnD_Project/hub]]
+- [[Wiki/ZEUS_AIVoucher_Project/hub]]
+- [[Wiki/Pixel_AIVoucher_Project/hub]]

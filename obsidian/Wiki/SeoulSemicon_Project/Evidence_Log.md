@@ -94,3 +94,34 @@ source: "public Slack evidence sweep (2024-04-21 to 2026-04-21)"
   - [[Action_Items]]
   - [[Change_Log]]
 
+### Evidence 06
+- Source: Slack Message
+- Channel: #tf_seoulsemicon-vina
+- Date: 2026-03-24
+- Thread: 없음
+- Topic: 처리 속도와 네트워크 병목
+- Type: 수치
+- Original:
+  > #1(신규 PC) : 15초 내외
+  > #2(2차 납품) : 1분 이상
+  > AI PC 의 이더넷 속도가 1000M일 경우 15초 내외. 100M일 경우 2분대
+- Interpretation:
+  - 현장 처리 성능은 모델 자체보다 네트워크/PC 구성에 크게 좌우된다.
+- Linked Pages:
+  - [[Project_Overview]]
+  - [[Risks]]
+
+### Evidence 07
+- Source: Slack Message
+- Channel: #hubble-pjt-seoulsemicon
+- Date: 2026-03-13
+- Thread: 없음
+- Topic: 추가 PC 관련 계약/서류
+- Type: 변경
+- Original:
+  > 이번에 진행된 PC 추가건 계약서 및 서류 공유합니다.
+- Interpretation:
+  - 본 프로젝트는 본 납품 이후 추가 PC 증설 또는 확장 계약 흐름이 존재한다.
+- Linked Pages:
+  - [[Change_Log]]
+  - [[Project_Overview]]

@@ -258,6 +258,52 @@ source: "public Slack evidence sweep (2024-04-21 to 2026-04-21)"
   - [[Action_Items]]
 
 ### Evidence 17
+- Source: Slack
+- Channel: #psk-견적발주납품현황
+- Date: 2026-03-12
+- Thread: 없음
+- Topic: 서버 사양별 단가 비교
+- Type: 수치
+- Original:
+  > RAM 512g 기준: 17,000,000
+  > RAM 256g 기준: 13,400,000
+- Interpretation:
+  - PE Agent 또는 관련 서버 구매 검토에서 메모리 사양별 단가 비교안이 실제로 논의됐다.
+- Linked Pages:
+  - [[KPI]]
+  - [[Project_Overview]]
+
+### Evidence 18
+- Source: Slack
+- Channel: #pjt_psk_pe-agent
+- Date: 2025-07-01
+- Thread: 없음
+- Topic: PE Agent 협업 방향 재정렬
+- Type: 결정
+- Original:
+  > 금주부터는 기존에 PEE팀에서 개발하고 있던 PE Agent 솔루션과 동일한 개발 목표를 ...
+- Interpretation:
+  - 2025년 중반부터 PE Agent는 팀별 개별 개발보다 공통 목표 정렬이 강조된다.
+- Linked Pages:
+  - [[Decisions]]
+  - [[Project_Overview]]
+
+### Evidence 19
+- Source: Slack
+- Channel: #pjt_psk_pe-agent
+- Date: 2025-07-18
+- Thread: 없음
+- Topic: 공유 문서 운영 방식
+- Type: 변경
+- Original:
+  > PSK에 공유할 작업사항이나 자료 등은 ... 컨플루언스 - PSK 스페이스 내에서 페이지 작성 진행합니다.
+- Interpretation:
+  - 대외 공유 자료는 Slack 산발 공유보다 PSK 전용 문서 공간 중심으로 운영하는 방향이 정리됐다.
+- Linked Pages:
+  - [[Change_Log]]
+  - [[Project_Overview]]
+
+### Evidence 20
 - Source: Slack Canvas
 - Channel: 공용 검색 결과
 - Date: 2026-02-04

@@ -120,3 +120,48 @@ source: "public Slack evidence sweep (2024-04-21 to 2026-04-21)"
   - [[Risks]]
   - [[Conflict_Register]]
 
+### Evidence 08
+- Source: Slack Message
+- Channel: #pjt_금호타이어_첫제품x-ray
+- Date: 2026-04-16
+- Thread: 없음
+- Topic: 작업자 화면 피드백
+- Type: 변경
+- Original:
+  > 확대/축소 기능을 추가로 요청
+  > 2장으로 한 화면에 보이는 화면을 크게 1장만 보이도록 변경 요청
+- Interpretation:
+  - 실제 현장 사용성 요구는 모델보다 UI 가독성과 화면 배치에 더 직접적으로 연결된다.
+- Linked Pages:
+  - [[Change_Log]]
+  - [[Project_Overview]]
+
+### Evidence 09
+- Source: Slack Message
+- Channel: #pjt_금호타이어_첫제품x-ray
+- Date: 2026-04-28
+- Thread: 없음
+- Topic: 1차 납품용 AI 모듈 완료
+- Type: 변경
+- Original:
+  > 차주 1차 납품용 ai 모듈 완료되어 공유드립니다.
+- Interpretation:
+  - 고객 피드백 반영 이후 실제 1차 납품 기준 모듈이 준비된 것으로 확인된다.
+- Linked Pages:
+  - [[Change_Log]]
+  - [[Project_Overview]]
+
+### Evidence 10
+- Source: Slack Message
+- Channel: #pjt_금호타이어_첫제품x-ray
+- Date: 2026-04-29
+- Thread: 없음
+- Topic: Mold 번호 검증 요구
+- Type: 결정
+- Original:
+  > MOLD 번호 ... 타이어 in/out 에 있는 MOLD 번호가 동일한지 검증해야 함
+- Interpretation:
+  - 현장 요구사항은 단순 외관 판정에서 생산 이력/번호 일치 검증으로 확장된다.
+- Linked Pages:
+  - [[Decisions]]
+  - [[Project_Overview]]

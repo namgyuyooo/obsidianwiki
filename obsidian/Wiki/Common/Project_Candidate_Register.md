@@ -25,7 +25,7 @@ tags:
 | 한국알박 | `#pjt_한국알박` | 제안서/데모/POC 유사 과제 언급 | 프로젝트 확정 | `[[Wiki/KoreaAlbac_Project/hub]]` 생성 완료 |
 | 서울세미콘 | `#hubble-pjt-seoulsemicon`, `#tf_seoulsemicon-vina` | NDA, 계약서, PO, Invoice, Acceptance Report, 출장 보고 | 프로젝트 확정 | `[[Wiki/SeoulSemicon_Project/hub]]` 생성 완료 |
 | 메카로 수요예측 | `#pjt_메카로-수요예측` | 제안서, 근거자료 문서, 현황 발표, PoC 결과발표 | 프로젝트 확정 | `[[Wiki/Mecaro_Forecast_Project/hub]]` 생성 완료 |
-| ZEUS AI바우처 | `#pjt_zeus_ai바우처` | 채널 존재 확인 | 초기 탐색 후보 | 이번 라운드에서는 증적 밀도 낮음 |
+| ZEUS AI바우처 | `#pjt_zeus_ai바우처` | 사업계획서, 중간보고, 결과보고, 협업 제안, 인프라 논의 | 프로젝트 확정 | `[[Wiki/ZEUS_AIVoucher_Project/hub]]` 생성 완료 |
 | 서울바이오시스 | `#pjt_서울바이오시스` | EHM 소개, 데모 POC 결과, AI agent 인사이트 | 프로젝트 확정 | `[[Wiki/SeoulBiosys_Project/hub]]` 생성 완료 |
 | 금호타이어 CMS | `#pjt_금호타이어_cms` | `result.zip`, raw/overlay 이미지, 배포 테스트, 실패 케이스 공유 | 프로젝트 확정 | `[[Wiki/KumhoTire_CMS_Project/hub]]` 생성 완료 |
 | Advanced Electric Korea | `#hubble-pjt-어드벤스일렉트릭코리아` | 세금계산서, 하자이행보증증권, `recipes.zip`, 개선요청사항 | 프로젝트 확정 | `[[Wiki/AdvancedElectricKorea_Project/hub]]` 생성 완료 |
@@ -33,8 +33,8 @@ tags:
 | 대한전선 공정혁신과제 | `#pjt-대한전선-공정혁신과제-호반혁신기술공모전` | Daily csv, 불량이미지 zip, user guide, SCADA/센서 분석 메시지 | 프로젝트 확정 | `[[Wiki/DaehanCable_ProcessInnovation_Project/hub]]` 생성 완료 |
 | BGF에코스페셜티(구 FLK) | `#pjt-비지에프에코스페셜티-구-flk` | 운영 리뷰 ppt/pdf, 장애처리보고서, 운영 성능/변색 이슈 | 프로젝트 확정 | `[[Wiki/BGF_EcoSpecialty_Project/hub]]` 생성 완료 |
 | 나노텍 정출연과제 | `#pjt_나노텍_정출연과제` | OES 활용사례, 협업 Item, 초회 미팅 docx, 과제 신청서류 | 프로젝트 확정 | `[[Wiki/Nanotech_RnD_Project/hub]]` 생성 완료 |
-| 픽셀 AI바우처 | `#pjt_픽셀_ai바우처` | 이미지 샘플, 패키지/도메인 논의 | 2차 탐색 후보 | 제안/결과 문서 재탐색 필요 |
-| DMT | `#pjt_dmt` | 배포 가이드, 스크립트/도커/DB 운영 메시지 | 2차 탐색 후보 | 프로젝트 채널인지 내부 운영 채널인지 구분 필요 |
+| 픽셀 AI바우처 | `#pjt_픽셀_ai바우처` | 중간보고, 협력 모델안, 판정기준, 패키지/도메인 논의 | 프로젝트 확정 | `[[Wiki/Pixel_AIVoucher_Project/hub]]` 생성 완료 |
+| DMT | `#pjt_dmt` | 배포 가이드, 스크립트/도커/DB 운영 메시지 | 보조 채널 | 픽셀/기타 프로젝트의 구현·배포 보조 채널로 우선 해석 |
 | PSK 온도예측task | `#pjt_psk_온도예측task` | 이번 검색에서 파일 미확인 | 2차 탐색 후보 | 메시지 중심 재탐색 필요 |
 | 한맥-pjt | `#한맥-pjt` | 이번 검색에서 고가치 파일 미확인 | 2차 탐색 후보 | 채널 실체 재확인 필요 |
 
@@ -43,8 +43,6 @@ tags:
 ### 1차 분리 권장
 
 ### 2차 탐색 후 분리 검토
-- ZEUS AI바우처
-- 픽셀 AI바우처
 - DMT
 - PSK 온도예측task
 - 한맥-pjt
@@ -62,9 +60,7 @@ tags:
   - 한국알박
 - 보강 필요:
   - LG엔솔 이미지분석
-  - ZEUS AI바우처
   - 서울바이오시스
-  - 픽셀 AI바우처
   - DMT
 
 ## 공통 채널 역할

@@ -6,6 +6,7 @@
       {
         "id": "59c7f91d8aac31c4",
         "type": "tabs",
+        "dimension": 18.591370558375633,
         "children": [
           {
             "id": "0bed030b4967f757",
@@ -26,6 +27,7 @@
       {
         "id": "41d890990cb6c9bf",
         "type": "tabs",
+        "dimension": 81.40862944162437,
         "children": [
           {
             "id": "d17880641586b6ec",
@@ -33,12 +35,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Wiki/Business_Plan_Project/Company_Description.md",
+                "file": "Wiki/KumhoTire_FirstProduct_Xray_Project/Sources.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Company_Description"
+              "title": "Sources"
             }
           }
         ]
@@ -200,43 +202,43 @@
       "bases:새 베이스 생성하기": false
     }
   },
-  "active": "d17880641586b6ec",
+  "active": "0bed030b4967f757",
   "lastOpenFiles": [
-    "Wiki/Nanotech_RnD_Project/hub.md",
-    "Wiki/Nanotech_RnD_Project/Sources.md",
-    "Wiki/Nanotech_RnD_Project/Risks.md",
-    "Wiki/Nanotech_RnD_Project/Project_Overview.md",
-    "Wiki/Nanotech_RnD_Project/Evidence_Log.md",
-    "Wiki/Nanotech_RnD_Project/Decisions.md",
-    "Wiki/Nanotech_RnD_Project/Conflict_Register.md",
-    "Wiki/Nanotech_RnD_Project/Change_Log.md",
-    "Wiki/Nanotech_RnD_Project/Action_Items.md",
+    "Wiki/KumhoTire_FirstProduct_Xray_Project/Sources.md",
+    "Wiki/log.md",
+    "Wiki/index.md",
+    "raw/README.md",
+    "raw",
+    "Wiki/KumhoTire_FirstProduct_Xray_Project/hub.md",
+    "Wiki/KumhoTire_FirstProduct_Xray_Project/Evidence_Log.md",
+    "Wiki/KumhoTire_FirstProduct_Xray_Project/Decisions.md",
+    "Wiki/KumhoTire_FirstProduct_Xray_Project/Conflict_Register.md",
+    "Wiki/KumhoTire_FirstProduct_Xray_Project/Change_Log.md",
+    "Wiki/HsAIVoucher_Project/Action_Items.md",
+    "Wiki/KumhoTire_FirstProduct_Xray_Project/Action_Items.md",
+    "Wiki/KumhoTire_CMS_Project/Risks.md",
+    "Wiki/Common/RTM_YNG_한양대_반도체_자율지능형_에이전트.md",
+    "Wiki/Pixel_AIVoucher_Project/hub.md",
+    "Wiki/Pixel_AIVoucher_Project/Sources.md",
+    "Wiki/Pixel_AIVoucher_Project/Risks.md",
+    "Wiki/Pixel_AIVoucher_Project/Project_Overview.md",
+    "Wiki/Pixel_AIVoucher_Project/Evidence_Log.md",
+    "Wiki/Pixel_AIVoucher_Project/Decisions.md",
+    "Wiki/Pixel_AIVoucher_Project/Conflict_Register.md",
+    "Wiki/Pixel_AIVoucher_Project/Change_Log.md",
+    "Wiki/Pixel_AIVoucher_Project/Action_Items.md",
+    "Wiki/Pixel_AIVoucher_Project",
+    "Wiki/ZEUS_AIVoucher_Project/Sources.md",
+    "Wiki/ZEUS_AIVoucher_Project/hub.md",
+    "Wiki/ZEUS_AIVoucher_Project/Risks.md",
+    "Wiki/ZEUS_AIVoucher_Project/Project_Overview.md",
+    "Wiki/ZEUS_AIVoucher_Project",
     "Wiki/Nanotech_RnD_Project",
-    "Wiki/BGF_EcoSpecialty_Project/hub.md",
-    "Wiki/BGF_EcoSpecialty_Project/Sources.md",
-    "Wiki/BGF_EcoSpecialty_Project/Risks.md",
-    "Wiki/BGF_EcoSpecialty_Project/Project_Overview.md",
-    "Wiki/BGF_EcoSpecialty_Project/Evidence_Log.md",
-    "Wiki/BGF_EcoSpecialty_Project/Decisions.md",
-    "Wiki/BGF_EcoSpecialty_Project/Conflict_Register.md",
-    "Wiki/BGF_EcoSpecialty_Project/Change_Log.md",
-    "Wiki/BGF_EcoSpecialty_Project/Action_Items.md",
     "Wiki/BGF_EcoSpecialty_Project",
-    "Wiki/Common/RTM_YNG_화승_AI바우처.md",
-    "Wiki/DaehanCable_ProcessInnovation_Project/hub.md",
-    "Wiki/DaehanCable_ProcessInnovation_Project/Risks.md",
-    "Wiki/DaehanCable_ProcessInnovation_Project/Sources.md",
-    "Wiki/DaehanCable_ProcessInnovation_Project/Project_Overview.md",
-    "Wiki/DaehanCable_ProcessInnovation_Project/Evidence_Log.md",
-    "Wiki/DaehanCable_ProcessInnovation_Project/Decisions.md",
-    "Wiki/DaehanCable_ProcessInnovation_Project/Conflict_Register.md",
     "Wiki/DaehanCable_ProcessInnovation_Project",
     "Wiki/Daeduck_AFVI_Project",
     "Wiki/AdvancedElectricKorea_Project",
     "Wiki/KumhoTire_CMS_Project",
-    "Wiki/SeoulBiosys_Project",
-    "Wiki/LGEnergy_ImageAnalysis_Project",
-    "Wiki/HsAIVoucher_Project",
-    "Wiki/KoreaAlbac_Project"
+    "Wiki/SeoulBiosys_Project"
   ]
 }
