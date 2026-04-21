@@ -17,4 +17,5 @@ LG엔솔 이미지분석 관련 공개 Slack 증적을 정리하는 허브입니
 - [[Wiki/LGEnergy_ImageAnalysis_Project/Change_Log]]
 - [[Wiki/LGEnergy_ImageAnalysis_Project/Conflict_Register]]
 - [[Wiki/LGEnergy_ImageAnalysis_Project/Action_Items]]
-
+- [[Wiki/LGEnergy_ImageAnalysis_Project/Environment_and_Targets]]
+- [[Wiki/LGEnergy_ImageAnalysis_Project/Deployment_and_Constraints]]

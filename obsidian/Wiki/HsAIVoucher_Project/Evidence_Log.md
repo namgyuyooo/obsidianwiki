@@ -71,3 +71,32 @@ source: "public Slack evidence sweep (2024-04-21 to 2026-04-21)"
   - [[Change_Log]]
   - [[Conflict_Register]]
 
+### Evidence 05
+- Source: Slack Message
+- Channel: #pjt_화승_ai바우처
+- Date: 2026-04-02
+- Thread: 없음
+- Topic: 확산 전개 견적 문의
+- Type: 결정
+- Original:
+  > 작년 도입한 물성예측 솔루션을 5개 설비(양산공장 전체)에 확산전개 하게되면 비용이 얼마가 될지 견적 가능할까요?
+- Interpretation:
+  - 후속 확장 논의는 단순 유지보수가 아니라 양산공장 전개 비용 산정 관점에서 시작됐다.
+- Linked Pages:
+  - [[Project_Overview]]
+  - [[Decisions]]
+
+### Evidence 06
+- Source: Slack Message
+- Channel: #pjt_화승_ai바우처
+- Date: 2026-04-08
+- Thread: 없음
+- Topic: 기능추가개발과 확산전개 견적의 구분
+- Type: 결정
+- Original:
+  > 지난번 추가 기능 개발 견적 건과는 별개입니다.
+- Interpretation:
+  - 고객 확장 요청은 기존 기능추가개발 견적과 다른 트랙으로 관리된다.
+- Linked Pages:
+  - [[Decisions]]
+  - [[Conflict_Register]]

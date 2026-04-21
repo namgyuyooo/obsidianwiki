@@ -104,3 +104,63 @@ source: "public Slack evidence sweep (2024-04-21 to 2026-04-21)"
   - [[Risks]]
   - [[Conflict_Register]]
 
+### Evidence 07
+- Source: Slack Message
+- Channel: #pjt_금호타이어_cms
+- Date: 2026-01-07
+- Thread: 있음
+- Topic: 공장과 연구소 니즈 차이
+- Type: 리스크
+- Original:
+  > 공장에서는 중요하게 여기는 8가지 항목들을 기준으로 시작
+  > 연구소와 니즈가 다르다
+- Interpretation:
+  - 고객 내부에서도 현장과 연구소의 평가 기준이 달라 단일 모델/화면으로 모두 만족시키기 어렵다.
+- Linked Pages:
+  - [[Factory_vs_Lab_Gap]]
+  - [[Risks]]
+
+### Evidence 08
+- Source: Slack Message
+- Channel: #pjt_금호타이어_cms
+- Date: 2026-01-07
+- Thread: 있음
+- Topic: 공장 이미지 기반 개선 필요
+- Type: 결정
+- Original:
+  > 실제 적용을 생각하면 공장 이미지를 기반으로 하는 것이 좋다
+- Interpretation:
+  - 연구소 데이터 중심 접근보다 공장 데이터 중심 재학습/개선이 우선이라는 방향이 제시됐다.
+- Linked Pages:
+  - [[Factory_vs_Lab_Gap]]
+  - [[Decisions]]
+
+### Evidence 09
+- Source: Slack Message
+- Channel: #pjt_금호타이어_cms
+- Date: 2026-01-23
+- Thread: 있음
+- Topic: UA 계산 대응 방식
+- Type: 결정
+- Original:
+  > gauge(belt1~2 사이의 거리)를 이용한 수식을 사용하여 UA를 계산
+- Interpretation:
+  - 일부 측정 항목은 AI 검출이 아닌 규칙 기반 계산으로 먼저 안정화하려는 단계적 접근이 사용됐다.
+- Linked Pages:
+  - [[Factory_vs_Lab_Gap]]
+  - [[Decisions]]
+
+### Evidence 10
+- Source: Slack Message
+- Channel: #pjt_금호타이어_cms
+- Date: 2026-01-23
+- Thread: 있음
+- Topic: 일정 압박
+- Type: 액션
+- Original:
+  > 금호측 내부 보고 시간을 생각하면 1월 3주가 데드라인
+- Interpretation:
+  - 이 프로젝트는 기술 개선뿐 아니라 고객 내부 보고 일정에 맞춘 배포 속도도 중요했다.
+- Linked Pages:
+  - [[Action_Items]]
+  - [[Factory_vs_Lab_Gap]]

@@ -17,4 +17,4 @@ source: "public Slack evidence sweep (2024-04-21 to 2026-04-21)"
 - [[Wiki/KumhoTire_FirstProduct_Xray_Project/Change_Log]]: 변경 이력
 - [[Wiki/KumhoTire_FirstProduct_Xray_Project/Conflict_Register]]: 충돌 및 확인 필요 항목
 - [[Wiki/KumhoTire_FirstProduct_Xray_Project/Action_Items]]: 액션 아이템
-
+- [[Wiki/KumhoTire_FirstProduct_Xray_Project/Field_Transition]]: POC에서 현장 기준으로 넘어가는 전환 관점 정리

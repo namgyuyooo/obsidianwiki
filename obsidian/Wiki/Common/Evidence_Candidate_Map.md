@@ -122,8 +122,8 @@ graph TD
 | 나노텍 정출연과제 | OES / 협업 과제 | `#pjt_나노텍_정출연과제` | `#tf_cross_team_sales` | OES 활용사례, 협업Item, 초회 미팅, 신청 서류 | 과제 제안, 협업 검토, 발표자료 | 높음 | 확정 / 문서 생성 완료 | [[Wiki/Nanotech_RnD_Project/hub]] 기준으로 협업 구조와 차별성 리스크 고도화 |
 | ZEUS AI바우처 | AI바우처 / 이중 솔루션 인프라 검토 | `#pjt_zeus_ai바우처` | `#tf_cross_team_sales` | 사업계획서, 중간보고, 결과보고, 협업 제안 | AI바우처, 인프라 검토, 후속 협업 | 높음 | 확정 / 문서 생성 완료 | [[Wiki/ZEUS_AIVoucher_Project/hub]] 기준으로 결과지표와 인프라안 고도화 |
 | 픽셀 AI바우처 | 패키지/이미지 검사 | `#pjt_픽셀_ai바우처` | `#tf_cross_team_sales`, `#pjt_dmt` | 중간보고, 협력 모델안, 판정기준 정리, 패키지 도메인 논의 | AI바우처, 도메인 정의, 후속 협업 | 높음 | 확정 / 문서 생성 완료 | [[Wiki/Pixel_AIVoucher_Project/hub]] 기준으로 최종 결과와 DMT 경계 고도화 |
-| DMT | 기술 운영 / PIXEL 연동 PoC | `#pjt_dmt` | `#pjt_픽셀_ai바우처` | 배포 가이드, CSV/JSON 결과, 모델 업데이트, 데모 PC 사양, PoC 보고 회의 문맥 | 기술 운영, 배포, 검증 지원 | 중간 | 보조 채널 | 픽셀 후속 협업의 하위 workstream 또는 보조 채널로 유지 |
-| PSK 온도예측task | 온도 예측 / IR 센서 협업 | `#pjt_psk_온도예측task` | `#tf_psk-업무대응` | 파일 미확인, 초회 미팅 조율 메시지 | 초회 협업 조율 | 낮음 | 2차 후보 | 독립 프로젝트보다는 PSK 하위 workstream 가능성 검토 |
+| DMT | 기술 운영 / PIXEL 연동 PoC | `#pjt_dmt` | `#pjt_픽셀_ai바우처` | 배포 가이드, CSV/JSON 결과, 모델 업데이트, 데모 PC 사양, PoC 보고 회의 문맥 | 기술 운영, 배포, 검증 지원 | 중간 | 보조 채널 / 구조화 완료 | [[Wiki/Pixel_AIVoucher_Project/DMT_Integration]] 기준으로 Pixel 하위 workstream으로 유지 |
+| PSK 온도예측task | 온도 예측 / IR 센서 협업 | `#pjt_psk_온도예측task` | `#tf_psk-업무대응` | 파일 미확인, 초회 미팅 조율 메시지 | 초회 협업 조율 | 낮음 | 하위 workstream / 구조화 완료 | [[Wiki/PSK_Project/Temperature_Prediction_Task]] 기준으로 PSK 하위 탐색 과제로 유지 |
 | 한맥-pjt | 런타임/스튜디오 요구사항 검토 | `#한맥-pjt` | 없음 | 2023 일정/로드맵 메시지, 외부 위키 링크 | 초기 일정 검토 | 낮음 | 2차 후보 | 현재로서는 독립 프로젝트 승격 보류 |
 
 ## 수집 레인

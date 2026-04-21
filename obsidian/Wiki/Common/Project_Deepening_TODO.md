@@ -111,12 +111,12 @@ tags:
 ## 보조 채널 / 미승격 후보 메모
 
 ### DMT
-- 독립 고객 프로젝트가 아니라 픽셀/DMT 협업의 배포·검증 지원 채널인지 계속 유지 판단
-- 가온코리아 및 PIXEL 연동 문맥을 `Pixel_AIVoucher_Project` 하위 workstream으로 흡수할지 검토
+- `[[Wiki/Pixel_AIVoucher_Project/DMT_Integration]]` 기준으로 Pixel 하위 배포·검증 workstream으로 흡수 완료
+- 다음에는 CSV 결과 포맷과 실제 운영 전환 여부를 보강
 
 ### PSK 온도예측task
-- 파일형 산출물보다 초회 미팅/IR 센서 요구사항 청취가 중심인지 확인
-- `PSK_Project`의 하위 workstream 문서로 흡수하는 편이 적절한지 검토
+- `[[Wiki/PSK_Project/Temperature_Prediction_Task]]` 기준으로 PSK 하위 탐색 workstream으로 구조화 완료
+- 다음에는 상견례 이후 실제 후속 일정과 센서 요구사항 문서화 여부를 보강
 
 ### 한맥-pjt
 - 최근 2년 내 후속 채널 또는 동일 고객명 변형 검색 필요

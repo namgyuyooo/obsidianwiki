@@ -34,8 +34,8 @@ tags:
 | BGF에코스페셜티(구 FLK) | `#pjt-비지에프에코스페셜티-구-flk` | 운영 리뷰 ppt/pdf, 장애처리보고서, 운영 성능/변색 이슈 | 프로젝트 확정 | `[[Wiki/BGF_EcoSpecialty_Project/hub]]` 생성 완료 |
 | 나노텍 정출연과제 | `#pjt_나노텍_정출연과제` | OES 활용사례, 협업 Item, 초회 미팅 docx, 과제 신청서류 | 프로젝트 확정 | `[[Wiki/Nanotech_RnD_Project/hub]]` 생성 완료 |
 | 픽셀 AI바우처 | `#pjt_픽셀_ai바우처` | 중간보고, 협력 모델안, 판정기준, 패키지/도메인 논의 | 프로젝트 확정 | `[[Wiki/Pixel_AIVoucher_Project/hub]]` 생성 완료 |
-| DMT | `#pjt_dmt` | 배포 가이드, 스크립트/도커/DB 운영 메시지 | 보조 채널 | 픽셀/기타 프로젝트의 구현·배포 보조 채널로 우선 해석 |
-| PSK 온도예측task | `#pjt_psk_온도예측task` | 이번 검색에서 파일 미확인 | 2차 탐색 후보 | 메시지 중심 재탐색 필요 |
+| DMT | `#pjt_dmt` | 배포 가이드, CSV 결과, XML/NAS 운영 메시지 | 보조 채널 / 구조화 완료 | `[[Wiki/Pixel_AIVoucher_Project/DMT_Integration]]` 기준으로 Pixel 하위 workstream으로 관리 |
+| PSK 온도예측task | `#pjt_psk_온도예측task` | 파일 미확인, 초회 미팅/IR 센서 요구사항 청취 메시지 | 하위 workstream / 구조화 완료 | `[[Wiki/PSK_Project/Temperature_Prediction_Task]]` 기준으로 PSK 하위 탐색 과제로 관리 |
 | 한맥-pjt | `#한맥-pjt` | 이번 검색에서 고가치 파일 미확인 | 2차 탐색 후보 | 채널 실체 재확인 필요 |
 
 ## 분리 우선순위
@@ -43,8 +43,6 @@ tags:
 ### 1차 분리 권장
 
 ### 2차 탐색 후 분리 검토
-- DMT
-- PSK 온도예측task
 - 한맥-pjt
 
 ## 첨부파일 우선순위 메모

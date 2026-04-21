@@ -19,4 +19,9 @@ PSK 프로젝트의 개요 페이지입니다. 주요 문서:
 - [[Wiki/PSK_Project/KPI]]: 수치 및 KPI 정리
 - [[Wiki/PSK_Project/Action_Items]]: 액션 아이템
 - [[Wiki/PSK_Project/EPI_Process]]: EPI 공정 요약
+- [[Wiki/PSK_Project/Contract_and_Commercial]]: 공동기술개발 계약, 발주, 세금계산서, 서버 조달 흐름
+- [[Wiki/PSK_Project/EHM_Operations]]: EHM 발주, 버전, export, 운영 리스크
+- [[Wiki/PSK_Project/PE_Agent]]: PE Agent 데모, 설명자료, 서버 요구사항
+- [[Wiki/PSK_Project/Precia]]: milestone, 데이터 요구량, threshold 리스크
+- [[Wiki/PSK_Project/Temperature_Prediction_Task]]: PSK CTD팀과의 온도예측task 초기 논의와 IR 센서 요구사항 청취
 - [[Wiki/Common/MOCVD_Recipe]]: 여러 프로젝트에서 공통으로 사용하는 MOCVD 레시피

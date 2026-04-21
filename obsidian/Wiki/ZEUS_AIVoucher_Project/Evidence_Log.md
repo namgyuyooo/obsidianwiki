@@ -114,3 +114,48 @@ source: "public Slack evidence sweep (2024-04-21 to 2026-04-21)"
   - [[Change_Log]]
   - [[Project_Overview]]
 
+### Evidence 08
+- Source: Slack Message
+- Channel: #pjt_zeus_ai바우처
+- Date: 2025-06-04
+- Thread: 없음
+- Topic: GPU 부재와 대안
+- Type: 리스크
+- Original:
+  > EHM workstation에는 GPU가 없는 상황이라 GPU 추가 혹은 별도 이미지 추론 workstation 견적을 요청
+- Interpretation:
+  - 인프라 의사결정은 추상적 선호가 아니라 기존 장비 제약에서 시작된 실제 납품 이슈였다.
+- Linked Pages:
+  - [[Infrastructure_and_Value]]
+  - [[Risks]]
+
+### Evidence 09
+- Source: Slack Message
+- Channel: #pjt_zeus_ai바우처
+- Date: 2024-11-28
+- Thread: 없음
+- Topic: 사업 가치 표현
+- Type: 수치
+- Original:
+  > 유지보수 비용 절감 20%
+  > 유지보수 시간 절감 70%
+- Interpretation:
+  - ZEUS 프로젝트는 기술 성능 외에도 정량적 사업 가치 메시지를 정리해 사용했다.
+- Linked Pages:
+  - [[Infrastructure_and_Value]]
+  - [[KPI]]
+
+### Evidence 10
+- Source: Slack Message
+- Channel: #pjt_zeus_ai바우처
+- Date: 2024-11-28
+- Thread: 없음
+- Topic: 기술 설명 포인트
+- Type: 결정
+- Original:
+  > overfitting 우려 / NPU 연계 / virtual metrology
+- Interpretation:
+  - 발표 자료와 질의응답에서는 VM 설명, 과적합 대응, NPU 연계성이 핵심 설명 축이었다.
+- Linked Pages:
+  - [[Project_Overview]]
+  - [[Infrastructure_and_Value]]

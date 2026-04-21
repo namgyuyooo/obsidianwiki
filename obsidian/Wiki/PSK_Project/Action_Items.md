@@ -18,3 +18,6 @@ source: "public Slack evidence sweep (2024-04-21 to 2026-04-21)"
 - Precia Sobel 필터 로직 배포 후 결과 확인
 - EHM 납품 시 버전 명시 원칙 반영
 - export 관련 EHM 패치 및 메모리 이슈 재발 여부 확인
+- PSKH / EHM / PE Agent / Precia 하위 위키 문서 기준으로 책임 범위 재정리
+- 온도예측task 대표자급 상견례 이후 후속 일정 재개 여부 확인
+- IR 센서 요구사항이 문서화됐는지 추가 탐색

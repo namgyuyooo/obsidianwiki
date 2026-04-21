@@ -17,4 +17,4 @@ source: "public Slack evidence sweep (2024-04-21 to 2026-04-21)"
 - [[Wiki/KumhoTire_CMS_Project/Change_Log]]: 변경 이력
 - [[Wiki/KumhoTire_CMS_Project/Conflict_Register]]: 충돌 및 확인 필요 항목
 - [[Wiki/KumhoTire_CMS_Project/Action_Items]]: 액션 아이템
-
+- [[Wiki/KumhoTire_CMS_Project/Factory_vs_Lab_Gap]]: 연구소 이미지와 공장 이미지 간 품질/요구 차이

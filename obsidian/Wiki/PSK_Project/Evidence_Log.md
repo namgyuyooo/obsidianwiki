@@ -259,6 +259,36 @@ source: "public Slack evidence sweep (2024-04-21 to 2026-04-21)"
 
 ### Evidence 17
 - Source: Slack
+- Channel: #pjt_psk_온도예측task
+- Date: 2026-02-25
+- Thread: 있음
+- Topic: 온도예측task 초회 미팅 아젠다
+- Type: 액션
+- Original:
+  > PSK CTD 팀 - RTM 상견례
+  > IR 센서 관련 요구사항 청취
+- Interpretation:
+  - 온도예측task는 아직 구현보다 고객 측 CTD팀과의 상견례 및 요구사항 수집 단계다.
+- Linked Pages:
+  - [[Project_Overview]]
+  - [[Temperature_Prediction_Task]]
+
+### Evidence 18
+- Source: Slack
+- Channel: #pjt_psk_온도예측task
+- Date: 2026-03-04
+- Thread: 없음
+- Topic: 미팅 보류 사유
+- Type: 변경
+- Original:
+  > 이번 협업의 성공적인 시작을 위해서는 대표님과 김일경 전무님의 대면 상견례가 선행되는 것이 중요
+  > IR 센서 관련 요구사항이 당장 시급한 문제는 아니어서 다시 일정 조율
+- Interpretation:
+  - 이 workstream은 긴급 개발 과제가 아니라 관계 형성과 초기 요구사항 정의가 우선인 단계로 보인다.
+- Linked Pages:
+  - [[Temperature_Prediction_Task]]
+  - [[Action_Items]]
+- Source: Slack
 - Channel: #psk-견적발주납품현황
 - Date: 2026-03-12
 - Thread: 없음

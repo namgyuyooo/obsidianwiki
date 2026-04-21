@@ -17,4 +17,4 @@ source: "public Slack evidence sweep (2024-04-21 to 2026-04-21)"
 - [[Wiki/HsAIVoucher_Project/Change_Log]]
 - [[Wiki/HsAIVoucher_Project/Conflict_Register]]
 - [[Wiki/HsAIVoucher_Project/Action_Items]]
-
+- [[Wiki/HsAIVoucher_Project/Expansion_Structure]]

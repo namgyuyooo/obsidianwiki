@@ -84,3 +84,51 @@ source: "public Slack evidence sweep (2024-04-21 to 2026-04-21)"
   - [[Decisions]]
   - [[Conflict_Register]]
 
+### Evidence 06
+- Source: Slack Message
+- Channel: #pjt_한국알박
+- Date: 2026-03-17
+- Thread: 없음
+- Topic: PoC 제안서 중간 리뷰
+- Type: 변경
+- Original:
+  > 한국알박 PoC 제안서 - 작업 결과 중간 공유
+  > 내일(3/18 수요일) 내용 살펴보시고 잠깐 리뷰 미팅 진행하시죠.
+- Interpretation:
+  - 리뷰는 형식적 절차가 아니라 문서 중간 결과를 실제로 조정하는 작업 단계였다.
+- Linked Pages:
+  - [[Change_Log]]
+  - [[Project_Overview]]
+
+### Evidence 07
+- Source: Slack Message
+- Channel: #pjt_한국알박
+- Date: 2026-03-25
+- Thread: 없음
+- Topic: 수명 개념 표현 수정
+- Type: 리스크
+- Original:
+  > "Total Life와 Target Life는 다른 것이고, 전력량이 아니다"라고 지적하신 부분이 있어
+- Interpretation:
+  - 제안서 핵심 리스크는 단순 기술 부족보다 고객/설비 맥락에 맞는 개념 표현의 정확성이다.
+- Linked Pages:
+  - [[Risks]]
+  - [[Conflict_Register]]
+
+### Evidence 08
+- Source: Slack Message
+- Channel: #pjt_한국알박
+- Date: 2026-03-09
+- Thread: 없음
+- Topic: PoC item keyword list
+- Type: 결정
+- Original:
+  > 박막 두께 및 Uniformity 최적화
+  > Sheet Resistance, Film Stress 물성
+  > Target 수명 및 교체 시점 예측
+  > Chamber Cleaning 최적 주기 예측
+- Interpretation:
+  - 제안서의 실제 문제 정의는 예지보전 일반론이 아니라 sputtering 공정의 구체적 물성과 수명 예측 항목으로 구성된다.
+- Linked Pages:
+  - [[Project_Overview]]
+  - [[Decisions]]

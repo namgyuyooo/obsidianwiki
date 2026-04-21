@@ -17,4 +17,4 @@ source: "public Slack evidence sweep (2024-04-21 to 2026-04-21)"
 - [[Wiki/SeoulSemicon_Project/Change_Log]]: 변경 이력
 - [[Wiki/SeoulSemicon_Project/Conflict_Register]]: 충돌 및 확인 필요 항목
 - [[Wiki/SeoulSemicon_Project/Action_Items]]: 액션 아이템
-
+- [[Wiki/SeoulSemicon_Project/Delivery_Operations]]: 처리속도, 네트워크, 복수 설비 운영 관점 정리

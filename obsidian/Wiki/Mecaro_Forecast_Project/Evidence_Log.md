@@ -100,3 +100,47 @@ source: "public Slack evidence sweep (2024-04-21 to 2026-04-21)"
   - [[Action_Items]]
   - [[Project_Overview]]
 
+### Evidence 07
+- Source: Slack Message
+- Channel: #pjt_메카로-수요예측
+- Date: 2026-01-27
+- Thread: 없음
+- Topic: 데이터 자산화 과제
+- Type: 결정
+- Original:
+  > 판매계획 데이터 자산화 프로젝트
+- Interpretation:
+  - 메카로 프로젝트는 수요예측 모델 단건이 아니라 데이터 자산화 과제로 설명되고 있었다.
+- Linked Pages:
+  - [[Project_Overview]]
+  - [[Decisions]]
+
+### Evidence 08
+- Source: Slack Message
+- Channel: #pjt_메카로-수요예측
+- Date: 2026-01-27
+- Thread: 없음
+- Topic: 영업 TF 관여
+- Type: 결정
+- Original:
+  > 영업측 TF
+- Interpretation:
+  - 이 프로젝트는 IT 검토를 넘어 영업 조직이 관여하는 사업화 과제로 운영됐다.
+- Linked Pages:
+  - [[Project_Overview]]
+  - [[Proposal_and_Evidence]]
+
+### Evidence 09
+- Source: Slack Message
+- Channel: #pjt_메카로-수요예측
+- Date: 2026-01-26
+- Thread: 없음
+- Topic: FCST 현황 자료 활용
+- Type: 변경
+- Original:
+  > 방문 시 사용하실 FCST 현황 자료 공유드립니다.
+- Interpretation:
+  - FCST 현황 자료는 내부 참고용이 아니라 고객 또는 현업 미팅에서 실제 설명 자료로 활용됐다.
+- Linked Pages:
+  - [[Project_Overview]]
+  - [[Action_Items]]

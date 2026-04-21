@@ -17,4 +17,5 @@ source: "public Slack evidence sweep (2024-04-21 to 2026-04-21)"
 - [[Wiki/SeoulBiosys_Project/Change_Log]]
 - [[Wiki/SeoulBiosys_Project/Conflict_Register]]
 - [[Wiki/SeoulBiosys_Project/Action_Items]]
-
+- [[Wiki/SeoulBiosys_Project/POC_to_Agent]]
+- [[Wiki/SeoulBiosys_Project/Commercial_and_Next_Step]]

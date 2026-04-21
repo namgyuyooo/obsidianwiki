@@ -17,4 +17,4 @@ source: "public Slack evidence sweep (2024-04-21 to 2026-04-21)"
 - [[Wiki/KoreaAlbac_Project/Change_Log]]
 - [[Wiki/KoreaAlbac_Project/Conflict_Register]]
 - [[Wiki/KoreaAlbac_Project/Action_Items]]
-
+- [[Wiki/KoreaAlbac_Project/Proposal_Evolution]]

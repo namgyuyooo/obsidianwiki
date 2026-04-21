@@ -100,3 +100,62 @@ source: "public Slack evidence sweep (2024-04-21 to 2026-04-21)"
   - [[Risks]]
   - [[Conflict_Register]]
 
+### Evidence 07
+- Source: Slack Message
+- Channel: #pjt_현대모비스
+- Date: 2026-04-14
+- Thread: 없음
+- Topic: 프로젝트 시작 시점
+- Type: 액션
+- Original:
+  > 4월 내부 검토 / 4월말 투자 심의 이후 계약 진행하고 5월초쯤에는 바로 착수해야 할 것 같습니다.
+- Interpretation:
+  - 실질적인 시작 시점은 5월 초 전후로 가정되고 있었으며, 투자심의가 선행 조건이었다.
+- Linked Pages:
+  - [[Project_Overview]]
+  - [[Action_Items]]
+
+### Evidence 08
+- Source: Slack Message
+- Channel: #pjt_현대모비스
+- Date: 2026-04-14
+- Thread: 없음
+- Topic: 견적 구조
+- Type: 수치
+- Original:
+  > 메인 99,000,000원 + a 20,000,000원
+- Interpretation:
+  - 견적은 단일 총액보다 메인 범위와 추가 범위를 분리해 조정하고 있던 흔적이 있다.
+- Linked Pages:
+  - [[Project_Overview]]
+  - [[Conflict_Register]]
+
+### Evidence 09
+- Source: Slack Message
+- Channel: #pjt_현대모비스
+- Date: 2026-04-14
+- Thread: 없음
+- Topic: 총액 기준
+- Type: 수치
+- Original:
+  > 1+2 합쳐서 1억 미만으로
+- Interpretation:
+  - 내부적으로 총액 상한 또는 심의 방어 기준이 1억원 미만으로 인식되고 있었을 가능성이 있다.
+- Linked Pages:
+  - [[Risks]]
+  - [[Conflict_Register]]
+
+### Evidence 10
+- Source: Slack Message
+- Channel: #pjt_현대모비스
+- Date: 2026-04-14
+- Thread: 없음
+- Topic: 서버 사양 및 처리량 전제
+- Type: 수치
+- Original:
+  > cpu 32core 급 / 2개 라인 / line당 평균 2,000EA/day
+- Interpretation:
+  - 제안은 추상적 AI 과제가 아니라 서버 사양과 일일 처리량 전제를 포함한 운영형 시스템 제안이었다.
+- Linked Pages:
+  - [[Project_Overview]]
+  - [[KPI]]
