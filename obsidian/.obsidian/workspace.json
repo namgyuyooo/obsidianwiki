@@ -31,10 +31,14 @@
             "id": "d17880641586b6ec",
             "type": "leaf",
             "state": {
-              "type": "graph",
-              "state": {},
-              "icon": "lucide-git-fork",
-              "title": "그래프 뷰"
+              "type": "markdown",
+              "state": {
+                "file": "Wiki/Business_Plan_Project/Company_Description.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "Company_Description"
             }
           }
         ]
@@ -198,20 +202,41 @@
   },
   "active": "d17880641586b6ec",
   "lastOpenFiles": [
-    "Wiki/PSK_Project/hub.md",
-    "Wiki/PSK_Project/EPI_Process.md",
-    "Wiki/EPI_Project/hub.md",
-    "Wiki/EPI_Project/Equipment.md",
-    "Wiki/Common/MOCVD_Recipe.md",
-    "Wiki/Schema.md",
-    "Wiki/PSK_Project",
-    "Wiki/EPI_Project",
-    "Wiki/Common",
-    "Wiki",
-    "L1_memory",
-    "obsidianwiki",
-    "RTM_LG이노텍 세미나 발표자료_v.22.09.24.gz",
-    "미확인 545715.crdownload",
-    "환영합니다!.md"
+    "Wiki/Nanotech_RnD_Project/hub.md",
+    "Wiki/Nanotech_RnD_Project/Sources.md",
+    "Wiki/Nanotech_RnD_Project/Risks.md",
+    "Wiki/Nanotech_RnD_Project/Project_Overview.md",
+    "Wiki/Nanotech_RnD_Project/Evidence_Log.md",
+    "Wiki/Nanotech_RnD_Project/Decisions.md",
+    "Wiki/Nanotech_RnD_Project/Conflict_Register.md",
+    "Wiki/Nanotech_RnD_Project/Change_Log.md",
+    "Wiki/Nanotech_RnD_Project/Action_Items.md",
+    "Wiki/Nanotech_RnD_Project",
+    "Wiki/BGF_EcoSpecialty_Project/hub.md",
+    "Wiki/BGF_EcoSpecialty_Project/Sources.md",
+    "Wiki/BGF_EcoSpecialty_Project/Risks.md",
+    "Wiki/BGF_EcoSpecialty_Project/Project_Overview.md",
+    "Wiki/BGF_EcoSpecialty_Project/Evidence_Log.md",
+    "Wiki/BGF_EcoSpecialty_Project/Decisions.md",
+    "Wiki/BGF_EcoSpecialty_Project/Conflict_Register.md",
+    "Wiki/BGF_EcoSpecialty_Project/Change_Log.md",
+    "Wiki/BGF_EcoSpecialty_Project/Action_Items.md",
+    "Wiki/BGF_EcoSpecialty_Project",
+    "Wiki/Common/RTM_YNG_화승_AI바우처.md",
+    "Wiki/DaehanCable_ProcessInnovation_Project/hub.md",
+    "Wiki/DaehanCable_ProcessInnovation_Project/Risks.md",
+    "Wiki/DaehanCable_ProcessInnovation_Project/Sources.md",
+    "Wiki/DaehanCable_ProcessInnovation_Project/Project_Overview.md",
+    "Wiki/DaehanCable_ProcessInnovation_Project/Evidence_Log.md",
+    "Wiki/DaehanCable_ProcessInnovation_Project/Decisions.md",
+    "Wiki/DaehanCable_ProcessInnovation_Project/Conflict_Register.md",
+    "Wiki/DaehanCable_ProcessInnovation_Project",
+    "Wiki/Daeduck_AFVI_Project",
+    "Wiki/AdvancedElectricKorea_Project",
+    "Wiki/KumhoTire_CMS_Project",
+    "Wiki/SeoulBiosys_Project",
+    "Wiki/LGEnergy_ImageAnalysis_Project",
+    "Wiki/HsAIVoucher_Project",
+    "Wiki/KoreaAlbac_Project"
   ]
 }
