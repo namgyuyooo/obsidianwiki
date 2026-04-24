@@ -48,6 +48,18 @@ tags:
   - [[RTM_YNG_Company_Profile_2026-04-21]]
   - [[RTM_YNG_Evidence_Log_2026-04-21]]
 
+- 문서명: 3. RTM_HUBBLE 소개서(딥러닝기반비전AI솔루션).pdf
+- 프로젝트: RTM 회사 공통정보
+- 유형: 솔루션 소개서
+- Drive 분류: `RTM-기타 / 브로셔 발송용` 및 영업용 회사 소개자료 계열
+- 형식: `pdf`
+- 열람 방식: Google Drive fetch
+- 상태: 읽음
+- 선정 근거: Hubble 제품 정의, 런타임/엔진 기능, Turnkey 공급, Pre-PoC 프로그램, LED/Heat Block/Pellicle 적용 사례와 정량 성과가 직접 확인됨
+- 연결 페이지:
+  - [[RTM_YNG_Company_Profile_2026-04-21]]
+  - [[RTM_YNG_Evidence_Log_2026-04-21]]
+
 - 문서명: RTM_25 AI 바우처 회사소개서.pptx
 - 프로젝트: RTM 회사 공통정보
 - 유형: 회사소개 발표자료
