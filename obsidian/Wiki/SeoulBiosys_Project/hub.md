@@ -9,6 +9,7 @@ source: "public Slack evidence sweep (2024-04-21 to 2026-04-21)"
 
 서울바이오시스 관련 공개 Slack 증적을 정리하는 허브입니다.
 
+- [[Wiki/SeoulBiosys_Account/hub]]: 서울바이오시스 계정 상위 허브
 - [[Wiki/SeoulBiosys_Project/Project_Overview]]
 - [[Wiki/SeoulBiosys_Project/Sources]]
 - [[Wiki/SeoulBiosys_Project/Evidence_Log]]

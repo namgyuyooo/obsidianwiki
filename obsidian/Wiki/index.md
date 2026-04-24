@@ -53,6 +53,26 @@ source: "Global wiki index initialized from existing project hubs"
 - [[Wiki/SeoulSemicon_Project/hub]]: 서울반도체 프로젝트 위키 허브
 - [[Wiki/ZEUS_AIVoucher_Project/hub]]: ZEUS AI Voucher 프로젝트 위키 허브
 
+## RTM_YNG 프로젝트 위키 (Common/ 폴더)
+
+Drive 소스 기반으로 구축된 RTM_YNG 계열 프로젝트 페이지 (L1_memory 연동):
+- [[Wiki/Common/RTM_YNG_산업현장_에이전트_연구개발]]: 국책과제 RS-2026-25553046, 65.9억
+- [[Wiki/Common/RTM_YNG_탈레스_Trust_my_Tech]]: Trust my Tech, 과제번호 충돌 등록
+- [[Wiki/Common/RTM_YNG_서울반도체_AI_응용제품_신속_상용화]]: AI 응용제품, MOCVD 65대
+- [[Wiki/Common/RTM_YNG_케타포_AI바우처]]: K-POP 멀티에이전트 AI바우처 2026
+- [[Wiki/Common/RTM_YNG_경동나비엔_RTM]]: 비전검사 제안, 연구개발계획서 작성 중
+- [[Wiki/Common/RTM_YNG_HPP]]: PoC 완료, Accuracy 0.9487, 후속 2.5억
+- [[Wiki/Common/RTM_YNG_ZEUS_POC]]: BD 이물탐지 PoC, 적용 불가 판정
+- [[Wiki/Common/RTM_YNG_반도체_공정제어_멀티에이전트]]: RS-2026-25523818, 세정공정 실증
+- [[Wiki/Common/RTM_YNG_화승_AI바우처]]: EHM 웨더스트립, 총 430백만원
+- [[Wiki/Common/RTM_YNG_제우스_픽셀_AI바우처]]: 2024 AI바우처, 제우스 450백만 + 픽셀 308백만
+- [[Wiki/Common/RTM_YNG_한양대_반도체_자율지능형_에이전트]]: CY260116, 5개년 매출 57억
+- [[Wiki/Common/RTM_YNG_아사히카세이]]: 분리막 슬릿롤 외관검사 POC, 롤투롤
+- [[Wiki/Common/RTM_YNG_ITM_반도체]]: 전자담배 외관불량탐지, 확장 전략 2안
+- [[Wiki/Common/RTM_YNG_DMT_POC]]: 외관불량탐지 POC, 데이터 품질 병목
+- [[Wiki/Common/RTM_YNG_Project_Knowledge_Base_2026-04-21]]: RTM_YNG 통합 지식베이스
+- [[Wiki/Common/RTM_YNG_Drive_Discovery_2026-04-21]]: Drive 구조 감사 및 대표본 지도
+
 ## Common Knowledge and Maps
 
 - [[Wiki/Common/Slack_Public_Evidence_Index]]: 공개 Slack 증적 인덱스

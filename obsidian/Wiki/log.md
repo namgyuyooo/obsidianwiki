@@ -9,6 +9,29 @@ source: "Global wiki operations log"
 
 이 파일은 위키 운영의 append-only 로그입니다.
 
+## [2026-04-21] ingest | RTM_YNG L1_memory 14개 생성 + Drive 증적 완료
+
+- 작업 범위: RTM_YNG Drive 소스(PDF/HWP/HWPX) 증적 추출 완료 + L1_memory 파일 14개 신규 생성
+- Evidence Log 수록 프로젝트 (11개): 산업현장 에이전트(RS-2026-25553046, 65.9억), 탈레스(충돌), 서울반도체(100/143백만), 케타포(K-POP 멀티에이전트), 경동나비엔(167백만 견적), HPP(Acc 0.9487), ZEUS_POC(적용불가), 반도체공정제어(RS-2026-25523818), 화승(430백만), 제우스·픽셀(450+308백만), 한양대(CY260116, 57억)
+- 생성된 L1_memory 파일 (14개):
+  - `RTM_YNG_산업현장_에이전트_연구개발.md`
+  - `RTM_YNG_탈레스_Trust_my_Tech.md`
+  - `RTM_YNG_서울반도체.md`
+  - `RTM_YNG_케타포_AI바우처.md`
+  - `RTM_YNG_경동나비엔.md`
+  - `RTM_YNG_HPP.md`
+  - `RTM_YNG_ZEUS_POC.md`
+  - `RTM_YNG_반도체_공정제어_멀티에이전트.md`
+  - `RTM_YNG_화승_AI바우처.md`
+  - `RTM_YNG_제우스_픽셀_AI바우처.md`
+  - `RTM_YNG_한양대_반도체_자율지능형_에이전트.md`
+  - `RTM_YNG_아사히카세이.md`
+  - `RTM_YNG_ITM_반도체.md`
+  - `RTM_YNG_DMT_POC.md`
+- 충돌 등록: 탈레스 vf(20446514/100/143백만) vs 인건비제외(20286906/192/275백만)
+- index.md에 RTM_YNG 프로젝트 위키 섹션 추가
+- 후속 작업: RTM_YNG 위키 페이지 보강 (KPI 표, 비교본 diff, 리스크 표)
+
 ## [2026-04-21] structure | L1 memory layer 전체 생성
 
 - 작업 범위: 전체 19개 프로젝트 L1_memory 스냅샷 초안 생성 + R&D 프로젝트 위키 연결 + AGENTS.md L1_memory 워크플로우 추가

@@ -142,13 +142,13 @@ tags:
 - 나노텍 정출연과제
 
 ### 추가 탐색 후 심화
-- LGEnergy ImageAnalysis
-- SeoulBiosys
 - ZEUS AI바우처
 - 픽셀 AI바우처
-- DMT
-- PSK 온도예측task
 - 한맥-pjt
+
+### 구조화 완료 후 후속 확인
+- LGEnergy ImageAnalysis
+- SeoulBiosys
 
 ## 연결 문서
 

@@ -9,6 +9,7 @@ source: "public Slack evidence sweep (2024-04-21 to 2026-04-21)"
 
 서울세미콘 / SSC Vina 관련 공개 Slack 증적을 정리하는 허브입니다.
 
+- [[Wiki/SeoulSemicon_Account/hub]]: 서울세미콘 계정 상위 허브
 - [[Wiki/SeoulSemicon_Project/Project_Overview]]: 최근 2년 공개 Slack 기준 프로젝트 개요
 - [[Wiki/SeoulSemicon_Project/Sources]]: 출처 목록
 - [[Wiki/SeoulSemicon_Project/Evidence_Log]]: 계약, 발주, 인보이스, 검수, 출장 운영 증적 로그

@@ -19,8 +19,18 @@ source: ""
 - [[Wiki/Common/Operations_Project_Evidence_Map]]: 회의록, KPI, 공수, 로드맵 중심의 운영형 프로젝트 증적맵
 - [[Wiki/Common/Slack_Public_Evidence_Index]]: 최근 2년 공개 Slack 전체 탐색에서 확인한 증적 인덱스와 분류 기준
 - [[Wiki/Common/Project_Candidate_Register]]: 공개 Slack 증적을 기준으로 분리 가능한 프로젝트 후보 레지스터
+- [[Wiki/Common/Cross_Project_Patterns]]: 고객별 로그를 넘어 반복되는 전환/배포/운영 패턴 정리
+- [[Wiki/Common/Accounts_Index]]: 여러 하위 축을 함께 봐야 하는 고객 계정 허브 인덱스
+- [[Wiki/Common/Hanmac_Assessment]]: 한맥 채널의 최근 2년 증적 밀도와 보류 판단
 - [[Wiki/Common/MOCVD_Recipe]]: 여러 프로젝트에서 재사용하는 공정 개념
 - [[Wiki/Common/Wiki_Ingest_Operating_Model]]: 구조 관리와 실제 내용 보존을 함께 다루는 운영 원칙
 - [[Wiki/Common/Wiki_Ingest_Templates]]: Sources, Evidence Log, Conflict Register, Change Log 템플릿
 - [[Wiki/Common/Wiki_Ingest_Prompt_Set]]: 상황별 인제스트 프롬프트 모음
+- [[Wiki/Common/RTM_YNG_Company_Profile_2026-04-21]]: PPTX/HWP/HWPX까지 반영한 RTM 회사 공통정보 허브
 - [[Wiki/Schema]]: 위키 전체 스키마와 필수 규칙
+- [[Wiki/PSK_Account/hub]]: PSK 계정 상위 허브
+- [[Wiki/SeoulSemicon_Account/hub]]: 서울세미콘 계정 상위 허브
+- [[Wiki/SeoulBiosys_Account/hub]]: 서울바이오시스 계정 상위 허브
+- [[Wiki/LGEnergy_Account/hub]]: LG엔솔 계정 상위 허브
+- [[Wiki/KumhoTire_Account/hub]]: 금호타이어 계정 하위 프로젝트 관계 허브
+- [[Wiki/Pixel_Account/hub]]: Pixel 본과제와 DMT 연동 관계 허브

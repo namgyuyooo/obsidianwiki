@@ -9,6 +9,7 @@ source: "public Slack evidence sweep (2024-04-21 to 2026-04-21)"
 
 PSK 프로젝트의 개요 페이지입니다. 주요 문서:
 
+- [[Wiki/PSK_Account/hub]]: PSK 계정 상위 허브
 - [[Wiki/PSK_Project/Project_Overview]]: 최근 2년 공개 Slack 기준 프로젝트 개요
 - [[Wiki/PSK_Project/Sources]]: 최근 2년 출처 목록
 - [[Wiki/PSK_Project/Evidence_Log]]: 수치, 결정, 변경, 리스크 증적 로그
