@@ -43,6 +43,7 @@ tags:
 
 ## Supporting Documents
 
+- [[RTM_Government_RnD_Folder_Index]]
 - [[RTM_YNG_Project_Knowledge_Base_2026-04-21]]
 - [[RTM_YNG_Drive_Discovery_2026-04-21]]
 - [[RTM_YNG_Sources_2026-04-21]]
@@ -50,6 +51,11 @@ tags:
 - [[RTM_YNG_Change_Log_2026-04-21]]
 - [[RTM_YNG_Conflict_Register_2026-04-21]]
 - [[RTM_YNG_Wiki_Build_Plan_2026-04-21]]
+
+## Folder Wiki Layer
+
+- 폴더 단위 전수 위키는 [[RTM_Government_RnD_Folder_Index]]에서 관리한다.
+- 기존 개별 과제 페이지는 유지하며, 폴더 위키를 상위 컨테이너로 사용한다.
 
 ## Next Expansion Candidates
 

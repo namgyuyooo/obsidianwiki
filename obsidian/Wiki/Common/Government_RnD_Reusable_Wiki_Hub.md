@@ -19,7 +19,11 @@ source: "Google Drive representative documents reviewed on 2026-04-27"
 - [[Wiki/Common/Government_RnD_Prompt_Set]]: 초기 세팅, HWP 표현 추출, 역할 정리용 프롬프트 세트
 - [[Wiki/Common/Government_RnD_Section_Skeletons]]: 배경, 목표, 역할, 사업화 문단 골격
 - [[Wiki/Common/Government_RnD_Drive_Source_Map_2026-04-27]]: `5.국책과제` Drive 폴더 기반 대표 소스 맵
+- [[Wiki/Common/RTM_Government_RnD_Folder_Index]]: RTM 정부과제 폴더 단위 전수 위키 인덱스
+- [[Wiki/Common/RTM_Government_RnD_Folder_Candidate_Register]]: 폴더 위키 후보/상태 레지스터
+- [[Wiki/Common/RTM_Government_RnD_Folder_Coverage_Tracker]]: 폴더 위키 생성/심화 진행표
 - [[Wiki/Common/RTM_Government_RnD_Appeal_Bank]]: 알티엠 정부과제용 회사 어필 포인트 뱅크
 - [[Wiki/Common/RTM_Government_RnD_Reference_Bank]]: 알티엠 정부과제용 고객/성과 레퍼런스 뱅크
+- [[Wiki/Common/RTM_Government_RnD_Complete_Template]]: 알티엠 정부과제 목차별 완성본 초안 템플릿
 - [[Wiki/Schema]]: 전역 스키마
 - [[Wiki/index]]: 위키 전역 진입점

@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "obsidian/L1_memory/KoreaAlbac_Project.md",
+                "file": "obsidian/Equipment Health Manager.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "KoreaAlbac_Project"
+              "title": "Equipment Health Manager"
             }
           }
         ]
@@ -94,7 +94,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "obsidian/L1_memory/KoreaAlbac_Project.md",
+                "file": "obsidian/Equipment Health Manager.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -104,7 +104,7 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "KoreaAlbac_Project 의 백링크"
+              "title": "Equipment Health Manager 의 백링크"
             }
           },
           {
@@ -113,12 +113,12 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "obsidian/L1_memory/KoreaAlbac_Project.md",
+                "file": "obsidian/Equipment Health Manager.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               },
               "icon": "links-going-out",
-              "title": "KoreaAlbac_Project 의 나가는 링크"
+              "title": "Equipment Health Manager 의 나가는 링크"
             }
           },
           {
@@ -156,13 +156,13 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "obsidian/L1_memory/KoreaAlbac_Project.md",
+                "file": "obsidian/Equipment Health Manager.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
               },
               "icon": "lucide-list",
-              "title": "KoreaAlbac_Project 의 개요"
+              "title": "Equipment Health Manager 의 개요"
             }
           }
         ]
@@ -183,35 +183,35 @@
       "bases:새 베이스 생성하기": false
     }
   },
-  "active": "2cdfac7d881e1e8d",
+  "active": "935f71797bec8d5c",
   "lastOpenFiles": [
+    "obsidian/Wiki/Common/RTM_Government_RnD_Complete_Template.md",
+    "obsidian/Wiki/Common/RTM_GovRnD_2021_스마트공장_고도화2.md",
+    "obsidian/Wiki/Common/RTM_GovRnD_2021_산업디지털_전환_연대공급기업.md",
+    "obsidian/Wiki/Common/RTM_GovRnD_2022_엔업.md",
+    "obsidian/Wiki/Common/RTM_GovRnD_2022_AI바우처_2022.md",
+    "obsidian/Wiki/Common/RTM_GovRnD_2026_바이오시스_상생혁신.md",
+    "obsidian/Wiki/Common/RTM_GovRnD_2026_뿌리산업.md",
+    "obsidian/Wiki/Common/RTM_GovRnD_2026_xaas.md",
+    "obsidian/Wiki/Common/RTM_GovRnD_2025_자율제조_AI_Agent.md",
+    "obsidian/Wiki/Common/RTM_GovRnD_2026_인공지능_기술사업화_지원사업.md",
+    "obsidian/Wiki/Common/RTM_GovRnD_2026_PSK_디지털혁신중견기업육성사업.md",
+    "obsidian/Wiki/Common/RTM_GovRnD_2026_AI바우처.md",
+    "Wiki/SanupAI_RnD_Project/Project_Overview.md",
+    "obsidian/L1_memory/KoreaAlbac_Project.md",
+    "obsidian/Wiki/Common/RTM_GovRnD_2026_대학연스타트업_한양대.md",
+    "obsidian/Wiki/Common/RTM_GovRnD_2026_TMT2차.md",
+    "obsidian/Wiki/Common/RTM_GovRnD_2026_AI_응용제품_신속_상용화.md",
+    "obsidian/Wiki/Common/RTM_GovRnD_2026_산업현장_에이전트_연구개발.md",
+    "obsidian/Wiki/Common/RTM_Government_RnD_Folder_Coverage_Tracker.md",
+    "obsidian/Wiki/Common/RTM_Government_RnD_Folder_Candidate_Register.md",
+    "obsidian/Wiki/Common/RTM_Government_RnD_Folder_Index.md",
     "obsidian/Wiki/Common/RTM_Government_RnD_Reference_Bank.md",
     "obsidian/Wiki/Common/RTM_Government_RnD_Appeal_Bank.md",
     "obsidian/L1_memory/HyundaiMobis_Project.md",
     "obsidian/L1_memory/DaehanCable_ProcessInnovation_Project.md",
     "obsidian/L1_memory/AdvancedElectricKorea_Project.md",
-    "obsidian/L1_memory/SeoulBiosys_Project.md",
-    "obsidian/L1_memory/SanupAI_RnD_Project.md",
-    "obsidian/L1_memory/RTM_YNG_ITM_반도체.md",
-    "obsidian/L1_memory/RTM_YNG_HPP.md",
-    "obsidian/L1_memory/RTM_YNG_DMT_POC.md",
-    "obsidian/L1_memory/RTM_YNG_화승_AI바우처.md",
-    "obsidian/L1_memory/RTM_YNG_한양대_반도체_자율지능형_에이전트.md",
-    "obsidian/L1_memory/RTM_YNG_탈레스_Trust_my_Tech.md",
-    "obsidian/L1_memory/RTM_YNG_케타포_AI바우처.md",
-    "obsidian/L1_memory/RTM_YNG_제우스_픽셀_AI바우처.md",
-    "obsidian/L1_memory/RTM_YNG_아사히카세이.md",
-    "obsidian/L1_memory/RTM_YNG_서울반도체.md",
-    "obsidian/L1_memory/RTM_YNG_산업현장_에이전트_연구개발.md",
-    "obsidian/L1_memory/RTM_YNG_경동나비엔.md",
-    "Wiki/SanupAI_RnD_Project/Project_Overview.md",
-    "obsidian/Wiki/Common/Government_RnD_Drive_Source_Map_2026-04-27.md",
-    "obsidian/Wiki/Common/Government_RnD_Section_Skeletons.md",
-    "obsidian/Wiki/Common/Government_RnD_Prompt_Set.md",
-    "obsidian/Wiki/Common/Government_RnD_Project_Starter_Template.md",
-    "obsidian/Wiki/SanupAI_RnD_Project/hub.md",
     "Wiki/SanupAI_RnD_Project",
-    "Wiki",
-    "obsidian/Wiki/Common/RTM_YNG_아사히카세이_보고자료_2026-04-22.md"
+    "Wiki"
   ]
 }

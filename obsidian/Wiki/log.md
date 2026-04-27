@@ -9,6 +9,55 @@ source: "Global wiki operations log"
 
 이 파일은 위키 운영의 append-only 로그입니다.
 
+## [2026-04-27] structure | RTM government RnD folder-wide wiki layer
+
+- 작업 범위: 국책과제/바우처/조상 아카이브 폴더를 폴더 단위로 전수 위키화하는 상위 구조와 폴더 위키 생성
+- 생성 문서:
+  - `Common/RTM_Government_RnD_Folder_Index.md`
+  - `Common/RTM_Government_RnD_Folder_Candidate_Register.md`
+  - `Common/RTM_Government_RnD_Folder_Coverage_Tracker.md`
+  - `Common/RTM_GovRnD_2026_산업현장_에이전트_연구개발.md`
+  - `Common/RTM_GovRnD_2026_AI_응용제품_신속_상용화.md`
+  - `Common/RTM_GovRnD_2026_TMT2차.md`
+  - `Common/RTM_GovRnD_2026_대학연스타트업_한양대.md`
+  - `Common/RTM_GovRnD_2026_AI바우처.md`
+  - `Common/RTM_GovRnD_2026_PSK_디지털혁신중견기업육성사업.md`
+  - `Common/RTM_GovRnD_2026_인공지능_기술사업화_지원사업.md`
+  - `Common/RTM_GovRnD_2025_자율제조_AI_Agent.md`
+  - `Common/RTM_GovRnD_2026_xaas.md`
+  - `Common/RTM_GovRnD_2026_뿌리산업.md`
+  - `Common/RTM_GovRnD_2026_바이오시스_상생혁신.md`
+  - `Common/RTM_GovRnD_2022_AI바우처_2022.md`
+  - `Common/RTM_GovRnD_2022_엔업.md`
+  - `Common/RTM_GovRnD_2021_산업디지털_전환_연대공급기업.md`
+  - `Common/RTM_GovRnD_2021_스마트공장_고도화2.md`
+- 갱신 문서:
+  - `Common/Government_RnD_Reusable_Wiki_Hub.md`
+  - `Common/hub.md`
+  - `index.md`
+  - `Common/RTM_YNG_Project_Index_2026-04-21.md`
+  - `log.md`
+- 핵심 판단:
+  - 기존 개별 과제 페이지는 유지하고, 새 폴더 위키를 상위 컨테이너로 둔다.
+  - 대표본이 약한 폴더도 삭제하지 않고 `현재 미확인` 상태로 보존한다.
+
+## [2026-04-27] ingest | Final-body style asset expansion from PSK XaaS and technology-commercialization finals
+
+- 작업 범위: `PSK`, `XaaS`, `기술사업화/상생형` 최종본 계열을 반영해 정부과제 문체/표현 자산 보강
+- 갱신 문서:
+  - `Common/Government_RnD_HWP_Expression_Bank.md`
+  - `Common/Government_RnD_Writing_Style_Guide.md`
+- 반영한 최종본/대표 근거:
+  - `1. 연구개발계획서_통합.hwpx/pdf` (PSK 계열)
+  - `1. 사업수행계획서_최종.hwp` (XaaS 계열)
+  - `2026년 인공지능 기술사업화 지원사업 연구개발계획서_통합_0310.pdf`
+  - `1-1. (설반)연구개발계획서_(최종)통합본.hwp`
+- 추가된 핵심 자산:
+  - `실시간 운영 및 유지보수 에이전트`
+  - `사업수행계획서형` 문체
+  - `라인 단위 On-Prem 공급 + 연간 갱신/유지보수`
+  - `Fab 테스트베드`, `현장 베타테스트`, `도메인 문서 10만 건 이상`
+
 ## [2026-04-27] structure | RTM government RnD appeal bank and reference bank
 
 - 작업 범위: 알티엠 정부과제용 회사 어필 포인트와 고객/성과 레퍼런스 자산을 공통 문서로 분리 생성
@@ -143,3 +192,26 @@ source: "Global wiki operations log"
 - 제목 형식: `## [YYYY-MM-DD] operation | short label`
 - operation 예시: `ingest`, `query`, `lint`, `structure`
 - 각 항목에는 변경 문서, 핵심 영향, 후속 작업을 짧게 남깁니다.
+
+## [2026-04-27] ingest | local final-body extraction for government RnD style assets
+
+- 로컬 동기화 Google Drive 경로에서 `산업현장 에이전트_연구개발계획서_RS-2026-25553046(알티엠).pdf`와 `PSK 작업중_v9.hwpx`를 직접 확인함.
+- `Government_RnD_HWP_Expression_Bank`에 운영형 최종본 문구, 오케스트레이션형 표현, 대체 실증 경로, 4M/온톨로지/온디바이스 계열 문장 자산을 추가함.
+- `Government_RnD_Writing_Style_Guide`에 로컬 직접 추출 기반 관찰, 문장 연결 습관, 역할 중심 목표 서술, 대비형 부정 문장 패턴을 추가함.
+- 후속 작업: `XaaS`, `설반`, `기술사업화` 최종본도 로컬 동기화본이 확보되면 같은 방식으로 직접 추출해 문장 예시를 더 누적할 것.
+
+## [2026-04-27] ingest | local final-body extraction for service and commercialization variants
+
+- 로컬 동기화 Google Drive 경로에서 `사업계획서_서울반도체.hwpx`, `2026년 인공지능 기술사업화 지원사업 연구개발계획서_통합_0310.pdf`, `AI바우처_사업계획서(26)_케타포_최종취합.hwpx`를 직접 확인함.
+- `Government_RnD_HWP_Expression_Bank`에 `설반 상용화형`, `기술사업화 공급형`, `XaaS/AI바우처 오케스트레이션형` 표현군과 문장 자산을 추가함.
+- `Government_RnD_Writing_Style_Guide`에 `AS-IS/TO-BE 비교형`, `폐쇄망 RAG 업데이트형`, `중앙 오케스트레이터 기반 서비스형` 서술 패턴과 사업화/운영 KPI 닫힘 문장을 추가함.
+
+## [2026-04-27] ingest | RTM section-ready paragraph samples
+
+- `RTM_Government_RnD_Appeal_Bank`에 `연구개발 필요성`, `수행기관 역량`, `개발 내용 및 수행방법`, `수행기관-수요기업 역할`, `사업화 및 확산`, `기대효과`용 실전 문단 샘플을 추가함.
+- 로컬 직접 추출로 정리한 `운영형`, `상용화형`, `공급형`, `오케스트레이션형` 문장 습관을 알티엠 고유 포트폴리오와 결합해 바로 붙여넣기 가능한 수준으로 정리함.
+
+## [2026-04-27] structure | RTM government RnD complete draft template
+
+- `RTM_Government_RnD_Complete_Template`를 신규 생성하고, `목차별 완성본 초안`, `교체 슬롯`, `문서 유형별 분기`, `최종 점검 체크리스트`를 한 문서로 정리함.
+- `Government_RnD_Reusable_Wiki_Hub`, `Common/hub`, `index.md`에 새 템플릿 링크를 추가해 정부과제 공통 자산에서 바로 진입 가능하게 연결함.
