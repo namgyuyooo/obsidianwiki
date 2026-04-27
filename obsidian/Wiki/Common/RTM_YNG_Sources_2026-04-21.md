@@ -84,6 +84,66 @@ tags:
   - [[RTM_YNG_Company_Profile_2026-04-21]]
   - [[RTM_YNG_Evidence_Log_2026-04-21]]
 
+- 문서명: 3.발표자료_(주)픽셀.pptx
+- 프로젝트: RTM 회사 공통정보 / 픽셀 AI바우처
+- 유형: AI바우처 발표자료
+- Drive 분류: Drive 검색 기반 후보
+- 형식: `pptx`
+- 열람 방식: Google Drive fetch / file id `14H_ia-cUCOsGp0GLKgscRObAQhGZTRwF`
+- 상태: 읽음
+- 선정 근거: PCB AOI Hubble 적용 과제, 초기/목표 성능, 특허출원, 전시/사업화 활동이 확인되어 Hubble 고객 레퍼런스를 보강함
+- 연결 페이지:
+  - [[RTM_YNG_Company_Profile_2026-04-21]]
+  - [[RTM_YNG_Evidence_Log_2026-04-21]]
+
+- 문서명: [스크립트포함](AI반도체분과)_R-20240321-023009 _제우스_알티엠 .pptx
+- 프로젝트: RTM 회사 공통정보 / 제우스 AI반도체분과
+- 유형: AI바우처 발표자료
+- Drive 분류: Drive 검색 기반 후보
+- 형식: `pptx`
+- 열람 방식: Google Drive fetch / file id `1Q58nsKspxTixRWVK07Yzoa0swLC_F6UX`
+- 상태: 읽음
+- 선정 근거: 제우스 반도체 세정 장비 가상계측 과제, RTM 당시 회사 프로필, Hubble/Apollo 목표 성능, 사업비와 데이터 규모가 확인되어 Hubble+Apollo 결합 레퍼런스를 보강함
+- 연결 페이지:
+  - [[RTM_YNG_Company_Profile_2026-04-21]]
+  - [[RTM_YNG_Evidence_Log_2026-04-21]]
+
+- 문서명: pixel_final.hwpx
+- 프로젝트: RTM 회사 공통정보 / 픽셀 AI바우처
+- 유형: 최종 결과보고서 원본
+- Drive 분류: 로컬 추출본 `.tmp_drive_hwp`
+- 형식: `hwpx`
+- 열람 방식: `rhwp info`, `rhwp dump`
+- 상태: 읽음
+- 선정 근거: 픽셀 PCB AOI Hubble 1.3 적용 성과인 미검율 `0.15%`, 과검율 `0.91%`, `Takt time 1.354ms`, Hubble 객체 탐지 정확도 `99.9%`가 최종보고서 원문에서 확인됨
+- 연결 페이지:
+  - [[RTM_YNG_Company_Profile_2026-04-21]]
+  - [[RTM_YNG_Evidence_Log_2026-04-21]]
+
+- 문서명: zeus_final_sales.hwpx
+- 프로젝트: RTM 회사 공통정보 / 제우스 AI반도체분과
+- 유형: 최종 결과보고서 원본
+- Drive 분류: 로컬 추출본 `.tmp_drive_hwp`
+- 형식: `hwpx`
+- 열람 방식: `rhwp info`, `rhwp dump`
+- 상태: 읽음
+- 선정 근거: 제우스 반도체 세정 장비 비산 패턴 가상계측 성과인 Hubble `99.42%`, Apollo `100%`, 리드타임 `112시간 -> 35.2시간`, `68.57%` 단축이 최종보고서 원문에서 확인됨
+- 연결 페이지:
+  - [[RTM_YNG_Company_Profile_2026-04-21]]
+  - [[RTM_YNG_Evidence_Log_2026-04-21]]
+
+- 문서명: zeus_mid.hwpx
+- 프로젝트: RTM 회사 공통정보 / 제우스 AI반도체분과
+- 유형: 중간보고서 원본
+- Drive 분류: 로컬 추출본 `.tmp_drive_hwp`
+- 형식: `hwpx`
+- 열람 방식: `rhwp info`, `rhwp dump`
+- 상태: 읽음
+- 선정 근거: Warboy 1EA, 공급 완료일 `24.06.26`, 공급금액 `30백만원`, AI반도체 인프라 비용 `20백만원`이 확인되어 제우스 과제 수행 단계와 인프라 맥락을 보강함
+- 연결 페이지:
+  - [[RTM_YNG_Company_Profile_2026-04-21]]
+  - [[RTM_YNG_Evidence_Log_2026-04-21]]
+
 - 문서명: 산업현장 에이전트_연구개발계획서_RS-2026-25553046(알티엠).pdf
 - 프로젝트: 산업현장 에이전트_연구개발
 - 유형: 연구개발계획서
