@@ -215,3 +215,38 @@ source: "Global wiki operations log"
 
 - `RTM_Government_RnD_Complete_Template`를 신규 생성하고, `목차별 완성본 초안`, `교체 슬롯`, `문서 유형별 분기`, `최종 점검 체크리스트`를 한 문서로 정리함.
 - `Government_RnD_Reusable_Wiki_Hub`, `Common/hub`, `index.md`에 새 템플릿 링크를 추가해 정부과제 공통 자산에서 바로 진입 가능하게 연결함.
+
+## [2026-04-27] structure | Trust my Tech validation worksheet
+
+- `RTM_YNG_탈레스_Trust_my_Tech_Validation_2026-04-27`를 생성해 `Trust my Tech 2차`를 정부과제 템플릿 재현력 검증용 기준 케이스로 정리함.
+- 대표본, 비교본, 충돌값, 재생성 비교축, 통과/실패 판정 기준을 한 문서로 묶고 기존 `RTM_YNG_탈레스_Trust_my_Tech` 페이지에서 바로 연결되게 링크를 추가함.
+
+## [2026-04-27] ingest | Trust my Tech regenerated draft and comparison
+
+- `RTM_YNG_탈레스_Trust_my_Tech_Regenerated_Draft_2026-04-27`를 생성해 `vf` 대표본 기준 템플릿 재생성 초안을 작성함.
+- `RTM_YNG_탈레스_Trust_my_Tech_Regeneration_Comparison_2026-04-27`를 생성해 원본 대표본과 재생성본의 재현 정도, 누락 요소, 템플릿 보완 포인트를 비교 정리함.
+- 기존 `RTM_YNG_탈레스_Trust_my_Tech` 및 검증 워크시트에서 새 산출물로 바로 이동 가능하게 링크를 추가함.
+
+## [2026-04-27] ingest | Trust my Tech body-style draft
+
+- `RTM_YNG_탈레스_Trust_my_Tech_Body_Draft_2026-04-27`를 생성해 `사업 개요 -> 필요성 -> 목표 -> 개발내용 -> 역량 -> 역할 -> 실증 -> 사업화 -> 기대효과` 흐름의 본문형 초안을 작성함.
+- 검증 워크시트와 기존 프로젝트 페이지에서 본문 초안으로 바로 이동 가능하게 링크를 추가하고, 충돌 중인 과제번호/예산은 본문 하단 메모로 분리 유지함.
+
+## [2026-04-27] structure | Trust my Tech submission-grade assembly draft
+
+- `RTM_YNG_탈레스_Trust_my_Tech_Submission_Draft_2026-04-27`를 생성해 `공고/지원내용/vf 대표본`을 바탕으로 한 제출형 조립 규칙을 추가함.
+- 단락별 목표 분량, 표/이미지 슬롯, 외부자료 각주 규칙, 실전 조립 순서, 누락 방지 메모를 정리함.
+- 기존 `Trust my Tech` 프로젝트 페이지에서 새 제출형 초안으로 바로 진입할 수 있도록 링크를 추가함.
+- 로컬 드라이브 경로에서 `붙임1 공고`, `붙임2 지원내용`, `vf 대표본 pdf`를 직접 읽어 `15페이지 이내`, `PDF 제출`, `국문/영문 동시 제출`, `평균 1억원 내외`, `탈레스 플랫폼/코칭/PoC/MVP/네트워킹 지원` 규정을 제출형 초안에 반영함.
+
+## [2026-04-27] ingest | Trust my Tech submission-ready body draft
+
+- `RTM_YNG_탈레스_Trust_my_Tech_Submission_Body_Draft_2026-04-27`를 생성해 로컬 드라이브에서 직접 확인한 공고문, 지원내용, `vf` 대표본을 바탕으로 실제 제출문 톤의 본문 초안을 작성함.
+- `문제인식 -> 실현가능성 -> 성장전략 -> 협업 구조 -> 실증 -> 기대효과` 흐름으로 재구성하고, `15페이지 이내 제출`, `국문/영문 동시 제출`, `탈레스 지원 포인트`, `TRL 5->7`, `Top-5 적중률 90%`, `MTTR 30% 단축` 등 실제 근거를 반영함.
+- 기존 `Trust my Tech` 프로젝트 페이지에서 새 제출용 본문 초안으로 바로 이동 가능하게 링크를 추가함.
+
+## [2026-04-27] structure | Trust my Tech HWP field-level pack
+
+- `RTM_YNG_탈레스_Trust_my_Tech_HWP_Field_Pack_2026-04-27`를 생성해 `vf` 양식의 실제 칸 순서에 맞춘 붙여넣기용 문단 세트를 정리함.
+- `프로그램 특화 항목 -> 개요 요약 -> 문제인식 -> 실현가능성 -> 성장전략 -> 팀 -> ESG` 순으로 각 칸별 `본문`, `표/이미지 슬롯`, `각주 메모`를 분리함.
+- 실제 HWP 작성 시 칸별로 바로 옮겨 적을 수 있도록 `양식 칸 단위 작업본`으로 연결함.
