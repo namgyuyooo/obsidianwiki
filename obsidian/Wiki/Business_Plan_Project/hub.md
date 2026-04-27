@@ -1,7 +1,7 @@
 ---
 type: hub
 created: 2026-04-20
-updated: 2026-04-20
+updated: 2026-04-27
 source: ""
 ---
 
@@ -20,3 +20,4 @@ source: ""
 - [[Wiki/Business_Plan_Project/Financial_Projections]]: 재무 예측 섹션 작성 가이드
 - [[Wiki/Business_Plan_Project/Appendix]]: 부록에 포함할 정보
 - [[Wiki/Business_Plan_Project/Writing_Guidelines]]: 작성 방침과 패턴 요약
+- [[Wiki/Common/Government_RnD_Reusable_Wiki_Hub]]: 정부 R&D 과제용 공통 문장 자산과 역할/자료 가이드

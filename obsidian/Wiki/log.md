@@ -1,13 +1,81 @@
 ---
 type: log
 created: 2026-04-21
-updated: 2026-04-21
+updated: 2026-04-27
 source: "Global wiki operations log"
 ---
 
 # Wiki Log
 
 이 파일은 위키 운영의 append-only 로그입니다.
+
+## [2026-04-27] structure | RTM government RnD appeal bank and reference bank
+
+- 작업 범위: 알티엠 정부과제용 회사 어필 포인트와 고객/성과 레퍼런스 자산을 공통 문서로 분리 생성
+- 생성 문서:
+  - `Common/RTM_Government_RnD_Appeal_Bank.md`
+  - `Common/RTM_Government_RnD_Reference_Bank.md`
+- 주요 근거:
+  - `Common/RTM_YNG_Company_Profile_2026-04-21.md`
+  - `글로벌기업협업프로그램_TrustMyTech_알티엠_최종.pptx`
+  - `RTM_회사소개서_품질검사_0609.pdf`
+  - `industrial_agent_final.hwp`
+  - `seoul_final.hwp`
+  - `pixel_final.hwpx`
+  - `zeus_final_sales.hwpx`
+- 갱신 문서:
+  - `Common/Government_RnD_Reusable_Wiki_Hub.md`
+  - `Common/hub.md`
+  - `index.md`
+  - `log.md`
+- 후속 작업:
+  - `PSK`, `LG에너지솔루션`, `플루오린코리아` 계열의 정량 KPI와 과제명 보강
+  - 신규 HWP/HWPX에서 고객별 유사실적 문장을 더 직접 승격
+
+## [2026-04-27] structure | Government RnD reusable wiki asset set
+
+- 작업 범위: 정부 R&D 과제 재활용을 위한 공통 문장 자산, 역할 서술 규칙, 자료 체크리스트, 위키 운영 가이드 신규 생성
+- 생성 문서:
+  - `Common/Government_RnD_Reusable_Wiki_Hub.md`
+  - `Common/Government_RnD_Writing_Style_Guide.md`
+  - `Common/Government_RnD_HWP_Expression_Bank.md`
+  - `Common/Government_RnD_Participant_Role_Guide.md`
+  - `Common/Government_RnD_Source_Checklist.md`
+  - `Common/Government_RnD_Wiki_Operating_Guide.md`
+  - `Common/Government_RnD_Project_Starter_Template.md`
+  - `Common/Government_RnD_Prompt_Set.md`
+  - `Common/Government_RnD_Section_Skeletons.md`
+- 근거 대표본:
+  - `산업현장 에이전트_연구개발계획서_RS-2026-25553046(알티엠).pdf`
+  - `(서식01) 연구개발계획서(양식)_산업현장문제해결형산업AI에이전트기술개발(R&D).pdf`
+  - `1. 사업계획서(도입_서울반도체).pdf`
+  - `(kr)별첨1-9. (탈레스) Trust my Tech 프로그램 사업계획서_vf.pdf`
+- 갱신 문서:
+  - `Common/hub.md`
+  - `index.md`
+  - `log.md`
+  - `Business_Plan_Project/hub.md`
+  - `L1_memory/Business_Plan_Project.md`
+- 후속 작업:
+  - 신규 정부과제 인제스트 시 프로젝트별 Evidence Log에서 문장 자산을 추가 승격
+  - HWP/HWPX 대표본이 더 확보되면 항목별 표현 예시 확장
+
+## [2026-04-27] ingest | Government RnD drive source map from 5.국책과제
+
+- 작업 범위: `5.국책과제` Drive 폴더 구조 확인 및 정부과제 공통 소스 풀 맵 작성
+- 신규 문서:
+  - `Common/Government_RnD_Drive_Source_Map_2026-04-27.md`
+- 확인한 상위 묶음:
+  - `산업현장 에이전트_연구개발`
+  - `(중기) AI 응용제품 신속 상용화 지원사업`
+  - `TMT2차`
+  - `2026년 대학연스타트업 과제_한양대`
+  - `2026년도 전자부품산업기술개발`
+  - `AI바우처`
+- 핵심 판단:
+  - 이 폴더는 정부과제 재활용용 공통 소스 풀로 사용할 가치가 높음
+  - `공고/양식 -> 작성중 분절본 -> 취합본 -> 최종본 -> 제출서류` 흐름이 반복 확인됨
+  - `hwp/hwpx`가 실제 항목 표현 보존에 가장 유리함
 
 ## [2026-04-21] ingest | RTM_YNG L1_memory 14개 생성 + Drive 증적 완료
 

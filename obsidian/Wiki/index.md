@@ -1,7 +1,7 @@
 ---
 type: index
 created: 2026-04-21
-updated: 2026-04-21
+updated: 2026-04-27
 source: "Global wiki index initialized from existing project hubs"
 ---
 
@@ -28,6 +28,9 @@ source: "Global wiki index initialized from existing project hubs"
 - [[Wiki/Common/Wiki_Ingest_Operating_Model]]: 인제스트 운영 원칙
 - [[Wiki/Common/Wiki_Ingest_Templates]]: 핵심 문서 템플릿
 - [[Wiki/Common/Wiki_Ingest_Prompt_Set]]: 작업별 프롬프트 세트
+- [[Wiki/Common/Government_RnD_Reusable_Wiki_Hub]]: 정부 R&D 과제 재활용용 공통 표현, 역할, 자료 체크리스트 허브
+- [[Wiki/Common/RTM_Government_RnD_Appeal_Bank]]: 알티엠 정부과제용 어필 포인트 뱅크
+- [[Wiki/Common/RTM_Government_RnD_Reference_Bank]]: 알티엠 정부과제용 고객/성과 레퍼런스 뱅크
 - [[Wiki/Common/RTM_YNG_Project_Index_2026-04-21]]: 2026-04-21 기준 RTM_YNG 프로젝트 묶음 인덱스
 
 ## Project Hubs
@@ -82,6 +85,10 @@ Drive 소스 기반으로 구축된 RTM_YNG 계열 프로젝트 페이지 (L1_me
 - [[Wiki/Common/Delivery_Project_Evidence_Map]]: 납품형 프로젝트 증적 맵
 - [[Wiki/Common/Proposal_Project_Evidence_Map]]: 제안형 프로젝트 증적 맵
 - [[Wiki/Common/Operations_Project_Evidence_Map]]: 운영형 프로젝트 증적 맵
+- [[Wiki/Common/Government_RnD_Writing_Style_Guide]]: 정부 R&D 문체, 문단 전개, 역할 서술 패턴
+- [[Wiki/Common/Government_RnD_Drive_Source_Map_2026-04-27]]: `5.국책과제` Drive 폴더의 정부과제 대표본 후보 지도
+- [[Wiki/Common/RTM_Government_RnD_Appeal_Bank]]: 정부과제 본문용 알티엠 어필 포인트 자산
+- [[Wiki/Common/RTM_Government_RnD_Reference_Bank]]: 정부과제 유사실적/사업화용 알티엠 레퍼런스 자산
 
 ## Usage Notes
 

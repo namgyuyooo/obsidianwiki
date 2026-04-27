@@ -1,0 +1,217 @@
+{
+  "main": {
+    "id": "ad55b594354e6cc4",
+    "type": "split",
+    "children": [
+      {
+        "id": "ae157af73edb4d9b",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "2cdfac7d881e1e8d",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "obsidian/L1_memory/KoreaAlbac_Project.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "KoreaAlbac_Project"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "7dfdfd5c737f8eff",
+    "type": "split",
+    "children": [
+      {
+        "id": "d4d58855d2a6f659",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "935f71797bec8d5c",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical",
+                "autoReveal": false
+              },
+              "icon": "lucide-folder-closed",
+              "title": "파일 탐색기"
+            }
+          },
+          {
+            "id": "d1da17b04af942ef",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "검색"
+            }
+          },
+          {
+            "id": "addaa09caf71e25a",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {},
+              "icon": "lucide-bookmark",
+              "title": "북마크"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "right": {
+    "id": "b0642cab6a1419a5",
+    "type": "split",
+    "children": [
+      {
+        "id": "2e7042746c34e10e",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "6553e387e92dea68",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "file": "obsidian/L1_memory/KoreaAlbac_Project.md",
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "KoreaAlbac_Project 의 백링크"
+            }
+          },
+          {
+            "id": "516df1c2f31334c5",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "file": "obsidian/L1_memory/KoreaAlbac_Project.md",
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "KoreaAlbac_Project 의 나가는 링크"
+            }
+          },
+          {
+            "id": "041eaa6bd70f0630",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "태그"
+            }
+          },
+          {
+            "id": "a124fc4aa9a946bf",
+            "type": "leaf",
+            "state": {
+              "type": "all-properties",
+              "state": {
+                "sortOrder": "frequency",
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-archive",
+              "title": "모든 속성"
+            }
+          },
+          {
+            "id": "1b0e9204c86719a7",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "file": "obsidian/L1_memory/KoreaAlbac_Project.md",
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "KoreaAlbac_Project 의 개요"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:빠른 전환기 열기": false,
+      "graph:그래프 뷰 열기": false,
+      "canvas:새 캔버스 만들기": false,
+      "daily-notes:오늘의 일일 노트 열기": false,
+      "templates:템플릿 삽입": false,
+      "command-palette:명령어 팔레트 열기": false,
+      "bases:새 베이스 생성하기": false
+    }
+  },
+  "active": "2cdfac7d881e1e8d",
+  "lastOpenFiles": [
+    "obsidian/Wiki/Common/RTM_Government_RnD_Reference_Bank.md",
+    "obsidian/Wiki/Common/RTM_Government_RnD_Appeal_Bank.md",
+    "obsidian/L1_memory/HyundaiMobis_Project.md",
+    "obsidian/L1_memory/DaehanCable_ProcessInnovation_Project.md",
+    "obsidian/L1_memory/AdvancedElectricKorea_Project.md",
+    "obsidian/L1_memory/SeoulBiosys_Project.md",
+    "obsidian/L1_memory/SanupAI_RnD_Project.md",
+    "obsidian/L1_memory/RTM_YNG_ITM_반도체.md",
+    "obsidian/L1_memory/RTM_YNG_HPP.md",
+    "obsidian/L1_memory/RTM_YNG_DMT_POC.md",
+    "obsidian/L1_memory/RTM_YNG_화승_AI바우처.md",
+    "obsidian/L1_memory/RTM_YNG_한양대_반도체_자율지능형_에이전트.md",
+    "obsidian/L1_memory/RTM_YNG_탈레스_Trust_my_Tech.md",
+    "obsidian/L1_memory/RTM_YNG_케타포_AI바우처.md",
+    "obsidian/L1_memory/RTM_YNG_제우스_픽셀_AI바우처.md",
+    "obsidian/L1_memory/RTM_YNG_아사히카세이.md",
+    "obsidian/L1_memory/RTM_YNG_서울반도체.md",
+    "obsidian/L1_memory/RTM_YNG_산업현장_에이전트_연구개발.md",
+    "obsidian/L1_memory/RTM_YNG_경동나비엔.md",
+    "Wiki/SanupAI_RnD_Project/Project_Overview.md",
+    "obsidian/Wiki/Common/Government_RnD_Drive_Source_Map_2026-04-27.md",
+    "obsidian/Wiki/Common/Government_RnD_Section_Skeletons.md",
+    "obsidian/Wiki/Common/Government_RnD_Prompt_Set.md",
+    "obsidian/Wiki/Common/Government_RnD_Project_Starter_Template.md",
+    "obsidian/Wiki/SanupAI_RnD_Project/hub.md",
+    "Wiki/SanupAI_RnD_Project",
+    "Wiki",
+    "obsidian/Wiki/Common/RTM_YNG_아사히카세이_보고자료_2026-04-22.md"
+  ]
+}

@@ -1,7 +1,7 @@
 ---
 type: hub
 created: 2026-04-21
-updated: 2026-04-21
+updated: 2026-04-27
 source: ""
 ---
 
@@ -26,7 +26,10 @@ source: ""
 - [[Wiki/Common/Wiki_Ingest_Operating_Model]]: 구조 관리와 실제 내용 보존을 함께 다루는 운영 원칙
 - [[Wiki/Common/Wiki_Ingest_Templates]]: Sources, Evidence Log, Conflict Register, Change Log 템플릿
 - [[Wiki/Common/Wiki_Ingest_Prompt_Set]]: 상황별 인제스트 프롬프트 모음
+- [[Wiki/Common/Government_RnD_Reusable_Wiki_Hub]]: 정부 R&D 과제용 공통 자료, 표현 자산, 위키 운영 규칙 허브
 - [[Wiki/Common/RTM_YNG_Company_Profile_2026-04-21]]: PPTX/HWP/HWPX까지 반영한 RTM 회사 공통정보 허브
+- [[Wiki/Common/RTM_Government_RnD_Appeal_Bank]]: 정부 R&D 제안서용 알티엠 어필 포인트 뱅크
+- [[Wiki/Common/RTM_Government_RnD_Reference_Bank]]: 정부 R&D 제안서용 알티엠 고객/성과 레퍼런스 뱅크
 - [[Wiki/Schema]]: 위키 전체 스키마와 필수 규칙
 - [[Wiki/PSK_Account/hub]]: PSK 계정 상위 허브
 - [[Wiki/SeoulSemicon_Account/hub]]: 서울세미콘 계정 상위 허브
