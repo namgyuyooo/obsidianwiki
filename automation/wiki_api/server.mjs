@@ -513,6 +513,20 @@ function spotliteScore(line, path) {
   return score;
 }
 
+function isSpotliteBusinessLine(line, path = "") {
+  const text = `${line} ${path}`.toLowerCase();
+  if (!String(line || "").trim()) return false;
+  if (/^#+\s|^---$|^\|?\s*-+\s*\|/.test(String(line || "").trim())) return false;
+  if (/명령:|위키\s*(관리|구조|승격|전수\s*조사|반영|갱신|정리|수정)|wiki\s*(manage|management|promotion|ingest|wikify)/i.test(text)) return false;
+  if (/hub\s*(갱신|최신|update)|허브\s*(갱신|보강|최신|확인)/i.test(text)) return false;
+  if (/sources|evidence[_\s-]*log|change[_\s-]*log|conflict[_\s-]*register|action[_\s-]*items|risks|decisions/.test(text) && /검토|갱신|확인|연결|링크|누락|보강|정합성|전수/i.test(text)) return false;
+  if (/명칭|일괄\s*수정|치환|rename|아사히카세이\s*[-=]*>\s*아사히카세히/i.test(text)) return false;
+  if (/사용자\s*상태\s*지정\s*필요|현재\s*허브는\s*실제\s*업무|원문\s*근거를\s*우선\s*확인|담당자,\s*고객\s*대응,\s*산출물/i.test(text)) return false;
+  if (/연결된\s*근거\s*문서|액션\/리스크\/결정|최신\s*진행상황|상태로\s*갱신|실행\s*항목을\s*보강/i.test(text)) return false;
+  if (/^(type|성격)\s*:\s*|리스크와\s*불확실성을\s*관리|출처\s*목록|근거와\s*관찰\s*사항/i.test(String(line || "").trim())) return false;
+  return true;
+}
+
 function compactSpotliteLine(line) {
   return String(line || "")
     .replace(/^[-*]\s+/, "")
@@ -545,6 +559,7 @@ async function spotliteSummary(scope = "work") {
     const lines = markdown.split("\n")
       .map(compactSpotliteLine)
       .filter((line) => line.length >= 8)
+      .filter((line) => isSpotliteBusinessLine(line, path))
       .filter((line) => /(오늘|금일|이번\s*주|이번주|금주|해야|필요|다음|액션|확인|제출|미팅|회의|고객|담당|리스크|위험|이슈|결정|운영 메모|진행 맥락|실무 판단|다음 확인|Action|Risk|Decision|todo|week|today|asap)/i.test(line))
       .slice(0, 16);
     if (!lines.length && !["actions", "risks", "decisions", "hub"].includes(classification.docKind)) continue;
@@ -589,7 +604,7 @@ async function spotliteSummary(scope = "work") {
     .sort((a, b) => (b.actions + b.risks * 2 + b.count) - (a.actions + a.risks * 2 + a.count))
     .slice(0, 10);
   const cachedGlm = await readJsonFile(spotliteGlmPath, null).catch(() => null);
-  const digest = cachedGlm?.scope === scope ? cachedGlm.digest : null;
+  const digest = cachedGlm?.scope === scope && cachedGlm?.digestVersion === 2 ? cachedGlm.digest : null;
   return {
     scope,
     workspace: {
@@ -618,7 +633,7 @@ async function spotliteSummary(scope = "work") {
       today.length ? `오늘 바로 볼 항목 ${today.length}개가 있습니다.` : "진행 중 프로젝트 안에서 오늘로 명시된 항목은 아직 적습니다.",
       week.length ? `이번주 처리 후보 ${week.length}개가 감지됐습니다.` : "진행 중 프로젝트 안에서 이번주 항목은 아직 적습니다.",
       risks.length ? `리스크/이슈 후보 ${risks.length}개를 먼저 확인하는 편이 안전합니다.` : "리스크 후보는 많지 않습니다.",
-      memos.length ? "운영 메모가 있는 허브를 우선 읽으면 진행 맥락을 빠르게 잡을 수 있습니다." : "허브 운영 메모 보강이 필요합니다.",
+      memos.length ? "프로젝트 운영 메모에서 실무 맥락 후보를 찾았습니다." : "현재 문서에는 실무 액션으로 확정할 만한 메모가 부족합니다.",
     ],
     today,
     week,
@@ -648,7 +663,7 @@ async function refreshSpotliteGlm(scope = "work") {
     ].join("\n"),
   };
   if (!apiKey || !apiUrl || !summary.summary.ongoingProjects) {
-    const result = { scope, generatedAt: new Date().toISOString(), digest: localDigest, summary };
+    const result = { scope, digestVersion: 2, generatedAt: new Date().toISOString(), digest: localDigest, summary };
     await writeJsonFile(spotliteGlmPath, result);
     return result;
   }
@@ -668,7 +683,9 @@ async function refreshSpotliteGlm(scope = "work") {
           role: "system",
           content: [
             "당신은 RTM PMO의 Spotlite 분석가다.",
-            "Common/위키관리/운영 자동화 이야기는 제외하고, 진행 중 프로젝트의 실제 업무 상태와 다음 액션만 정리한다.",
+            "Common/위키관리/운영 자동화 이야기는 제외하고, 진행 중 프로젝트의 실제 고객 업무 상태와 다음 액션만 정리한다.",
+            "금지: Hub 갱신, 위키 갱신, 위키 구조 승격, 명칭 정정, Sources/Evidence_Log/Action_Items/Risks/Decisions 검토를 업무 액션으로 쓰지 않는다.",
+            "입력 근거가 위키관리뿐이면 '실무 정보 부족'이라고 쓰고 담당자/고객/산출물/현장일정/기술 리스크 확인 질문만 제안한다.",
             "출력은 JSON 객체만 반환한다: markdown, todayPriorities, weeklyPriorities, risks, missingInputs.",
             "markdown은 한국어 Markdown으로 짧지만 실무적으로 작성한다.",
           ].join(" "),
@@ -688,6 +705,7 @@ async function refreshSpotliteGlm(scope = "work") {
     }
     const result = {
       scope,
+      digestVersion: 2,
       generatedAt: new Date().toISOString(),
       digest: { provider: "glm", model, endpoint, ...parsed },
       summary,
@@ -697,6 +715,7 @@ async function refreshSpotliteGlm(scope = "work") {
   } catch (error) {
     const result = {
       scope,
+      digestVersion: 2,
       generatedAt: new Date().toISOString(),
       digest: { ...localDigest, upstreamStatus: error.message },
       summary,
