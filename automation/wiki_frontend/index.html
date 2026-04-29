@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>위키 운영 콘솔</title>
-    <link rel="stylesheet" href="./styles.css?v=20260429-rclone-progress" />
+    <link rel="stylesheet" href="./styles.css?v=20260429-mission-control-v2" />
   </head>
   <body>
     <main class="app-shell">
@@ -26,13 +26,14 @@
         </div>
 
         <nav class="nav-list" aria-label="Primary">
-          <button class="nav-item active" id="spotlite-nav-item" data-view="spotlite">업무 Spotlite</button>
-          <button class="nav-item" data-view="operations">운영</button>
+          <button class="nav-item active" id="mission-nav-item" data-view="mission">Mission Control</button>
+          <button class="nav-item" id="chat-nav-item" data-view="chat">업무 GLM 챗</button>
           <button class="nav-item" data-view="pipeline">수집 파이프라인</button>
+          <button class="nav-item" data-view="paperclip">Paperclip Studio</button>
+          <button class="nav-item" id="spotlite-nav-item" data-view="spotlite">업무 Spotlite</button>
           <button class="nav-item" id="wiki-nav-item" data-view="wiki">업무 위키</button>
           <button class="nav-item" id="ingest-nav-item" data-view="ingest">업무 지식 주입</button>
-          <button class="nav-item" id="chat-nav-item" data-view="chat">업무 GLM 챗</button>
-          <button class="nav-item" data-view="paperclip">Paperclip</button>
+          <button class="nav-item" data-view="operations">운영 설정</button>
         </nav>
 
         <section class="sidebar-utility-panel">
@@ -69,6 +70,134 @@
         <nav id="section-anchors" class="section-anchors" aria-label="현재 탭 섹션">
           <div class="section-anchor-track"></div>
         </nav>
+
+        <section id="mission" class="view active">
+          <div class="mission-hero" data-anchor="지휘실">
+            <div>
+              <span class="eyebrow">Mission Control</span>
+              <h3>오늘 무엇을 추진해야 하는가</h3>
+              <p>위키는 뒤의 근거 저장소로 두고, 여기서는 프로젝트 상태, 결정 대기, 핵심문서, 수집 상태, 다음 액션을 CEO/PM 관점으로 봅니다.</p>
+            </div>
+            <div class="mission-actions mission-command-box">
+              <textarea id="mission-command-input" placeholder="예: 쏘닉스 자료를 찾아 수집하고 위키화해서 오늘 액션으로 정리해줘."></textarea>
+              <div>
+                <button id="mission-command-chat" class="command-button accent" type="button">GLM과 추진 논의</button>
+                <button id="mission-command-collect" class="command-button" type="button">Drive 표적 수집 계획</button>
+              </div>
+              <button id="mission-refresh" class="command-button" type="button">Mission Control 갱신</button>
+            </div>
+          </div>
+
+          <section class="mission-answer-grid" data-anchor="다섯 질문">
+            <article>
+              <span>오늘 뭘 해야 하지?</span>
+              <strong id="mission-answer-today">로딩 중</strong>
+            </article>
+            <article>
+              <span>어떤 자료가 새로 들어왔지?</span>
+              <strong id="mission-answer-evidence">로딩 중</strong>
+            </article>
+            <article>
+              <span>무엇이 결정 대기지?</span>
+              <strong id="mission-answer-pending">로딩 중</strong>
+            </article>
+            <article>
+              <span>어떤 프로젝트가 위험하지?</span>
+              <strong id="mission-answer-risk">로딩 중</strong>
+            </article>
+            <article>
+              <span>다음 액션은 뭐지?</span>
+              <strong id="mission-answer-next">로딩 중</strong>
+            </article>
+          </section>
+
+          <section class="mission-pipeline-flow panel" data-anchor="자동화 흐름">
+            <div class="panel-heading">
+              <div>
+                <h3>수집 → 위키화 상태 머신</h3>
+                <p>자동화는 버튼 모음이 아니라 어디까지 갔는지 보여주는 흐름이어야 합니다.</p>
+              </div>
+              <button id="mission-open-pipeline" class="command-button" type="button">Pipeline 열기</button>
+            </div>
+            <div id="mission-flow-steps" class="mission-flow-steps"></div>
+          </section>
+
+          <section class="mission-metrics metric-grid" data-anchor="숫자 현황">
+            <article class="metric">
+              <span>진행 프로젝트</span>
+              <strong id="mission-ongoing">0</strong>
+            </article>
+            <article class="metric">
+              <span>결정 대기</span>
+              <strong id="mission-decisions">0</strong>
+            </article>
+            <article class="metric">
+              <span>핵심문서 후보</span>
+              <strong id="mission-core-docs">0</strong>
+            </article>
+            <article class="metric">
+              <span>수집/위키화</span>
+              <strong id="mission-coverage">0%</strong>
+            </article>
+          </section>
+
+          <div class="mission-layout" data-anchor="프로젝트 운영">
+            <section class="panel mission-project-panel">
+              <div class="panel-heading">
+                <div>
+                  <h3>Project Command Center</h3>
+                  <p>진행 중, 최근 변경, 결정 대기, 핵심문서 우선으로 정렬합니다.</p>
+                </div>
+                <span id="mission-project-count">0건</span>
+              </div>
+              <div id="mission-projects" class="mission-project-list">
+                <div class="spotlite-empty">프로젝트 운영 정보를 불러오는 중입니다.</div>
+              </div>
+            </section>
+
+            <aside class="panel mission-detail-panel">
+              <div class="panel-heading">
+                <div>
+                  <h3 id="mission-detail-title">프로젝트 선택</h3>
+                  <p id="mission-detail-subtitle">카드를 누르면 CEO/PM 브리핑이 표시됩니다.</p>
+                </div>
+              </div>
+              <div class="mission-brief-modes">
+                <button class="command-button" data-brief-mode="CEO Brief" type="button">CEO Brief</button>
+                <button class="command-button" data-brief-mode="PM Action Plan" type="button">PM Action</button>
+                <button class="command-button" data-brief-mode="Customer Follow-up" type="button">고객 후속</button>
+                <button class="command-button" data-brief-mode="Risk Review" type="button">Risk Review</button>
+              </div>
+              <div id="mission-detail" class="mission-detail">
+                <p>오늘 뭘 해야 하는지, 어떤 자료가 새로 들어왔는지, 무엇이 결정 대기인지 여기서 봅니다.</p>
+              </div>
+            </aside>
+          </div>
+
+          <div class="mission-bottom-grid" data-anchor="결정과 문서">
+            <section class="panel">
+              <div class="panel-heading">
+                <h3>결정 대기 큐</h3>
+                <span id="mission-decision-count">0건</span>
+              </div>
+              <div id="mission-decision-queue" class="event-list"></div>
+            </section>
+            <section class="panel">
+              <div class="panel-heading">
+                <h3>핵심문서 활용</h3>
+                <span id="mission-doc-count">0건</span>
+              </div>
+              <div id="mission-core-documents" class="event-list"></div>
+            </section>
+            <section class="panel">
+              <div class="panel-heading">
+                <h3>GLM 사용 로그</h3>
+                <span id="mission-llm-count">0건</span>
+              </div>
+              <div id="mission-llm-usage" class="event-list"></div>
+            </section>
+          </div>
+        </section>
 
         <section id="spotlite-work" class="view">
           <div class="spotlite-hero" data-anchor="오늘">
@@ -750,7 +879,7 @@
           </div>
         </section>
 
-        <section id="chat" class="view active">
+        <section id="chat" class="view">
           <div class="chat-workbench">
             <aside class="chat-project-rail" data-anchor="프로젝트">
               <div class="rail-heading">
@@ -912,9 +1041,9 @@
         <section id="paperclip" class="view">
           <div class="paperclip-hero" data-anchor="개요">
             <div>
-              <span class="eyebrow">Context Bridge</span>
-              <h3>Paperclip 위키/GLM 브리지</h3>
-              <p>Paperclip은 별도 작업장이 아니라 본 위키와 GLM 챗이 더 좋은 컨텍스트를 쓰도록 돕는 브리지입니다.</p>
+              <span class="eyebrow">Paperclip Studio</span>
+              <h3>자료 넣고 결과 받는 스킬 작업대</h3>
+              <p>회의록, 보고서 MD, HWP/HWPX/RHWP 해석, 엑셀 분석, 코드 보조, 근거 검증을 하나의 흐름으로 실행하고 결과는 검토 후 위키 승격합니다.</p>
             </div>
             <button id="paperclip-refresh" class="command-button">Paperclip 새로고침</button>
           </div>
@@ -933,8 +1062,8 @@
             </section>
             <section class="panel paperclip-composer" data-anchor="Task 생성">
               <div class="panel-heading">
-                <h3>컨텍스트 Task 생성</h3>
-                <span>GLM 보조 큐</span>
+                <h3>스킬 Task 생성</h3>
+                <span>미리보기 후 승인</span>
               </div>
               <label>
                 <span>템플릿</span>

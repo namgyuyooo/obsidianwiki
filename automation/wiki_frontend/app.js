@@ -32,6 +32,12 @@ const state = {
   paperclipTemplates: [],
   paperclipTasks: [],
   paperclipEvents: [],
+  mission: null,
+  coreDocuments: [],
+  decisionQueue: [],
+  llmUsage: [],
+  automationSnapshot: null,
+  activeMissionProjectKey: "",
   activeSpace: localStorage.getItem("wiki_ops_active_space") || "work",
   sidebarCollapsed: localStorage.getItem("wiki_ops_sidebar_collapsed") === "true",
   running: [],
@@ -77,6 +83,7 @@ const state = {
 };
 
 const titles = {
+  mission: "Mission Control",
   spotlite: "Spotlite",
   "spotlite-work": "Spotlite Work",
   "spotlite-personal": "Spotlite Personal",
@@ -85,7 +92,7 @@ const titles = {
   wiki: "위키",
   ingest: "지식 주입",
   chat: "GLM 챗",
-  paperclip: "Paperclip",
+  paperclip: "Paperclip Studio",
 };
 
 const settingLabels = {
@@ -484,6 +491,218 @@ function renderEvents(target, events) {
     item.innerHTML = `<strong>${event.command}</strong><small>${event.status}</small><p>${event.detail}</p>`;
     container.appendChild(item);
   });
+}
+
+function missionLineList(items, emptyText) {
+  const values = (items || []).filter(Boolean).slice(0, 4);
+  if (!values.length) return `<p class="mission-muted">${escapeHtml(emptyText)}</p>`;
+  return `<ul>${values.map((item) => `<li>${inlineMarkdown(item)}</li>`).join("")}</ul>`;
+}
+
+function renderMissionProjectCard(project) {
+  const status = project.workflowStatusLabel || project.workflowStatus || "미지정";
+  const docs = (project.coreDocuments || []).slice(0, 3);
+  return [
+    `<article class="mission-project-card ${project.projectKey === state.activeMissionProjectKey ? "active" : ""}" data-mission-project="${escapeHtml(project.projectKey)}">`,
+    `<div class="mission-project-head">`,
+    `<div><strong>${escapeHtml(project.projectLabel || project.projectKey)}</strong><small>${escapeHtml(status)} · 결정대기 ${escapeHtml(project.decisionQueueCount || 0)}건 · ${escapeHtml((project.pages || []).length)}문서</small></div>`,
+    `<button class="command-button" type="button" data-mission-open="${escapeHtml(project.projectKey)}">운영 보기</button>`,
+    `</div>`,
+    `<p>${escapeHtml(project.oneLine || "운영 메모 보강 필요")}</p>`,
+    `<div class="mission-card-grid">`,
+    `<section><span>다음 액션</span>${missionLineList(project.nextActions, "액션 보강 필요")}</section>`,
+    `<section><span>리스크</span>${missionLineList(project.risks, "명시 리스크 없음")}</section>`,
+    `</div>`,
+    docs.length ? `<div class="mission-doc-chips">${docs.map((doc) => `<button type="button" data-mission-doc="${escapeHtml(doc.key)}">${escapeHtml(doc.title)} · ${escapeHtml(doc.statusLabel)}</button>`).join("")}</div>` : `<small class="mission-muted">핵심문서 연결 부족</small>`,
+    `</article>`,
+  ].join("");
+}
+
+function renderMissionDetail(project) {
+  if (!project) {
+    $("#mission-detail-title").textContent = "프로젝트 선택";
+    $("#mission-detail-subtitle").textContent = "카드를 누르면 CEO/PM 브리핑이 표시됩니다.";
+    $("#mission-detail").innerHTML = `<p>오늘 뭘 해야 하는지, 어떤 자료가 새로 들어왔는지, 무엇이 결정 대기인지 여기서 봅니다.</p>`;
+    return;
+  }
+  $("#mission-detail-title").textContent = project.projectLabel || project.projectKey;
+  $("#mission-detail-subtitle").textContent = `${project.workflowStatusLabel || project.workflowStatus || "미지정"} · 마지막 활동 ${project.lastActivityAt?.slice(0, 10) || "알 수 없음"}`;
+  $("#mission-detail").innerHTML = [
+    `<section><h4>현재 업무상태</h4><p>${escapeHtml(project.oneLine || "운영 메모 보강 필요")}</p></section>`,
+    `<section><h4>다음 액션</h4>${missionLineList(project.nextActions, "다음 액션 없음")}</section>`,
+    `<section><h4>리스크/충돌</h4>${missionLineList([...(project.risks || []), ...(project.conflicts || [])], "명시 리스크/충돌 없음")}</section>`,
+    `<section><h4>결정/핵심문서</h4><p>결정 대기 ${escapeHtml(project.decisionQueueCount || 0)}건 · 핵심문서 ${(project.coreDocuments || []).length}건</p></section>`,
+    `<div class="mission-detail-actions">`,
+    project.hubPath ? `<button class="command-button" type="button" data-mission-wiki="${escapeHtml(project.hubPath)}">허브 열기</button>` : "",
+    `<button class="command-button accent" type="button" data-mission-chat="${escapeHtml(project.projectLabel || project.projectKey)}">GLM 업무 챗으로 논의</button>`,
+    `</div>`,
+  ].join("");
+}
+
+function renderMissionControl() {
+  const mission = state.mission || { summary: {}, projects: [] };
+  const summary = mission.summary || {};
+  const coverage = state.coverage || {};
+  const projects = mission.projects || [];
+  const queue = state.decisionQueue.filter((item) => item.status === "pending");
+  const docs = state.coreDocuments;
+  const risky = projects.filter((project) => (project.risks || []).length || (project.conflicts || []).length || project.decisionQueueCount);
+  const actionProject = projects.find((project) => (project.nextActions || []).length) || projects[0];
+  const latestRun = state.automationSnapshot?.running?.[0] || state.automationSnapshot?.runs?.[0] || null;
+  $("#mission-answer-today").textContent = actionProject
+    ? `${actionProject.projectLabel || actionProject.projectKey}: ${(actionProject.nextActions || [actionProject.oneLine || "운영 메모 보강"])[0]}`
+    : "진행 프로젝트/액션 보강 필요";
+  $("#mission-answer-evidence").textContent = docs.length
+    ? `${docs.length}개 핵심문서 후보 · high ${docs.filter((doc) => doc.priority === "high").length}개`
+    : `manifest ${coverage.documentsInManifest || 0}건 · 아직 핵심문서 후보 없음`;
+  $("#mission-answer-pending").textContent = queue.length ? `${queue.length}건 승인/보류 필요` : "결정 대기 없음";
+  $("#mission-answer-risk").textContent = risky.length ? `${risky[0].projectLabel || risky[0].projectKey} 외 ${Math.max(0, risky.length - 1)}건` : "명시 리스크 없음";
+  $("#mission-answer-next").textContent = latestRun?.status === "running"
+    ? `${latestRun.command} 진행 중`
+    : coverage.documentsInManifest ? "위키화/결정대기 큐 검토" : "Drive 수집 성공 경험부터 만들기";
+  renderMissionPipelineFlow(coverage, latestRun);
+  $("#mission-ongoing").textContent = String(summary.ongoing || 0);
+  $("#mission-decisions").textContent = String(summary.decisionQueue || state.decisionQueue.filter((item) => item.status === "pending").length || 0);
+  $("#mission-core-docs").textContent = String(summary.highPriorityDocuments || state.coreDocuments.filter((item) => item.priority === "high").length || 0);
+  $("#mission-coverage").textContent = `${coverage.progressPercent || 0}%`;
+  $("#mission-project-count").textContent = `${(mission.projects || []).length}건`;
+  $("#mission-projects").innerHTML = projects.length
+    ? projects.map(renderMissionProjectCard).join("")
+    : `<div class="spotlite-empty">프로젝트 운영 정보가 아직 없습니다. 진행 중 상태와 Hub 운영 메모를 보강하세요.</div>`;
+  const active = projects.find((item) => item.projectKey === state.activeMissionProjectKey) || projects[0];
+  if (active && !state.activeMissionProjectKey) state.activeMissionProjectKey = active.projectKey;
+  renderMissionDetail(active);
+
+  const queueItems = queue.slice(0, 8);
+  $("#mission-decision-count").textContent = `${queueItems.length}건`;
+  renderEvents("#mission-decision-queue", queueItems.length ? queueItems.map((item) => ({
+    command: item.title || item.id,
+    status: `${item.kind || "decision"} · ${item.projectLabel || item.projectKey || "미분류"}`,
+    detail: `${escapeHtml(String(item.content || "").slice(0, 180))} <button class="inline-delete" data-decision-approve="${escapeHtml(item.id)}">승인</button> <button class="inline-delete" data-decision-hold="${escapeHtml(item.id)}">보류</button>`,
+  })) : [{ command: "결정 대기 없음", status: "clear", detail: "확정 전 후보가 생기면 여기에 표시됩니다." }]);
+
+  const docItems = docs.slice(0, 8);
+  $("#mission-doc-count").textContent = `${docItems.length}건`;
+  renderEvents("#mission-core-documents", docItems.length ? docItems.map((doc) => ({
+    command: doc.title,
+    status: `${doc.priority} · ${doc.statusLabel} · ${doc.projectLabel}`,
+    detail: `score ${doc.score} · ${doc.folderPath || "-"} <button class="inline-delete" data-doc-status="${escapeHtml(doc.key)}" data-status="decision_evidence">결정근거</button> <button class="inline-delete" data-doc-status="${escapeHtml(doc.key)}" data-status="in_use">활용중</button>`,
+  })) : [{ command: "핵심문서 후보 없음", status: "manifest 대기", detail: "Drive manifest가 쌓이면 활용 후보가 표시됩니다." }]);
+
+  const usage = state.llmUsage.slice(0, 6);
+  $("#mission-llm-count").textContent = `${usage.length}건`;
+  renderEvents("#mission-llm-usage", usage.length ? usage.map((item) => ({
+    command: item.feature || "glm",
+    status: `${item.status} · ${item.model || item.provider || "glm"}`,
+    detail: `${item.reason || ""} · ${item.durationMs || 0}ms${item.error ? ` · ${item.error}` : ""}`,
+  })) : [{ command: "GLM 호출 없음", status: "local-first", detail: "로컬 규칙으로 가능한 기능은 GLM 없이 동작합니다." }]);
+
+  document.querySelectorAll("[data-mission-open]").forEach((button) => {
+    button.addEventListener("click", () => {
+      state.activeMissionProjectKey = button.dataset.missionOpen;
+      renderMissionControl();
+    });
+  });
+  document.querySelectorAll("[data-mission-wiki]").forEach((button) => {
+    button.addEventListener("click", () => {
+      document.querySelector("[data-view='wiki']")?.click();
+      openNotionWikiPage(button.dataset.missionWiki);
+    });
+  });
+  document.querySelectorAll("[data-mission-chat]").forEach((button) => {
+    button.addEventListener("click", () => {
+      document.querySelector("[data-view='chat']")?.click();
+      $("#chat-input").value = `${button.dataset.missionChat} 프로젝트의 현재 업무상태, 리스크, 다음 액션을 PM 관점으로 정리하고 오늘 추진할 일을 제안해줘.`;
+      $("#chat-input").focus();
+    });
+  });
+  document.querySelectorAll("[data-decision-approve]").forEach((button) => {
+    button.addEventListener("click", () => resolveDecision(button.dataset.decisionApprove, "approve"));
+  });
+  document.querySelectorAll("[data-decision-hold]").forEach((button) => {
+    button.addEventListener("click", () => resolveDecision(button.dataset.decisionHold, "hold"));
+  });
+  document.querySelectorAll("[data-doc-status]").forEach((button) => {
+    button.addEventListener("click", () => updateDocumentStatus(button.dataset.docStatus, button.dataset.status));
+  });
+}
+
+function renderMissionPipelineFlow(coverage = {}, latestRun = null) {
+  const manifest = Number(coverage.documentsInManifest || 0);
+  const processed = Number(coverage.processedDocuments || 0);
+  const pendingDecisions = state.decisionQueue.filter((item) => item.status === "pending").length;
+  const runningCommand = latestRun?.status === "running" ? latestRun.command : "";
+  const steps = [
+    { id: "target", label: "목표 입력", detail: "한 문장 지시 또는 표적 분석", done: true, active: false },
+    { id: "copy", label: "Drive 수집", detail: runningCommand.includes("rclone-copy") ? "rclone copy 진행 중" : manifest ? "수집 이력 있음" : "P0 병목: 실제 수집 필요", done: manifest > 0, active: runningCommand.includes("rclone-copy") },
+    { id: "manifest", label: "Manifest", detail: `${manifest} docs`, done: manifest > 0, active: runningCommand.includes("build-manifest") },
+    { id: "extract", label: "추출/위키화", detail: `${processed} processed`, done: processed > 0, active: runningCommand === "run" || runningCommand === "full-cycle" },
+    { id: "review", label: "결정 대기", detail: `${pendingDecisions} pending`, done: pendingDecisions === 0 && processed > 0, active: pendingDecisions > 0 },
+    { id: "action", label: "오늘 액션", detail: "Mission Control 반영", done: Boolean(state.mission?.summary?.ongoing), active: false },
+  ];
+  const target = $("#mission-flow-steps");
+  if (!target) return;
+  target.innerHTML = steps.map((step) => [
+    `<article class="${step.done ? "done" : ""} ${step.active ? "active" : ""}">`,
+    `<strong>${escapeHtml(step.label)}</strong>`,
+    `<small>${escapeHtml(step.detail)}</small>`,
+    `</article>`,
+  ].join("")).join("");
+}
+
+async function loadMissionControl() {
+  const workspace = wikiWorkspaceParam();
+  const [mission, docs, queue, llm, coverage, automation] = await Promise.all([
+    api(`/api/projects/command-center?workspace=${encodeURIComponent(workspace)}`),
+    api(`/api/documents/core?workspace=${encodeURIComponent(workspace)}`),
+    api(`/api/decision-queue?workspace=${encodeURIComponent(workspace)}`),
+    api("/api/ops/llm-usage"),
+    api("/api/coverage"),
+    api("/api/automation/status"),
+  ]);
+  if (!mission.mock && !mission.error) state.mission = mission;
+  if (!docs.mock && !docs.error) state.coreDocuments = docs.documents || [];
+  if (!queue.mock && !queue.error) state.decisionQueue = queue.items || [];
+  if (!llm.mock && !llm.error) state.llmUsage = llm.usage || [];
+  if (!coverage.mock && !coverage.error) state.coverage = coverage;
+  if (!automation.mock && !automation.error) state.automationSnapshot = automation;
+  renderMissionControl();
+}
+
+function missionCommandText() {
+  return $("#mission-command-input")?.value.trim() || "";
+}
+
+function missionCommandToChat() {
+  const text = missionCommandText();
+  document.querySelector("[data-view='chat']")?.click();
+  $("#chat-input").value = text || "현재 Mission Control 기준으로 오늘 해야 할 일, 위험 프로젝트, 결정 대기, 다음 액션을 PM/CEO 관점으로 정리해줘.";
+  $("#chat-input").focus();
+}
+
+function missionCommandToPipeline() {
+  const text = missionCommandText();
+  document.querySelector("[data-view='pipeline']")?.click();
+  if (text) $("#drive-instruction-input").value = text;
+  $("#drive-instruction-input")?.focus();
+}
+
+async function resolveDecision(id, action) {
+  const result = await api(`/api/decision-queue/${encodeURIComponent(id)}/resolve`, {
+    method: "POST",
+    body: JSON.stringify({ action, workspace: wikiWorkspaceParam() }),
+  });
+  if (result.error) alert(`결정 처리 실패: ${result.error}`);
+  await loadMissionControl();
+}
+
+async function updateDocumentStatus(key, status) {
+  const result = await api("/api/documents/status", {
+    method: "PATCH",
+    body: JSON.stringify({ key, status }),
+  });
+  if (result.error) alert(`문서 상태 변경 실패: ${result.error}`);
+  await loadMissionControl();
 }
 
 function filteredWikiPages() {
@@ -1725,6 +1944,7 @@ async function refreshCoverage() {
     $("#coverage-details").textContent = "커버리지 API 연결 대기";
     return;
   }
+  state.coverage = payload;
   $("#coverage-label").textContent = payload.label;
   $("#coverage-percent").textContent = `${payload.progressPercent}%`;
   $("#coverage-fill").style.width = `${payload.progressPercent}%`;
@@ -2067,6 +2287,7 @@ function activateView(viewId) {
     : `${workspaceLabel()} · ${titles[actualViewId] || titles[logicalId] || actualViewId}`;
   updateWorkspaceChrome();
   renderSectionAnchors(actualViewId);
+  if (actualViewId === "mission") loadMissionControl();
   if (actualViewId === "spotlite-work" && !state.spotlite.work) loadSpotlite("work");
   if (actualViewId === "spotlite-work") renderSpotliteTemplates("work");
   if (actualViewId === "spotlite-personal") renderPersonalLock();
@@ -2468,6 +2689,9 @@ function renderPromotionResult(target, result) {
   container.querySelector("[data-promotion-download]")?.addEventListener("click", () => {
     downloadText((path || "knowledge-promotion.md").split("/").pop(), result.markdown || "");
   });
+  if (result.paperclipAgent?.length) {
+    container.insertAdjacentHTML("beforeend", `<p class="promotion-agent-note">Paperclip Agent가 검증/위키화 실행 후보 ${result.paperclipAgent.length}건을 백그라운드 큐에 추가했습니다. 실행 전 Paperclip Studio에서 승인하세요.</p>`);
+  }
 }
 
 async function promoteKnowledgeFromIngest() {
@@ -2583,6 +2807,17 @@ async function sendChat() {
       memory: (data) => {
         const label = data.remembered?.memory?.title || data.remembered?.title || "자동 메모리";
         streaming.setStatus(`자동 기억 반영: ${label}`);
+      },
+      paperclip: (data) => {
+        const drafts = data.paperclip?.agentDrafts || [];
+        const autoRuns = data.paperclip?.autoRuns || [];
+        const recommended = data.paperclip?.recommendedTasks || [];
+        const label = [
+          drafts.length ? `agent draft ${drafts.length}` : "",
+          autoRuns.length ? `read skill ${autoRuns.length}` : "",
+          recommended.length ? `approval ${recommended.length}` : "",
+        ].filter(Boolean).join(" · ") || "background ready";
+        streaming.setStatus(`Paperclip Agent: ${label}`);
       },
       done: (data) => {
         finalStatus = data.status || "completed";
@@ -2842,6 +3077,10 @@ document.querySelectorAll("[data-command]").forEach((button) => {
 
 $("#refresh-status").addEventListener("click", refreshStatus);
 $("#wiki-space-select")?.addEventListener("change", (event) => activateWorkspace(event.target.value));
+$("#mission-refresh")?.addEventListener("click", loadMissionControl);
+$("#mission-open-pipeline")?.addEventListener("click", () => document.querySelector("[data-view='pipeline']")?.click());
+$("#mission-command-chat")?.addEventListener("click", missionCommandToChat);
+$("#mission-command-collect")?.addEventListener("click", missionCommandToPipeline);
 $("#spotlite-work-refresh")?.addEventListener("click", () => loadSpotlite("work"));
 $("#spotlite-work-glm-refresh")?.addEventListener("click", () => refreshSpotliteGlm("work"));
 $("#spotlite-personal-refresh")?.addEventListener("click", () => loadSpotlite("personal"));
@@ -3019,7 +3258,7 @@ renderStatus();
 syncSidebarState();
 updateWorkspaceChrome();
 const hashView = location.hash?.slice(1);
-const initialView = hashView && (titles[hashView] || hashView === "spotlite") ? hashView : "spotlite";
+const initialView = hashView && (titles[hashView] || hashView === "spotlite") ? hashView : "mission";
 activateView(initialView);
 renderEvents("#run-list", state.runs);
 renderAutomationState();

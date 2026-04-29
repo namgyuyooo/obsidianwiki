@@ -552,6 +552,256 @@ select {
   align-items: center;
 }
 
+.mission-hero {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 28px;
+  border-radius: 28px;
+  background:
+    radial-gradient(circle at 12% 18%, rgba(255, 255, 255, 0.72), transparent 28%),
+    linear-gradient(135deg, #17211a 0%, #31513f 48%, #d8b76a 100%);
+  color: #fffdf4;
+  box-shadow: 0 24px 60px rgba(24, 32, 25, 0.22);
+}
+
+.mission-hero h3 {
+  margin: 8px 0;
+  font-size: clamp(28px, 4vw, 48px);
+  letter-spacing: -0.05em;
+}
+
+.mission-hero p {
+  max-width: 760px;
+  margin: 0;
+  color: rgba(255, 253, 244, 0.78);
+  line-height: 1.7;
+}
+
+.mission-actions,
+.mission-brief-modes,
+.mission-detail-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.mission-command-box {
+  align-items: stretch;
+  flex: 0 1 420px;
+  flex-direction: column;
+}
+
+.mission-command-box textarea {
+  min-height: 92px;
+  resize: vertical;
+  border: 1px solid rgba(255, 253, 244, 0.28);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.16);
+  color: #fffdf4;
+  padding: 12px 14px;
+  line-height: 1.55;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.18);
+}
+
+.mission-command-box textarea::placeholder {
+  color: rgba(255, 253, 244, 0.62);
+}
+
+.mission-command-box > div {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.mission-answer-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 18px;
+}
+
+.mission-answer-grid article {
+  min-height: 138px;
+  border: 1px solid rgba(28, 36, 30, 0.1);
+  border-radius: 24px;
+  background:
+    linear-gradient(180deg, rgba(255, 253, 248, 0.92), rgba(248, 241, 226, 0.92));
+  padding: 18px;
+  box-shadow: 0 14px 34px rgba(38, 32, 18, 0.07);
+}
+
+.mission-answer-grid span {
+  display: block;
+  color: #73705f;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  text-transform: uppercase;
+}
+
+.mission-answer-grid strong {
+  display: block;
+  margin-top: 12px;
+  color: #162018;
+  font-size: 18px;
+  line-height: 1.45;
+}
+
+.mission-pipeline-flow {
+  margin-top: 18px;
+}
+
+.mission-flow-steps {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.mission-flow-steps article {
+  position: relative;
+  border: 1px solid rgba(34, 45, 37, 0.1);
+  border-radius: 18px;
+  background: #f7f2e8;
+  padding: 14px;
+}
+
+.mission-flow-steps article.done {
+  background: #eef8ec;
+  border-color: rgba(68, 123, 77, 0.22);
+}
+
+.mission-flow-steps article.active {
+  background: #fff6da;
+  border-color: rgba(196, 139, 37, 0.36);
+  box-shadow: 0 10px 24px rgba(196, 139, 37, 0.14);
+}
+
+.mission-flow-steps strong,
+.mission-flow-steps small {
+  display: block;
+}
+
+.mission-flow-steps small {
+  color: #6f705f;
+  margin-top: 6px;
+}
+
+.promotion-agent-note {
+  border: 1px solid rgba(68, 123, 77, 0.2);
+  border-radius: 16px;
+  background: #eff8ec;
+  color: #28442d;
+  margin: 12px 0 0;
+  padding: 12px 14px;
+}
+
+.mission-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) minmax(340px, 0.75fr);
+  gap: 18px;
+  margin-top: 18px;
+}
+
+.mission-bottom-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+  margin-top: 18px;
+}
+
+.mission-project-list {
+  display: grid;
+  gap: 14px;
+}
+
+.mission-project-card {
+  padding: 18px;
+  border: 1px solid rgba(28, 36, 30, 0.1);
+  border-radius: 22px;
+  background: linear-gradient(180deg, #fffdf8, #f5f0e5);
+  box-shadow: 0 14px 34px rgba(38, 32, 18, 0.08);
+}
+
+.mission-project-card.active {
+  outline: 2px solid rgba(84, 125, 91, 0.55);
+  background: linear-gradient(180deg, #fbfff6, #eff8ec);
+}
+
+.mission-project-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.mission-project-head strong,
+.mission-project-head small,
+.mission-card-grid span,
+.mission-muted {
+  display: block;
+}
+
+.mission-project-head strong {
+  font-size: 18px;
+  color: #18221b;
+}
+
+.mission-project-head small,
+.mission-muted,
+.mission-card-grid span {
+  color: #6d735f;
+  font-size: 12px;
+}
+
+.mission-card-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.mission-card-grid section,
+.mission-detail section {
+  padding: 12px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.66);
+}
+
+.mission-card-grid ul,
+.mission-detail ul {
+  margin: 8px 0 0;
+  padding-left: 18px;
+  line-height: 1.55;
+}
+
+.mission-doc-chips {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+
+.mission-doc-chips button {
+  border: 1px solid rgba(84, 125, 91, 0.25);
+  border-radius: 999px;
+  background: #f7fbf2;
+  color: #2c442f;
+  padding: 6px 10px;
+  font-size: 12px;
+}
+
+.mission-detail {
+  display: grid;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.mission-detail h4 {
+  margin: 0 0 6px;
+}
+
 .pipeline-hero h3,
 .pipeline-hero p {
   margin: 0;
@@ -3065,6 +3315,9 @@ pre {
   }
 
   .metric-grid,
+  .mission-layout,
+  .mission-bottom-grid,
+  .mission-card-grid,
   .panel-grid,
   .pipeline-steps,
   .spotlite-summary,
@@ -3106,7 +3359,8 @@ pre {
     flex-direction: column;
   }
 
-  .pipeline-hero {
+  .pipeline-hero,
+  .mission-hero {
     align-items: stretch;
     flex-direction: column;
   }
