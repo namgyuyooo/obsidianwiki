@@ -40,3 +40,13 @@ source: "public Slack evidence sweep (2024-04-21 to 2026-04-21)"
   - [[Change_Log]]
 - 비고: 파일 본문은 미열람, 제목과 메시지 맥락 기준으로만 정리
 
+## Update - 2026-04-29
+
+- 문서명: (일반분과)_R-20240318-021643 _픽셀_알티엠.pptx
+- 형식: pptx
+- Drive: RTM_YNG
+- 폴더: /RTM-기타
+- 수정일: 1712824534
+- 로컬 경로: `/Users/rtm/Documents/GitHub/Obsidian_wiki/obsidianwiki/automation/drive_wikify/runtime/mirror_test/RTM-기타/(일반분과)_R-20240318-021643 _픽셀_알티엠.pptx`
+- 프로젝트 판정: `update_existing_project`
+- 판정 근거: Matched explicit alias from file name or extracted headings.

@@ -1,0 +1,65 @@
+drive_wikify:
+  wiki_root: obsidian/Wiki
+  l1_memory_root: obsidian/L1_memory
+  coverage_tracker: obsidian/Wiki/Common/Drive_Wikify_Coverage_Tracker.md
+  log_page: obsidian/Wiki/log.md
+  allowed_file_types:
+    - hwp
+    - hwpx
+    - pdf
+    - docx
+    - pptx
+    - gdoc
+    - gslides
+  batch:
+    max_folders_per_run: 3
+    max_files_per_folder: 50
+    min_files_per_batch: 20
+    max_fetch_docs: 3
+  extraction:
+    chunk_size_min_chars: 8000
+    chunk_size_max_chars: 15000
+    require_full_text_for:
+      - hwp
+      - hwpx
+      - pdf
+      - docx
+      - pptx
+    parser_priority:
+      hwp:
+        - rhwp
+        - text_fallback
+      hwpx:
+        - rhwp
+        - unzip_xml
+      pdf:
+        - native_text
+        - ocr
+      docx:
+        - docx_xml
+      pptx:
+        - pptx_xml
+        - slide_notes
+  project_decision:
+    create_new_project_if:
+      - customer_differs
+      - program_differs
+      - year_differs
+      - participant_set_differs
+      - budget_differs_materially
+      - equipment_or_process_differs
+    branch_review_threshold: 2
+    auto_create_project_space: true
+  validation:
+    require_sources: true
+    require_evidence_log: true
+    require_change_log: true
+    require_conflict_register: true
+    require_project_decision: true
+    require_branch_decision: true
+    require_chunk_summaries: true
+  runtime:
+    state_dir: automation/drive_wikify/runtime
+    lock_file: automation/drive_wikify/runtime/drive_wikify.lock
+    cleanup_processed_files: true
+    deletion_log: automation/drive_wikify/runtime/deletion_log.jsonl

@@ -1,0 +1,47 @@
+# Binary document files
+*.hwp
+*.hwpx
+*.pptx
+*.docx
+*.doc
+*.xlsx
+*.xls
+*.pdf
+
+# Image files
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.bmp
+*.tiff
+*.svg
+*.ico
+*.webp
+
+# Other binary files
+*.zip
+*.tar
+*.tar.gz
+*.rar
+*.7z
+
+# Obsidian user-specific files
+.obsidian/workspace.json
+.obsidian/graph.json
+.obsidian/core-plugins.json
+.obsidian/community-plugins.json
+
+# System files
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# Log files
+*.log
+
+# Temporary files
+*.tmp
+*.temp
+~$*

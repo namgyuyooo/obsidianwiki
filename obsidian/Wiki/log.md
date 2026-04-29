@@ -1,13 +1,117 @@
 ---
 type: log
 created: 2026-04-21
-updated: 2026-04-27
+updated: 2026-04-29
 source: "Global wiki operations log"
 ---
 
 # Wiki Log
 
 이 파일은 위키 운영의 append-only 로그입니다.
+
+## 2026-04-29
+- [[Wiki/Common/Search_Evidence_Deletion_Registry]]: 사용자 요청에 따른 검색 증적 삭제 실제 근거 링크와 프로젝트 연결 레지스트리 생성
+- PSK_Project/hub.md, RTM_YNG_Project_Index_2026-04-21.md: 검색 증적 삭제 레지스트리 링크 추가
+- Wiki/index.md: 검색 증적 삭제 레지스트리를 공통 지식 섹션에 등록
+
+## [2026-04-29] structure | Drive batch wikify operating layer for GLM and 오픈클로
+
+- 작업 범위: 구글 드라이브 전수 위키화를 과부하 없이 이어가기 위한 배치형 운영 문서와 상태 추적 문서 추가
+- 생성 문서:
+  - `Common/Drive_Wikify_Batch_Operating_Model.md`
+  - `Common/Drive_Wikify_Coverage_Tracker.md`
+  - `Common/Drive_Wikify_Model_Prompt_Set.md`
+- 갱신 문서:
+  - `Common/hub.md`
+  - `index.md`
+  - `log.md`
+- 핵심 판단:
+  - Drive 조회와 모델 해석을 분리하고, 모델은 `GLM` 분류기와 `오픈클로` 원문 추출기로 나눠 쓴다.
+  - 전수 탐색은 `Shared Drive -> 폴더 큐 -> 대표본 선별 -> 위키 반영`의 작은 배치로만 진행한다.
+  - 중간 실패나 quota 이후에도 이어갈 수 있도록 `Coverage_Tracker`를 공용 커서 문서로 사용한다.
+
+## [2026-04-29] structure | Drive wikify closed-loop automation design
+
+- 작업 범위: `수집 -> 위키화 -> 로그 -> 충돌/규칙 검수 -> 재구조화 -> 대기 -> 재수집` 루프를 자동화하기 위한 상태 머신 정의
+- 생성 문서:
+  - `Common/Drive_Wikify_Automation_Loop.md`
+- 갱신 문서:
+  - `Common/Drive_Wikify_Batch_Operating_Model.md`
+  - `Common/Drive_Wikify_Model_Prompt_Set.md`
+  - `Common/hub.md`
+  - `index.md`
+  - `log.md`
+- 핵심 판단:
+  - `오픈클로`는 전수 수집기보다 오케스트레이터에 가깝게 쓰는 편이 안정적이다.
+  - `GLM`은 메타데이터 triage, `오픈클로`는 Evidence/Conflict 추출, 검수 단계는 별도 게이트로 분리한다.
+  - 자동화는 큐 문서와 append-only 로그를 기준으로 재개 가능해야 한다.
+
+## [2026-04-29] ingest | Drive batch test on 2026년도 전자부품산업기술개발
+
+- 작업 범위: `2026년도 전자부품산업기술개발` Shared Drive에 대해 실제 소배치 테스트 수행
+- 확인한 경로:
+  - Drive 루트
+  - `0. 최종_제출서류`
+  - `1. 알티엠`
+  - 루트 총괄 스프레드시트 `2026년도 전자부품산업기술개발`
+- 갱신 문서:
+  - `Common/Drive_Wikify_Coverage_Tracker.md`
+  - `Common/RTM_GovRnD_2026_PSK_디지털혁신중견기업육성사업.md`
+  - `log.md`
+- 실제 확인 결과:
+  - 루트에서 `0. 최종_제출서류`, `2. 회의록`, `1. 지원`, 운영 스프레드시트 2건을 확인
+  - `0. 최종_제출서류` 아래에서 `1. 알티엠`, `2. S2W`, `3. ETRI`, `4. 성균관대학교`, `1. (필수)연구개발계획서`를 확인
+  - 총괄 스프레드시트 fetch 결과 참여기관, 연락처, 문서 작성 분담표, 제출서류 체크리스트, 역할/범위 메모, 예산표가 한 파일에 혼재함을 확인
+  - 예산 총액은 `5,253,730`으로 읽히는 블록과 `5,247,139 / 5,237,139`로 읽히는 블록이 함께 보여 상충 후보로 보류
+- 후속 작업:
+  - 기관별 실제 계획서 원문 또는 통합본 fetch
+  - 총액 상충 여부 재검증
+  - 이 폴더를 `운영 허브 + 제출 패키지` 복합 구조로 재분류할지 판단
+
+## [2026-04-29] structure | Separate automation workspace from wiki content
+
+- 작업 범위: Drive 위키화 자동화 코드를 위키 본문 계층과 분리하기 위한 작업공간 스캐폴딩 추가
+- 생성 경로:
+  - `automation/README.md`
+  - `automation/drive_wikify/README.md`
+  - `automation/drive_wikify/config/pipeline.example.yaml`
+  - `automation/drive_wikify/runtime/README.md`
+  - `automation/drive_wikify/src/README.md`
+- 갱신 문서:
+  - `Common/Drive_Wikify_Automation_Loop.md`
+  - `Common/Drive_Wikify_Batch_Operating_Model.md`
+  - `log.md`
+- 핵심 판단:
+  - `obsidian/Wiki/`는 지식/근거/기록 계층으로 유지한다.
+  - 실제 실행 코드는 `automation/drive_wikify/` 아래에만 둔다.
+  - 위키 문서는 코드가 아니라 자동화의 설계서와 실행 결과 저장소 역할을 맡는다.
+
+## [2026-04-29] structure | Multi-format extraction and project branching rules
+
+- 작업 범위: 자동화 파이프라인에 `rhwp`, `pdf`, `docx`, `pptx` 추출 의무와 신규 프로젝트/프로젝트 분기 판단 규칙 반영
+- 갱신 문서:
+  - `Common/Drive_Wikify_Batch_Operating_Model.md`
+  - `Common/Drive_Wikify_Automation_Loop.md`
+  - `automation/drive_wikify/config/pipeline.example.yaml`
+  - `automation/drive_wikify/src/README.md`
+  - `log.md`
+- 핵심 판단:
+  - 파일 존재 기록만으로는 충분하지 않고, `hwp/hwpx/pdf/docx/pptx` 모두 실제 본문 추출 대상이어야 한다.
+  - 프로젝트로 정의될 수 있는 문서군이면 신규 프로젝트 위키 생성까지 자동화 범위에 포함한다.
+  - 중복 또는 유사 내용은 자동 병합하지 않고 `동일 프로젝트 업데이트`와 `별도 프로젝트 분기`를 먼저 판정해야 한다.
+
+## [2026-04-29] structure | Resume-friendly batching and chunked LLM processing
+
+- 작업 범위: Drive rate limit 대응을 위해 `재개 가능한 배치 처리`와 `청크 -> 파일 -> 프로젝트` 승격 규칙 반영
+- 갱신 문서:
+  - `Common/Drive_Wikify_Batch_Operating_Model.md`
+  - `Common/Drive_Wikify_Automation_Loop.md`
+  - `automation/drive_wikify/config/pipeline.example.yaml`
+  - `automation/drive_wikify/README.md`
+  - `log.md`
+- 핵심 판단:
+  - Google Drive rate limit 환경에서는 빠른 완료보다 중단 후 재개 가능한 배치 설계가 더 중요하다.
+  - LLM 입력은 1배치 20~50개 파일, 1파일 8,000~15,000자 청크 기준으로 자르고 `청크 요약 -> 파일 요약 -> 프로젝트 위키 반영`으로 승격한다.
 
 ## [2026-04-27] structure | RTM government RnD folder-wide wiki layer
 

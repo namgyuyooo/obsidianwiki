@@ -1,7 +1,7 @@
 ---
 type: index
 created: 2026-04-21
-updated: 2026-04-27
+updated: 2026-04-29
 source: "Global wiki index initialized from existing project hubs"
 ---
 
@@ -28,6 +28,10 @@ source: "Global wiki index initialized from existing project hubs"
 - [[Wiki/Common/Wiki_Ingest_Operating_Model]]: 인제스트 운영 원칙
 - [[Wiki/Common/Wiki_Ingest_Templates]]: 핵심 문서 템플릿
 - [[Wiki/Common/Wiki_Ingest_Prompt_Set]]: 작업별 프롬프트 세트
+- [[Wiki/Common/Drive_Wikify_Batch_Operating_Model]]: Drive 전수 위키화용 배치 운영 모델
+- [[Wiki/Common/Drive_Wikify_Automation_Loop]]: 수집부터 대기까지 반복하는 자동 루프 설계
+- [[Wiki/Common/Drive_Wikify_Coverage_Tracker]]: Drive 폴더 큐와 재개 상태 추적기
+- [[Wiki/Common/Drive_Wikify_Model_Prompt_Set]]: `GLM` + `오픈클로` 모델 분업 프롬프트
 - [[Wiki/Common/Government_RnD_Reusable_Wiki_Hub]]: 정부 R&D 과제 재활용용 공통 표현, 역할, 자료 체크리스트 허브
 - [[Wiki/Common/RTM_Government_RnD_Folder_Index]]: RTM 정부과제 폴더 단위 위키 인덱스
 - [[Wiki/Common/RTM_Government_RnD_Appeal_Bank]]: 알티엠 정부과제용 어필 포인트 뱅크
@@ -94,6 +98,7 @@ Drive 소스 기반으로 구축된 RTM_YNG 계열 프로젝트 페이지 (L1_me
 - [[Wiki/Common/RTM_Government_RnD_Appeal_Bank]]: 정부과제 본문용 알티엠 어필 포인트 자산
 - [[Wiki/Common/RTM_Government_RnD_Reference_Bank]]: 정부과제 유사실적/사업화용 알티엠 레퍼런스 자산
 - [[Wiki/Common/RTM_Government_RnD_Complete_Template]]: 정부과제 초안 작성용 알티엠 완성본 템플릿
+- [[Wiki/Common/Search_Evidence_Deletion_Registry]]: 검색 증적 삭제 실제 근거 링크와 프로젝트 연결 레지스트리
 
 ## Usage Notes
 

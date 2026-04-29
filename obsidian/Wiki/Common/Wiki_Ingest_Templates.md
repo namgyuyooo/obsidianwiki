@@ -1,7 +1,7 @@
 ---
 type: knowledge
 created: 2026-04-21
-updated: 2026-04-21
+updated: 2026-04-29
 source: "2026-04-21 ingest redesign discussion"
 ---
 
@@ -56,7 +56,7 @@ source: "2026-04-21 ingest redesign discussion"
 - 비고: 초기 가정 확인용
 ```
 
-## Evidence Log.md
+## Evidence_Log.md
 
 ```markdown
 # Evidence Log
@@ -75,7 +75,7 @@ source: "2026-04-21 ingest redesign discussion"
   - 본문 KPI 섹션
 - Linked Pages:
   - [[KPI]]
-  - [[Conflict Register]]
+  - [[Conflict_Register]]
 
 ### Evidence 02
 - Source: 2026년 연구개발계획서 초안
@@ -89,10 +89,10 @@ source: "2026-04-21 ingest redesign discussion"
   - 기대효과 섹션
 - Linked Pages:
   - [[KPI]]
-  - [[Conflict Register]]
+  - [[Conflict_Register]]
 ```
 
-## Conflict Register.md
+## Conflict_Register.md
 
 ```markdown
 # Conflict Register
@@ -104,7 +104,7 @@ source: "2026-04-21 ingest redesign discussion"
   - 문서 B: 목표 1.5시간
 - 관련 출처:
   - [[Sources]]
-  - [[Evidence Log]]
+  - [[Evidence_Log]]
 - 현재 판단:
   - 공식 제출 수치 단일화 필요
 - 상태:
@@ -114,7 +114,7 @@ source: "2026-04-21 ingest redesign discussion"
   - [[Project Overview]]
 ```
 
-## Change Log.md
+## Change_Log.md
 
 ```markdown
 # Change Log

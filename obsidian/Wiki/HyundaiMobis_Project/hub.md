@@ -18,3 +18,4 @@ source: "public Slack evidence sweep (2024-04-21 to 2026-04-21)"
 - [[Wiki/HyundaiMobis_Project/Change_Log]]
 - [[Wiki/HyundaiMobis_Project/Conflict_Register]]
 - [[Wiki/HyundaiMobis_Project/Action_Items]]
+- [[Wiki/Common/Search_Evidence_Deletion_Registry]]: 검색 증적 삭제 실제 근거 링크와 프로젝트 연결 레지스트리

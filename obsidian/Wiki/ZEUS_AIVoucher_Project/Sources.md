@@ -39,3 +39,24 @@ source: "public Slack evidence sweep (2024-04-21 to 2026-04-21)"
   - [[Change_Log]]
 - 비고: 파일 본문은 미열람, 제목과 메시지 맥락 기준으로만 정리
 
+## Update - 2026-04-29
+
+- 문서명: 2.최종보고서_(주)제우스_매출기반 .hwpx
+- 형식: hwpx
+- Drive: RTM_YNG
+- 폴더: /RTM-기타
+- 수정일: 1733202319
+- 로컬 경로: `/Users/rtm/Documents/GitHub/Obsidian_wiki/obsidianwiki/automation/drive_wikify/runtime/mirror_test/RTM-기타/2.최종보고서_(주)제우스_매출기반 .hwpx`
+- 프로젝트 판정: `update_existing_project`
+- 판정 근거: Matched explicit alias from file name or extracted headings.
+
+## Update - 2026-04-29
+
+- 문서명: 2024년 AI바우처 지원사업 중간보고서_제우스,알티엠.pdf
+- 형식: pdf
+- Drive: RTM_YNG
+- 폴더: /RTM-기타
+- 수정일: 1724034425
+- 로컬 경로: `/Users/rtm/Documents/GitHub/Obsidian_wiki/obsidianwiki/automation/drive_wikify/runtime/mirror_test/RTM-기타/2024년 AI바우처 지원사업 중간보고서_제우스,알티엠.pdf`
+- 프로젝트 판정: `update_existing_project`
+- 판정 근거: Matched explicit alias from file name or extracted headings.

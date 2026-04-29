@@ -1,7 +1,7 @@
 ---
 type: hub
 created: 2026-04-21
-updated: 2026-04-21
+updated: 2026-04-29
 source: "산업현장문제해결형산업AI에이전트기술개발(R&D) 폴더 탐색"
 ---
 

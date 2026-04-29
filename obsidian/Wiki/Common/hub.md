@@ -26,6 +26,10 @@ source: ""
 - [[Wiki/Common/Wiki_Ingest_Operating_Model]]: 구조 관리와 실제 내용 보존을 함께 다루는 운영 원칙
 - [[Wiki/Common/Wiki_Ingest_Templates]]: Sources, Evidence Log, Conflict Register, Change Log 템플릿
 - [[Wiki/Common/Wiki_Ingest_Prompt_Set]]: 상황별 인제스트 프롬프트 모음
+- [[Wiki/Common/Drive_Wikify_Batch_Operating_Model]]: 구글 드라이브 전수 위키화를 위한 배치형 운영 모델
+- [[Wiki/Common/Drive_Wikify_Automation_Loop]]: `수집 -> 위키화 -> 로그 -> 검수 -> 재구조화 -> 대기` 자동 루프 설계
+- [[Wiki/Common/Drive_Wikify_Coverage_Tracker]]: 폴더 큐, 커서, 재시도 상태를 남기는 배치 추적기
+- [[Wiki/Common/Drive_Wikify_Model_Prompt_Set]]: `GLM`과 `오픈클로`를 분리 사용하는 프롬프트 계약
 - [[Wiki/Common/Government_RnD_Reusable_Wiki_Hub]]: 정부 R&D 과제용 공통 자료, 표현 자산, 위키 운영 규칙 허브
 - [[Wiki/Common/RTM_Government_RnD_Folder_Index]]: RTM 정부과제 폴더 단위 위키 인덱스
 - [[Wiki/Common/RTM_YNG_Company_Profile_2026-04-21]]: PPTX/HWP/HWPX까지 반영한 RTM 회사 공통정보 허브

@@ -36,6 +36,13 @@ L1 memory snapshots are compact context loaders for new sessions — not source 
 
 When starting wiki work, read `obsidian/Wiki/index.md` first, then drill into relevant pages.
 
+## Personal vs Work Separation
+
+- Keep personal records out of the RTM work wiki by default.
+- This repository is the canonical work/RTM knowledge base, not a personal journal or private life log.
+- If an event has both personal and work implications, record only the work-facing facts in the relevant RTM project space and keep personal context outside this repository.
+- There is currently no personal record migration to perform; personal structure should remain empty unless the human explicitly creates a separate personal vault or namespace.
+
 ## L1 Memory Workflow
 
 `obsidian/L1_memory/` contains one file per project: `{ProjectName}.md`
@@ -100,6 +107,20 @@ When a new source arrives:
 
 Prefer append-style updates over destructive rewrites when historical context matters.
 
+## Event Capture and Promotion
+
+When a new work event appears, promote it through the wiki in this order:
+
+1. Capture the raw event in the appropriate inbox or source note.
+2. Register provenance in `Sources.md`.
+3. Extract facts, quotes, numbers, decisions, and constraints into `Evidence_Log.md`.
+4. Register contradictions or unresolved mismatches in `Conflict_Register.md`.
+5. Record actual document/wiki changes in `Change_Log.md`.
+6. Update synthesized pages such as `Project_Overview.md`, `Decisions.md`, `Risks.md`, `KPI.md`.
+7. Refresh the relevant `obsidian/L1_memory/{ProjectName}.md`.
+
+Do not jump straight from a new event to a cleaned-up conclusion if source facts, conflicts, or version changes need to remain visible.
+
 ## Query Workflow
 
 When answering a question using the wiki:
@@ -150,6 +171,17 @@ Most project folders should keep these pages available:
 - optional specialized pages such as `KPI.md`, `Equipment.md`, `Architecture.md`
 
 And a corresponding `obsidian/L1_memory/{ProjectName}.md` must exist.
+
+## Canonical Project Evidence Files
+
+Use underscore file names for project evidence documents:
+
+- `Sources.md`
+- `Evidence_Log.md`
+- `Conflict_Register.md`
+- `Change_Log.md`
+
+Avoid creating parallel space-named files such as `Evidence Log.md`, `Conflict Register.md`, or `Change Log.md` inside project folders. If older instructions mention space-named variants, treat them as conceptual labels and use the underscore file names above.
 
 ## Practical Default
 

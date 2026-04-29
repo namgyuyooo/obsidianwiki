@@ -26,3 +26,4 @@ PSK 프로젝트의 개요 페이지입니다. 주요 문서:
 - [[Wiki/PSK_Project/Precia]]: milestone, 데이터 요구량, threshold 리스크
 - [[Wiki/PSK_Project/Temperature_Prediction_Task]]: PSK CTD팀과의 온도예측task 초기 논의와 IR 센서 요구사항 청취
 - [[Wiki/Common/MOCVD_Recipe]]: 여러 프로젝트에서 공통으로 사용하는 MOCVD 레시피
+- [[Wiki/Common/Search_Evidence_Deletion_Registry]]: 검색 증적 삭제 실제 근거 링크와 프로젝트 연결 레지스트리

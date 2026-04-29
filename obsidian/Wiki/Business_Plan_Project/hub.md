@@ -1,7 +1,7 @@
 ---
 type: hub
 created: 2026-04-20
-updated: 2026-04-27
+updated: 2026-04-29
 source: ""
 ---
 
@@ -21,3 +21,10 @@ source: ""
 - [[Wiki/Business_Plan_Project/Appendix]]: 부록에 포함할 정보
 - [[Wiki/Business_Plan_Project/Writing_Guidelines]]: 작성 방침과 패턴 요약
 - [[Wiki/Common/Government_RnD_Reusable_Wiki_Hub]]: 정부 R&D 과제용 공통 문장 자산과 역할/자료 가이드
+
+## Evidence Operations
+
+- [[Wiki/Business_Plan_Project/Sources]]: 출처 목록
+- [[Wiki/Business_Plan_Project/Evidence_Log]]: 핵심 증적 로그
+- [[Wiki/Business_Plan_Project/Conflict_Register]]: 충돌 및 확인 필요 항목
+- [[Wiki/Business_Plan_Project/Change_Log]]: 변경 이력

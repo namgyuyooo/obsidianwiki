@@ -51,6 +51,7 @@ tags:
 - [[RTM_YNG_Change_Log_2026-04-21]]
 - [[RTM_YNG_Conflict_Register_2026-04-21]]
 - [[RTM_YNG_Wiki_Build_Plan_2026-04-21]]
+- [[Wiki/Common/Search_Evidence_Deletion_Registry]]: 검색 증적 삭제 실제 근거 링크와 프로젝트 연결 레지스트리
 
 ## Folder Wiki Layer
 

@@ -1,7 +1,7 @@
 ---
 type: knowledge
 created: 2026-04-21
-updated: 2026-04-21
+updated: 2026-04-29
 source: "2026-04-21 ingest redesign discussion"
 ---
 
@@ -24,7 +24,7 @@ source: "2026-04-21 ingest redesign discussion"
   - 출처 위치
 - 추천 문서
   - `Sources.md`
-  - `Evidence Log.md`
+  - `Evidence_Log.md`
   - `Document Notes/문서명.md`
 
 ## 2. 정제 지식 계층
@@ -51,9 +51,22 @@ source: "2026-04-21 ingest redesign discussion"
   - 이전 안 대비 변경사항
   - 확정/미확정 구분
 - 추천 문서
-  - `Change Log.md`
-  - `Conflict Register.md`
+  - `Change_Log.md`
+  - `Conflict_Register.md`
   - 기존 문서 하단 업데이트 블록
+
+## 신규 이벤트 처리 순서
+
+새로운 업무 이벤트가 생기면 바로 정제 문서에 결론을 쓰지 않고 아래 순서로 승격합니다.
+
+1. 원본 이벤트를 캡처합니다.
+2. 관련 파일, 메모, Drive 경로, 회의록을 `Sources.md`에 등록합니다.
+3. 실제 문장, 수치, 결정사항, 제약 조건을 `Evidence_Log.md`에 추출합니다.
+4. 기존 값과 다른 수치, 일정, 요구사항은 `Conflict_Register.md`에 보류 상태로 등록합니다.
+5. 실제 위키 문서나 보고서를 수정했으면 `Change_Log.md`에 기록합니다.
+6. 프로젝트 상태, 핵심 결정, 미해결 이슈가 바뀌면 `obsidian/L1_memory/{ProjectName}.md`를 갱신합니다.
+
+개인 기록은 이 업무 위키에 저장하지 않습니다. 개인/업무가 섞인 이벤트는 업무상 필요한 사실만 프로젝트 문서에 남기고, 개인 맥락은 별도 개인 공간에 둡니다.
 
 ## 운영 원칙
 
@@ -89,7 +102,7 @@ source: "2026-04-21 ingest redesign discussion"
   - 문서 내용의 완결성
 - 파일명, 버전번호, 수정일 중 하나만으로 대표본을 확정하지 않습니다.
 - `hwp`와 `hwpx`를 형식상 이유로 후보군에서 제외하지 않습니다.
-- 대표본을 먼저 읽고, 비교본을 읽어 변경사항을 `Change Log`와 `Conflict Register`에 기록합니다.
+- 대표본을 먼저 읽고, 비교본을 읽어 변경사항을 `Change_Log`와 `Conflict_Register`에 기록합니다.
 
 ## 추천 프로젝트 구조
 
@@ -111,9 +124,9 @@ Wiki/
     ├── Decisions.md
     ├── Risks.md
     ├── Sources.md
-    ├── Evidence Log.md
-    ├── Change Log.md
-    ├── Conflict Register.md
+    ├── Evidence_Log.md
+    ├── Change_Log.md
+    ├── Conflict_Register.md
     ├── Market Analysis.md
     ├── Target Customer.md
     ├── Revenue Model.md

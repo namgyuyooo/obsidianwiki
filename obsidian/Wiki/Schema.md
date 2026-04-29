@@ -1,7 +1,7 @@
 ---
 type: schema
 created: 2026-04-20
-updated: 2026-04-21
+updated: 2026-04-29
 source: ""
 ---
 
@@ -18,6 +18,7 @@ source: ""
 - 허브(hub) 페이지는 해당 네임스페이스의 하위 페이지 목록을 포함합니다.
 - 모든 페이지는 적어도 하나의 들어오는 링크와 나가는 링크를 갖도록 노력합니다.
 - 민감한 자격증명(비밀번호, 토큰 등)은 wiki에 저장하지 않습니다.
+- 개인 기록은 RTM 업무 위키에 저장하지 않습니다. 개인/업무가 섞인 이벤트는 업무상 필요한 사실만 프로젝트 문서에 남기고 개인 맥락은 별도 개인 공간에 둡니다.
 
 ## Repository Layers
 
@@ -56,14 +57,25 @@ source: ""
 
 - 각 프로젝트에는 아래 문서를 기본 관리 대상으로 둡니다.
   - `Sources.md`
-  - `Evidence Log.md`
-  - `Change Log.md`
-  - `Conflict Register.md`
+  - `Evidence_Log.md`
+  - `Change_Log.md`
+  - `Conflict_Register.md`
 - 문서 단위 원문 메모가 필요하면 `Document Notes/` 아래에 `YYYY-MM-DD_문서명.md` 형식으로 저장합니다.
 - `Sources.md`는 문서 메타데이터와 연결 문서를 관리합니다.
-- `Evidence Log.md`는 핵심 문장, 수치, 산식, 결정 이유, 제약 조건의 발췌를 보관합니다.
-- `Conflict Register.md`는 상충 수치, 상충 주장, 미확정 판단을 보관합니다.
-- `Change Log.md`는 위키 구조 변경, 복구 이력, 핵심 업데이트를 기록합니다.
+- `Evidence_Log.md`는 핵심 문장, 수치, 산식, 결정 이유, 제약 조건의 발췌를 보관합니다.
+- `Conflict_Register.md`는 상충 수치, 상충 주장, 미확정 판단을 보관합니다.
+- `Change_Log.md`는 위키 구조 변경, 복구 이력, 핵심 업데이트를 기록합니다.
+- `Evidence Log.md`, `Conflict Register.md`, `Change Log.md` 같은 space 방식 파일명은 새로 만들지 않습니다.
+
+## Event Capture and Promotion
+
+- 새 업무 이벤트는 바로 결론 문서로 정리하지 않고 아래 순서로 승격합니다.
+  - 원본 이벤트 캡처
+  - `Sources.md`에 출처 등록
+  - `Evidence_Log.md`에 사실, 원문, 수치, 결정사항 추출
+  - 충돌 또는 미확정 값은 `Conflict_Register.md`에 등록
+  - 실제 문서 수정은 `Change_Log.md`에 기록
+  - 프로젝트 상태가 바뀌면 `obsidian/L1_memory/{ProjectName}.md` 갱신
 
 ## Update Block Convention
 
@@ -77,7 +89,7 @@ source: ""
 - Evidence:
   - "유지보수 평균소요시간 4시간, 목표 30% 감소"
 - Impact:
-  - [[KPI]], [[Conflict Register]] 갱신 필요
+  - [[KPI]], [[Conflict_Register]] 갱신 필요
 - Status:
   - 확인 필요
 ```
@@ -88,4 +100,4 @@ source: ""
 - 원문 전체를 복붙하지 않더라도, 맥락을 잃지 않을 정도의 발췌는 반드시 남깁니다.
 - 수치 원문, 계산식, 결정 이유, 제약 조건은 가능한 한 원문 표현을 유지합니다.
 - 출처 위치를 알 수 있다면 페이지, 섹션, 슬라이드 번호까지 남깁니다.
-- 파일명과 본문 제목이 어긋나거나 문서 내용이 섞인 경우, 복구 사실을 `Change Log.md`에 기록합니다.
+- 파일명과 본문 제목이 어긋나거나 문서 내용이 섞인 경우, 복구 사실을 `Change_Log.md`에 기록합니다.
