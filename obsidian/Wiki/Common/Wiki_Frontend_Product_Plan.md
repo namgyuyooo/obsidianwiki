@@ -86,7 +86,7 @@ source: "Local wiki frontend product and architecture plan"
 - source/evidence/conflict/change log 빠른 탭
 - Obsidian wikilink 후보
 
-### 3. Knowledge Ingest Inbox
+### 3. 한국어 지식 주입 Inbox
 
 입력:
 
@@ -97,7 +97,7 @@ source: "Local wiki frontend product and architecture plan"
 
 처리:
 
-- GLM digest
+- 한국어 GLM digest
 - 프로젝트 판정
 - evidence 후보
 - conflict 후보
@@ -110,12 +110,13 @@ source: "Local wiki frontend product and architecture plan"
 - `Change_Log.md` draft
 - `Conflict_Register.md` draft
 - L1 memory update 후보
+- 모든 사용자 검토용 출력은 한국어로 작성
 
 ### 4. LLM Digest Review
 
 GLM API가 맡을 일:
 
-- 긴 입력의 첫 digest
+- 긴 입력의 첫 한국어 digest
 - 신규/기존 프로젝트 판정
 - 중복 프로젝트 후보 비교
 - 충돌 가능성 분류
@@ -137,11 +138,15 @@ GLM API가 맡을 일:
 - 사용자는 메인 LLM으로 GLM API를 사용한다.
 - digest와 chat을 같은 API 계층으로 묶으면 운영 설정과 비용 관리가 단순하다.
 - 위키 검색 결과를 context로 넣어 RAG-lite 방식으로 먼저 운영할 수 있다.
-- 프로젝트별 지침, 메모리, 최근 대화 이력을 저장해 GPT/Claude식 작업실 구조로 운영한다.
+- 전역 지침과 프로젝트별 특수 지침을 분리해 GPT/Claude식 작업실 구조로 운영한다.
+- 날짜, 테스트, 결정, 변경, 선호, 규칙처럼 기억할 만한 대화 문장은 자동 프로젝트 메모리 후보로 저장한다.
 - Paperclip 상태, agent template, 최근 task는 GLM 챗의 운영 힌트로 사용한다.
 - GLM 호출은 기본적으로 thinking을 활성화하고 충분한 budget을 둔다.
+- GLM 추론 중에는 같은 프로젝트의 다음 메시지를 UI와 API 양쪽에서 막는다.
+- 실패 시에는 입력문을 복원하고 재시도 가능한 실패 상태를 표시한다.
 - 프로젝트별 메모리와 대화내용은 L1 memory에 보조 지식으로 저장하되, 대화내역은 `결정/검증된 지식이 아닐 수 있음`을 명시한다.
 - 대화에서 나온 사실은 근거 Markdown으로 확인되거나 사용자가 결정해야만 프로젝트 본문 지식으로 승격한다.
+- `위키 자체가 아니라 고객 프로젝트 업무 상태와 다음 액션으로 답한다` 류의 공통 원칙은 프로젝트 메모리가 아니라 전역 지침으로 관리한다.
 
 ## 권장 아키텍처
 

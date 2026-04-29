@@ -10,6 +10,9 @@ source: "Global wiki operations log"
 이 파일은 위키 운영의 append-only 로그입니다.
 
 ## 2026-04-29
+- `automation/wiki_api/`, `automation/wiki_frontend/`: 지식 주입 다이제스트를 한국어 기본 출력으로 전환하고 GLM/fallback 모두 한국어 판정·근거·충돌·다음 액션 형식으로 표시, GLM이 형식을 벗어나면 한국어 local digest로 대체
+- `automation/wiki_api/`, `automation/wiki_frontend/`: GLM 챗 상태 표시(`전송/추론/저장/실패`)와 프로젝트별 추론 lock 추가, 추론 중 중복 채팅을 UI/API에서 차단
+- `automation/wiki_api/`, `automation/wiki_frontend/`: GLM 챗 전역 지침 관리 추가, 공통 응답 원칙을 프로젝트 메모리에서 분리, 날짜/테스트/결정/선호 등 기억할 만한 발화 자동 메모리 저장 구현
 - `automation/wiki_api/`, `automation/wiki_frontend/`: GLM thinking 기본 활성화 설정 추가, 프로젝트별 GLM 챗 메모리/대화내용을 `auxiliary_not_decision` L1 memory 문서로 자동 동기화
 - `automation/wiki_api/`, `automation/wiki_frontend/`: `위키` 탭 신규 생성, Markdown 직접 조회/index API와 `[[wikilink]]` 기반 Obsidian식 그래프맵 시각화 추가
 - `automation/wiki_frontend/`, `automation/wiki_api/`: `운영`에서 수집 실행 동선을 분리해 `수집 파이프라인` 탭을 추가하고, Paperclip을 독립 작업대가 아니라 본 위키/GLM 챗 컨텍스트 브리지로 재정의

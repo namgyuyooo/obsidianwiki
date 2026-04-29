@@ -34,17 +34,30 @@ const state = {
   paperclipEvents: [],
   running: [],
   schedules: [],
+  driveTargets: [],
   searchResults: [],
   selectedSearchPaths: new Set(),
   wikiPages: [],
   wikiGraph: { nodes: [], edges: [] },
   activeWikiPath: "",
+  activeProjectKey: "",
+  wikiFilters: {
+    division: "all",
+    nature: "all",
+    projectKey: "all",
+    query: "",
+    viewMode: "grid",
+    sortBy: "name",
+  },
   skills: [],
   chatProjects: [],
   chatGlobal: { instructions: "", autoMemory: true },
   activeChatProjectId: "default",
   chatComposing: false,
   chatSending: false,
+  chatPhase: "idle",
+  lastChatText: "",
+  notionCurrentCategory: "all",
 };
 
 const titles = {
@@ -101,6 +114,14 @@ function escapeHtml(value) {
 
 function inlineMarkdown(value) {
   return escapeHtml(value)
+    .replace(/\[\[([^\]|#]+)(?:#[^\]|]+)?(?:\|([^\]]+))?\]\]/g, (_, target, label) => {
+      const cleanTarget = String(target || "").trim();
+      const cleanLabel = String(label || target || "").trim();
+      return `<a href="#" class="wiki-internal-link" data-wiki-target="${escapeHtml(cleanTarget)}">${escapeHtml(cleanLabel)}</a>`;
+    })
+    .replace(/\[([^\]]+)\]\(([^)]+\.md)(?:#[^)]+)?\)/g, (_, label, target) => {
+      return `<a href="#" class="wiki-internal-link" data-wiki-target="${escapeHtml(target.trim())}">${escapeHtml(label.trim())}</a>`;
+    })
     .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
     .replace(/`([^`]+)`/g, "<code>$1</code>");
 }
@@ -384,6 +405,251 @@ async function openWikiPage(path) {
   $("#wiki-reader-body").innerHTML = renderMarkdownDocument(payload.markdown);
 }
 
+const divisionLabels = {
+  all: "전체",
+  project: "프로젝트",
+  account: "고객/계정",
+  operations: "운영/자동화",
+  common: "공통지식",
+  memory: "메모리/챗",
+  log: "로그/감사",
+};
+
+const natureLabels = {
+  all: "전체 성격",
+  hub: "허브",
+  overview: "개요",
+  sources: "출처",
+  evidence: "근거",
+  conflict: "충돌",
+  actions: "액션",
+  decisions: "결정",
+  risks: "리스크",
+  changelog: "변경이력",
+  log: "로그",
+  memory: "메모리",
+  knowledge: "지식",
+};
+
+const projectShortcutKinds = ["hub", "overview", "sources", "evidence", "actions", "risks", "decisions", "conflict", "changelog"];
+
+function normalizeWikiTarget(value) {
+  return String(value || "")
+    .replace(/\\/g, "/")
+    .replace(/^.*\//, "")
+    .replace(/\.md$/i, "")
+    .trim()
+    .toLowerCase();
+}
+
+function resolveWikiTarget(target) {
+  const normalized = normalizeWikiTarget(target);
+  if (!normalized) return "";
+  const direct = state.wikiPages.find((page) => page.path === target || page.path.endsWith(`/${target}`));
+  if (direct) return direct.path;
+  const byTitle = state.wikiPages.find((page) => normalizeWikiTarget(page.title) === normalized);
+  if (byTitle) return byTitle.path;
+  const byBase = state.wikiPages.find((page) => normalizeWikiTarget(page.path) === normalized);
+  return byBase?.path || "";
+}
+
+function updateNotionStats() {
+  const total = state.wikiPages.length;
+  const divisions = new Set(state.wikiPages.map((page) => page.division || "operations"));
+  $("#notion-total-pages").textContent = `${total}`;
+  $("#notion-total-categories").textContent = `${divisions.size}`;
+}
+
+function updateWikiFilterControls() {
+  const projectSelect = $("#notion-project-filter");
+  if (!projectSelect) return;
+  const projects = [...new Map(state.wikiPages
+    .filter((page) => ["project", "account"].includes(page.division))
+    .map((page) => [page.projectKey, page.projectLabel || page.projectKey]))]
+    .sort((a, b) => a[1].localeCompare(b[1]));
+  projectSelect.innerHTML = [
+    `<option value="all">프로젝트/계정 전체</option>`,
+    ...projects.map(([key, label]) => `<option value="${escapeHtml(key)}">${escapeHtml(label)}</option>`),
+  ].join("");
+  projectSelect.value = state.wikiFilters.projectKey;
+}
+
+function pagesByProject() {
+  const groups = new Map();
+  state.wikiPages.forEach((page) => {
+    const key = page.projectKey || page.section || "Wiki";
+    if (!groups.has(key)) {
+      groups.set(key, {
+        key,
+        label: page.projectLabel || key,
+        division: page.division || "operations",
+        pages: [],
+      });
+    }
+    groups.get(key).pages.push(page);
+  });
+  return [...groups.values()].sort((a, b) => {
+    const byDivision = String(a.division).localeCompare(String(b.division));
+    return byDivision || a.label.localeCompare(b.label);
+  });
+}
+
+function filteredNotionPages() {
+  const category = state.notionCurrentCategory || "all";
+  const query = state.wikiFilters.query.toLowerCase();
+  return state.wikiPages.filter((page) => {
+    if (category !== "all") {
+      if (category.startsWith("kind:") && page.docKind !== category.replace("kind:", "")) return false;
+      if (!category.startsWith("kind:") && page.division !== category) return false;
+    }
+    if (state.wikiFilters.division !== "all" && page.division !== state.wikiFilters.division) return false;
+    if (state.wikiFilters.nature !== "all" && page.docKind !== state.wikiFilters.nature) return false;
+    if (state.wikiFilters.projectKey !== "all" && page.projectKey !== state.wikiFilters.projectKey) return false;
+    if (!query) return true;
+    return [
+      page.title,
+      page.path,
+      page.projectLabel,
+      page.division,
+      page.docKind,
+      page.frontmatter?.type,
+      page.frontmatter?.source,
+    ].filter(Boolean).join(" ").toLowerCase().includes(query);
+  }).sort((a, b) => {
+    if (state.wikiFilters.sortBy === "updated") return String(b.updatedAt).localeCompare(String(a.updatedAt));
+    if (state.wikiFilters.sortBy === "type") return String(a.docKind).localeCompare(String(b.docKind)) || a.title.localeCompare(b.title);
+    return a.title.localeCompare(b.title);
+  });
+}
+
+function renderProjectCard(group) {
+  const shortcutPages = projectShortcutKinds
+    .map((kind) => group.pages.find((page) => page.docKind === kind))
+    .filter(Boolean);
+  const updated = group.pages.map((page) => page.updatedAt).sort().at(-1) || "";
+  return [
+    `<article class="notion-project-card" data-project-key="${escapeHtml(group.key)}">`,
+    `<button class="notion-card-main" data-project-drill="${escapeHtml(group.key)}" type="button">`,
+    `<span class="notion-card-kicker">${escapeHtml(divisionLabels[group.division] || group.division)}</span>`,
+    `<strong>${escapeHtml(group.label)}</strong>`,
+    `<small>${group.pages.length} docs · ${escapeHtml(updated.slice(0, 10) || "updated unknown")}</small>`,
+    `</button>`,
+    `<div class="notion-shortcuts">`,
+    shortcutPages.map((page) => `<button type="button" data-notion-path="${escapeHtml(page.path)}">${escapeHtml(natureLabels[page.docKind] || page.docKind)}</button>`).join(""),
+    `</div>`,
+    `</article>`,
+  ].join("");
+}
+
+function renderPageCard(page) {
+  return [
+    `<article class="notion-page-card ${page.path === state.activeWikiPath ? "active" : ""}">`,
+    `<button class="notion-card-main" data-notion-path="${escapeHtml(page.path)}" type="button">`,
+    `<span class="notion-card-kicker">${escapeHtml(divisionLabels[page.division] || page.division)} · ${escapeHtml(natureLabels[page.docKind] || page.docKind)}</span>`,
+    `<strong>${escapeHtml(page.title)}</strong>`,
+    `<small>${escapeHtml(page.projectLabel || page.section)} · ${escapeHtml(page.path)}</small>`,
+    `</button>`,
+    `</article>`,
+  ].join("");
+}
+
+function renderNotionWikiContent() {
+  const viewMode = $("#notion-view-mode")?.value || state.wikiFilters.viewMode || "grid";
+  const sortBy = $("#notion-sort-by")?.value || state.wikiFilters.sortBy || "name";
+  state.wikiFilters.viewMode = viewMode;
+  state.wikiFilters.sortBy = sortBy;
+  const pages = filteredNotionPages();
+  const content = $("#notion-content-area");
+  const categoryLabel = divisionLabels[state.notionCurrentCategory] || natureLabels[state.notionCurrentCategory?.replace?.("kind:", "")] || "전체";
+  $("#notion-current-category").textContent = state.activeProjectKey
+    ? `${categoryLabel} / ${state.activeProjectKey}`
+    : categoryLabel;
+
+  if (!pages.length) {
+    content.innerHTML = `<div class="notion-empty-state"><div class="notion-empty-icon">문서 없음</div><h3>조건에 맞는 문서가 없습니다</h3><p>검색어 또는 필터를 줄여보세요.</p></div>`;
+    return;
+  }
+
+  if (viewMode === "tree") {
+    const groups = pagesByProject().map((group) => ({ ...group, pages: group.pages.filter((page) => pages.includes(page)) })).filter((group) => group.pages.length);
+    content.innerHTML = `<div class="notion-tree-list">${groups.map((group) => [
+      `<section class="notion-tree-group">`,
+      `<button class="notion-tree-heading" data-project-drill="${escapeHtml(group.key)}" type="button">${escapeHtml(group.label)} <span>${group.pages.length}</span></button>`,
+      `<div class="notion-tree-pages">${group.pages.map(renderPageCard).join("")}</div>`,
+      `</section>`,
+    ].join("")).join("")}</div>`;
+  } else if (viewMode === "list") {
+    content.innerHTML = `<div class="notion-page-list">${pages.map(renderPageCard).join("")}</div>`;
+  } else if (state.wikiFilters.projectKey === "all" && ["all", "project", "account"].includes(state.notionCurrentCategory)) {
+    const groups = pagesByProject()
+      .map((group) => ({ ...group, pages: group.pages.filter((page) => pages.includes(page)) }))
+      .filter((group) => group.pages.length && ["project", "account"].includes(group.division));
+    content.innerHTML = `<div class="notion-card-grid">${groups.map(renderProjectCard).join("")}</div>`;
+  } else {
+    content.innerHTML = `<div class="notion-card-grid">${pages.map(renderPageCard).join("")}</div>`;
+  }
+
+  document.querySelectorAll("[data-notion-path]").forEach((button) => {
+    button.addEventListener("click", (event) => {
+      event.stopPropagation();
+      openNotionWikiPage(button.dataset.notionPath);
+    });
+  });
+  document.querySelectorAll("[data-project-drill]").forEach((button) => {
+    button.addEventListener("click", () => {
+      state.activeProjectKey = button.dataset.projectDrill;
+      state.wikiFilters.projectKey = button.dataset.projectDrill;
+      const projectFilter = $("#notion-project-filter");
+      if (projectFilter) projectFilter.value = state.wikiFilters.projectKey;
+      renderNotionWikiContent();
+    });
+  });
+}
+
+async function loadNotionWikiBrowser() {
+  const payload = await api("/api/wiki/index");
+  if (payload.mock || !payload.pages) {
+    $("#notion-content-area").innerHTML = `<div class="notion-empty-state"><h3>위키 API 연결 대기</h3><p>${escapeHtml(payload.error || "서버 응답을 확인하세요.")}</p></div>`;
+    return;
+  }
+  state.wikiPages = payload.pages;
+  updateNotionStats();
+  updateWikiFilterControls();
+  renderNotionWikiContent();
+}
+
+async function openNotionWikiPage(path) {
+  if (!path) return;
+  state.activeWikiPath = path;
+  const page = state.wikiPages.find((item) => item.path === path) || { title: path, path };
+  $(".notion-details-panel")?.classList.add("notion-details-open");
+  $("#notion-details-content").innerHTML = `<div class="notion-details-placeholder"><p>문서를 불러오는 중입니다.</p></div>`;
+  $("#notion-doc-type").textContent = natureLabels[page.docKind] || page.docKind || "문서";
+  $("#notion-doc-updated").textContent = page.updatedAt?.slice(0, 10) || "updated unknown";
+  const payload = await api(`/api/wiki/page?path=${encodeURIComponent(path)}`);
+  if (payload.error || payload.mock) {
+    $("#notion-details-content").innerHTML = `<div class="notion-details-placeholder"><p>${escapeHtml(payload.error || "문서 API 연결 대기")}</p></div>`;
+    return;
+  }
+  $("#notion-details-content").innerHTML = [
+    `<div class="notion-doc-title">`,
+    `<span>${escapeHtml(divisionLabels[page.division] || page.division || "Wiki")} / ${escapeHtml(page.projectLabel || page.section || "")}</span>`,
+    `<h2>${escapeHtml(payload.title)}</h2>`,
+    `<code>${escapeHtml(payload.path)}</code>`,
+    `</div>`,
+    renderMarkdownDocument(payload.markdown),
+  ].join("");
+  $("#notion-doc-type").textContent = natureLabels[page.docKind] || page.docKind || payload.frontmatter?.type || "문서";
+  $("#notion-doc-updated").textContent = page.updatedAt?.slice(0, 10) || payload.frontmatter?.updated || "updated unknown";
+  renderNotionWikiContent();
+}
+
+function initializeNotionWikiBrowser() {
+  document.querySelectorAll(".notion-nav-content").forEach((section) => section.classList.add("notion-expanded"));
+  document.querySelectorAll(".notion-chevron").forEach((chevron) => { chevron.textContent = "▲"; });
+  loadNotionWikiBrowser();
+}
+
 function activeChatProject() {
   return state.chatProjects.find((project) => project.id === state.activeChatProjectId) || state.chatProjects[0] || null;
 }
@@ -414,6 +680,7 @@ function renderChatProjects() {
     (project.messages || []).forEach((message) => appendMessage(message.role, message.content));
   }
   renderChatMemories();
+  setChatPhase(state.chatPhase || "idle");
 }
 
 function renderChatMemories() {
@@ -428,6 +695,41 @@ function renderChatMemories() {
   document.querySelectorAll("[data-memory-delete]").forEach((button) => {
     button.addEventListener("click", () => deleteChatMemory(button.dataset.memoryDelete));
   });
+}
+
+function setChatPhase(phase, detail = "") {
+  state.chatPhase = phase;
+  state.chatSending = ["sending", "thinking", "saving"].includes(phase);
+  const labels = {
+    idle: "대기",
+    sending: "전송 중",
+    thinking: "GLM 추론중",
+    saving: "저장 중",
+    failed: "실패",
+  };
+  const status = $("#chat-status");
+  status.className = `chat-status ${phase}`;
+  status.textContent = labels[phase] || phase;
+  $("#chat-status-detail").textContent = detail || "GLM 응답 대기 중에는 다음 메시지를 잠급니다.";
+  $("#chat-send").disabled = state.chatSending;
+  $("#chat-input").disabled = state.chatSending;
+  $("#chat-project-select").disabled = state.chatSending;
+}
+
+function appendThinkingMessage() {
+  const message = document.createElement("article");
+  message.className = "message assistant thinking";
+  message.dataset.thinking = "true";
+  message.innerHTML = [
+    `<div class="thinking-dots"><span></span><span></span><span></span></div>`,
+    `<p>GLM이 위키 근거, 프로젝트 메모리, 최근 대화를 검토 중입니다. 완료 전에는 다음 메시지를 막아둡니다.</p>`,
+  ].join("");
+  $("#chat-log").appendChild(message);
+  $("#chat-log").scrollTop = $("#chat-log").scrollHeight;
+}
+
+function removeThinkingMessage() {
+  document.querySelectorAll("[data-thinking='true']").forEach((node) => node.remove());
 }
 
 async function loadChatProjects() {
@@ -640,6 +942,73 @@ async function refreshCoverage() {
   ].join(" · ");
 }
 
+function renderDriveTargets(payload = {}) {
+  const candidates = payload.candidates || state.driveTargets || [];
+  state.driveTargets = candidates;
+  const status = $("#target-analysis-status");
+  if (status) {
+    const summary = payload.summary;
+    status.textContent = summary
+      ? `후보 ${candidates.length}개 · Drive 폴더 ${summary.driveFolders}개 · 위키 프로젝트 ${summary.wikiProjects}개`
+      : `후보 ${candidates.length}개`;
+  }
+  const list = $("#target-candidate-list");
+  if (!list) return;
+  if (!candidates.length) {
+    list.innerHTML = `<p class="pipeline-note">표적 분석 후보가 아직 없습니다.</p>`;
+    return;
+  }
+  list.innerHTML = candidates.slice(0, 8).map((candidate, index) => [
+    `<article class="target-candidate ${escapeHtml(candidate.priority)}">`,
+    `<div>`,
+    `<strong>${index + 1}. ${escapeHtml(candidate.folder)}</strong>`,
+    `<small>${escapeHtml(candidate.priority)} · score ${candidate.score} · ${escapeHtml(candidate.remotePath)}</small>`,
+    `<p>${escapeHtml((candidate.reasons || []).join(" / "))}</p>`,
+    `</div>`,
+    `<div class="target-buttons">`,
+    `<button class="command-button" data-target-copy="${escapeHtml(candidate.remotePath)}" data-dry-run="true" type="button">copy 미리보기</button>`,
+    `<button class="command-button accent" data-target-copy="${escapeHtml(candidate.remotePath)}" data-dry-run="false" type="button">선택 수집</button>`,
+    `</div>`,
+    `</article>`,
+  ].join("")).join("");
+  document.querySelectorAll("[data-target-copy]").forEach((button) => {
+    button.addEventListener("click", () => runTargetCopy(button));
+  });
+}
+
+async function analyzeDriveTargets() {
+  $("#target-analysis-status").textContent = "분석 중: 위키/manifest/coverage/rclone lsd를 대조합니다.";
+  const payload = await api("/api/drive/targets", { method: "POST", body: JSON.stringify({}) });
+  if (payload.error || payload.mock) {
+    $("#target-analysis-status").textContent = `분석 실패: ${payload.error || "API 연결 대기"}`;
+    return;
+  }
+  renderDriveTargets(payload);
+}
+
+async function runTargetCopy(button) {
+  const remotePath = button.dataset.targetCopy;
+  const dryRun = button.dataset.dryRun !== "false";
+  const originalLabel = button.textContent;
+  button.disabled = true;
+  button.textContent = dryRun ? "미리보기 중..." : "수집 중...";
+  const result = await api("/api/automation/target-rclone-copy", {
+    method: "POST",
+    body: JSON.stringify({ remotePath, dryRun }),
+  }).finally(() => {
+    button.disabled = false;
+    button.textContent = originalLabel;
+  });
+  state.runs.unshift({
+    command: dryRun ? `target rclone dry-run: ${remotePath}` : `target rclone copy: ${remotePath}`,
+    status: result.status || "failed",
+    detail: result.error || result.stdout || `Run id: ${result.runId}`,
+  });
+  renderEvents("#run-list", state.runs);
+  $("#run-count").textContent = `${state.runs.length}건`;
+  await refreshStatus();
+}
+
 async function loadSettings() {
   const payload = await api("/api/settings");
   if (payload.mock || !payload.settings) {
@@ -690,13 +1059,21 @@ async function saveSettings(event) {
 async function triggerCommand(button) {
   const command = button.dataset.command;
   const dryRun = button.dataset.dryRun === "true";
+  const label = dryRun ? `${command} dry-run` : command;
+  const originalLabel = button.dataset.originalLabel || button.textContent;
+  button.dataset.originalLabel = originalLabel;
+  button.disabled = true;
+  button.textContent = dryRun ? "미리보기 실행 중..." : "실행 중...";
   const result = await api("/api/automation/trigger", {
     method: "POST",
     body: JSON.stringify({ command, dryRun }),
+  }).finally(() => {
+    button.disabled = false;
+    button.textContent = originalLabel;
   });
   const status = result.mock ? "mock 대기" : result.status;
   state.runs.unshift({
-    command: dryRun ? `${command} dry-run` : command,
+    command: label,
     status,
     detail: result.error || (result.mock ? "Backend API 연결 대기" : `Run id: ${result.runId}`),
   });
@@ -706,14 +1083,21 @@ async function triggerCommand(button) {
 }
 
 async function triggerOpenClaw() {
+  const button = $("#openclaw-trigger");
+  const originalLabel = button.textContent;
+  button.disabled = true;
+  button.textContent = "오픈클로 실행 중...";
   const result = await api("/api/openclaw/trigger", {
     method: "POST",
-    body: JSON.stringify({ task: "drive_wikify_cycle" }),
+    body: JSON.stringify({ task: "drive_wikify_cycle", dryRun: true }),
+  }).finally(() => {
+    button.disabled = false;
+    button.textContent = originalLabel;
   });
   state.runs.unshift({
     command: "openclaw-trigger",
     status: result.status || "대기",
-    detail: result.error || result.stdout || "OpenClaw 호출 요청을 보냈습니다.",
+    detail: result.error || result.stdout || "OpenClaw 로컬 자동화 트리거를 실행했습니다.",
   });
   renderEvents("#run-list", state.runs);
   $("#run-count").textContent = `${state.runs.length}건`;
@@ -978,21 +1362,72 @@ async function generateDigest() {
   const text = $("#knowledge-input").value.trim();
   const projectHint = $("#project-hint").value.trim();
   if (!text) return;
+  $("#digest-output").textContent = "한국어 다이제스트를 생성하는 중입니다.";
   const payload = await api("/api/llm/digest", {
     method: "POST",
     body: JSON.stringify({ text, projectHint }),
   });
-  $("#digest-output").textContent = payload.mock
-    ? [
-        "project_decision: hold_for_review",
-        `project_hint: ${projectHint || "none"}`,
-        "sources_draft: 입력 원문 또는 파일 경로를 Sources.md 후보로 등록",
-        "evidence_candidates:",
-        "- 핵심 문장과 수치를 추출 대기",
-        "conflict_candidates:",
-        "- 기존 프로젝트와 중복 가능성 확인 필요",
-      ].join("\n")
-    : JSON.stringify(payload, null, 2);
+  $("#digest-output").textContent = formatDigestOutput(payload, projectHint);
+}
+
+function formatDigestOutput(payload, projectHint = "") {
+  if (payload.mock) {
+    return [
+      "# 한국어 지식 주입 다이제스트",
+      "",
+      `- 판정: 검토 보류`,
+      `- 프로젝트 힌트: ${projectHint || "없음"}`,
+      "- 출처 초안: 입력 원문 또는 파일 경로를 Sources.md 후보로 등록",
+      "",
+      "## 핵심 근거 후보",
+      "- 핵심 문장과 수치를 추출 대기",
+      "",
+      "## 충돌 후보",
+      "- 기존 프로젝트와 중복 가능성 확인 필요",
+      "",
+      "## 다음 액션",
+      "- GLM 연결 후 프로젝트 분기/중복 판단을 재검토",
+    ].join("\n");
+  }
+  if (payload.digest) {
+    try {
+      return formatDigestObject(JSON.parse(payload.digest), payload);
+    } catch {
+      return payload.digest;
+    }
+  }
+  return formatDigestObject(payload, payload);
+}
+
+function formatDigestObject(data, meta = {}) {
+  const lines = [
+    "# 한국어 지식 주입 다이제스트",
+    "",
+    `- 제공자: ${meta.provider || data.provider || "local"}`,
+    `- 판정: ${data.판정 || data.project_decision || "검토 필요"}`,
+    `- 프로젝트 후보: ${data.프로젝트_후보 || data.프로젝트_힌트 || data.project_hint || "없음"}`,
+    "",
+    "## 출처 초안",
+    data.출처_초안 || data.sources_draft || "- 입력 원문 또는 파일 경로 확인 필요",
+    "",
+    "## 핵심 근거 후보",
+    ...[].concat(data.핵심_근거_후보 || data.evidence_candidates || []).map((item) => `- ${item}`),
+    "",
+    "## 수치 후보",
+    ...[].concat(data.수치_후보 || data.number_candidates || []).map((item) => `- ${item}`),
+    "",
+    "## 충돌 후보",
+    ...[].concat(data.충돌_후보 || data.conflict_candidates || []).map((item) => `- ${item}`),
+    "",
+    "## 위키 반영 초안",
+    data.위키_반영_초안 || "- 승격 전 근거 확인 필요",
+    "",
+    "## 다음 액션",
+    data.다음_액션 || data.next_action || "- 프로젝트 분기/중복 여부 검토",
+  ];
+  if (data.보류_이유) lines.push("", "## 보류 이유", data.보류_이유);
+  if (meta.upstreamStatus) lines.push("", "## GLM 상태", meta.upstreamStatus);
+  return lines.join("\n");
 }
 
 async function sendChat() {
@@ -1000,26 +1435,42 @@ async function sendChat() {
   const input = $("#chat-input");
   const text = input.value.trim();
   if (!text) return;
-  state.chatSending = true;
-  $("#chat-send").disabled = true;
+  state.lastChatText = text;
+  setChatPhase("sending", "메시지를 저장하고 GLM 요청을 준비 중입니다.");
   appendMessage("user", text);
+  appendThinkingMessage();
   input.value = "";
 
   try {
+    setChatPhase("thinking", "GLM thinking/reasoning 중입니다. 응답이 끝날 때까지 다음 메시지를 잠급니다.");
     const payload = await api("/api/chat/glm", {
       method: "POST",
       body: JSON.stringify({ message: text, projectId: state.activeChatProjectId }),
     });
-    appendMessage(
-      "assistant",
-      payload.mock
-        ? "GLM API가 연결되면 위키 근거를 바탕으로 프로젝트 상태와 다음 액션을 정리합니다."
-        : payload.message,
-    );
+    removeThinkingMessage();
+    if (payload.error) {
+      const detail = payload.status === "busy"
+        ? "이미 같은 프로젝트에서 GLM 추론이 진행 중입니다."
+        : payload.error;
+      appendMessage("assistant error", `GLM 채팅 실패: ${detail}`);
+      input.value = text;
+      setChatPhase("failed", "실패했습니다. 내용을 수정하거나 다시 전송할 수 있습니다.");
+      return;
+    }
+    appendMessage("assistant", payload.mock
+      ? "GLM API가 연결되면 위키 근거를 바탕으로 프로젝트 상태와 다음 액션을 정리합니다."
+      : payload.message);
+    const memoryNote = payload.remembered?.scope === "project"
+      ? `자동 메모리 저장: ${payload.remembered.memory?.title || "프로젝트 메모리"}`
+      : payload.remembered?.scope === "global"
+        ? "전역 지침에 자동 반영됨"
+        : "응답 완료";
+    setChatPhase("saving", "대화와 보조 메모리를 저장 중입니다.");
     await loadChatProjects();
+    setChatPhase(payload.status === "failed" ? "failed" : "idle", payload.status === "failed" ? "GLM fallback/실패 응답을 확인하세요." : memoryNote);
   } finally {
-    state.chatSending = false;
-    $("#chat-send").disabled = false;
+    removeThinkingMessage();
+    if (state.chatPhase !== "failed") setChatPhase("idle", $("#chat-status-detail").textContent);
     input.focus();
   }
 }
@@ -1027,12 +1478,94 @@ async function sendChat() {
 function appendMessage(role, text) {
   const message = document.createElement("article");
   message.className = `message ${role}`;
-  if (role === "assistant") {
+  const messageId = `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  message.dataset.messageId = messageId;
+  
+  if (role.includes("assistant")) {
     message.innerHTML = renderMarkdownDocument(text);
+    // Add knowledge promotion button to assistant messages
+    const promotionButton = document.createElement("button");
+    promotionButton.className = "knowledge-promotion-button";
+    promotionButton.textContent = "📚 지식승격";
+    promotionButton.type = "button";
+    promotionButton.dataset.messageContent = text;
+    promotionButton.dataset.messageId = messageId;
+    promotionButton.addEventListener("click", () => openKnowledgePromotionPanel(text, messageId));
+    message.appendChild(promotionButton);
   } else {
     message.textContent = text;
   }
   $("#chat-log").appendChild(message);
+  $("#chat-log").scrollTop = $("#chat-log").scrollHeight;
+}
+
+function openKnowledgePromotionPanel(content, messageId) {
+  const panel = $("#knowledge-promotion-panel");
+  const textarea = $("#promotion-content");
+  const resultDiv = $("#promotion-result");
+  
+  textarea.value = content;
+  panel.style.display = "grid";
+  resultDiv.innerHTML = '<div class="loading">승격할 도구를 선택하고 실행하세요.</div>';
+  
+  // Scroll to panel
+  panel.scrollIntoView({ behavior: "smooth", block: "nearest" });
+}
+
+function closeKnowledgePromotionPanel() {
+  $("#knowledge-promotion-panel").style.display = "none";
+  $("#promotion-content").value = "";
+  $("#promotion-project-hint").value = "";
+  $("#promotion-result").innerHTML = "";
+}
+
+async function executeKnowledgePromotion() {
+  const content = $("#promotion-content").value.trim();
+  const projectHint = $("#promotion-project-hint").value.trim();
+  const tool = $("#promotion-tool-select").value;
+  const resultDiv = $("#promotion-result");
+  
+  if (!content) {
+    resultDiv.innerHTML = '<div class="error">승격할 내용이 비어있습니다.</div>';
+    return;
+  }
+  
+  resultDiv.innerHTML = '<div class="loading">지식 승격 처리 중...</div>';
+  
+  try {
+    let result;
+    if (tool === "digest") {
+      result = await api("/api/llm/digest", {
+        method: "POST",
+        body: JSON.stringify({ text: content, projectHint }),
+      });
+      resultDiv.innerHTML = `<div class="success">한국어 다이제스트 생성 완료</div><pre>${formatDigestOutput(result, projectHint)}</pre>`;
+    } else if (tool === "evidence") {
+      result = await api("/api/chat/evidence", {
+        method: "POST",
+        body: JSON.stringify({ content, projectHint }),
+      });
+      resultDiv.innerHTML = `<div class="success">근거 로그 후보 생성 완료</div><pre>${escapeHtml(JSON.stringify(result, null, 2))}</pre>`;
+    } else if (tool === "memory") {
+      if (!state.activeChatProjectId) {
+        resultDiv.innerHTML = '<div class="error">프로젝트 메모리를 추가하려면 프로젝트를 선택해야 합니다.</div>';
+        return;
+      }
+      result = await api(`/api/chat/projects/${encodeURIComponent(state.activeChatProjectId)}/memories`, {
+        method: "POST",
+        body: JSON.stringify({
+          title: `지식승격 - ${new Date().toLocaleString("ko-KR")}`,
+          content: content,
+        }),
+      });
+      resultDiv.innerHTML = `<div class="success">프로젝트 메모리 추가 완료</div><p>${escapeHtml(result.memory?.title || "메모리")}</p>`;
+      await loadChatProjects();
+    } else {
+      resultDiv.innerHTML = '<div class="error">알 수 없는 도구 유형입니다.</div>';
+    }
+  } catch (error) {
+    resultDiv.innerHTML = `<div class="error">승격 실패: ${escapeHtml(error.message)}</div>`;
+  }
 }
 
 document.querySelectorAll(".nav-item").forEach((button) => {
@@ -1042,7 +1575,7 @@ document.querySelectorAll(".nav-item").forEach((button) => {
     button.classList.add("active");
     $(`#${button.dataset.view}`).classList.add("active");
     $("#view-title").textContent = titles[button.dataset.view];
-    if (button.dataset.view === "wiki" && !state.wikiPages.length) loadWikiExplorer();
+    if (button.dataset.view === "wiki" && !state.wikiPages.length) loadNotionWikiBrowser();
   });
 });
 
@@ -1055,6 +1588,7 @@ $("#operation-settings").addEventListener("submit", saveSettings);
 $("#openclaw-trigger").addEventListener("click", triggerOpenClaw);
 $("#stop-run").addEventListener("click", stopCurrentRun);
 $("#side-stop-run").addEventListener("click", stopCurrentRun);
+$("#target-analysis-button").addEventListener("click", analyzeDriveTargets);
 $("#schedule-form").addEventListener("submit", createSchedule);
 $("#skill-draft-button").addEventListener("click", createSkillDraft);
 $("#chat-project-select").addEventListener("change", (event) => {
@@ -1066,11 +1600,76 @@ $("#chat-global-save").addEventListener("click", saveChatGlobal);
 $("#chat-project-save").addEventListener("click", saveChatProject);
 $("#chat-project-delete").addEventListener("click", deleteChatProject);
 $("#chat-memory-add").addEventListener("click", addChatMemory);
-$("#wiki-refresh").addEventListener("click", loadWikiExplorer);
-$("#wiki-filter").addEventListener("input", () => {
-  renderWikiPages();
+$("#wiki-refresh").addEventListener("click", loadNotionWikiBrowser);
+$("#notion-wiki-search").addEventListener("input", () => {
+  state.wikiFilters.query = $("#notion-wiki-search").value.trim();
+  renderNotionWikiContent();
 });
-$("#wiki-graph-fit").addEventListener("click", renderWikiGraph);
+
+// Notion Wiki Browser Events
+document.querySelectorAll(".notion-nav-toggle").forEach((toggle) => {
+  toggle.addEventListener("click", () => {
+    const section = toggle.dataset.section;
+    const content = document.querySelector(`.notion-nav-content[data-section="${section}"]`);
+    const chevron = toggle.querySelector(".notion-chevron");
+    
+    content.classList.toggle("notion-expanded");
+    chevron.textContent = content.classList.contains("notion-expanded") ? "▲" : "▼";
+  });
+});
+
+document.querySelectorAll(".notion-nav-item").forEach((item) => {
+  item.addEventListener("click", () => {
+    const category = item.dataset.category;
+    state.notionCurrentCategory = category;
+    state.activeProjectKey = "";
+    state.wikiFilters.projectKey = "all";
+    const projectFilter = $("#notion-project-filter");
+    if (projectFilter) projectFilter.value = "all";
+    renderNotionWikiContent();
+    
+    // Update breadcrumb
+    $("#notion-current-category").textContent = item.textContent.trim();
+    
+    // Highlight active item
+    document.querySelectorAll(".notion-nav-item").forEach((i) => i.classList.remove("active"));
+    item.classList.add("active");
+  });
+});
+
+$("#notion-view-mode").addEventListener("change", renderNotionWikiContent);
+$("#notion-sort-by").addEventListener("change", renderNotionWikiContent);
+$("#notion-division-filter")?.addEventListener("change", (event) => {
+  state.wikiFilters.division = event.target.value;
+  renderNotionWikiContent();
+});
+$("#notion-nature-filter")?.addEventListener("change", (event) => {
+  state.wikiFilters.nature = event.target.value;
+  renderNotionWikiContent();
+});
+$("#notion-project-filter")?.addEventListener("change", (event) => {
+  state.wikiFilters.projectKey = event.target.value;
+  state.activeProjectKey = event.target.value === "all" ? "" : event.target.value;
+  renderNotionWikiContent();
+});
+$("#notion-close-details").addEventListener("click", () => {
+  document.querySelector(".notion-details-panel").classList.remove("notion-details-open");
+});
+$("#notion-details-content").addEventListener("click", (event) => {
+  const link = event.target.closest(".wiki-internal-link");
+  if (!link) return;
+  event.preventDefault();
+  const resolved = resolveWikiTarget(link.dataset.wikiTarget || "");
+  if (resolved) openNotionWikiPage(resolved);
+});
+$("#notion-copy-link")?.addEventListener("click", async () => {
+  if (!state.activeWikiPath) return;
+  await navigator.clipboard?.writeText(state.activeWikiPath);
+});
+$("#notion-open-in-obsidian")?.addEventListener("click", () => {
+  if (!state.activeWikiPath) return;
+  openNotionWikiPage(state.activeWikiPath);
+});
 $("#paperclip-refresh").addEventListener("click", refreshPaperclip);
 $("#paperclip-create-task").addEventListener("click", createPaperclipTask);
 $("#paperclip-trigger-task").addEventListener("click", triggerPaperclipTask);
@@ -1078,6 +1677,8 @@ $("#wiki-search-button").addEventListener("click", searchWiki);
 $("#summarize-selected").addEventListener("click", summarizeSelectedResults);
 $("#digest-button").addEventListener("click", generateDigest);
 $("#chat-send").addEventListener("click", sendChat);
+$("#close-promotion-panel").addEventListener("click", closeKnowledgePromotionPanel);
+$("#execute-promotion").addEventListener("click", executeKnowledgePromotion);
 $("#wiki-query").addEventListener("keydown", (event) => {
   if (event.key === "Enter") searchWiki();
 });
@@ -1111,3 +1712,6 @@ renderPaperclip({
 $("#run-count").textContent = `${state.runs.length}건`;
 refreshStatus();
 setInterval(refreshStatus, 5000);
+
+// Initialize Notion Wiki Browser
+initializeNotionWikiBrowser();

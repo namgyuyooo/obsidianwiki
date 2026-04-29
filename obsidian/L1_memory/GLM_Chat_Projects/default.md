@@ -5,7 +5,7 @@ project_name: "기본 업무 챗"
 status: "active"
 knowledge_role: auxiliary_not_decision
 created: 2026-04-29T04:11:08.843Z
-updated: 2026-04-29T04:29:39.738Z
+updated: 2026-04-29T05:08:46.742Z
 source: wiki_api chat_projects.json
 ---
 
@@ -16,8 +16,8 @@ source: wiki_api chat_projects.json
 - 대화내역은 검증/승인된 결정 사항이 아닐 수 있으므로 `보조 맥락`으로만 사용한다.
 - 실제 프로젝트 사실, 수치, 결정은 별도 근거 Markdown, Sources, Evidence Log, Change Log, Conflict Register로 승격되어야 한다.
 
-## 프로젝트 지침
-> 위키를 근거 저장소로 사용해 실제 프로젝트 상태, 리스크, 다음 액션을 정리한다.
+## 프로젝트별 특수 지침
+- 없음
 
 ## 관리 메모리
 - 없음

@@ -1,6 +1,6 @@
 import { createServer } from "node:http";
 import { readFile, readdir, stat, writeFile, mkdir } from "node:fs/promises";
-import { createReadStream } from "node:fs";
+import { createReadStream, existsSync } from "node:fs";
 import { spawn } from "node:child_process";
 import { extname, join, normalize, relative, resolve } from "node:path";
 
@@ -16,10 +16,13 @@ const runHistoryPath = join(apiRuntime, "runs.json");
 const paperclipTasksPath = join(apiRuntime, "paperclip_tasks.json");
 const paperclipEventsPath = join(apiRuntime, "paperclip_events.json");
 const schedulesPath = join(apiRuntime, "schedules.json");
+const targetAnalysisPath = join(apiRuntime, "target_analysis.json");
 const skillOutputsRoot = join(apiRuntime, "skill_outputs");
 const chatProjectsPath = join(apiRuntime, "chat_projects.json");
 const chatGlobalSettingsPath = join(apiRuntime, "chat_global_settings.json");
 const activeJobs = new Map();
+const activeChatRequests = new Map();
+let runHistoryWrite = Promise.resolve();
 
 const host = process.env.WIKI_API_HOST || "127.0.0.1";
 const port = Number(process.env.WIKI_API_PORT || 8787);
@@ -147,19 +150,30 @@ async function writeEnvValues(updates) {
 }
 
 async function appendRunHistory(entry) {
-  await mkdir(apiRuntime, { recursive: true });
-  const history = await readJsonFile(runHistoryPath, []);
-  history.unshift(entry);
-  await writeFile(runHistoryPath, JSON.stringify(history.slice(0, 100), null, 2), "utf-8");
-  return history.slice(0, 100);
+  return withRunHistoryLock(async () => {
+    await mkdir(apiRuntime, { recursive: true });
+    const history = await readJsonFile(runHistoryPath, []);
+    history.unshift(entry);
+    const trimmed = history.slice(0, 100);
+    await writeFile(runHistoryPath, JSON.stringify(trimmed, null, 2), "utf-8");
+    return trimmed;
+  });
 }
 
 async function updateRunHistory(runId, updates) {
-  await mkdir(apiRuntime, { recursive: true });
-  const history = await readJsonFile(runHistoryPath, []);
-  const next = history.map((entry) => (entry.runId === runId ? { ...entry, ...updates, updatedAt: new Date().toISOString() } : entry));
-  await writeFile(runHistoryPath, JSON.stringify(next.slice(0, 100), null, 2), "utf-8");
-  return next.find((entry) => entry.runId === runId);
+  return withRunHistoryLock(async () => {
+    await mkdir(apiRuntime, { recursive: true });
+    const history = await readJsonFile(runHistoryPath, []);
+    const next = history.map((entry) => (entry.runId === runId ? { ...entry, ...updates, updatedAt: new Date().toISOString() } : entry));
+    const trimmed = next.slice(0, 100);
+    await writeFile(runHistoryPath, JSON.stringify(trimmed, null, 2), "utf-8");
+    return trimmed.find((entry) => entry.runId === runId);
+  });
+}
+
+function withRunHistoryLock(callback) {
+  runHistoryWrite = runHistoryWrite.then(callback, callback);
+  return runHistoryWrite;
 }
 
 async function prependJsonHistory(path, entry, limit = 100) {
@@ -257,6 +271,7 @@ async function wikiIndex() {
     const path = relative(repoRoot, file);
     const frontmatter = parseFrontmatter(markdown);
     const section = path.startsWith("obsidian/L1_memory/") ? "L1_memory" : path.split("/")[2] || "Wiki";
+    const classification = classifyWikiPage(path, frontmatter);
     pages.push({
       title: titleFromMarkdown(path, markdown),
       path,
@@ -264,9 +279,58 @@ async function wikiIndex() {
       frontmatter,
       updatedAt: fileStat?.mtime?.toISOString?.() || "",
       size: fileStat?.size || markdown.length,
+      ...classification,
     });
   }
   return pages.sort((a, b) => a.section.localeCompare(b.section) || a.title.localeCompare(b.title));
+}
+
+function classifyWikiPage(path, frontmatter = {}) {
+  const parts = path.split("/");
+  const section = path.startsWith("obsidian/L1_memory/") ? "L1_memory" : parts[2] || "Wiki";
+  const fileName = parts.at(-1) || "";
+  const baseName = fileName.replace(/\.md$/i, "");
+  const lowerPath = path.toLowerCase();
+  const lowerBase = baseName.toLowerCase();
+  const type = String(frontmatter.type || "").toLowerCase();
+  let division = "operations";
+  if (section === "L1_memory") division = "memory";
+  else if (section === "Common") division = "common";
+  else if (section.endsWith("_Project")) division = "project";
+  else if (section.endsWith("_Account")) division = "account";
+  else if (/(log|change_log|conflict_register|deletion|audit)/i.test(path)) division = "log";
+
+  const kindRules = [
+    ["hub", lowerBase === "hub" || type === "hub" || type === "project"],
+    ["overview", /overview|summary|profile|project_overview/.test(lowerBase) || type === "overview"],
+    ["sources", /sources|source/.test(lowerBase)],
+    ["evidence", /evidence|connected|근거/.test(lowerBase) || type === "evidence"],
+    ["conflict", /conflict|충돌/.test(lowerBase) || type === "conflict"],
+    ["actions", /action|todo|next/.test(lowerBase) || type === "actions"],
+    ["decisions", /decision|결정/.test(lowerBase) || type === "decisions"],
+    ["risks", /risk|리스크/.test(lowerBase) || type === "risks"],
+    ["changelog", /change_log|changelog|변경/.test(lowerBase) || type === "changelog"],
+    ["log", /(^|_)log$|log\.md$|audit|deletion/.test(lowerPath) || type === "log"],
+    ["memory", section === "L1_memory" || /memory|chat/.test(lowerPath) || type.includes("memory")],
+  ];
+  const docKind = (kindRules.find(([, matched]) => matched) || ["knowledge"])[0];
+  const nature = docKind;
+  const isProjectLike = division === "project" || division === "account";
+  const projectKey = isProjectLike ? section : division === "memory" ? "L1_memory" : section || "Wiki";
+  const projectLabel = projectKey
+    .replace(/_/g, " ")
+    .replace(/\bProject\b/g, "Project")
+    .replace(/\bAccount\b/g, "Account")
+    .trim();
+
+  return {
+    projectKey,
+    projectLabel,
+    division,
+    nature,
+    docKind,
+    isProjectHub: isProjectLike && docKind === "hub",
+  };
 }
 
 function extractWikiLinks(markdown) {
@@ -534,6 +598,204 @@ async function coverageSummary() {
   };
 }
 
+function runCapture(command, args, options = {}) {
+  const timeoutMs = options.timeoutMs || 30000;
+  return new Promise((resolvePromise) => {
+    const child = spawn(command, args, { cwd: repoRoot, env: process.env });
+    let stdout = "";
+    let stderr = "";
+    const timeout = setTimeout(() => {
+      child.kill("SIGTERM");
+      stderr += "\nCommand timed out.";
+    }, timeoutMs);
+    child.stdout.on("data", (chunk) => { stdout += chunk.toString(); });
+    child.stderr.on("data", (chunk) => { stderr += chunk.toString(); });
+    child.on("error", (error) => {
+      clearTimeout(timeout);
+      resolvePromise({ code: 127, stdout, stderr: `${stderr}\n${error.message}` });
+    });
+    child.on("close", (code) => {
+      clearTimeout(timeout);
+      resolvePromise({ code, stdout, stderr });
+    });
+  });
+}
+
+function parseRcloneLsd(stdout) {
+  return stdout.split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line) => {
+      const match = line.match(/^\S+\s+\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2}\s+\S+\s+(.+)$/);
+      return match ? match[1].trim() : "";
+    })
+    .filter(Boolean);
+}
+
+function tokenSet(value) {
+  return new Set(String(value || "")
+    .toLowerCase()
+    .replace(/[_-]+/g, " ")
+    .split(/[^가-힣a-z0-9]+/i)
+    .filter((item) => item.length >= 2 && !["project", "account", "wiki", "drive"].includes(item)));
+}
+
+function overlapScore(a, b) {
+  const left = tokenSet(a);
+  const right = tokenSet(b);
+  let score = 0;
+  for (const token of left) if (right.has(token)) score += 1;
+  return score;
+}
+
+async function driveTargetAnalysis(options = {}) {
+  const { values: env } = await readEnvFile();
+  const remote = env.RCLONE_REMOTE || "gdrive";
+  const remoteRoot = env.RCLONE_REMOTE_PATH || "";
+  const source = `${remote}:${remoteRoot}`.replace(/:$/, ":");
+  const pages = await wikiIndex();
+  const coverage = await coverageSummary().catch(() => ({ rows: [], statuses: {}, documentsInManifest: 0, processedDocuments: 0 }));
+  const manifest = await readJsonFile(join(driveRuntime, "manifest.json"), { documents: [] });
+  const runOutput = await readJsonFile(join(driveRuntime, "run_output.json"), { results: [] });
+  const requiredKinds = ["hub", "overview", "sources", "evidence", "actions", "risks", "decisions", "conflict", "changelog"];
+  const projectGroups = new Map();
+
+  for (const page of pages) {
+    if (!["project", "account"].includes(page.division)) continue;
+    if (!projectGroups.has(page.projectKey)) {
+      projectGroups.set(page.projectKey, {
+        projectKey: page.projectKey,
+        projectLabel: page.projectLabel,
+        division: page.division,
+        kinds: new Set(),
+        pages: 0,
+      });
+    }
+    const group = projectGroups.get(page.projectKey);
+    group.kinds.add(page.docKind);
+    group.pages += 1;
+  }
+
+  const rclone = await runCapture("rclone", [
+    "lsd",
+    source,
+    "--max-depth",
+    "1",
+    "--tpslimit",
+    String(env.RCLONE_TPSLIMIT || 1),
+    "--tpslimit-burst",
+    "1",
+  ], { timeoutMs: Number(options.timeoutMs || 35000) });
+  const driveFolders = rclone.code === 0 ? parseRcloneLsd(rclone.stdout) : [];
+  const trackedFolders = new Set((coverage.rows || []).map((row) => row.folderPath).filter(Boolean));
+  const manifestFolders = new Set((manifest.documents || []).map((doc) => doc.folder_path).filter(Boolean));
+  const processedFiles = new Set((runOutput.results || []).map((result) => result.record?.file_path || result.file_path).filter(Boolean));
+  const candidates = [];
+
+  for (const folder of driveFolders) {
+    const bestProject = [...projectGroups.values()]
+      .map((group) => ({ ...group, overlap: Math.max(overlapScore(folder, group.projectKey), overlapScore(folder, group.projectLabel)) }))
+      .sort((a, b) => b.overlap - a.overlap)[0];
+    const tracked = trackedFolders.has(`/${folder}`) || [...trackedFolders].some((item) => item.includes(folder));
+    const manifested = [...manifestFolders].some((item) => item.includes(folder));
+    const missingKinds = bestProject && bestProject.overlap > 0
+      ? requiredKinds.filter((kind) => !bestProject.kinds.has(kind))
+      : [];
+    let score = 30;
+    const reasons = [];
+    if (!tracked) {
+      score += 25;
+      reasons.push("coverage tracker에 없는 Drive 폴더");
+    }
+    if (!manifested) {
+      score += 20;
+      reasons.push("local manifest에 아직 반영되지 않음");
+    }
+    if (bestProject?.overlap > 0) {
+      score += Math.min(25, bestProject.overlap * 8);
+      reasons.push(`위키 프로젝트 후보와 명칭 유사: ${bestProject.projectLabel}`);
+      if (missingKinds.length) {
+        score += Math.min(20, missingKinds.length * 3);
+        reasons.push(`위키 문서 성격 누락: ${missingKinds.slice(0, 5).join(", ")}`);
+      }
+    } else {
+      score += 15;
+      reasons.push("신규 프로젝트/계정 후보일 수 있음");
+    }
+    candidates.push({
+      remote,
+      remotePath: remoteRoot ? `${remoteRoot}/${folder}` : folder,
+      folder,
+      score,
+      priority: score >= 80 ? "high" : score >= 60 ? "medium" : "low",
+      matchedProject: bestProject?.overlap > 0 ? bestProject.projectKey : "",
+      matchedProjectLabel: bestProject?.overlap > 0 ? bestProject.projectLabel : "",
+      missingKinds,
+      tracked,
+      manifested,
+      reasons,
+      recommendedCommand: `rclone copy ${remote}:${remoteRoot ? `${remoteRoot}/${folder}` : folder} ${relative(repoRoot, join(driveRuntime, "mirror", safePathSegment(folder)))} --check-first --transfers 1 --checkers 1 --tpslimit ${env.RCLONE_TPSLIMIT || 1}`,
+    });
+  }
+
+  for (const group of projectGroups.values()) {
+    const missingKinds = requiredKinds.filter((kind) => !group.kinds.has(kind));
+    if (!missingKinds.length) continue;
+    const relatedFolder = driveFolders
+      .map((folder) => ({ folder, overlap: Math.max(overlapScore(folder, group.projectKey), overlapScore(folder, group.projectLabel)) }))
+      .sort((a, b) => b.overlap - a.overlap)[0];
+    if (!relatedFolder || relatedFolder.overlap < 1) continue;
+    if (candidates.some((candidate) => candidate.remotePath.endsWith(relatedFolder.folder))) continue;
+    candidates.push({
+      remote,
+      remotePath: remoteRoot ? `${remoteRoot}/${relatedFolder.folder}` : relatedFolder.folder,
+      folder: relatedFolder.folder,
+      score: 70,
+      priority: "medium",
+      matchedProject: group.projectKey,
+      matchedProjectLabel: group.projectLabel,
+      missingKinds,
+      tracked: trackedFolders.has(`/${relatedFolder.folder}`),
+      manifested: [...manifestFolders].some((item) => item.includes(relatedFolder.folder)),
+      reasons: [`위키 프로젝트 ${group.projectLabel}에 ${missingKinds.slice(0, 5).join(", ")} 보강 필요`],
+      recommendedCommand: `rclone copy ${remote}:${remoteRoot ? `${remoteRoot}/${relatedFolder.folder}` : relatedFolder.folder} ${relative(repoRoot, join(driveRuntime, "mirror", safePathSegment(relatedFolder.folder)))} --check-first --transfers 1 --checkers 1 --tpslimit ${env.RCLONE_TPSLIMIT || 1}`,
+    });
+  }
+
+  const analysis = {
+    createdAt: new Date().toISOString(),
+    source,
+    safety: {
+      driveDeleteSource: false,
+      remoteDeleteAllowed: false,
+      commandSurface: "rclone lsd + selected rclone copy only",
+    },
+    summary: {
+      driveFolders: driveFolders.length,
+      wikiProjects: projectGroups.size,
+      manifestDocuments: manifest.documents?.length || 0,
+      processedDocuments: processedFiles.size,
+      trackedFolders: trackedFolders.size,
+      rcloneStatus: rclone.code === 0 ? "ok" : "failed",
+    },
+    rcloneError: rclone.code === 0 ? "" : rclone.stderr.slice(-2000),
+    candidates: candidates.sort((a, b) => b.score - a.score || a.folder.localeCompare(b.folder)).slice(0, 30),
+  };
+  await prependJsonHistory(targetAnalysisPath, analysis, 50);
+  return analysis;
+}
+
+async function targetRcloneCopy(remotePath, dryRun = true) {
+  const { values: env } = await readEnvFile();
+  const mirrorRoot = join(repoRoot, env.RCLONE_MIRROR_ROOT || "automation/drive_wikify/runtime/mirror", safePathSegment(remotePath));
+  return runCommand("rclone-copy", Boolean(dryRun), {
+    extraArgs: ["--remote-path", remotePath, "--mirror-root", mirrorRoot],
+    targetRemotePath: remotePath,
+    targetMirrorRoot: relative(repoRoot, mirrorRoot),
+    safety: "local mirror only; source Google Drive delete is not implemented",
+  });
+}
+
 async function settingsPayload() {
   const { values } = await readEnvFile();
   return {
@@ -548,11 +810,12 @@ async function settingsPayload() {
   };
 }
 
-async function triggerOpenClaw(task) {
+async function triggerOpenClaw(task, options = {}) {
   const { values: env } = await readEnvFile();
   const webhookUrl = process.env.OPENCLAW_WEBHOOK_URL || env.OPENCLAW_WEBHOOK_URL || process.env.GLM_API_URL || env.GLM_API_URL;
   const apiKey = process.env.OPENCLAW_API_KEY || env.OPENCLAW_API_KEY || process.env.GLM_API_KEY || env.GLM_API_KEY;
   const usesGlmFallback = !process.env.OPENCLAW_WEBHOOK_URL && !env.OPENCLAW_WEBHOOK_URL;
+  const dryRun = options.dryRun !== false;
   const payload = {
     source: "wiki_api",
     task: task || "drive_wikify_cycle",
@@ -563,6 +826,11 @@ async function triggerOpenClaw(task) {
       driveDeleteSource: false,
       remoteDeleteAllowed: false,
     },
+    execution: {
+      localFallback: usesGlmFallback,
+      dryRun,
+      note: "No remote deletion is implemented. Local fallback runs rclone copy only against the local mirror.",
+    },
     commands: {
       dryRun: "drive_wikify.cli rclone-copy --dry-run",
       manifest: "drive_wikify.cli build-manifest",
@@ -572,54 +840,62 @@ async function triggerOpenClaw(task) {
   };
 
   if (!webhookUrl) {
-    const entry = {
-      runId: `${Date.now()}-openclaw`,
-      command: "openclaw-trigger",
-      status: "not_configured",
-      code: 0,
-      stdout: "Neither OPENCLAW_WEBHOOK_URL nor GLM_API_URL is configured.",
-      stderr: "",
-      createdAt: new Date().toISOString(),
-    };
-    await appendRunHistory(entry);
-    return { ...entry, payload };
+    try {
+      const cycle = await fullCycle(dryRun);
+      const stepSummary = cycle.steps.map((step) => `${step.command}: ${step.status}`).join("\n");
+      const entry = {
+        runId: `${Date.now()}-openclaw`,
+        command: "openclaw-trigger",
+        status: cycle.status,
+        code: 200,
+        stdout: [
+          "OpenClaw/GLM endpoint 미설정: 로컬 Drive Wikify 실행을 수행했습니다.",
+          dryRun ? "모드: dry-run 미리보기" : "모드: 실제 로컬 mirror 수집 + 위키화",
+          "원본 Google Drive 삭제: 금지",
+          stepSummary,
+        ].join("\n"),
+        stderr: "",
+        endpoint: "local-drive-wikify",
+        createdAt: new Date().toISOString(),
+      };
+      await appendRunHistory(entry);
+      return { ...entry, payload, localResult: cycle };
+    } catch (error) {
+      const entry = {
+        runId: `${Date.now()}-openclaw`,
+        command: "openclaw-trigger",
+        status: "failed",
+        code: 500,
+        stdout: "",
+        stderr: error.message,
+        createdAt: new Date().toISOString(),
+      };
+      await appendRunHistory(entry);
+      return { ...entry, payload };
+    }
   }
 
   if (usesGlmFallback) {
     try {
-      const { payload: glmPayload, endpoint } = await requestGlmChatCompletion(webhookUrl, apiKey, {
-        model: payload.model,
-        messages: [
-          {
-            role: "system",
-            content: [
-              "당신은 OpenClaw 역할을 대신하는 Drive Wikify 자동화 오케스트레이터다.",
-              "명령을 실제로 실행하지 말고, 제공된 payload 기준으로 안전한 실행 계획과 검증 게이트를 JSON으로 반환한다.",
-              "원본 Google Drive 삭제는 절대 금지다.",
-            ].join(" "),
-          },
-          {
-            role: "user",
-            content: JSON.stringify(payload),
-          },
-        ],
-        temperature: 0.1,
-        max_tokens: 900,
-        thinking: glmThinkingOptions(env),
-        response_format: { type: "json_object" },
-      });
+      const cycle = await fullCycle(dryRun);
+      const stepSummary = cycle.steps.map((step) => `${step.command}: ${step.status}`).join("\n");
       const entry = {
         runId: `${Date.now()}-openclaw`,
         command: "openclaw-trigger",
-        status: "sent",
+        status: cycle.status,
         code: 200,
-        stdout: glmMessageContent(glmPayload).slice(-8000),
+        stdout: [
+          "OpenClaw webhook 미설정: GLM fallback 대신 로컬 Drive Wikify 실행을 수행했습니다.",
+          dryRun ? "모드: dry-run 미리보기" : "모드: 실제 로컬 mirror 수집 + 위키화",
+          "원본 Google Drive 삭제: 금지",
+          stepSummary,
+        ].join("\n"),
         stderr: "",
-        endpoint,
+        endpoint: "local-drive-wikify",
         createdAt: new Date().toISOString(),
       };
       await appendRunHistory(entry);
-      return { ...entry, payload, raw: glmPayload };
+      return { ...entry, payload, localResult: cycle };
     } catch (error) {
       const entry = {
         runId: `${Date.now()}-openclaw`,
@@ -656,19 +932,36 @@ async function triggerOpenClaw(task) {
   return { ...entry, payload };
 }
 
+function resolvePythonBin() {
+  if (process.env.PYTHON_BIN) return process.env.PYTHON_BIN;
+  const bundledPython = "/Users/rtm/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3";
+  return existsSync(bundledPython) ? bundledPython : "python3";
+}
+
+function safePathSegment(value) {
+  return String(value || "target")
+    .replace(/\\/g, "/")
+    .split("/")
+    .filter(Boolean)
+    .map((part) => part.replace(/[^가-힣\w .@()-]+/g, "_").trim() || "folder")
+    .join("/");
+}
+
 function runCommand(command, dryRun, meta = {}) {
   const allowed = new Set(["rclone-copy", "build-manifest", "run"]);
   if (!allowed.has(command)) {
     throw new Error(`Unsupported automation command: ${command}`);
   }
+  const { extraArgs = [], ...entryMeta } = meta;
   const args = ["-m", "drive_wikify.cli", command];
   if (command === "rclone-copy" && dryRun) args.push("--dry-run");
+  args.push(...extraArgs);
 
   const env = {
     ...process.env,
     PYTHONPATH: driveWikifySrc,
   };
-  const python = process.env.PYTHON_BIN || "/Users/rtm/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3";
+  const python = resolvePythonBin();
   const runId = `${Date.now()}-${command}`;
   const startedAt = new Date().toISOString();
   const commandLabel = dryRun ? `${command} --dry-run` : command;
@@ -681,7 +974,7 @@ function runCommand(command, dryRun, meta = {}) {
     stderr: "",
     createdAt: startedAt,
     startedAt,
-    ...meta,
+    ...entryMeta,
   };
 
   return new Promise(async (resolvePromise) => {
@@ -714,6 +1007,19 @@ function runCommand(command, dryRun, meta = {}) {
       stderr += chunk.toString();
       updateRunHistory(runId, { stdout: stdout.slice(-8000), stderr: stderr.slice(-8000) }).catch(() => {});
     });
+    child.on("error", async (error) => {
+      clearTimeout(timeout);
+      activeJobs.delete(runId);
+      stderr += `\nFailed to start ${python}: ${error.message}`;
+      const finalEntry = await updateRunHistory(runId, {
+        status: "failed",
+        code: 127,
+        stdout: stdout.slice(-8000),
+        stderr: stderr.slice(-8000),
+        finishedAt: new Date().toISOString(),
+      });
+      resolvePromise(finalEntry);
+    });
     child.on("close", async (code) => {
       clearTimeout(timeout);
       activeJobs.delete(runId);
@@ -731,7 +1037,7 @@ function runCommand(command, dryRun, meta = {}) {
 
 async function fullCycle(dryRun) {
   const steps = [];
-  steps.push(await runCommand("rclone-copy", true));
+  steps.push(await runCommand("rclone-copy", Boolean(dryRun)));
   if (!dryRun) {
     steps.push(await runCommand("build-manifest", false));
     steps.push(await runCommand("run", false));
@@ -747,13 +1053,23 @@ async function fullCycle(dryRun) {
 async function automationSnapshot() {
   const runs = await readJsonFile(runHistoryPath, []);
   const schedules = await readJsonFile(schedulesPath, []);
+  const normalizedRuns = runs.map((run) => {
+    if (run.status === "running" && !activeJobs.has(run.runId)) {
+      return {
+        ...run,
+        status: "stale",
+        stderr: run.stderr || "실행 프로세스는 없지만 이전 로그가 running으로 남아 정리 표시했습니다.",
+      };
+    }
+    return run;
+  });
   return {
     running: [...activeJobs.values()].map((job) => ({
       runId: job.runId,
       command: job.command,
       startedAt: job.startedAt,
     })),
-    runs,
+    runs: normalizedRuns,
     schedules,
   };
 }
@@ -863,13 +1179,14 @@ function localDigest(text, projectHint) {
   const evidenceLines = lines.slice(0, 10);
   return {
     provider: "local-rule-digest",
-    project_decision: projectHint ? "candidate_existing_project" : "hold_for_review",
-    project_hint: projectHint || null,
-    sources_draft: "입력 텍스트 또는 파일 경로를 Sources.md 후보로 등록",
-    evidence_candidates: evidenceLines,
-    number_candidates: numberLines,
-    conflict_candidates: conflictLines,
-    next_action: "GLM adapter 연결 후 프로젝트 분기/중복 판단을 재검토",
+    language: "ko",
+    판정: projectHint ? "기존 프로젝트 후보" : "검토 보류",
+    프로젝트_힌트: projectHint || "없음",
+    출처_초안: "입력 원문, 파일 경로, Drive mirror path를 Sources.md 후보로 등록",
+    핵심_근거_후보: evidenceLines,
+    수치_후보: numberLines,
+    충돌_후보: conflictLines,
+    다음_액션: "GLM 연결 후 프로젝트 분기, 중복 여부, 위키 승격 가능성을 재검토",
   };
 }
 
@@ -889,6 +1206,14 @@ function codingPlanGlmUrl(apiUrl) {
 function glmMessageContent(payload) {
   const message = payload.choices?.[0]?.message || {};
   return message.content || message.reasoning_content || "";
+}
+
+function isKoreanDigestContent(content) {
+  const text = String(content || "");
+  if (/Analyze the Request|Analyze the Input|Map to JSON/i.test(text)) return false;
+  const trimmed = text.trim();
+  const looksStructured = trimmed.startsWith("{") || trimmed.startsWith("```json");
+  return looksStructured && /[가-힣]/.test(text) && /(판정|프로젝트_후보|핵심_근거_후보|다음_액션|출처_초안)/.test(text);
 }
 
 function glmThinkingOptions(env = {}) {
@@ -971,7 +1296,14 @@ async function glmDigest(text, projectHint) {
       messages: [
         {
           role: "system",
-          content: "You produce evidence-preserving wiki ingest digests in compact JSON.",
+          content: [
+            "당신은 Obsidian 위키에 새 지식을 주입하기 전 한국어 다이제스트를 만드는 보조자다.",
+            "반드시 한국어로만 작성한다.",
+            "입력 원문을 근거 보존 관점으로 정리하되, 확정 지식과 보조 대화 맥락을 구분한다.",
+            "JSON 객체만 반환한다.",
+            "키는 반드시 한국어로 쓴다: 판정, 프로젝트_후보, 출처_초안, 핵심_근거_후보, 수치_후보, 충돌_후보, 위키_반영_초안, 다음_액션, 보류_이유.",
+            "프로젝트 확정이 어렵거나 근거가 부족하면 판정은 검토 보류로 둔다.",
+          ].join(" "),
         },
         {
           role: "user",
@@ -983,12 +1315,19 @@ async function glmDigest(text, projectHint) {
       thinking: glmThinkingOptions(env),
       response_format: { type: "json_object" },
     });
+    const content = glmMessageContent(payload);
+    if (!isKoreanDigestContent(content)) {
+      return {
+        ...localDigest(text, projectHint),
+        upstreamStatus: "GLM이 한국어 지식 주입 형식을 벗어나 local Korean digest로 대체",
+      };
+    }
     return {
       provider: "glm",
       model,
       endpoint,
       raw: payload,
-      digest: glmMessageContent(payload),
+      digest: content,
     };
   } catch (error) {
     return { ...localDigest(text, projectHint), upstreamStatus: error.message };
@@ -1443,6 +1782,17 @@ async function glmChat(message, projectId = "default") {
   }
 }
 
+function chatBusyPayload(projectId) {
+  const active = activeChatRequests.get(projectId);
+  if (!active) return null;
+  return {
+    status: "busy",
+    error: "GLM 추론이 아직 진행 중입니다. 현재 응답이 끝난 뒤 다음 메시지를 보내세요.",
+    projectId,
+    active,
+  };
+}
+
 async function paperclipStatus() {
   const { values: env } = await readEnvFile();
   const url = process.env.PAPERCLIP_URL || env.PAPERCLIP_URL || "http://127.0.0.1:3000";
@@ -1844,6 +2194,12 @@ const server = createServer(async (req, res) => {
     if (pathname === "/api/coverage" && req.method === "GET") {
       return sendJson(res, 200, await coverageSummary());
     }
+    if (pathname === "/api/drive/targets" && req.method === "GET") {
+      return sendJson(res, 200, { analyses: await readJsonFile(targetAnalysisPath, []) });
+    }
+    if (pathname === "/api/drive/targets" && req.method === "POST") {
+      return sendJson(res, 200, await driveTargetAnalysis());
+    }
     if (pathname === "/api/automation/runs" && req.method === "GET") {
       return sendJson(res, 200, { runs: await readJsonFile(runHistoryPath, []) });
     }
@@ -1870,6 +2226,12 @@ const server = createServer(async (req, res) => {
       const result = body.command === "full-cycle" ? await fullCycle(Boolean(body.dryRun)) : await runCommand(body.command, Boolean(body.dryRun));
       return sendJson(res, result.status === "completed" ? 200 : 500, result);
     }
+    if (pathname === "/api/automation/target-rclone-copy" && req.method === "POST") {
+      const body = await readBody(req);
+      if (!body.remotePath) return sendJson(res, 400, { error: "remotePath is required" });
+      const result = await targetRcloneCopy(body.remotePath, body.dryRun !== false);
+      return sendJson(res, result.status === "completed" ? 200 : 500, result);
+    }
     if (pathname === "/api/skills/catalog" && req.method === "GET") {
       return sendJson(res, 200, { skills: skillCatalog() });
     }
@@ -1886,6 +2248,9 @@ const server = createServer(async (req, res) => {
     if (pathname === "/api/chat/global" && req.method === "POST") {
       const body = await readBody(req);
       return sendJson(res, 200, { global: await saveGlobalChatSettings(body) });
+    }
+    if (pathname === "/api/chat/status" && req.method === "GET") {
+      return sendJson(res, 200, { active: [...activeChatRequests.values()] });
     }
     if (pathname === "/api/chat/projects" && req.method === "POST") {
       const body = await readBody(req);
@@ -1906,7 +2271,9 @@ const server = createServer(async (req, res) => {
     }
     if (pathname === "/api/openclaw/trigger" && req.method === "POST") {
       const body = await readBody(req);
-      const result = await triggerOpenClaw(body.task || "drive_wikify_cycle");
+      const result = await triggerOpenClaw(body.task || "drive_wikify_cycle", {
+        dryRun: body.dryRun !== false,
+      });
       return sendJson(res, result.status === "failed" ? 500 : 200, result);
     }
     if (pathname === "/api/wiki/search" && req.method === "GET") {
@@ -1942,13 +2309,177 @@ const server = createServer(async (req, res) => {
     if (pathname === "/api/chat/glm" && req.method === "POST") {
       const body = await readBody(req);
       const projectId = body.projectId || "default";
-      await appendChatProjectMessage(projectId, { role: "user", content: body.message || "" });
-      const remembered = await autoRememberFromMessage(projectId, body.message || "");
-      const result = await glmChat(body.message || "", projectId);
-      await appendChatProjectMessage(result.projectId || projectId, { role: "assistant", content: result.message || "" });
-      result.remembered = remembered;
-      return sendJson(res, 200, result);
+      const busy = chatBusyPayload(projectId);
+      if (busy) return sendJson(res, 409, busy);
+      const active = {
+        projectId,
+        status: "thinking",
+        phase: "glm_reasoning",
+        startedAt: new Date().toISOString(),
+      };
+      activeChatRequests.set(projectId, active);
+      try {
+        await appendChatProjectMessage(projectId, { role: "user", content: body.message || "" });
+        const remembered = await autoRememberFromMessage(projectId, body.message || "");
+        const result = await glmChat(body.message || "", projectId);
+        await appendChatProjectMessage(result.projectId || projectId, { role: "assistant", content: result.message || "" });
+        result.remembered = remembered;
+        result.status = result.provider === "fallback" && /^GLM 연결 실패/.test(result.message || "") ? "failed" : "completed";
+        return sendJson(res, 200, result);
+      } finally {
+        activeChatRequests.delete(projectId);
+      }
     }
+    if (pathname === "/api/chat/evidence" && req.method === "POST") {
+      const body = await readBody(req);
+      const content = body.content || "";
+      const projectHint = body.projectHint || "";
+      
+      // Create evidence log candidate from chat content
+      const evidence = {
+        id: `chat-evidence-${Date.now()}`,
+        source: "chat_promotion",
+        projectHint,
+        content: content,
+        extractedAt: new Date().toISOString(),
+        candidates: {
+          facts: extractFactsFromContent(content),
+          numbers: extractNumbersFromContent(content),
+          decisions: extractDecisionsFromContent(content),
+          actions: extractActionsFromContent(content),
+          conflicts: extractConflictsFromContent(content),
+        },
+      };
+      
+      return sendJson(res, 200, { evidence, status: "candidate_created" });
+    }
+    if (pathname === "/api/chat/evidence" && req.method === "POST") {
+      const body = await readBody(req);
+      const content = body.content || "";
+      const projectHint = body.projectHint || "";
+      
+      // Extract key information from chat content
+      const facts = extractKeyInfo(content);
+      const numbers = extractKeyNumbers(content);
+      const decisions = extractKeyDecisions(content);
+      const actions = extractKeyActions(content);
+      const conflicts = extractKeyConflicts(content);
+      
+      const evidence = {
+        id: `chat-evidence-${Date.now()}`,
+        source: "chat_promotion",
+        projectHint,
+        content: content,
+        extractedAt: new Date().toISOString(),
+        candidates: {
+          facts: facts,
+          numbers: numbers,
+          decisions: decisions,
+          actions: actions,
+          conflicts: conflicts,
+        },
+      };
+      
+      return sendJson(res, 200, { evidence, status: "candidate_created" });
+    }
+    
+    // Helper functions for extracting information from chat content
+    function extractKeyInfo(content) {
+      const text = String(content || "");
+      const facts = [];
+      const factPatterns = [
+        /(.{10,200}?완료|진행중|계획됨|결정됨|확정됨)/g,
+        /(.{10,200}?테스트|검증|확인|완료)/g,
+        /(.{10,200}?리스크|이슈|문제|해결)/g,
+      ];
+      
+      factPatterns.forEach((pattern) => {
+        const matches = text.match(pattern);
+        if (matches) {
+          facts.push(matches[0].trim());
+        }
+      });
+      
+      return [...new Set(facts)].slice(0, 10);
+    }
+    
+    function extractKeyNumbers(content) {
+      const text = String(content || "");
+      const numbers = [];
+      const numberPatterns = [
+        /(\d{1,2}월\s*\d{1,2}일)/g,
+        /(\d{4}-\d{1,2}-\d{1,2})/g,
+        /(\d+\.?\d*\s*[%억만천원원]+)/g,
+        /(\d+\s*개|건|회|분|초|시간)/g,
+      ];
+      
+      numberPatterns.forEach((pattern) => {
+        const matches = text.match(pattern);
+        if (matches) {
+          numbers.push(matches[0].trim());
+        }
+      });
+      
+      return [...new Set(numbers)].slice(0, 8);
+    }
+    
+    function extractKeyDecisions(content) {
+      const text = String(content || "");
+      const decisions = [];
+      const decisionPatterns = [
+        /(.{10,100}?결정했다?|결정함|확정했다?|확정함)/g,
+        /(.{10,100}?선택했다?|선택함|채택했다?|채택함)/g,
+        /(.{10,100}?하기로 했다?)/g,
+      ];
+      
+      decisionPatterns.forEach((pattern) => {
+        const matches = text.match(pattern);
+        if (matches) {
+          decisions.push(matches[0].trim());
+        }
+      });
+      
+      return [...new Set(decisions)].slice(0, 5);
+    }
+    
+    function extractKeyActions(content) {
+      const text = String(content || "");
+      const actions = [];
+      const actionPatterns = [
+        /(.{10,100}?다음에?|추후에?|그다음에?)/g,
+        /(.{10,100}?해야 한다?|해야 함|필요함|필요하다)/g,
+        /(.{10,100}?계획이다?|예정이다?)/g,
+      ];
+      
+      actionPatterns.forEach((pattern) => {
+        const matches = text.match(pattern);
+        if (matches) {
+          actions.push(matches[0].trim());
+        }
+      });
+      
+      return [...new Set(actions)].slice(0, 5);
+    }
+    
+    function extractKeyConflicts(content) {
+      const text = String(content || "");
+      const conflicts = [];
+      const conflictPatterns = [
+        /(.{10,100}?다르다?|상이하다?|불일치하다?|충돌한다?)/g,
+        /(.{10,100}?이전에?|과거에?|예전에?)/g,
+        /(.{10,100}?변경했다?|수정했다?)/g,
+      ];
+      
+      conflictPatterns.forEach((pattern) => {
+        const matches = text.match(pattern);
+        if (matches) {
+          conflicts.push(matches[0].trim());
+        }
+      });
+      
+      return [...new Set(conflicts)].slice(0, 5);
+    }
+
     if (pathname === "/api/paperclip/status" && req.method === "GET") {
       return sendJson(res, 200, await paperclipStatus());
     }

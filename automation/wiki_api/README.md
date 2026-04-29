@@ -27,8 +27,10 @@ http://127.0.0.1:8787
 - GLM-backed OpenClaw 자동화 트리거
 - 전체 Google Drive 수집 상태 요약
 - 신규 지식 digest draft
-- 프로젝트별 지침/메모리를 저장하는 GLM 업무 운영 chat
+- 전역 지침과 프로젝트별 특수 지침/메모리를 분리 저장하는 GLM 업무 운영 chat
+- 프로젝트별 GLM 추론 lock과 `/api/chat/status` 실행 상태 조회
 - 프로젝트별 GLM 챗 지침/메모리/최근 대화의 L1 memory 보조 지식 동기화
+- 대화 중 기억할 만한 날짜/결정/테스트/선호/규칙을 자동 프로젝트 메모리 후보로 저장
 - Paperclip bridge 상태를 GLM chat 운영 컨텍스트로 주입
 
 ## 안전 원칙
@@ -64,5 +66,9 @@ http://127.0.0.1:8787
 ## GLM 챗 보조 지식 저장
 
 - `automation/wiki_api/runtime/chat_projects.json`은 런타임 원본이다.
+- `automation/wiki_api/runtime/chat_global_settings.json`은 모든 GLM 챗에 적용되는 전역 운영 지침 원본이다.
+- 전역 지침은 `obsidian/L1_memory/GLM_Global_Instructions.md`로 자동 동기화한다.
 - 같은 내용은 `obsidian/L1_memory/GLM_Chat_Projects/*.md`로 자동 동기화한다.
 - 이 문서들은 `auxiliary_not_decision` 성격이며, 대화내역은 결정/검증된 사실이 아니라 보조 맥락으로만 사용한다.
+- 프로젝트별 자동 메모리는 `source: auto_from_chat`, `confidence: auxiliary_not_decision`으로 저장한다.
+- 같은 프로젝트에서 GLM이 추론 중이면 다음 `/api/chat/glm` 요청은 `409 busy`로 거절한다.

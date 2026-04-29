@@ -13,7 +13,7 @@
 - 위키 직접 조회와 Obsidian식 그래프맵
 - 운영 설정 조회/수정
 - 위키 검색, 근거 Markdown 선택, 선택 근거 GLM 정리
-- 신규 지식 주입과 LLM digest preview
+- 신규 지식 주입과 한국어 LLM 다이제스트 preview
 - 처리 결과 확인
 - GPT/Claude식 프로젝트별 GLM 업무 운영 chat
 - Paperclip 기반 위키/GLM 컨텍스트 브리지
@@ -37,6 +37,13 @@
 - 중앙 뷰어는 Markdown을 읽기 쉬운 HTML preview로 렌더링한다.
 - 우측 그래프맵은 `[[wikilink]]`와 `.md` 링크를 기반으로 노드/링크를 시각화한다.
 
+## 지식 주입
+
+- 지식 주입 다이제스트는 한국어 출력을 기본으로 한다.
+- GLM 프롬프트는 한국어 JSON 키와 한국어 설명을 요구한다.
+- GLM 실패 또는 미연결 fallback도 `판정`, `출처 초안`, `핵심 근거 후보`, `충돌 후보`, `다음 액션` 형식의 한국어 초안으로 표시한다.
+- GLM이 내부 분석문이나 비한국어 형식으로 응답하면 한국어 local digest로 자동 대체한다.
+
 ## GLM 챗
 
 - GLM 챗은 위키 검색 결과를 설명하지 않고, 위키를 근거 저장소로 사용해 실제 업무 상태를 정리한다.
@@ -44,10 +51,15 @@
 - `위키 검색 결과`, `스니펫`, `메타데이터` 같은 메타 설명을 피하고 프로젝트 자체를 바로 다룬다.
 - Paperclip 상태, agent template, 최근 task는 GLM 챗의 운영 힌트로 들어가며 별도 실행 결과처럼 과장하지 않는다.
 - 화면은 좌측 프로젝트 목록, 중앙 대화, 우측 지침/메모리 패널 구조다.
+- 전역 지침은 모든 GLM 챗에 공통 적용하고, 프로젝트별 지침은 해당 프로젝트만의 특수 규칙으로 분리한다.
 - 프로젝트별 지침, 메모리, 대화 이력은 `automation/wiki_api/runtime/chat_projects.json`에 저장된다.
+- 전역 지침은 `automation/wiki_api/runtime/chat_global_settings.json`과 `obsidian/L1_memory/GLM_Global_Instructions.md`에 저장된다.
 - 같은 내용은 `obsidian/L1_memory/GLM_Chat_Projects/*.md`에 보조 지식으로 자동 동기화된다.
 - 대화내역은 결정된 지식이 아닐 수 있으므로 GLM과 위키에서는 `auxiliary_not_decision`으로 취급한다.
+- 대화 중 날짜, 테스트, 결정, 변경, 선호, 규칙처럼 기억할 만한 문장은 자동 프로젝트 메모리 후보로 저장한다.
 - GLM 호출은 기본적으로 `GLM_THINKING_TYPE=enabled`, `GLM_THINKING_BUDGET_TOKENS=8192`를 사용해 깊게 검토하도록 유도한다.
+- 채팅 중에는 `전송 중 -> GLM 추론중 -> 저장 중 -> 대기/실패` 상태를 표시하고, 추론 중 다음 메시지 입력을 잠근다.
+- 같은 프로젝트에서 서버가 이미 추론 중이면 중복 요청은 `409 busy`로 막고 UI에 실패/재시도 상태를 보여준다.
 
 ## 수집 파이프라인
 
