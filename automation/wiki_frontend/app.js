@@ -41,6 +41,7 @@ const state = {
   wikiGraph: { nodes: [], edges: [] },
   activeWikiPath: "",
   wikiManagementCommands: [],
+  activeWikiManagementCommandId: "",
   activeProjectKey: "",
   wikiFilters: {
     division: "all",
@@ -97,6 +98,7 @@ const settingLabels = {
   GLM_THINKING_BUDGET_TOKENS: "GLM thinking budget",
   GLM_CHAT_MAX_TOKENS: "GLM 챗 출력 토큰",
   GLM_CHAT_STREAM: "GLM 챗 스트리밍",
+  GLM_CONTEXT_MODE: "GLM 컨텍스트 절약 모드",
   OPENCLAW_WEBHOOK_URL: "OpenClaw GLM Webhook override",
   OPENCLAW_API_KEY: "OpenClaw GLM API Key override",
   PAPERCLIP_URL: "Paperclip URL",
@@ -260,6 +262,7 @@ function renderSearchBrief(brief) {
     ? `${brief.provider} · ${brief.upstreamStatus}`
     : `${brief?.provider || "정리 완료"}${brief?.model ? ` · ${brief.model}` : ""}${brief?.endpoint ? ` · ${brief.endpoint}` : ""}`;
   $("#search-brief").innerHTML = [
+    brief?.tokenBudget ? `<p class="token-budget-note">컨텍스트: ${escapeHtml(brief.tokenBudget.mode)} · 압축카드 ${escapeHtml(brief.tokenBudget.evidenceCards)}개 · 근거 약 ${escapeHtml(brief.tokenBudget.estimatedEvidenceChars)}자</p>` : "",
     renderMarkdownBullets(brief?.summaryMarkdown),
     renderBriefList("핵심 발견", brief?.keyFindings),
     renderBriefList("프로젝트 후보", brief?.relatedProjects),
@@ -655,8 +658,12 @@ function renderWikiManagementCommand(entry) {
   if (!container) return;
   if (!entry) {
     container.textContent = "아직 실행된 관리 명령이 없습니다.";
+    state.activeWikiManagementCommandId = "";
+    $("#wiki-command-apply").disabled = true;
     return;
   }
+  state.activeWikiManagementCommandId = entry.id || "";
+  $("#wiki-command-apply").disabled = !entry.id;
   const plan = entry.plan || {};
   const targetPages = plan.targetPages || [];
   const operations = plan.operations || [];
@@ -675,12 +682,14 @@ function renderWikiManagementCommand(entry) {
     targetPages.length ? `<h4>대상 문서</h4><div class="wiki-command-targets">${targetPages.slice(0, 12).map((page) => `<button type="button" data-notion-path="${escapeHtml(page.path)}">${escapeHtml(page.title || page.path)}<small>${escapeHtml(page.path)}</small></button>`).join("")}</div>` : "",
     plan.risks?.length ? `<h4>위험/검증</h4><ul>${plan.risks.map((risk) => `<li>${escapeHtml(risk)}</li>`).join("")}</ul>` : "",
     plan.nextActions?.length ? `<h4>다음 액션</h4><ul>${plan.nextActions.map((action) => `<li>${escapeHtml(action)}</li>`).join("")}</ul>` : "",
+    `<div class="wiki-command-apply-inline"><button class="command-button danger" data-wiki-command-apply="${escapeHtml(entry.id)}" type="button">이 계획 실행</button><span>현재 자동 실행 범위: 로컬 Markdown 명칭 치환. 구조 승격은 로그에 skipped로 남깁니다.</span></div>`,
     entry.upstreamStatus ? `<p class="pipeline-note">GLM 상태: ${escapeHtml(entry.upstreamStatus)}</p>` : "",
     `</article>`,
   ].join("");
   container.querySelectorAll("[data-notion-path]").forEach((button) => {
     button.addEventListener("click", () => openNotionWikiPage(button.dataset.notionPath));
   });
+  container.querySelector("[data-wiki-command-apply]")?.addEventListener("click", applyWikiManagementCommand);
 }
 
 async function loadWikiManagementCommands() {
@@ -708,6 +717,51 @@ async function runWikiManagementCommand() {
   $("#wiki-command-status").textContent = `${result.provider} 계획 완료 · 대상 ${targetCount}개 · 치환 ${pairCount}쌍`;
   state.wikiManagementCommands.unshift(result);
   renderWikiManagementCommand(result);
+}
+
+function renderWikiApplyResult(result) {
+  const container = $("#wiki-command-result");
+  if (!container) return;
+  const changedFiles = result.changedFiles || [];
+  const skippedOperations = result.skippedOperations || [];
+  const summary = [
+    `<article class="wiki-command-card">`,
+    `<div class="wiki-command-meta">`,
+    `<strong>실행 결과: ${escapeHtml(result.status || "unknown")}</strong>`,
+    `<small>${escapeHtml(result.createdAt || "")} · local wiki only · Google Drive 원본 변경 없음</small>`,
+    `</div>`,
+    changedFiles.length ? `<h4>변경된 로컬 위키 파일</h4><div class="wiki-command-targets">${changedFiles.map((file) => `<button type="button" data-notion-path="${escapeHtml(file.path)}">${escapeHtml(file.title || file.path)}<small>${escapeHtml(file.replacements.map((pair) => `${pair.from}->${pair.to} ${pair.count}회`).join(", "))}</small></button>`).join("")}</div>` : `<p class="pipeline-note">변경된 파일이 없습니다.</p>`,
+    skippedOperations.length ? `<h4>자동 실행 제외</h4><ul>${skippedOperations.map((item) => `<li><strong>${escapeHtml(item.type || item.path || "skipped")}</strong>: ${escapeHtml(item.reason || "")}</li>`).join("")}</ul>` : "",
+    `</article>`,
+  ].join("");
+  container.innerHTML = summary;
+  container.querySelectorAll("[data-notion-path]").forEach((button) => {
+    button.addEventListener("click", () => openNotionWikiPage(button.dataset.notionPath));
+  });
+}
+
+async function applyWikiManagementCommand() {
+  const commandId = state.activeWikiManagementCommandId;
+  if (!commandId) {
+    $("#wiki-command-status").textContent = "실행할 계획이 없습니다.";
+    return;
+  }
+  const ok = window.confirm("검토한 계획을 로컬 위키 Markdown에 실행합니다. 원본 Google Drive는 절대 수정/삭제하지 않습니다. 계속할까요?");
+  if (!ok) return;
+  $("#wiki-command-status").textContent = "로컬 위키 실행 중";
+  const result = await api("/api/wiki/manage/apply", {
+    method: "POST",
+    body: JSON.stringify({ commandId }),
+  });
+  if (result.error || result.mock) {
+    $("#wiki-command-status").textContent = `실행 실패: ${result.error || "API 연결 대기"}`;
+    return;
+  }
+  const changedCount = result.changedFiles?.length || 0;
+  const skippedCount = result.skippedOperations?.length || 0;
+  $("#wiki-command-status").textContent = `실행 완료 · 변경 ${changedCount}개 · 제외 ${skippedCount}개`;
+  renderWikiApplyResult(result);
+  await loadNotionWikiBrowser();
 }
 
 function fillWikiManagementExample() {
@@ -1455,12 +1509,13 @@ async function searchWiki() {
 async function summarizeSelectedResults() {
   const query = $("#wiki-query").value.trim();
   const paths = [...state.selectedSearchPaths];
+  const mode = $("#wiki-search-mode")?.value || "standard";
   if (!query || !paths.length) return;
   $("#search-brief-provider").textContent = "GLM 정리 중";
-  $("#search-brief").textContent = `${paths.length}개 선택 근거를 GLM으로 정리하는 중입니다.`;
+  $("#search-brief").textContent = `${paths.length}개 선택 근거를 ${mode} 압축 카드로 정리하는 중입니다.`;
   const payload = await api("/api/wiki/search/brief", {
     method: "POST",
-    body: JSON.stringify({ query, paths }),
+    body: JSON.stringify({ query, paths, mode }),
   });
   if (payload.error) {
     $("#search-brief-provider").textContent = "정리 실패";
@@ -1614,7 +1669,8 @@ async function sendChat() {
     await apiStream("/api/chat/glm/stream", { message: text, projectId: state.activeChatProjectId }, {
       status: (data) => {
         const thinkingBudget = data.thinking?.budget_tokens ? ` · thinking ${data.thinking.budget_tokens} tokens` : "";
-        streaming.setStatus(`연결됨: ${data.endpoint || "glm"} · output ${data.maxTokens || "default"} tokens${thinkingBudget}`);
+        const contextMode = data.tokenBudget?.mode ? ` · context ${data.tokenBudget.mode}/${data.tokenBudget.maxCards} cards` : "";
+        streaming.setStatus(`연결됨: ${data.endpoint || "glm"} · output ${data.maxTokens || "default"} tokens${thinkingBudget}${contextMode}`);
       },
       thinking: (data) => {
         streaming.appendThinking(data.content || "");
@@ -1895,6 +1951,7 @@ $("#chat-project-delete").addEventListener("click", deleteChatProject);
 $("#chat-memory-add").addEventListener("click", addChatMemory);
 $("#wiki-refresh").addEventListener("click", loadNotionWikiBrowser);
 $("#wiki-command-run").addEventListener("click", runWikiManagementCommand);
+$("#wiki-command-apply").addEventListener("click", applyWikiManagementCommand);
 $("#wiki-command-example").addEventListener("click", fillWikiManagementExample);
 $("#notion-wiki-search").addEventListener("input", () => {
   state.wikiFilters.query = $("#notion-wiki-search").value.trim();

@@ -377,8 +377,9 @@
             <textarea id="wiki-command-input" placeholder="예: 아사히카세히의 위키를 모두 모아 프로젝트, 고객사로 승격해. 참고로 아사히카세이->아사히카세히 영칭도 일괄수정"></textarea>
             <div class="wiki-command-actions">
               <button class="command-button accent" id="wiki-command-run" type="button">GLM 관리 계획 생성</button>
+              <button class="command-button danger" id="wiki-command-apply" type="button" disabled>검토한 계획 실행</button>
               <button class="command-button" id="wiki-command-example" type="button">예시 입력</button>
-              <span>현재는 preview-only입니다. 실제 파일 적용 전 diff 검토가 필요합니다.</span>
+              <span>실행은 로컬 위키 Markdown만 변경합니다. 원본 Google Drive는 절대 삭제/수정하지 않습니다.</span>
             </div>
             <div id="wiki-command-result" class="wiki-command-result">아직 실행된 관리 명령이 없습니다.</div>
           </section>
@@ -529,6 +530,11 @@
         <section id="search" class="view">
           <div class="search-row">
             <input id="wiki-query" type="search" placeholder="프로젝트, 문서명, 수치, 충돌 키워드 검색" />
+            <select id="wiki-search-mode" title="GLM에 전달할 근거 압축 강도">
+              <option value="economy">절약</option>
+              <option value="standard" selected>표준</option>
+              <option value="deep">정밀</option>
+            </select>
             <button id="wiki-search-button" class="command-button">검색</button>
           </div>
           <div class="search-workspace">

@@ -18,6 +18,8 @@ const paperclipEventsPath = join(apiRuntime, "paperclip_events.json");
 const schedulesPath = join(apiRuntime, "schedules.json");
 const targetAnalysisPath = join(apiRuntime, "target_analysis.json");
 const wikiManagementPath = join(apiRuntime, "wiki_management_commands.json");
+const wikiManagementApplyPath = join(apiRuntime, "wiki_management_apply_log.json");
+const wikiContextCachePath = join(apiRuntime, "wiki_context_cache.json");
 const knowledgePromotionPath = join(apiRuntime, "knowledge_promotions.json");
 const knowledgePromotionRoot = join(apiRuntime, "knowledge_promotions");
 const skillOutputsRoot = join(apiRuntime, "skill_outputs");
@@ -55,6 +57,7 @@ const editableSettings = new Set([
   "GLM_THINKING_BUDGET_TOKENS",
   "GLM_CHAT_MAX_TOKENS",
   "GLM_CHAT_STREAM",
+  "GLM_CONTEXT_MODE",
   "OPENCLAW_WEBHOOK_URL",
   "OPENCLAW_API_KEY",
   "PAPERCLIP_URL",
@@ -245,6 +248,99 @@ function findSnippet(markdown, query) {
   return found.slice(start, start + 240);
 }
 
+function contextBudget(mode = "standard") {
+  const budgets = {
+    economy: { mode: "economy", maxCards: 4, maxKeyLines: 5, maxMemoryItems: 4, recentTurns: 4, maxLineChars: 180 },
+    standard: { mode: "standard", maxCards: 7, maxKeyLines: 8, maxMemoryItems: 7, recentTurns: 6, maxLineChars: 240 },
+    deep: { mode: "deep", maxCards: 12, maxKeyLines: 14, maxMemoryItems: 10, recentTurns: 8, maxLineChars: 320 },
+  };
+  return budgets[mode] || budgets.standard;
+}
+
+function compactLine(line, maxChars = 240) {
+  return String(line || "").replace(/\s+/g, " ").trim().slice(0, maxChars);
+}
+
+function extractMeaningfulLines(markdown, query = "", budget = contextBudget()) {
+  const terms = String(query || "").toLowerCase().split(/\s+/).filter((term) => term.length >= 2);
+  const lines = markdown.split("\n").map((line) => line.trim()).filter((line) => line && !line.startsWith("---"));
+  const scored = lines.map((line, index) => {
+    const lower = line.toLowerCase();
+    let score = 0;
+    if (/^#{1,4}\s/.test(line)) score += 2;
+    if (terms.some((term) => lower.includes(term))) score += 8;
+    if (/\d{4}-\d{1,2}-\d{1,2}|\d+\.?\d*\s*(%|억|만|천|원|개|건|회|분|초|시간)/.test(line)) score += 5;
+    if (/결정|확정|완료|진행|보류|리스크|충돌|이슈|다음|액션|근거|출처|고객|납기|일정/.test(line)) score += 4;
+    if (line.length > 260) score -= 1;
+    return { line: compactLine(line, budget.maxLineChars), score, index };
+  }).filter((item) => item.score > 0);
+  return [...new Map(scored
+    .sort((a, b) => b.score - a.score || a.index - b.index)
+    .slice(0, budget.maxKeyLines)
+    .sort((a, b) => a.index - b.index)
+    .map((item) => [item.line, item.line])).values()];
+}
+
+function extractPatternLines(markdown, regex, limit = 6) {
+  return [...new Set(markdown.split("\n")
+    .map((line) => compactLine(line, 220))
+    .filter((line) => regex.test(line))
+    .slice(0, limit))];
+}
+
+function estimateChars(value) {
+  return JSON.stringify(value || {}).length;
+}
+
+async function wikiContextCardForResult(item, query = "", mode = "standard") {
+  const budget = contextBudget(mode);
+  const fullPath = managedWikiFullPath(item.path);
+  const fileStat = await stat(fullPath).catch(() => null);
+  const cache = await readJsonFile(wikiContextCachePath, {});
+  const cached = cache[item.path];
+  let base = cached;
+  if (!cached || cached.mtimeMs !== fileStat?.mtimeMs || cached.size !== fileStat?.size) {
+    const markdown = await readFile(fullPath, "utf-8");
+    const frontmatter = parseFrontmatter(markdown);
+    base = {
+      path: item.path,
+      title: titleFromMarkdown(item.path, markdown),
+      frontmatter,
+      classification: classifyWikiPage(item.path, frontmatter),
+      mtimeMs: fileStat?.mtimeMs || 0,
+      size: fileStat?.size || markdown.length,
+      snippet: findSnippet(markdown, query || item.title || item.path),
+      keyLines: extractMeaningfulLines(markdown, "", contextBudget("deep")),
+      numbers: extractPatternLines(markdown, /\d{4}-\d{1,2}-\d{1,2}|\d+\.?\d*\s*(%|억|만|천|원|개|건|회|분|초|시간)/, 10),
+      decisions: extractPatternLines(markdown, /결정|확정|승인|채택|선택|완료/, 8),
+      actions: extractPatternLines(markdown, /다음|액션|해야|필요|예정|진행할|확인할/, 8),
+      conflicts: extractPatternLines(markdown, /충돌|불일치|상이|다르|변경|수정|이전/, 8),
+    };
+    cache[item.path] = base;
+    await mkdir(apiRuntime, { recursive: true });
+    await writeFile(wikiContextCachePath, JSON.stringify(cache, null, 2), "utf-8");
+  }
+  const queryLines = base.keyLines
+    .filter((line) => String(query || "").toLowerCase().split(/\s+/).filter(Boolean).some((term) => line.toLowerCase().includes(term)))
+    .slice(0, Math.max(2, Math.floor(budget.maxKeyLines / 2)));
+  const keyLines = [...new Set([...queryLines, ...(base.keyLines || [])])].slice(0, budget.maxKeyLines);
+  const card = {
+    title: base.title || item.title,
+    path: item.path,
+    score: item.score,
+    docKind: base.classification?.docKind,
+    division: base.classification?.division,
+    projectKey: base.classification?.projectKey,
+    snippet: item.snippet || base.snippet,
+    keyLines,
+    numbers: (base.numbers || []).slice(0, Math.ceil(budget.maxKeyLines / 2)),
+    decisions: (base.decisions || []).slice(0, 4),
+    actions: (base.actions || []).slice(0, 4),
+    conflicts: (base.conflicts || []).slice(0, 4),
+  };
+  return { ...card, estimatedChars: estimateChars(card) };
+}
+
 async function searchWiki(query) {
   const roots = [wikiRoot, l1Root];
   const files = (await Promise.all(roots.map(walkMarkdown))).flat();
@@ -429,21 +525,20 @@ function localSearchBrief(query, results) {
   };
 }
 
-async function searchWikiBrief(query, selectedPaths = []) {
+async function searchWikiBrief(query, selectedPaths = [], mode = "standard") {
+  const budget = contextBudget(mode);
   const allResults = query ? await searchWiki(query) : [];
   const selected = new Set((selectedPaths || []).filter(Boolean));
   const results = selected.size ? allResults.filter((item) => selected.has(item.path)) : allResults;
   const evidence = [];
-  for (const item of results.slice(0, 12)) {
-    const page = await pageByPath(item.path).catch(() => null);
-    evidence.push({
+  for (const item of results.slice(0, budget.maxCards)) {
+    const card = await wikiContextCardForResult(item, query, mode).catch(() => ({
       title: item.title,
       path: item.path,
       snippet: item.snippet,
       score: item.score,
-      frontmatter: item.frontmatter,
-      excerpt: page?.markdown?.slice(0, 4000) || item.snippet,
-    });
+    }));
+    evidence.push(card);
   }
   const { values: env } = await readEnvFile();
   const apiKey = process.env.GLM_API_KEY || env.GLM_API_KEY;
@@ -469,7 +564,16 @@ async function searchWikiBrief(query, selectedPaths = []) {
           },
           {
             role: "user",
-            content: JSON.stringify({ query, evidence }),
+            content: JSON.stringify({
+              query,
+              evidence,
+              token_budget_policy: {
+                mode,
+                input_strategy: "compressed_wiki_cards_only",
+                max_cards: budget.maxCards,
+                instruction: "근거 원문을 반복하지 말고 카드의 핵심 문장/수치/리스크만 사용한다.",
+              },
+            }),
           },
         ],
         temperature: 0.1,
@@ -492,6 +596,12 @@ async function searchWikiBrief(query, selectedPaths = []) {
         provider: "glm",
         model,
         endpoint,
+        tokenBudget: {
+          mode,
+          inputStrategy: "compressed_wiki_cards_only",
+          evidenceCards: evidence.length,
+          estimatedEvidenceChars: evidence.reduce((sum, item) => sum + (item.estimatedChars || estimateChars(item)), 0),
+        },
         ...parsed,
       },
     };
@@ -502,6 +612,12 @@ async function searchWikiBrief(query, selectedPaths = []) {
       selectedResults: results,
       brief: {
         ...localSearchBrief(query, results),
+        tokenBudget: {
+          mode,
+          inputStrategy: "compressed_wiki_cards_only",
+          evidenceCards: evidence.length,
+          estimatedEvidenceChars: evidence.reduce((sum, item) => sum + (item.estimatedChars || estimateChars(item)), 0),
+        },
         upstreamStatus: error.message,
       },
     };
@@ -988,6 +1104,110 @@ async function wikiManagementCommand(command) {
   return entry;
 }
 
+function managedWikiFullPath(path) {
+  const fullPath = resolve(repoRoot, normalize(path || ""));
+  const allowed = [wikiRoot, l1Root];
+  if (!allowed.some((root) => fullPath === root || fullPath.startsWith(`${root}/`))) {
+    throw new Error(`Refusing to write outside local wiki roots: ${path}`);
+  }
+  if (!fullPath.endsWith(".md")) {
+    throw new Error(`Only Markdown wiki files can be managed: ${path}`);
+  }
+  return fullPath;
+}
+
+function collectWikiManagementPairs(entry) {
+  const fromHints = entry.hints?.renamePairs || [];
+  const fromOps = (entry.plan?.operations || [])
+    .flatMap((operation) => operation.pairs || operation.proposedChanges?.pairs || [])
+    .filter(Boolean);
+  const pairs = [...fromHints, ...fromOps]
+    .map((pair) => ({ from: String(pair.from || "").trim(), to: String(pair.to || "").trim() }))
+    .filter((pair) => pair.from && pair.to && pair.from !== pair.to);
+  return [...new Map(pairs.map((pair) => [`${pair.from}\u0000${pair.to}`, pair])).values()];
+}
+
+async function applyWikiManagementCommand(commandId, options = {}) {
+  const history = await readJsonFile(wikiManagementPath, []);
+  const entry = history.find((item) => item.id === commandId);
+  if (!entry) return { error: "management command not found", commandId };
+  const pairs = collectWikiManagementPairs(entry);
+  const targetPages = entry.plan?.targetPages || [];
+  const dryRun = options.dryRun === true;
+  const changedFiles = [];
+  const skippedOperations = [];
+
+  if (!pairs.length) {
+    skippedOperations.push({ type: "term_replace", reason: "명칭 치환 쌍이 없어 자동 실행하지 않음" });
+  }
+
+  for (const page of targetPages) {
+    let fullPath;
+    try {
+      fullPath = managedWikiFullPath(page.path);
+    } catch (error) {
+      skippedOperations.push({ path: page.path, reason: error.message });
+      continue;
+    }
+    const before = await readFile(fullPath, "utf-8").catch(() => "");
+    if (!before) continue;
+    let after = before;
+    const replacements = [];
+    for (const pair of pairs) {
+      const count = after.split(pair.from).length - 1;
+      if (!count) continue;
+      after = after.split(pair.from).join(pair.to);
+      replacements.push({ ...pair, count });
+    }
+    if (!replacements.length || after === before) continue;
+    if (!dryRun) await writeFile(fullPath, after, "utf-8");
+    changedFiles.push({
+      path: page.path,
+      title: page.title || page.path,
+      replacements,
+      dryRun,
+    });
+  }
+
+  const structuralOps = (entry.plan?.operations || [])
+    .filter((operation) => operation.type && !["term_replace", "rename"].includes(operation.type))
+    .map((operation) => ({ type: operation.type, reason: "구조 승격/분기 작업은 diff 생성 단계에서만 자동화 예정" }));
+  skippedOperations.push(...structuralOps);
+
+  const status = dryRun
+    ? "previewed"
+    : changedFiles.length && skippedOperations.length ? "applied_partially" : changedFiles.length ? "applied" : "no_changes";
+  const applyEntry = {
+    id: `${Date.now()}-wiki-management-apply`,
+    commandId,
+    command: entry.command,
+    status,
+    dryRun,
+    changedFiles,
+    skippedOperations,
+    safety: {
+      localWikiOnly: true,
+      sourceGoogleDriveDelete: false,
+      remoteWrite: false,
+    },
+    createdAt: new Date().toISOString(),
+  };
+  await prependJsonHistory(wikiManagementApplyPath, applyEntry, 120);
+  if (!dryRun) {
+    const updatedHistory = history.map((item) => item.id === commandId ? {
+      ...item,
+      status,
+      appliedAt: applyEntry.createdAt,
+      applySummary: {
+        changedFileCount: changedFiles.length,
+        skippedOperationCount: skippedOperations.length,
+      },
+    } : item);
+    await writeFile(wikiManagementPath, JSON.stringify(updatedHistory, null, 2), "utf-8");
+  }
+  return applyEntry;
+}
+
 async function settingsPayload() {
   const { values } = await readEnvFile();
   return {
@@ -1421,6 +1641,11 @@ function glmChatMaxTokens(env = {}) {
   return Number.isFinite(value) && value > 0 ? value : 10000;
 }
 
+function glmContextMode(env = {}, requested = "") {
+  const mode = requested || process.env.GLM_CONTEXT_MODE || env.GLM_CONTEXT_MODE || "standard";
+  return ["economy", "standard", "deep"].includes(mode) ? mode : "standard";
+}
+
 async function requestGlmChatCompletion(apiUrl, apiKey, body, options = {}) {
   const primary = normalizeGlmChatUrl(apiUrl);
   const codingFallback = codingPlanGlmUrl(apiUrl);
@@ -1538,23 +1763,31 @@ async function glmDigest(text, projectHint) {
   }
 }
 
-async function operationalWikiContext(message) {
-  const matches = (await searchWiki(message)).slice(0, 6);
+async function operationalWikiContext(message, mode = "standard") {
+  const budget = contextBudget(mode);
+  const matches = (await searchWiki(message)).slice(0, budget.maxCards);
   const pages = [];
   for (const item of matches) {
-    const page = await pageByPath(item.path).catch(() => null);
-    pages.push({
+    const card = await wikiContextCardForResult(item, message, mode).catch(() => ({
       title: item.title,
       path: item.path,
-      frontmatter: item.frontmatter,
       snippet: item.snippet,
-      excerpt: page?.markdown?.slice(0, 5000) || item.snippet,
-    });
+      score: item.score,
+    }));
+    pages.push(card);
   }
   const automation = await automationSnapshot().catch(() => ({ running: [], runs: [], schedules: [] }));
   const coverage = await coverageSummary().catch(() => null);
   const paperclip = await paperclipStatus().catch(() => null);
   return {
+    tokenBudget: {
+      mode,
+      inputStrategy: "compressed_wiki_cards_plus_ops_snapshot",
+      maxCards: budget.maxCards,
+      recentTurns: budget.recentTurns,
+      maxMemoryItems: budget.maxMemoryItems,
+      estimatedEvidenceChars: pages.reduce((sum, page) => sum + (page.estimatedChars || estimateChars(page)), 0),
+    },
     evidence: pages,
     ops: {
       running: automation.running,
@@ -1945,12 +2178,50 @@ async function deleteChatProjectMessage(projectId, messageId) {
   return { deleted, projectId, messageId };
 }
 
+function compactProjectMemories(memories = [], mode = "standard") {
+  const budget = contextBudget(mode);
+  return memories
+    .map((memory) => ({
+      id: memory.id,
+      title: memory.title,
+      source: memory.source || "manual",
+      confidence: memory.confidence || "user_managed",
+      updatedAt: memory.updatedAt || memory.createdAt || "",
+      content: compactLine(memory.content || "", budget.maxLineChars * 2),
+    }))
+    .sort((a, b) => String(b.updatedAt).localeCompare(String(a.updatedAt)))
+    .slice(0, budget.maxMemoryItems);
+}
+
+function compactRecentMessages(messages = [], mode = "standard") {
+  const budget = contextBudget(mode);
+  return messages.slice(-budget.recentTurns).map((message) => ({
+    role: message.role,
+    createdAt: message.createdAt,
+    content: compactLine(message.content || "", budget.maxLineChars * 2),
+  }));
+}
+
+function conversationSummary(messages = [], mode = "standard") {
+  const budget = contextBudget(mode);
+  const older = messages.slice(0, Math.max(0, messages.length - budget.recentTurns));
+  if (!older.length) return "";
+  const lines = older
+    .map((message) => compactLine(message.content || "", 140))
+    .filter((line) => /결정|완료|진행|리스크|이슈|다음|액션|기억|메모리|확정|변경|고객|일정|납기/.test(line))
+    .slice(-8);
+  return lines.length
+    ? `이전 대화 압축 요약(확정 지식 아님): ${lines.join(" / ")}`
+    : `이전 대화 ${older.length}건은 보조 맥락으로만 존재하며, 확정 지식은 별도 근거 문서 확인 필요.`;
+}
+
 async function glmChat(message, projectId = "default", options = {}) {
   const projects = await listChatProjects();
   const project = projects.find((item) => item.id === projectId) || projects[0] || defaultChatProject();
   const globalSettings = await getGlobalChatSettings();
-  const context = await operationalWikiContext(`${project.name} ${message}`);
   const { values: env } = await readEnvFile();
+  const mode = glmContextMode(env, options.contextMode);
+  const context = await operationalWikiContext(`${project.name} ${message}`, mode);
   const apiKey = process.env.GLM_API_KEY || env.GLM_API_KEY;
   const apiUrl = process.env.GLM_API_URL || env.GLM_API_URL;
   const model = process.env.GLM_MODEL || env.GLM_MODEL || "glm-4.5";
@@ -1988,11 +2259,13 @@ async function glmChat(message, projectId = "default", options = {}) {
             content: JSON.stringify({
               task_request: message,
               global_instruction_role: "global_operating_rule",
-              project_memory: project.memories || [],
+              project_memory: compactProjectMemories(project.memories || [], mode),
               project_memory_role: "managed_auxiliary_memory",
-              recent_project_messages: (project.messages || []).slice(-12),
+              conversation_summary: conversationSummary(project.messages || [], mode),
+              recent_project_messages: compactRecentMessages(project.messages || [], mode),
               recent_project_messages_role: "auxiliary_context_not_decision",
               wiki_evidence_and_ops_context: context,
+              token_budget_policy: context.tokenBudget,
             }),
           },
         ],
@@ -2017,7 +2290,7 @@ async function glmChat(message, projectId = "default", options = {}) {
   }
 }
 
-function glmChatMessages(project, globalSettings, message, context) {
+function glmChatMessages(project, globalSettings, message, context, mode = "standard") {
   return [
     {
       role: "system",
@@ -2042,11 +2315,13 @@ function glmChatMessages(project, globalSettings, message, context) {
       content: JSON.stringify({
         task_request: message,
         global_instruction_role: "global_operating_rule",
-        project_memory: project.memories || [],
+        project_memory: compactProjectMemories(project.memories || [], mode),
         project_memory_role: "managed_auxiliary_memory",
-        recent_project_messages: (project.messages || []).slice(-12),
+        conversation_summary: conversationSummary(project.messages || [], mode),
+        recent_project_messages: compactRecentMessages(project.messages || [], mode),
         recent_project_messages_role: "auxiliary_context_not_decision",
         wiki_evidence_and_ops_context: context,
+        token_budget_policy: context.tokenBudget,
       }),
     },
   ];
@@ -2068,8 +2343,9 @@ async function streamGlmChat(message, projectId, res, options = {}) {
   const projects = await listChatProjects();
   const project = projects.find((item) => item.id === projectId) || projects[0] || defaultChatProject();
   const globalSettings = await getGlobalChatSettings();
-  const context = await operationalWikiContext(`${project.name} ${message}`);
   const { values: env } = await readEnvFile();
+  const mode = glmContextMode(env, options.contextMode);
+  const context = await operationalWikiContext(`${project.name} ${message}`, mode);
   const apiKey = process.env.GLM_API_KEY || env.GLM_API_KEY;
   const apiUrl = process.env.GLM_API_URL || env.GLM_API_URL;
   const model = process.env.GLM_MODEL || env.GLM_MODEL || "glm-4.5";
@@ -2081,7 +2357,7 @@ async function streamGlmChat(message, projectId, res, options = {}) {
 
   const body = {
     model,
-    messages: glmChatMessages(project, globalSettings, message, context),
+    messages: glmChatMessages(project, globalSettings, message, context, mode),
     temperature: 0.2,
     max_tokens: glmChatMaxTokens(env),
     thinking: glmThinkingOptions(env),
@@ -2104,7 +2380,7 @@ async function streamGlmChat(message, projectId, res, options = {}) {
     }
     const timeout = setTimeout(() => controller.abort(), timeoutMs);
     try {
-      sseWrite(res, "status", { phase: "connecting", endpoint: url.includes("/api/coding/paas/") ? "coding" : "paas", maxTokens: body.max_tokens, thinking: body.thinking });
+      sseWrite(res, "status", { phase: "connecting", endpoint: url.includes("/api/coding/paas/") ? "coding" : "paas", maxTokens: body.max_tokens, thinking: body.thinking, tokenBudget: context.tokenBudget });
       const response = await fetch(url, {
         method: "POST",
         signal: controller.signal,
@@ -2778,6 +3054,12 @@ const server = createServer(async (req, res) => {
       if (!body.command) return sendJson(res, 400, { error: "command is required" });
       return sendJson(res, 200, await wikiManagementCommand(body.command));
     }
+    if (pathname === "/api/wiki/manage/apply" && req.method === "POST") {
+      const body = await readBody(req);
+      if (!body.commandId) return sendJson(res, 400, { error: "commandId is required" });
+      const result = await applyWikiManagementCommand(body.commandId, { dryRun: body.dryRun === true });
+      return sendJson(res, result.error ? 404 : 200, result);
+    }
     if (pathname === "/api/wiki/graph" && req.method === "GET") {
       return sendJson(res, 200, await wikiGraph());
     }
@@ -2787,7 +3069,7 @@ const server = createServer(async (req, res) => {
     }
     if (pathname === "/api/wiki/search/brief" && req.method === "POST") {
       const body = await readBody(req);
-      return sendJson(res, 200, await searchWikiBrief(body.query || "", body.paths || []));
+      return sendJson(res, 200, await searchWikiBrief(body.query || "", body.paths || [], body.mode || "standard"));
     }
     if (pathname === "/api/wiki/page" && req.method === "GET") {
       const path = url.searchParams.get("path") || "";
@@ -2833,7 +3115,7 @@ const server = createServer(async (req, res) => {
         sseWrite(res, "user_saved", { message: userMessage });
         const remembered = await autoRememberFromMessage(projectId, body.message || "");
         if (remembered) sseWrite(res, "memory", { remembered });
-        const result = await streamGlmChat(body.message || "", projectId, res, { signal: controller.signal });
+        const result = await streamGlmChat(body.message || "", projectId, res, { signal: controller.signal, contextMode: body.contextMode || body.mode });
         if (controller.signal.aborted) {
           sseWrite(res, "done", { status: "stopped", message: "GLM 추론이 사용자 요청으로 중지되었습니다.", messages: { user: userMessage } });
           return res.end();
@@ -2877,7 +3159,7 @@ const server = createServer(async (req, res) => {
       try {
         const userMessage = await appendChatProjectMessage(projectId, { role: "user", content: body.message || "" });
         const remembered = await autoRememberFromMessage(projectId, body.message || "");
-        const result = await glmChat(body.message || "", projectId, { signal: controller.signal });
+        const result = await glmChat(body.message || "", projectId, { signal: controller.signal, contextMode: body.contextMode || body.mode });
         if (controller.signal.aborted) {
           result.status = "stopped";
           result.message = "GLM 추론이 사용자 요청으로 중지되었습니다.";
