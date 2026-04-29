@@ -1,3 +1,6 @@
+# Legacy example only.
+# Prefer config/drive_wikify.example.env and config/.env for actual runs.
+
 drive_wikify:
   wiki_root: obsidian/Wiki
   l1_memory_root: obsidian/L1_memory

@@ -7,12 +7,17 @@ from pathlib import Path
 ALLOWED_SUFFIXES = {".hwp", ".hwpx", ".pdf", ".docx", ".pptx"}
 
 
-def build_manifest(root: Path, drive_name: str, output_path: Path) -> int:
+def build_manifest(root: Path, drive_name: str, output_path: Path, allowed_file_types: list[str] | None = None) -> int:
+    allowed_suffixes = (
+        {f".{item.lower().lstrip('.')}" for item in allowed_file_types}
+        if allowed_file_types
+        else ALLOWED_SUFFIXES
+    )
     documents = []
     for file_path in sorted(root.rglob("*")):
         if not file_path.is_file():
             continue
-        if file_path.suffix.lower() not in ALLOWED_SUFFIXES:
+        if file_path.suffix.lower() not in allowed_suffixes:
             continue
         relative_parent = file_path.parent.relative_to(root)
         folder_path = "/" if str(relative_parent) == "." else f"/{relative_parent}".replace("//", "/")

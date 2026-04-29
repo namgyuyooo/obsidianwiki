@@ -36,6 +36,8 @@ source: "Closed-loop automation design for collect -> wiki -> log -> validate ->
 - 실행 코드는 리포지토리의 별도 작업공간인 `automation/drive_wikify/` 아래에 둔다.
 - `obsidian/Wiki/Common/Drive_Wikify_*.md` 문서는 실행 코드가 아니라 설계서와 실행 기록의 기준 문서다.
 - 실제 커서, 락, 임시 상태는 `automation/drive_wikify/runtime/` 아래에서 관리한다.
+- 주 설정은 `automation/drive_wikify/config/.env`에 모은다.
+- 원본 Google Drive는 절대 삭제하지 않고, 자동 정리는 `local mirror`에만 적용한다.
 
 ## 자동 루프
 

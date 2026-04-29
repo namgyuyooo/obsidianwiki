@@ -21,6 +21,8 @@ source: "Google Drive connector inventory plus batch wikify design"
 - 실행 코드는 `automation/drive_wikify/` 아래에 둔다.
 - 위키에는 설계 문서, 배치 기록, 증거, 충돌, 로그만 남긴다.
 - 따라서 이 문서는 코드 저장 위치가 아니라 운영 기준 문서다.
+- 주 실행 설정은 `automation/drive_wikify/config/.env`에 둔다.
+- 원본 Google Drive 삭제는 금지하고, 자동 정리는 성공 반영 후 `local mirror` 파일에만 적용한다.
 
 ## 현재 확인된 Drive 범위
 

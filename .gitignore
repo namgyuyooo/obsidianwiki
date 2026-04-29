@@ -45,3 +45,6 @@ Thumbs.db
 *.tmp
 *.temp
 ~$*
+
+# Local automation settings
+automation/drive_wikify/config/.env

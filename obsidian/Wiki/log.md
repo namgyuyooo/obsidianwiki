@@ -10,6 +10,9 @@ source: "Global wiki operations log"
 이 파일은 위키 운영의 append-only 로그입니다.
 
 ## 2026-04-29
+- `automation/drive_wikify`: 주 설정 체계를 `.env` 중심으로 재정렬하고 `DRIVE_DELETE_SOURCE=false` 안전 규칙 추가
+- `automation/README.md`, `automation/drive_wikify/README.md`, `runtime/README.md`, `src/README.md`: 원본 Google Drive 삭제 금지와 local mirror 정리 원칙 명시
+- `Drive_Wikify_Automation_Loop.md`, `Drive_Wikify_Batch_Operating_Model.md`: `.env` 기반 설정 위치와 local mirror only cleanup 규칙 반영
 - [[Wiki/Common/Search_Evidence_Deletion_Registry]]: 사용자 요청에 따른 검색 증적 삭제 실제 근거 링크와 프로젝트 연결 레지스트리 생성
 - PSK_Project/hub.md, RTM_YNG_Project_Index_2026-04-21.md: 검색 증적 삭제 레지스트리 링크 추가
 - Wiki/index.md: 검색 증적 삭제 레지스트리를 공통 지식 섹션에 등록

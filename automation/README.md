@@ -15,8 +15,8 @@
 - `obsidian/Wiki/` 아래에는 실행 코드를 두지 않는다.
 - `obsidian/Wiki/`에는 운영 문서, 결과 기록, 증거, 로그만 남긴다.
 - 실제 자동화 코드는 모두 `automation/` 아래에 둔다.
-- 자동화가 사용하는 상태 파일은 필요 시 `automation/runtime/` 아래에 둔다.
-- 위키 반영 대상 경로만 `obsidian/Wiki/`를 읽고 쓴다.
+- 원본 Google Drive는 절대 삭제하지 않는다.
+- 자동 정리는 `local mirror`에만 적용한다.
 
 ## 제안 구조
 
@@ -26,6 +26,8 @@ automation/
 ├── drive_wikify/
 │   ├── README.md
 │   ├── config/
+│   │   ├── drive_wikify.example.env
+│   │   ├── rclone.example.env
 │   │   └── pipeline.example.yaml
 │   ├── prompts/
 │   ├── runtime/
@@ -43,4 +45,4 @@ automation/
 - 설정:
   - `automation/drive_wikify/config/`
 
-이렇게 분리하면 위키는 지식 저장소로 유지되고, 자동화는 교체/테스트/배포 가능한 별도 계층이 된다.
+주 설정 방식은 `.env`이고, `pipeline.example.yaml`은 legacy reference다.
