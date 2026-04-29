@@ -17,11 +17,15 @@ const paperclipTasksPath = join(apiRuntime, "paperclip_tasks.json");
 const paperclipEventsPath = join(apiRuntime, "paperclip_events.json");
 const schedulesPath = join(apiRuntime, "schedules.json");
 const targetAnalysisPath = join(apiRuntime, "target_analysis.json");
+const wikiManagementPath = join(apiRuntime, "wiki_management_commands.json");
+const knowledgePromotionPath = join(apiRuntime, "knowledge_promotions.json");
+const knowledgePromotionRoot = join(apiRuntime, "knowledge_promotions");
 const skillOutputsRoot = join(apiRuntime, "skill_outputs");
 const chatProjectsPath = join(apiRuntime, "chat_projects.json");
 const chatGlobalSettingsPath = join(apiRuntime, "chat_global_settings.json");
 const activeJobs = new Map();
 const activeChatRequests = new Map();
+const activeChatControllers = new Map();
 let runHistoryWrite = Promise.resolve();
 
 const host = process.env.WIKI_API_HOST || "127.0.0.1";
@@ -49,6 +53,8 @@ const editableSettings = new Set([
   "GLM_MODEL",
   "GLM_THINKING_TYPE",
   "GLM_THINKING_BUDGET_TOKENS",
+  "GLM_CHAT_MAX_TOKENS",
+  "GLM_CHAT_STREAM",
   "OPENCLAW_WEBHOOK_URL",
   "OPENCLAW_API_KEY",
   "PAPERCLIP_URL",
@@ -504,7 +510,7 @@ async function searchWikiBrief(query, selectedPaths = []) {
 
 async function pageByPath(path) {
   const normalized = normalize(path);
-  const allowed = [wikiRoot, l1Root, join(repoRoot, "automation/drive_wikify/runtime")];
+  const allowed = [wikiRoot, l1Root, join(repoRoot, "automation/drive_wikify/runtime"), knowledgePromotionRoot];
   for (const root of allowed) {
     const fullPath = resolve(repoRoot, normalized);
     if (fullPath === root || fullPath.startsWith(`${root}/`)) {
@@ -626,8 +632,8 @@ function parseRcloneLsd(stdout) {
     .map((line) => line.trim())
     .filter(Boolean)
     .map((line) => {
-      const match = line.match(/^\S+\s+\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2}\s+\S+\s+(.+)$/);
-      return match ? match[1].trim() : "";
+      const match = line.match(/^\S+\s+(\d{4}-\d{2}-\d{2})\s+(\d{2}:\d{2}:\d{2})\s+\S+\s+(.+)$/);
+      return match ? { name: match[3].trim(), modifiedAt: `${match[1]}T${match[2]}` } : null;
     })
     .filter(Boolean);
 }
@@ -646,6 +652,15 @@ function overlapScore(a, b) {
   let score = 0;
   for (const token of left) if (right.has(token)) score += 1;
   return score;
+}
+
+function isGenericDriveFolder(folder) {
+  return /(^20\d{2}년?$|freenotes|personal|메모|백업|backup|chrome에서 저장됨|colab notebooks|sync with icloud|이력서|typing|타이핑|onedrive|원드라이브)/i.test(String(folder || "").trim());
+}
+
+function isRecentlyChanged(modifiedAt) {
+  if (!modifiedAt) return false;
+  return new Date(modifiedAt).getTime() >= new Date("2026-04-01T00:00:00").getTime();
 }
 
 async function driveTargetAnalysis(options = {}) {
@@ -692,7 +707,8 @@ async function driveTargetAnalysis(options = {}) {
   const processedFiles = new Set((runOutput.results || []).map((result) => result.record?.file_path || result.file_path).filter(Boolean));
   const candidates = [];
 
-  for (const folder of driveFolders) {
+  for (const folderInfo of driveFolders) {
+    const folder = folderInfo.name;
     const bestProject = [...projectGroups.values()]
       .map((group) => ({ ...group, overlap: Math.max(overlapScore(folder, group.projectKey), overlapScore(folder, group.projectLabel)) }))
       .sort((a, b) => b.overlap - a.overlap)[0];
@@ -701,33 +717,42 @@ async function driveTargetAnalysis(options = {}) {
     const missingKinds = bestProject && bestProject.overlap > 0
       ? requiredKinds.filter((kind) => !bestProject.kinds.has(kind))
       : [];
-    let score = 30;
+    let score = 20;
     const reasons = [];
+    if (isRecentlyChanged(folderInfo.modifiedAt)) {
+      score += 15;
+      reasons.push(`최근 수정 Drive 폴더: ${folderInfo.modifiedAt.slice(0, 10)}`);
+    }
     if (!tracked) {
-      score += 25;
+      score += 15;
       reasons.push("coverage tracker에 없는 Drive 폴더");
     }
     if (!manifested) {
-      score += 20;
+      score += 12;
       reasons.push("local manifest에 아직 반영되지 않음");
     }
     if (bestProject?.overlap > 0) {
-      score += Math.min(25, bestProject.overlap * 8);
+      score += Math.min(35, bestProject.overlap * 12);
       reasons.push(`위키 프로젝트 후보와 명칭 유사: ${bestProject.projectLabel}`);
       if (missingKinds.length) {
         score += Math.min(20, missingKinds.length * 3);
         reasons.push(`위키 문서 성격 누락: ${missingKinds.slice(0, 5).join(", ")}`);
       }
     } else {
-      score += 15;
+      score += 8;
       reasons.push("신규 프로젝트/계정 후보일 수 있음");
+    }
+    if (isGenericDriveFolder(folder)) {
+      score -= 30;
+      reasons.push("일반/연도/백업 성격 폴더라 우선순위 낮춤");
     }
     candidates.push({
       remote,
       remotePath: remoteRoot ? `${remoteRoot}/${folder}` : folder,
       folder,
-      score,
-      priority: score >= 80 ? "high" : score >= 60 ? "medium" : "low",
+      modifiedAt: folderInfo.modifiedAt,
+      score: Math.max(0, score),
+      priority: score >= 80 ? "high" : score >= 55 ? "medium" : "low",
       matchedProject: bestProject?.overlap > 0 ? bestProject.projectKey : "",
       matchedProjectLabel: bestProject?.overlap > 0 ? bestProject.projectLabel : "",
       missingKinds,
@@ -742,7 +767,11 @@ async function driveTargetAnalysis(options = {}) {
     const missingKinds = requiredKinds.filter((kind) => !group.kinds.has(kind));
     if (!missingKinds.length) continue;
     const relatedFolder = driveFolders
-      .map((folder) => ({ folder, overlap: Math.max(overlapScore(folder, group.projectKey), overlapScore(folder, group.projectLabel)) }))
+      .map((folderInfo) => ({
+        folder: folderInfo.name,
+        modifiedAt: folderInfo.modifiedAt,
+        overlap: Math.max(overlapScore(folderInfo.name, group.projectKey), overlapScore(folderInfo.name, group.projectLabel)),
+      }))
       .sort((a, b) => b.overlap - a.overlap)[0];
     if (!relatedFolder || relatedFolder.overlap < 1) continue;
     if (candidates.some((candidate) => candidate.remotePath.endsWith(relatedFolder.folder))) continue;
@@ -779,7 +808,7 @@ async function driveTargetAnalysis(options = {}) {
       rcloneStatus: rclone.code === 0 ? "ok" : "failed",
     },
     rcloneError: rclone.code === 0 ? "" : rclone.stderr.slice(-2000),
-    candidates: candidates.sort((a, b) => b.score - a.score || a.folder.localeCompare(b.folder)).slice(0, 30),
+    candidates: candidates.sort((a, b) => b.score - a.score || String(b.modifiedAt).localeCompare(String(a.modifiedAt)) || a.folder.localeCompare(b.folder)).slice(0, 30),
   };
   await prependJsonHistory(targetAnalysisPath, analysis, 50);
   return analysis;
@@ -794,6 +823,169 @@ async function targetRcloneCopy(remotePath, dryRun = true) {
     targetMirrorRoot: relative(repoRoot, mirrorRoot),
     safety: "local mirror only; source Google Drive delete is not implemented",
   });
+}
+
+function extractWikiCommandHints(command) {
+  const text = String(command || "");
+  const normalizeKeyword = (value) => String(value || "")
+    .trim()
+    .replace(/(?:의)$/g, "")
+    .trim();
+  const renamePairs = [...text.matchAll(/([가-힣A-Za-z0-9_ ()-]{2,})\s*[-=]+>\s*([가-힣A-Za-z0-9_ ()-]{2,})/g)]
+    .map((match) => {
+      const from = match[1].trim().replace(/^(참고로|그리고|또한|또)\s+/, "").split(/\s+/).at(-1);
+      const to = match[2].trim().split(/\s+/)[0];
+      return { from, to };
+    })
+    .filter((pair) => pair.from && pair.to);
+  const quoted = [...text.matchAll(/[\"“']([^\"“”']{2,})[\"”']/g)].map((match) => match[1].trim());
+  const projectMatch = text.match(/([가-힣A-Za-z0-9_ ()-]{2,})(?:의|에 대한)?\s*위키/);
+  const keywords = [
+    ...renamePairs.flatMap((pair) => [pair.from, pair.to]),
+    ...quoted,
+    projectMatch?.[1],
+  ].filter(Boolean);
+  return {
+    renamePairs,
+    keywords: [...new Set(keywords.map(normalizeKeyword).filter((item) => item.length >= 2))].slice(0, 12),
+  };
+}
+
+async function wikiManagementCommand(command) {
+  const { values: env } = await readEnvFile();
+  const hints = extractWikiCommandHints(command);
+  const pages = await wikiIndex();
+  const candidatePaths = new Set();
+  for (const keyword of hints.keywords) {
+    const results = await searchWiki(keyword).catch(() => []);
+    results.slice(0, 8).forEach((item) => candidatePaths.add(item.path));
+    pages
+      .filter((page) => `${page.title} ${page.path} ${page.projectLabel}`.toLowerCase().includes(keyword.toLowerCase()))
+      .slice(0, 8)
+      .forEach((page) => candidatePaths.add(page.path));
+  }
+  const targetPages = [];
+  for (const path of [...candidatePaths].slice(0, 18)) {
+    const page = await pageByPath(path).catch(() => null);
+    const indexed = pages.find((item) => item.path === path) || {};
+    if (!page) continue;
+    targetPages.push({
+      title: page.title,
+      path: page.path,
+      division: indexed.division,
+      projectKey: indexed.projectKey,
+      projectLabel: indexed.projectLabel,
+      docKind: indexed.docKind,
+      frontmatter: page.frontmatter,
+      excerpt: page.markdown.slice(0, 4500),
+    });
+  }
+
+  const localPlan = {
+    summaryMarkdown: [
+      `명령: ${command}`,
+      targetPages.length ? `후보 문서 ${targetPages.length}개를 찾았습니다.` : "후보 문서를 충분히 찾지 못했습니다. 검색어를 더 구체화하세요.",
+      hints.renamePairs.length ? `일괄 치환 후보: ${hints.renamePairs.map((pair) => `${pair.from} -> ${pair.to}`).join(", ")}` : "명시적 치환 후보는 없습니다.",
+      "현재 단계는 적용 전 계획 생성이며, 로컬 위키 파일을 아직 수정하지 않습니다.",
+    ].map((line) => `- ${line}`).join("\n"),
+    operations: [
+      ...(hints.renamePairs.length ? [{ type: "term_replace", pairs: hints.renamePairs, applyMode: "preview_only" }] : []),
+      { type: "project_customer_promotion", targetProjects: [...new Set(targetPages.map((page) => page.projectKey).filter(Boolean))], applyMode: "preview_only" },
+    ],
+    targetPages: targetPages.map(({ title, path, division, projectKey, docKind }) => ({ title, path, division, projectKey, docKind })),
+    risks: [
+      "동명이의어 또는 오타 교정이 실제 고객사명과 충돌할 수 있음",
+      "프로젝트/고객사 승격은 hub, Sources, Evidence Log, Change Log 간 링크 정합성 확인 필요",
+      "대량 변경은 적용 전 diff 검토가 필요",
+    ],
+    nextActions: [
+      "대상 문서 목록을 검토",
+      "명칭 치환 범위와 예외어를 확정",
+      "적용 버튼/패치 생성 단계에서 실제 파일 변경 수행",
+    ],
+  };
+
+  const apiKey = process.env.GLM_API_KEY || env.GLM_API_KEY;
+  const apiUrl = process.env.GLM_API_URL || env.GLM_API_URL;
+  const model = process.env.GLM_MODEL || env.GLM_MODEL || "glm-5.1";
+  let plan = localPlan;
+  let provider = "local-rule";
+  let endpoint = "";
+  let upstreamStatus = "";
+  if (apiKey && apiUrl && targetPages.length) {
+    try {
+      const response = await requestGlmChatCompletion(apiUrl, apiKey, {
+        model,
+        messages: [
+          {
+            role: "system",
+            content: [
+              "당신은 Obsidian 위키 운영 명령을 안전한 적용 전 계획으로 바꾸는 한국어 위키 관리자다.",
+              "절대 실제 파일 수정이 완료되었다고 말하지 않는다.",
+              "출력은 JSON 객체만 반환한다: summaryMarkdown, operations, targetPages, risks, nextActions.",
+              "operations에는 type, rationale, targetPaths, proposedChanges, validationChecks를 넣는다.",
+              "프로젝트/고객사 승격, 명칭 일괄수정, 링크 정합성, 출처 보존 관점으로 판단한다.",
+            ].join(" "),
+          },
+          {
+            role: "user",
+            content: JSON.stringify({
+              command,
+              hints,
+              candidatePages: targetPages,
+              safety: {
+                applyMode: "preview_only",
+                localWikiOnly: true,
+                requireDiffBeforeApply: true,
+              },
+            }),
+          },
+        ],
+        temperature: 0.1,
+        max_tokens: 1800,
+        thinking: glmThinkingOptions(env),
+        response_format: { type: "json_object" },
+      });
+      endpoint = response.endpoint;
+      const content = glmMessageContent(response.payload);
+      plan = JSON.parse(content);
+      if (!Array.isArray(plan.targetPages) || !plan.targetPages.length) {
+        plan.targetPages = localPlan.targetPages;
+      }
+      if (!Array.isArray(plan.operations) || !plan.operations.length) {
+        plan.operations = localPlan.operations;
+      }
+      if (!Array.isArray(plan.risks) || !plan.risks.length) {
+        plan.risks = localPlan.risks;
+      }
+      if (!Array.isArray(plan.nextActions) || !plan.nextActions.length) {
+        plan.nextActions = localPlan.nextActions;
+      }
+      provider = "glm";
+    } catch (error) {
+      upstreamStatus = error.message;
+      plan = { ...localPlan, upstreamStatus };
+    }
+  }
+
+  const entry = {
+    id: `${Date.now()}-wiki-management`,
+    command,
+    status: "planned",
+    provider,
+    endpoint,
+    upstreamStatus,
+    hints,
+    plan,
+    createdAt: new Date().toISOString(),
+    safety: {
+      previewOnly: true,
+      localWikiOnly: true,
+      requiresDiffBeforeApply: true,
+    },
+  };
+  await prependJsonHistory(wikiManagementPath, entry, 80);
+  return entry;
 }
 
 async function settingsPayload() {
@@ -1224,7 +1416,12 @@ function glmThinkingOptions(env = {}) {
   return thinking;
 }
 
-async function requestGlmChatCompletion(apiUrl, apiKey, body) {
+function glmChatMaxTokens(env = {}) {
+  const value = Number(process.env.GLM_CHAT_MAX_TOKENS || env.GLM_CHAT_MAX_TOKENS || 10000);
+  return Number.isFinite(value) && value > 0 ? value : 10000;
+}
+
+async function requestGlmChatCompletion(apiUrl, apiKey, body, options = {}) {
   const primary = normalizeGlmChatUrl(apiUrl);
   const codingFallback = codingPlanGlmUrl(apiUrl);
   const candidates = [primary, codingFallback].filter(Boolean);
@@ -1239,6 +1436,11 @@ async function requestGlmChatCompletion(apiUrl, apiKey, body) {
   for (const url of candidates) {
     for (const requestBody of bodyVariants) {
       const controller = new AbortController();
+      const abortFromParent = () => controller.abort();
+      if (options.signal) {
+        if (options.signal.aborted) controller.abort();
+        else options.signal.addEventListener("abort", abortFromParent, { once: true });
+      }
       const timeout = setTimeout(() => controller.abort(), timeoutMs);
       let response;
       try {
@@ -1253,10 +1455,12 @@ async function requestGlmChatCompletion(apiUrl, apiKey, body) {
         });
       } catch (error) {
         clearTimeout(timeout);
-        lastError = new Error(error.name === "AbortError" ? `GLM timeout after ${timeoutMs}ms` : error.message);
+        if (options.signal) options.signal.removeEventListener("abort", abortFromParent);
+        lastError = new Error(error.name === "AbortError" && options.signal?.aborted ? "GLM request stopped by user" : error.name === "AbortError" ? `GLM timeout after ${timeoutMs}ms` : error.message);
         continue;
       }
       clearTimeout(timeout);
+      if (options.signal) options.signal.removeEventListener("abort", abortFromParent);
       const text = await response.text();
       let payload = {};
       try {
@@ -1497,8 +1701,16 @@ async function listChatProjects() {
   let projects = await readJsonFile(chatProjectsPath, []);
   if (projects.length) {
     const migrated = migrateGlobalInstructionMemories(projects);
-    projects = migrated.projects;
-    if (migrated.changed) await saveChatProjects(projects);
+    const withMessageIds = migrated.projects.map((project) => ({
+      ...project,
+      messages: (project.messages || []).map((message, index) => ({
+        id: message.id || `${project.id || "project"}-${message.createdAt || "legacy"}-${index}`,
+        ...message,
+      })),
+    }));
+    const idChanged = JSON.stringify(withMessageIds) !== JSON.stringify(migrated.projects);
+    projects = withMessageIds;
+    if (migrated.changed || idChanged) await saveChatProjects(projects);
     await syncChatProjectsToL1(projects);
     return projects;
   }
@@ -1648,9 +1860,10 @@ function autoMemoryCandidate(message) {
     };
   }
   const explicit = /(기억해|기억하|메모리|앞으로|항상|원칙|지침|선호|규칙)/.test(text);
-  const projectFact = /(\d{1,2}월\s*\d{1,2}일|\d{4}-\d{1,2}-\d{1,2}|테스트|완료|진행|결정|변경|확정|보류|고객|일정|납기|리스크|이슈|다음 액션)/.test(text);
+  const projectFact = /(\d{1,2}월\s*\d{1,2}일|\d{4}-\d{1,2}-\d{1,2}|완료|진행|결정|변경|확정|보류|고객|일정|납기|리스크|이슈|다음 액션)/.test(text);
   if (!explicit && !projectFact) return null;
   if (/[?？]\s*$/.test(text) && !explicit) return null;
+  if (!explicit && /(답해|말해|알려줘|요약해|정리해|작성해|만들어줘|테스트)/.test(text)) return null;
   const titleBase = text
     .replace(/^(기억해|기억하자|메모리에 넣어|앞으로|항상)\s*/g, "")
     .split(/[.!?\n。]/)[0]
@@ -1702,15 +1915,37 @@ async function deleteChatMemory(projectId, memoryId) {
 async function appendChatProjectMessage(projectId, message) {
   const projects = await listChatProjects();
   const now = new Date().toISOString();
+  const nextMessage = {
+    id: message.id || `${Date.now()}-${message.role || "message"}-${Math.random().toString(36).slice(2, 8)}`,
+    ...message,
+    createdAt: message.createdAt || now,
+  };
   const updated = projects.map((project) => project.id === projectId ? {
     ...project,
-    messages: [...(project.messages || []), { ...message, createdAt: message.createdAt || now }].slice(-100),
+    messages: [...(project.messages || []), nextMessage].slice(-100),
     updatedAt: now,
   } : project);
   await saveChatProjects(updated);
+  return nextMessage;
 }
 
-async function glmChat(message, projectId = "default") {
+async function deleteChatProjectMessage(projectId, messageId) {
+  const projects = await listChatProjects();
+  let deleted = false;
+  const updated = projects.map((project) => {
+    if (project.id !== projectId) return project;
+    const messages = (project.messages || []).filter((message) => {
+      const keep = message.id !== messageId;
+      if (!keep) deleted = true;
+      return keep;
+    });
+    return { ...project, messages, updatedAt: new Date().toISOString() };
+  });
+  await saveChatProjects(updated);
+  return { deleted, projectId, messageId };
+}
+
+async function glmChat(message, projectId = "default", options = {}) {
   const projects = await listChatProjects();
   const project = projects.find((item) => item.id === projectId) || projects[0] || defaultChatProject();
   const globalSettings = await getGlobalChatSettings();
@@ -1762,9 +1997,9 @@ async function glmChat(message, projectId = "default") {
           },
         ],
         temperature: 0.2,
-        max_tokens: 1400,
+        max_tokens: glmChatMaxTokens(env),
         thinking: glmThinkingOptions(env),
-    });
+    }, { signal: options.signal });
     return {
       provider: "glm",
       model,
@@ -1782,6 +2017,150 @@ async function glmChat(message, projectId = "default") {
   }
 }
 
+function glmChatMessages(project, globalSettings, message, context) {
+  return [
+    {
+      role: "system",
+      content: [
+        "당신은 위키 검색 결과를 설명하는 챗봇이 아니라, 로컬 Obsidian 위키를 근거 저장소로 쓰는 한국어 업무 운영 매니저다.",
+        "목표는 사용자의 실제 프로젝트 업무를 관리하는 것이다: 현재 상태, 막힌 점, 다음 액션, 담당/증거/리스크를 정리한다.",
+        `전역 운영 지침: ${globalSettings.instructions || "없음"}`,
+        `현재 GLM 챗 프로젝트: ${project.name}`,
+        `프로젝트별 특수 지침: ${project.instructions || "없음"}`,
+        "충분히 깊게 내부 추론하되, 최종 답변에는 추론 과정을 장황하게 노출하지 말고 검토 결과와 근거만 정리하라.",
+        "프로젝트 메모리는 관리되는 보조 기억이고, 최근 대화내역은 결정/검증된 지식이 아닐 수 있는 보조 맥락이다.",
+        "대화 내용은 사용자가 명시적으로 결정했거나 별도 근거 Markdown으로 확인된 경우에만 확정 사실처럼 취급하라.",
+        "금지: '제공된 위키 검색 결과', '스니펫', '메타데이터를 종합하면', '현재 위키에 색인된' 같은 메타 표현으로 시작하지 마라.",
+        "위키나 검색 시스템 자체를 설명하지 말고, 프로젝트/업무 대상에 대해 바로 답하라.",
+        "Paperclip 컨텍스트가 있으면 이를 별도 실행 결과처럼 과장하지 말고, 사용 가능한 agent/template/task 힌트로만 활용하라.",
+        "근거는 path로 짧게 붙인다. 확실하지 않으면 '확인 필요'로 표시하고, 무엇을 열어봐야 하는지 제안한다.",
+        "기본 형식: 1) 현재 업무상태 2) 진행/완료 3) 리스크/충돌 4) 다음 액션 5) 근거.",
+      ].join(" "),
+    },
+    {
+      role: "user",
+      content: JSON.stringify({
+        task_request: message,
+        global_instruction_role: "global_operating_rule",
+        project_memory: project.memories || [],
+        project_memory_role: "managed_auxiliary_memory",
+        recent_project_messages: (project.messages || []).slice(-12),
+        recent_project_messages_role: "auxiliary_context_not_decision",
+        wiki_evidence_and_ops_context: context,
+      }),
+    },
+  ];
+}
+
+function sseWrite(res, event, data) {
+  res.write(`event: ${event}\n`);
+  res.write(`data: ${JSON.stringify(data)}\n\n`);
+}
+
+function extractStreamDelta(payload) {
+  const delta = payload.choices?.[0]?.delta || payload.choices?.[0]?.message || {};
+  const thinking = delta.reasoning_content || delta.reasoning || delta.thinking || delta.thoughts || "";
+  const content = delta.content || "";
+  return { thinking, content };
+}
+
+async function streamGlmChat(message, projectId, res, options = {}) {
+  const projects = await listChatProjects();
+  const project = projects.find((item) => item.id === projectId) || projects[0] || defaultChatProject();
+  const globalSettings = await getGlobalChatSettings();
+  const context = await operationalWikiContext(`${project.name} ${message}`);
+  const { values: env } = await readEnvFile();
+  const apiKey = process.env.GLM_API_KEY || env.GLM_API_KEY;
+  const apiUrl = process.env.GLM_API_URL || env.GLM_API_URL;
+  const model = process.env.GLM_MODEL || env.GLM_MODEL || "glm-4.5";
+  if (!apiKey || !apiUrl) {
+    const fallback = "GLM_API_URL과 GLM_API_KEY를 운영 설정에 넣으면 위키 기반 업무 운영 챗이 연결됩니다.";
+    sseWrite(res, "delta", { content: fallback });
+    return { provider: "fallback", model, message: fallback, context, projectId: project.id };
+  }
+
+  const body = {
+    model,
+    messages: glmChatMessages(project, globalSettings, message, context),
+    temperature: 0.2,
+    max_tokens: glmChatMaxTokens(env),
+    thinking: glmThinkingOptions(env),
+    stream: true,
+  };
+  const primary = normalizeGlmChatUrl(apiUrl);
+  const codingFallback = codingPlanGlmUrl(apiUrl);
+  const candidates = [primary, codingFallback].filter(Boolean);
+  const timeoutMs = Number(process.env.GLM_TIMEOUT_MS || env.GLM_TIMEOUT_MS || 120000);
+  let lastError = null;
+  let fullMessage = "";
+  let fullThinking = "";
+
+  for (const url of candidates) {
+    const controller = new AbortController();
+    const abortFromParent = () => controller.abort();
+    if (options.signal) {
+      if (options.signal.aborted) controller.abort();
+      else options.signal.addEventListener("abort", abortFromParent, { once: true });
+    }
+    const timeout = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+      sseWrite(res, "status", { phase: "connecting", endpoint: url.includes("/api/coding/paas/") ? "coding" : "paas", maxTokens: body.max_tokens, thinking: body.thinking });
+      const response = await fetch(url, {
+        method: "POST",
+        signal: controller.signal,
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify(body),
+      });
+      if (!response.ok) {
+        const text = await response.text();
+        lastError = new Error(`GLM HTTP ${response.status}: ${text || response.statusText}`);
+        if (response.status !== 429 || !codingFallback || url === codingFallback) break;
+        continue;
+      }
+      const decoder = new TextDecoder();
+      let buffer = "";
+      for await (const chunk of response.body) {
+        buffer += decoder.decode(chunk, { stream: true });
+        const parts = buffer.split("\n\n");
+        buffer = parts.pop() || "";
+        for (const part of parts) {
+          const line = part.split("\n").find((item) => item.startsWith("data:"));
+          if (!line) continue;
+          const data = line.replace(/^data:\s*/, "").trim();
+          if (!data || data === "[DONE]") continue;
+          let payload;
+          try {
+            payload = JSON.parse(data);
+          } catch {
+            continue;
+          }
+          const { thinking, content } = extractStreamDelta(payload);
+          if (thinking) {
+            fullThinking += thinking;
+            sseWrite(res, "thinking", { content: thinking });
+          }
+          if (content) {
+            fullMessage += content;
+            sseWrite(res, "delta", { content });
+          }
+        }
+      }
+      clearTimeout(timeout);
+      if (options.signal) options.signal.removeEventListener("abort", abortFromParent);
+      return { provider: "glm", model, endpoint: url.includes("/api/coding/paas/") ? "coding" : "paas", message: fullMessage, thinking: fullThinking, context, projectId: project.id };
+    } catch (error) {
+      lastError = new Error(error.name === "AbortError" && options.signal?.aborted ? "GLM request stopped by user" : error.name === "AbortError" ? `GLM stream timeout after ${timeoutMs}ms` : error.message);
+    } finally {
+      clearTimeout(timeout);
+      if (options.signal) options.signal.removeEventListener("abort", abortFromParent);
+    }
+  }
+  throw lastError || new Error("GLM stream failed");
+}
+
 function chatBusyPayload(projectId) {
   const active = activeChatRequests.get(projectId);
   if (!active) return null;
@@ -1790,6 +2169,106 @@ function chatBusyPayload(projectId) {
     error: "GLM 추론이 아직 진행 중입니다. 현재 응답이 끝난 뒤 다음 메시지를 보내세요.",
     projectId,
     active,
+  };
+}
+
+async function stopChatRequest(projectId) {
+  const targetId = projectId || [...activeChatRequests.keys()][0];
+  const active = activeChatRequests.get(targetId);
+  const controller = activeChatControllers.get(targetId);
+  if (!active || !controller) return { status: "not_running", projectId: targetId || null };
+  active.status = "stopping";
+  active.phase = "user_stop_requested";
+  controller.abort();
+  return { status: "stopping", projectId: targetId };
+}
+
+function extractPromotionCandidates(content) {
+  const text = String(content || "");
+  const sentenceish = text.split(/\n|(?<=[.!?。])/).map((item) => item.trim()).filter((item) => item.length >= 8);
+  const pick = (regex, limit) => [...new Set(sentenceish.filter((line) => regex.test(line)))].slice(0, limit);
+  return {
+    facts: pick(/완료|진행|계획|검증|확인|테스트|고객|납기|일정|상태/, 10),
+    numbers: [...new Set(text.match(/(\d{4}-\d{1,2}-\d{1,2}|\d{1,2}월\s*\d{1,2}일|\d+\.?\d*\s*(?:%|억|만|천|원|개|건|회|분|초|시간))/g) || [])].slice(0, 10),
+    decisions: pick(/결정|확정|채택|선택|하기로|승인/, 8),
+    actions: pick(/다음|추후|해야|필요|예정|액션|진행할|확인할/, 8),
+    conflicts: pick(/충돌|불일치|상이|다르|변경|수정|과거|이전/, 8),
+  };
+}
+
+function promotionMarkdown(entry) {
+  const candidates = entry.candidates || {};
+  const list = (items) => items?.length ? items.map((item) => `- ${item}`).join("\n") : "- 없음";
+  return [
+    "---",
+    "type: promoted_chat_knowledge_candidate",
+    `promotion_id: ${entry.id}`,
+    `status: ${entry.status}`,
+    `project_hint: "${String(entry.projectHint || "").replace(/"/g, '\\"')}"`,
+    `source: ${entry.source}`,
+    `created: ${entry.createdAt}`,
+    "knowledge_role: promotion_candidate_not_final_evidence",
+    "---",
+    "",
+    `# 지식 승격 후보 - ${entry.projectHint || "미지정 프로젝트"}`,
+    "",
+    "## 승격 상태",
+    "- 이 문서는 채팅/지식 주입 내용을 위키로 승격하기 전 검토용 후보이다.",
+    "- 확정 지식으로 쓰려면 원문 근거, Sources, Evidence Log, Change Log 반영 여부를 별도로 확인한다.",
+    "",
+    "## 원문",
+    quoteMarkdown(entry.content || ""),
+    "",
+    "## 핵심 사실 후보",
+    list(candidates.facts),
+    "",
+    "## 수치 후보",
+    list(candidates.numbers),
+    "",
+    "## 결정 후보",
+    list(candidates.decisions),
+    "",
+    "## 다음 액션 후보",
+    list(candidates.actions),
+    "",
+    "## 충돌 후보",
+    list(candidates.conflicts),
+  ].join("\n");
+}
+
+async function promoteKnowledge(body) {
+  const now = new Date().toISOString();
+  const content = String(body.content || body.text || "").trim();
+  if (!content) throw new Error("content is required");
+  const id = `knowledge-promotion-${Date.now()}`;
+  const entry = {
+    id,
+    status: "promoted_candidate_created",
+    source: body.source || "manual_ingest",
+    projectHint: body.projectHint || "",
+    tool: body.tool || "evidence",
+    content,
+    candidates: extractPromotionCandidates(content),
+    createdAt: now,
+  };
+  const markdown = promotionMarkdown(entry);
+  await mkdir(knowledgePromotionRoot, { recursive: true });
+  const fileName = `${id}.md`;
+  const outputPath = join(knowledgePromotionRoot, fileName);
+  await writeFile(outputPath, markdown, "utf-8");
+  entry.path = relative(repoRoot, outputPath);
+  entry.markdown = markdown;
+  await prependJsonHistory(knowledgePromotionPath, entry, 120);
+  return {
+    status: entry.status,
+    promotion: entry,
+    path: entry.path,
+    markdown,
+    nextActions: [
+      "생성된 승격 후보 Markdown을 검토",
+      "확정 가능한 항목만 프로젝트 Evidence Log 또는 Sources에 반영",
+      "충돌 후보가 있으면 Conflict Register로 승격",
+    ],
   };
 }
 
@@ -2252,11 +2731,15 @@ const server = createServer(async (req, res) => {
     if (pathname === "/api/chat/status" && req.method === "GET") {
       return sendJson(res, 200, { active: [...activeChatRequests.values()] });
     }
+    if (pathname === "/api/chat/stop" && req.method === "POST") {
+      const body = await readBody(req);
+      return sendJson(res, 200, await stopChatRequest(body.projectId || ""));
+    }
     if (pathname === "/api/chat/projects" && req.method === "POST") {
       const body = await readBody(req);
       return sendJson(res, 200, { project: await upsertChatProject(body) });
     }
-    if (pathname.startsWith("/api/chat/projects/") && req.method === "DELETE") {
+    if (pathname.match(/^\/api\/chat\/projects\/[^/]+$/) && req.method === "DELETE") {
       const id = decodeURIComponent(pathname.replace("/api/chat/projects/", ""));
       return sendJson(res, 200, await deleteChatProject(id));
     }
@@ -2268,6 +2751,10 @@ const server = createServer(async (req, res) => {
     if (pathname.match(/^\/api\/chat\/projects\/[^/]+\/memories\/[^/]+$/) && req.method === "DELETE") {
       const parts = pathname.split("/");
       return sendJson(res, 200, await deleteChatMemory(decodeURIComponent(parts[4]), decodeURIComponent(parts[6])));
+    }
+    if (pathname.match(/^\/api\/chat\/projects\/[^/]+\/messages\/[^/]+$/) && req.method === "DELETE") {
+      const parts = pathname.split("/");
+      return sendJson(res, 200, await deleteChatProjectMessage(decodeURIComponent(parts[4]), decodeURIComponent(parts[6])));
     }
     if (pathname === "/api/openclaw/trigger" && req.method === "POST") {
       const body = await readBody(req);
@@ -2282,6 +2769,14 @@ const server = createServer(async (req, res) => {
     }
     if (pathname === "/api/wiki/index" && req.method === "GET") {
       return sendJson(res, 200, { pages: await wikiIndex() });
+    }
+    if (pathname === "/api/wiki/manage" && req.method === "GET") {
+      return sendJson(res, 200, { commands: await readJsonFile(wikiManagementPath, []) });
+    }
+    if (pathname === "/api/wiki/manage" && req.method === "POST") {
+      const body = await readBody(req);
+      if (!body.command) return sendJson(res, 400, { error: "command is required" });
+      return sendJson(res, 200, await wikiManagementCommand(body.command));
     }
     if (pathname === "/api/wiki/graph" && req.method === "GET") {
       return sendJson(res, 200, await wikiGraph());
@@ -2306,11 +2801,71 @@ const server = createServer(async (req, res) => {
       const body = await readBody(req);
       return sendJson(res, 200, await glmDigest(body.text || "", body.projectHint || ""));
     }
+    if (pathname === "/api/knowledge/promotions" && req.method === "GET") {
+      return sendJson(res, 200, { promotions: await readJsonFile(knowledgePromotionPath, []) });
+    }
+    if (pathname === "/api/knowledge/promote" && req.method === "POST") {
+      const body = await readBody(req);
+      return sendJson(res, 200, await promoteKnowledge(body));
+    }
+    if (pathname === "/api/chat/glm/stream" && req.method === "POST") {
+      const body = await readBody(req);
+      const projectId = body.projectId || "default";
+      const busy = chatBusyPayload(projectId);
+      if (busy) return sendJson(res, 409, busy);
+      res.writeHead(200, {
+        "Content-Type": "text/event-stream; charset=utf-8",
+        "Cache-Control": "no-cache, no-transform",
+        Connection: "keep-alive",
+        "X-Accel-Buffering": "no",
+      });
+      const controller = new AbortController();
+      const active = {
+        projectId,
+        status: "thinking",
+        phase: "glm_streaming",
+        startedAt: new Date().toISOString(),
+      };
+      activeChatRequests.set(projectId, active);
+      activeChatControllers.set(projectId, controller);
+      try {
+        const userMessage = await appendChatProjectMessage(projectId, { role: "user", content: body.message || "" });
+        sseWrite(res, "user_saved", { message: userMessage });
+        const remembered = await autoRememberFromMessage(projectId, body.message || "");
+        if (remembered) sseWrite(res, "memory", { remembered });
+        const result = await streamGlmChat(body.message || "", projectId, res, { signal: controller.signal });
+        if (controller.signal.aborted) {
+          sseWrite(res, "done", { status: "stopped", message: "GLM 추론이 사용자 요청으로 중지되었습니다.", messages: { user: userMessage } });
+          return res.end();
+        }
+        const assistantMessage = await appendChatProjectMessage(result.projectId || projectId, {
+          role: "assistant",
+          content: result.message || "",
+          thinking: result.thinking || "",
+        });
+        sseWrite(res, "done", {
+          status: "completed",
+          provider: result.provider,
+          model: result.model,
+          endpoint: result.endpoint,
+          remembered,
+          messages: { user: userMessage, assistant: assistantMessage },
+        });
+        return res.end();
+      } catch (error) {
+        sseWrite(res, "error", { error: error.message });
+        return res.end();
+      } finally {
+        activeChatRequests.delete(projectId);
+        activeChatControllers.delete(projectId);
+      }
+    }
     if (pathname === "/api/chat/glm" && req.method === "POST") {
       const body = await readBody(req);
       const projectId = body.projectId || "default";
       const busy = chatBusyPayload(projectId);
       if (busy) return sendJson(res, 409, busy);
+      const controller = new AbortController();
       const active = {
         projectId,
         status: "thinking",
@@ -2318,166 +2873,35 @@ const server = createServer(async (req, res) => {
         startedAt: new Date().toISOString(),
       };
       activeChatRequests.set(projectId, active);
+      activeChatControllers.set(projectId, controller);
       try {
-        await appendChatProjectMessage(projectId, { role: "user", content: body.message || "" });
+        const userMessage = await appendChatProjectMessage(projectId, { role: "user", content: body.message || "" });
         const remembered = await autoRememberFromMessage(projectId, body.message || "");
-        const result = await glmChat(body.message || "", projectId);
-        await appendChatProjectMessage(result.projectId || projectId, { role: "assistant", content: result.message || "" });
+        const result = await glmChat(body.message || "", projectId, { signal: controller.signal });
+        if (controller.signal.aborted) {
+          result.status = "stopped";
+          result.message = "GLM 추론이 사용자 요청으로 중지되었습니다.";
+          result.messages = { user: userMessage };
+          return sendJson(res, 200, result);
+        }
+        const assistantMessage = await appendChatProjectMessage(result.projectId || projectId, { role: "assistant", content: result.message || "" });
         result.remembered = remembered;
+        result.messages = { user: userMessage, assistant: assistantMessage };
         result.status = result.provider === "fallback" && /^GLM 연결 실패/.test(result.message || "") ? "failed" : "completed";
         return sendJson(res, 200, result);
       } finally {
         activeChatRequests.delete(projectId);
+        activeChatControllers.delete(projectId);
       }
     }
     if (pathname === "/api/chat/evidence" && req.method === "POST") {
       const body = await readBody(req);
-      const content = body.content || "";
-      const projectHint = body.projectHint || "";
-      
-      // Create evidence log candidate from chat content
-      const evidence = {
-        id: `chat-evidence-${Date.now()}`,
+      return sendJson(res, 200, await promoteKnowledge({
+        content: body.content || "",
+        projectHint: body.projectHint || "",
         source: "chat_promotion",
-        projectHint,
-        content: content,
-        extractedAt: new Date().toISOString(),
-        candidates: {
-          facts: extractFactsFromContent(content),
-          numbers: extractNumbersFromContent(content),
-          decisions: extractDecisionsFromContent(content),
-          actions: extractActionsFromContent(content),
-          conflicts: extractConflictsFromContent(content),
-        },
-      };
-      
-      return sendJson(res, 200, { evidence, status: "candidate_created" });
-    }
-    if (pathname === "/api/chat/evidence" && req.method === "POST") {
-      const body = await readBody(req);
-      const content = body.content || "";
-      const projectHint = body.projectHint || "";
-      
-      // Extract key information from chat content
-      const facts = extractKeyInfo(content);
-      const numbers = extractKeyNumbers(content);
-      const decisions = extractKeyDecisions(content);
-      const actions = extractKeyActions(content);
-      const conflicts = extractKeyConflicts(content);
-      
-      const evidence = {
-        id: `chat-evidence-${Date.now()}`,
-        source: "chat_promotion",
-        projectHint,
-        content: content,
-        extractedAt: new Date().toISOString(),
-        candidates: {
-          facts: facts,
-          numbers: numbers,
-          decisions: decisions,
-          actions: actions,
-          conflicts: conflicts,
-        },
-      };
-      
-      return sendJson(res, 200, { evidence, status: "candidate_created" });
-    }
-    
-    // Helper functions for extracting information from chat content
-    function extractKeyInfo(content) {
-      const text = String(content || "");
-      const facts = [];
-      const factPatterns = [
-        /(.{10,200}?완료|진행중|계획됨|결정됨|확정됨)/g,
-        /(.{10,200}?테스트|검증|확인|완료)/g,
-        /(.{10,200}?리스크|이슈|문제|해결)/g,
-      ];
-      
-      factPatterns.forEach((pattern) => {
-        const matches = text.match(pattern);
-        if (matches) {
-          facts.push(matches[0].trim());
-        }
-      });
-      
-      return [...new Set(facts)].slice(0, 10);
-    }
-    
-    function extractKeyNumbers(content) {
-      const text = String(content || "");
-      const numbers = [];
-      const numberPatterns = [
-        /(\d{1,2}월\s*\d{1,2}일)/g,
-        /(\d{4}-\d{1,2}-\d{1,2})/g,
-        /(\d+\.?\d*\s*[%억만천원원]+)/g,
-        /(\d+\s*개|건|회|분|초|시간)/g,
-      ];
-      
-      numberPatterns.forEach((pattern) => {
-        const matches = text.match(pattern);
-        if (matches) {
-          numbers.push(matches[0].trim());
-        }
-      });
-      
-      return [...new Set(numbers)].slice(0, 8);
-    }
-    
-    function extractKeyDecisions(content) {
-      const text = String(content || "");
-      const decisions = [];
-      const decisionPatterns = [
-        /(.{10,100}?결정했다?|결정함|확정했다?|확정함)/g,
-        /(.{10,100}?선택했다?|선택함|채택했다?|채택함)/g,
-        /(.{10,100}?하기로 했다?)/g,
-      ];
-      
-      decisionPatterns.forEach((pattern) => {
-        const matches = text.match(pattern);
-        if (matches) {
-          decisions.push(matches[0].trim());
-        }
-      });
-      
-      return [...new Set(decisions)].slice(0, 5);
-    }
-    
-    function extractKeyActions(content) {
-      const text = String(content || "");
-      const actions = [];
-      const actionPatterns = [
-        /(.{10,100}?다음에?|추후에?|그다음에?)/g,
-        /(.{10,100}?해야 한다?|해야 함|필요함|필요하다)/g,
-        /(.{10,100}?계획이다?|예정이다?)/g,
-      ];
-      
-      actionPatterns.forEach((pattern) => {
-        const matches = text.match(pattern);
-        if (matches) {
-          actions.push(matches[0].trim());
-        }
-      });
-      
-      return [...new Set(actions)].slice(0, 5);
-    }
-    
-    function extractKeyConflicts(content) {
-      const text = String(content || "");
-      const conflicts = [];
-      const conflictPatterns = [
-        /(.{10,100}?다르다?|상이하다?|불일치하다?|충돌한다?)/g,
-        /(.{10,100}?이전에?|과거에?|예전에?)/g,
-        /(.{10,100}?변경했다?|수정했다?)/g,
-      ];
-      
-      conflictPatterns.forEach((pattern) => {
-        const matches = text.match(pattern);
-        if (matches) {
-          conflicts.push(matches[0].trim());
-        }
-      });
-      
-      return [...new Set(conflicts)].slice(0, 5);
+        tool: "evidence",
+      }));
     }
 
     if (pathname === "/api/paperclip/status" && req.method === "GET") {

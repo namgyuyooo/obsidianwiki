@@ -361,6 +361,13 @@ select {
   align-items: start;
 }
 
+.ingest-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 10px;
+}
+
 .target-actions {
   display: flex;
   gap: 10px;
@@ -867,6 +874,103 @@ select {
   border-bottom: 1px solid rgba(37, 95, 133, 0.35);
 }
 
+.wiki-command-panel {
+  margin-top: 16px;
+  border: 1px solid rgba(37, 95, 133, 0.18);
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(154, 106, 24, 0.12), transparent 34%),
+    rgba(255, 255, 255, 0.9);
+  box-shadow: var(--shadow);
+  padding: 16px;
+}
+
+.wiki-command-panel-primary {
+  margin: 0 0 18px;
+}
+
+.wiki-command-panel .panel-heading p {
+  color: var(--muted);
+  margin: 4px 0 0;
+}
+
+#wiki-command-input {
+  min-height: 92px;
+  margin-bottom: 10px;
+}
+
+.wiki-command-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.wiki-command-actions span {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.wiki-command-result {
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: rgba(247, 249, 246, 0.78);
+  padding: 14px;
+}
+
+.wiki-command-card {
+  display: grid;
+  gap: 12px;
+}
+
+.wiki-command-meta strong,
+.wiki-command-meta small {
+  display: block;
+}
+
+.wiki-command-meta small {
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+.wiki-command-targets {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 8px;
+}
+
+.wiki-command-targets button {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.86);
+  color: var(--ink);
+  cursor: pointer;
+  padding: 10px;
+  text-align: left;
+}
+
+.wiki-command-targets small {
+  display: block;
+  color: var(--muted);
+  margin-top: 4px;
+  overflow-wrap: anywhere;
+}
+
+.wiki-command-hints {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.wiki-command-hints span {
+  border: 1px solid rgba(37, 95, 133, 0.18);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.86);
+  color: var(--ink);
+  font-size: 13px;
+  padding: 6px 10px;
+}
+
 .panel,
 .reader {
   padding: 18px;
@@ -963,6 +1067,17 @@ select {
   grid-template-columns: 1fr 140px;
   gap: 10px;
   margin-bottom: 16px;
+}
+
+.chat-input-row textarea {
+  min-height: 64px;
+  max-height: 180px;
+  resize: vertical;
+}
+
+.chat-send-stack {
+  display: grid;
+  gap: 8px;
 }
 
 .search-workspace {
@@ -1688,6 +1803,66 @@ pre {
 
 .message.thinking p {
   margin: 0;
+}
+
+.message {
+  position: relative;
+}
+
+.message-body {
+  white-space: pre-wrap;
+}
+
+.message-actions {
+  position: absolute;
+  right: 10px;
+  top: 8px;
+  display: flex;
+  gap: 6px;
+  opacity: 0;
+  transition: opacity 0.16s ease;
+}
+
+.message-actions button {
+  border: 1px solid rgba(161, 59, 53, 0.22);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.82);
+  color: var(--red);
+  cursor: pointer;
+  font-size: 11px;
+  padding: 4px 8px;
+}
+
+.message:hover .message-actions,
+.message:focus-within .message-actions {
+  opacity: 1;
+}
+
+.message-stream-status {
+  display: block;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+
+.message-thinking {
+  border: 1px solid rgba(37, 95, 133, 0.16);
+  border-radius: 12px;
+  background: rgba(37, 95, 133, 0.06);
+  margin-bottom: 10px;
+  padding: 8px 10px;
+}
+
+.message-thinking summary {
+  color: var(--blue);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.message-thinking pre {
+  max-height: 220px;
+  overflow: auto;
+  white-space: pre-wrap;
 }
 
 .thinking-dots {

@@ -40,6 +40,7 @@ const state = {
   wikiPages: [],
   wikiGraph: { nodes: [], edges: [] },
   activeWikiPath: "",
+  wikiManagementCommands: [],
   activeProjectKey: "",
   wikiFilters: {
     division: "all",
@@ -56,6 +57,7 @@ const state = {
   chatComposing: false,
   chatSending: false,
   chatPhase: "idle",
+  pendingUserMessageId: "",
   lastChatText: "",
   notionCurrentCategory: "all",
 };
@@ -93,6 +95,8 @@ const settingLabels = {
   GLM_MODEL: "GLM 모델",
   GLM_THINKING_TYPE: "GLM thinking",
   GLM_THINKING_BUDGET_TOKENS: "GLM thinking budget",
+  GLM_CHAT_MAX_TOKENS: "GLM 챗 출력 토큰",
+  GLM_CHAT_STREAM: "GLM 챗 스트리밍",
   OPENCLAW_WEBHOOK_URL: "OpenClaw GLM Webhook override",
   OPENCLAW_API_KEY: "OpenClaw GLM API Key override",
   PAPERCLIP_URL: "Paperclip URL",
@@ -431,6 +435,8 @@ const natureLabels = {
   knowledge: "지식",
 };
 
+const wikiManagementExampleCommand = "아사히카세히의 위키를 모두 모아 프로젝트, 고객사로 승격해. 참고로 아사히카세이->아사히카세히 영칭도 일괄수정";
+
 const projectShortcutKinds = ["hub", "overview", "sources", "evidence", "actions", "risks", "decisions", "conflict", "changelog"];
 
 function normalizeWikiTarget(value) {
@@ -644,10 +650,79 @@ async function openNotionWikiPage(path) {
   renderNotionWikiContent();
 }
 
+function renderWikiManagementCommand(entry) {
+  const container = $("#wiki-command-result");
+  if (!container) return;
+  if (!entry) {
+    container.textContent = "아직 실행된 관리 명령이 없습니다.";
+    return;
+  }
+  const plan = entry.plan || {};
+  const targetPages = plan.targetPages || [];
+  const operations = plan.operations || [];
+  const renamePairs = entry.hints?.renamePairs || [];
+  const keywords = entry.hints?.keywords || [];
+  container.innerHTML = [
+    `<article class="wiki-command-card">`,
+    `<div class="wiki-command-meta">`,
+    `<strong>${escapeHtml(entry.command)}</strong>`,
+    `<small>${escapeHtml(entry.provider)} · ${escapeHtml(entry.status)} · ${escapeHtml(entry.createdAt || "")}</small>`,
+    `</div>`,
+    `<div class="markdown-preview">${renderMarkdownBullets(plan.summaryMarkdown || "- 계획 요약이 없습니다.")}</div>`,
+    renamePairs.length ? `<h4>감지된 명칭 변경</h4><div class="wiki-command-hints">${renamePairs.map((pair) => `<span><strong>${escapeHtml(pair.from)}</strong> -> <strong>${escapeHtml(pair.to)}</strong></span>`).join("")}</div>` : "",
+    keywords.length ? `<h4>검색/분류 키워드</h4><div class="wiki-command-hints">${keywords.map((keyword) => `<span>${escapeHtml(keyword)}</span>`).join("")}</div>` : "",
+    operations.length ? `<h4>예상 작업</h4><ul>${operations.slice(0, 8).map((op) => `<li><strong>${escapeHtml(op.type || "operation")}</strong>: ${escapeHtml(op.rationale || op.applyMode || JSON.stringify(op.proposedChanges || op.pairs || ""))}</li>`).join("")}</ul>` : "",
+    targetPages.length ? `<h4>대상 문서</h4><div class="wiki-command-targets">${targetPages.slice(0, 12).map((page) => `<button type="button" data-notion-path="${escapeHtml(page.path)}">${escapeHtml(page.title || page.path)}<small>${escapeHtml(page.path)}</small></button>`).join("")}</div>` : "",
+    plan.risks?.length ? `<h4>위험/검증</h4><ul>${plan.risks.map((risk) => `<li>${escapeHtml(risk)}</li>`).join("")}</ul>` : "",
+    plan.nextActions?.length ? `<h4>다음 액션</h4><ul>${plan.nextActions.map((action) => `<li>${escapeHtml(action)}</li>`).join("")}</ul>` : "",
+    entry.upstreamStatus ? `<p class="pipeline-note">GLM 상태: ${escapeHtml(entry.upstreamStatus)}</p>` : "",
+    `</article>`,
+  ].join("");
+  container.querySelectorAll("[data-notion-path]").forEach((button) => {
+    button.addEventListener("click", () => openNotionWikiPage(button.dataset.notionPath));
+  });
+}
+
+async function loadWikiManagementCommands() {
+  const payload = await api("/api/wiki/manage");
+  if (payload.mock || !payload.commands) return;
+  state.wikiManagementCommands = payload.commands;
+  renderWikiManagementCommand(payload.commands[0]);
+}
+
+async function runWikiManagementCommand() {
+  const input = $("#wiki-command-input");
+  const command = input.value.trim();
+  if (!command) return;
+  $("#wiki-command-status").textContent = "GLM/로컬 규칙으로 계획 생성 중";
+  const result = await api("/api/wiki/manage", {
+    method: "POST",
+    body: JSON.stringify({ command }),
+  });
+  if (result.error || result.mock) {
+    $("#wiki-command-status").textContent = `실패: ${result.error || "API 연결 대기"}`;
+    return;
+  }
+  const targetCount = result.plan?.targetPages?.length || 0;
+  const pairCount = result.hints?.renamePairs?.length || 0;
+  $("#wiki-command-status").textContent = `${result.provider} 계획 완료 · 대상 ${targetCount}개 · 치환 ${pairCount}쌍`;
+  state.wikiManagementCommands.unshift(result);
+  renderWikiManagementCommand(result);
+}
+
+function fillWikiManagementExample() {
+  const input = $("#wiki-command-input");
+  if (!input) return;
+  input.value = wikiManagementExampleCommand;
+  input.focus();
+  $("#wiki-command-status").textContent = "예시 명령 입력됨";
+}
+
 function initializeNotionWikiBrowser() {
   document.querySelectorAll(".notion-nav-content").forEach((section) => section.classList.add("notion-expanded"));
   document.querySelectorAll(".notion-chevron").forEach((chevron) => { chevron.textContent = "▲"; });
   loadNotionWikiBrowser();
+  loadWikiManagementCommands();
 }
 
 function activeChatProject() {
@@ -677,7 +752,7 @@ function renderChatProjects() {
     $("#chat-project-name").value = project.name || "";
     $("#chat-project-instructions").value = project.instructions || "";
     $("#chat-log").innerHTML = "";
-    (project.messages || []).forEach((message) => appendMessage(message.role, message.content));
+    (project.messages || []).forEach((message) => appendMessage(message.role, message.content, message.id));
   }
   renderChatMemories();
   setChatPhase(state.chatPhase || "idle");
@@ -712,6 +787,7 @@ function setChatPhase(phase, detail = "") {
   status.textContent = labels[phase] || phase;
   $("#chat-status-detail").textContent = detail || "GLM 응답 대기 중에는 다음 메시지를 잠급니다.";
   $("#chat-send").disabled = state.chatSending;
+  $("#chat-stop").disabled = !["sending", "thinking"].includes(phase);
   $("#chat-input").disabled = state.chatSending;
   $("#chat-project-select").disabled = state.chatSending;
 }
@@ -877,6 +953,51 @@ async function api(path, options = {}) {
   } catch (error) {
     return { error: error.message, mock: true };
   }
+}
+
+async function apiStream(path, payload, handlers = {}) {
+  const response = await fetch(path, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!response.ok) {
+    let errorPayload = {};
+    try {
+      errorPayload = await response.json();
+    } catch {
+      errorPayload = { error: `HTTP ${response.status}` };
+    }
+    handlers.error?.(errorPayload);
+    return errorPayload;
+  }
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+  const dispatch = (rawEvent) => {
+    const lines = rawEvent.split("\n");
+    const event = lines.find((line) => line.startsWith("event:"))?.replace(/^event:\s*/, "").trim() || "message";
+    const dataLine = lines.find((line) => line.startsWith("data:"));
+    if (!dataLine) return;
+    let data = {};
+    try {
+      data = JSON.parse(dataLine.replace(/^data:\s*/, ""));
+    } catch {
+      data = { raw: dataLine };
+    }
+    handlers[event]?.(data);
+    handlers.message?.({ event, data });
+  };
+  while (true) {
+    const { value, done } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+    const events = buffer.split("\n\n");
+    buffer = events.pop() || "";
+    events.filter(Boolean).forEach(dispatch);
+  }
+  if (buffer.trim()) dispatch(buffer);
+  return { status: "stream_complete" };
 }
 
 async function refreshStatus() {
@@ -1370,6 +1491,50 @@ async function generateDigest() {
   $("#digest-output").textContent = formatDigestOutput(payload, projectHint);
 }
 
+function renderPromotionResult(target, result) {
+  const container = typeof target === "string" ? $(target) : target;
+  if (!container) return;
+  if (result.error || result.mock) {
+    container.innerHTML = `<div class="error">승격 실패: ${escapeHtml(result.error || "API 연결 대기")}</div>`;
+    return;
+  }
+  const path = result.path || result.promotion?.path || "";
+  container.innerHTML = [
+    `<div class="success">승격 후보 저장 완료</div>`,
+    `<p><strong>저장 위치</strong>: <code>${escapeHtml(path)}</code></p>`,
+    `<div class="output-actions">`,
+    `<button class="command-button" data-promotion-open="${escapeHtml(path)}" type="button">생성 Markdown 조회</button>`,
+    `<button class="command-button" data-promotion-download type="button">MD 다운로드</button>`,
+    `</div>`,
+    result.markdown ? renderMarkdownDocument(result.markdown) : "",
+  ].join("");
+  container.querySelector("[data-promotion-open]")?.addEventListener("click", (event) => {
+    const openPath = event.currentTarget.dataset.promotionOpen;
+    if (openPath) {
+      document.querySelector("[data-view='wiki']")?.click();
+      openNotionWikiPage(openPath);
+    }
+  });
+  container.querySelector("[data-promotion-download]")?.addEventListener("click", () => {
+    downloadText((path || "knowledge-promotion.md").split("/").pop(), result.markdown || "");
+  });
+}
+
+async function promoteKnowledgeFromIngest() {
+  const content = $("#knowledge-input").value.trim();
+  const projectHint = $("#project-hint").value.trim();
+  if (!content) {
+    $("#knowledge-promote-status").innerHTML = `<div class="error">승격할 내용이 비어 있습니다.</div>`;
+    return;
+  }
+  $("#knowledge-promote-status").innerHTML = `<div class="loading">승격 후보 Markdown을 생성하고 로그화하는 중...</div>`;
+  const result = await api("/api/knowledge/promote", {
+    method: "POST",
+    body: JSON.stringify({ content, projectHint, source: "ingest_tab", tool: "evidence" }),
+  });
+  renderPromotionResult("#knowledge-promote-status", result);
+}
+
 function formatDigestOutput(payload, projectHint = "") {
   if (payload.mock) {
     return [
@@ -1436,38 +1601,54 @@ async function sendChat() {
   const text = input.value.trim();
   if (!text) return;
   state.lastChatText = text;
+  state.pendingUserMessageId = "";
   setChatPhase("sending", "메시지를 저장하고 GLM 요청을 준비 중입니다.");
   appendMessage("user", text);
-  appendThinkingMessage();
   input.value = "";
 
   try {
-    setChatPhase("thinking", "GLM thinking/reasoning 중입니다. 응답이 끝날 때까지 다음 메시지를 잠급니다.");
-    const payload = await api("/api/chat/glm", {
-      method: "POST",
-      body: JSON.stringify({ message: text, projectId: state.activeChatProjectId }),
+    const streaming = appendStreamingAssistantMessage();
+    setChatPhase("thinking", "GLM 스트리밍 thinking/reasoning 중입니다. 응답이 끝날 때까지 다음 메시지를 잠급니다.");
+    let finalStatus = "completed";
+    let failure = "";
+    await apiStream("/api/chat/glm/stream", { message: text, projectId: state.activeChatProjectId }, {
+      status: (data) => {
+        const thinkingBudget = data.thinking?.budget_tokens ? ` · thinking ${data.thinking.budget_tokens} tokens` : "";
+        streaming.setStatus(`연결됨: ${data.endpoint || "glm"} · output ${data.maxTokens || "default"} tokens${thinkingBudget}`);
+      },
+      thinking: (data) => {
+        streaming.appendThinking(data.content || "");
+        setChatPhase("thinking", "GLM thinking 내용을 수신 중입니다.");
+      },
+      delta: (data) => {
+        streaming.appendContent(data.content || "");
+      },
+      memory: (data) => {
+        const label = data.remembered?.memory?.title || data.remembered?.title || "자동 메모리";
+        streaming.setStatus(`자동 기억 반영: ${label}`);
+      },
+      done: (data) => {
+        finalStatus = data.status || "completed";
+        streaming.finish(data.messages?.assistant?.id || "");
+      },
+      error: (data) => {
+        failure = data.error || "GLM 스트리밍 실패";
+        finalStatus = "failed";
+        streaming.fail(failure);
+      },
     });
-    removeThinkingMessage();
-    if (payload.error) {
-      const detail = payload.status === "busy"
-        ? "이미 같은 프로젝트에서 GLM 추론이 진행 중입니다."
-        : payload.error;
-      appendMessage("assistant error", `GLM 채팅 실패: ${detail}`);
+    if (failure) {
       input.value = text;
       setChatPhase("failed", "실패했습니다. 내용을 수정하거나 다시 전송할 수 있습니다.");
       return;
     }
-    appendMessage("assistant", payload.mock
-      ? "GLM API가 연결되면 위키 근거를 바탕으로 프로젝트 상태와 다음 액션을 정리합니다."
-      : payload.message);
-    const memoryNote = payload.remembered?.scope === "project"
-      ? `자동 메모리 저장: ${payload.remembered.memory?.title || "프로젝트 메모리"}`
-      : payload.remembered?.scope === "global"
-        ? "전역 지침에 자동 반영됨"
-        : "응답 완료";
     setChatPhase("saving", "대화와 보조 메모리를 저장 중입니다.");
     await loadChatProjects();
-    setChatPhase(payload.status === "failed" ? "failed" : "idle", payload.status === "failed" ? "GLM fallback/실패 응답을 확인하세요." : memoryNote);
+    setChatPhase(finalStatus === "stopped" ? "failed" : "idle", finalStatus === "stopped" ? "추론이 중지되었습니다." : "스트리밍 응답 저장 완료");
+  } catch (error) {
+    appendMessage("assistant error", `GLM 채팅 실패: ${error.message}`);
+    input.value = text;
+    setChatPhase("failed", "실패했습니다. 내용을 수정하거나 다시 전송할 수 있습니다.");
   } finally {
     removeThinkingMessage();
     if (state.chatPhase !== "failed") setChatPhase("idle", $("#chat-status-detail").textContent);
@@ -1475,28 +1656,140 @@ async function sendChat() {
   }
 }
 
-function appendMessage(role, text) {
+function appendStreamingAssistantMessage() {
+  const message = document.createElement("article");
+  message.className = "message assistant streaming";
+  const body = document.createElement("div");
+  body.className = "message-body";
+  const thinking = document.createElement("details");
+  thinking.className = "message-thinking";
+  thinking.open = true;
+  thinking.innerHTML = `<summary>GLM thinking stream</summary><pre></pre>`;
+  const status = document.createElement("small");
+  status.className = "message-stream-status";
+  status.textContent = "스트림 준비 중";
+  let content = "";
+  let thinkingContent = "";
+  message.appendChild(status);
+  message.appendChild(thinking);
+  message.appendChild(body);
+  $("#chat-log").appendChild(message);
+  $("#chat-log").scrollTop = $("#chat-log").scrollHeight;
+  return {
+    appendContent(chunk) {
+      content += chunk;
+      body.textContent = content;
+      $("#chat-log").scrollTop = $("#chat-log").scrollHeight;
+    },
+    appendThinking(chunk) {
+      thinkingContent += chunk;
+      thinking.querySelector("pre").textContent = thinkingContent;
+      $("#chat-log").scrollTop = $("#chat-log").scrollHeight;
+    },
+    setStatus(text) {
+      status.textContent = text;
+    },
+    finish(id) {
+      message.classList.remove("streaming");
+      if (id) message.dataset.messageId = id;
+      if (!thinkingContent.trim()) thinking.remove();
+      body.innerHTML = renderMarkdownDocument(content || "응답 내용이 비어 있습니다.");
+      status.textContent = "스트리밍 완료";
+      attachMessageActions(message, "assistant", content, id);
+    },
+    fail(error) {
+      message.className = "message assistant error";
+      body.textContent = `GLM 채팅 실패: ${error}`;
+      status.textContent = "스트리밍 실패";
+    },
+  };
+}
+
+async function stopChatReasoning() {
+  if (!state.chatSending) return;
+  $("#chat-status-detail").textContent = "추론 중지를 요청했습니다.";
+  const payload = await api("/api/chat/stop", {
+    method: "POST",
+    body: JSON.stringify({ projectId: state.activeChatProjectId }),
+  });
+  removeThinkingMessage();
+  setChatPhase("failed", payload.status === "stopping" ? "추론을 중지했습니다. 필요하면 이어서 다시 전송하세요." : "실행 중인 추론이 없습니다.");
+}
+
+async function deleteChatMessage(messageId) {
+  if (!messageId) return;
+  const payload = await api(`/api/chat/projects/${encodeURIComponent(state.activeChatProjectId)}/messages/${encodeURIComponent(messageId)}`, {
+    method: "DELETE",
+  });
+  if (payload.error || payload.mock) {
+    $("#chat-status-detail").textContent = `메시지 삭제 실패: ${payload.error || "API 연결 대기"}`;
+    return;
+  }
+  await loadChatProjects();
+  setChatPhase("idle", payload.deleted ? "메시지를 삭제했습니다." : "삭제할 메시지를 찾지 못했습니다.");
+}
+
+function appendMessage(role, text, id = "") {
   const message = document.createElement("article");
   message.className = `message ${role}`;
-  const messageId = `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  const messageId = id || `local-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
   message.dataset.messageId = messageId;
-  
+  const body = document.createElement("div");
+  body.className = "message-body";
   if (role.includes("assistant")) {
-    message.innerHTML = renderMarkdownDocument(text);
+    body.innerHTML = renderMarkdownDocument(text);
+    message.appendChild(body);
     // Add knowledge promotion button to assistant messages
     const promotionButton = document.createElement("button");
     promotionButton.className = "knowledge-promotion-button";
-    promotionButton.textContent = "📚 지식승격";
+    promotionButton.textContent = "지식승격";
     promotionButton.type = "button";
     promotionButton.dataset.messageContent = text;
     promotionButton.dataset.messageId = messageId;
     promotionButton.addEventListener("click", () => openKnowledgePromotionPanel(text, messageId));
     message.appendChild(promotionButton);
   } else {
-    message.textContent = text;
+    body.textContent = text;
+    message.appendChild(body);
   }
+  attachMessageActions(message, role, text, messageId);
   $("#chat-log").appendChild(message);
   $("#chat-log").scrollTop = $("#chat-log").scrollHeight;
+}
+
+function attachMessageActions(message, role, text, messageId = "") {
+  if (message.querySelector(".message-actions")) return;
+  const actions = document.createElement("div");
+  actions.className = "message-actions";
+  const addAction = (label, title, handler) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.textContent = label;
+    button.title = title;
+    button.addEventListener("click", handler);
+    actions.appendChild(button);
+  };
+  if (role === "user") {
+    addAction("수정", "입력창에 이 메시지를 다시 올립니다.", () => {
+      $("#chat-input").value = text;
+      $("#chat-input").focus();
+      setChatPhase("idle", "메시지를 수정한 뒤 전송하세요.");
+    });
+    addAction("재추론", "같은 내용으로 새 GLM 추론을 실행합니다.", () => {
+      $("#chat-input").value = text;
+      sendChat();
+    });
+  }
+  if (role.includes("assistant")) {
+    addAction("복사", "응답을 클립보드에 복사합니다.", async () => {
+      await navigator.clipboard?.writeText(text);
+      setChatPhase("idle", "응답을 복사했습니다.");
+    });
+  }
+  if (messageId && !messageId.startsWith("local-")) {
+    addAction("삭제", "이 메시지를 프로젝트 대화내역에서 삭제합니다.", () => deleteChatMessage(messageId));
+  }
+  message.appendChild(actions);
 }
 
 function openKnowledgePromotionPanel(content, messageId) {
@@ -1545,7 +1838,7 @@ async function executeKnowledgePromotion() {
         method: "POST",
         body: JSON.stringify({ content, projectHint }),
       });
-      resultDiv.innerHTML = `<div class="success">근거 로그 후보 생성 완료</div><pre>${escapeHtml(JSON.stringify(result, null, 2))}</pre>`;
+      renderPromotionResult(resultDiv, result);
     } else if (tool === "memory") {
       if (!state.activeChatProjectId) {
         resultDiv.innerHTML = '<div class="error">프로젝트 메모리를 추가하려면 프로젝트를 선택해야 합니다.</div>';
@@ -1558,7 +1851,7 @@ async function executeKnowledgePromotion() {
           content: content,
         }),
       });
-      resultDiv.innerHTML = `<div class="success">프로젝트 메모리 추가 완료</div><p>${escapeHtml(result.memory?.title || "메모리")}</p>`;
+      resultDiv.innerHTML = `<div class="success">프로젝트 메모리 추가 완료</div><p>${escapeHtml(result.memory?.title || "메모리")}</p><p>프로젝트 메모리와 L1 memory에 반영됐습니다.</p>`;
       await loadChatProjects();
     } else {
       resultDiv.innerHTML = '<div class="error">알 수 없는 도구 유형입니다.</div>';
@@ -1601,6 +1894,8 @@ $("#chat-project-save").addEventListener("click", saveChatProject);
 $("#chat-project-delete").addEventListener("click", deleteChatProject);
 $("#chat-memory-add").addEventListener("click", addChatMemory);
 $("#wiki-refresh").addEventListener("click", loadNotionWikiBrowser);
+$("#wiki-command-run").addEventListener("click", runWikiManagementCommand);
+$("#wiki-command-example").addEventListener("click", fillWikiManagementExample);
 $("#notion-wiki-search").addEventListener("input", () => {
   state.wikiFilters.query = $("#notion-wiki-search").value.trim();
   renderNotionWikiContent();
@@ -1676,7 +1971,9 @@ $("#paperclip-trigger-task").addEventListener("click", triggerPaperclipTask);
 $("#wiki-search-button").addEventListener("click", searchWiki);
 $("#summarize-selected").addEventListener("click", summarizeSelectedResults);
 $("#digest-button").addEventListener("click", generateDigest);
+$("#knowledge-promote-button").addEventListener("click", promoteKnowledgeFromIngest);
 $("#chat-send").addEventListener("click", sendChat);
+$("#chat-stop").addEventListener("click", stopChatReasoning);
 $("#close-promotion-panel").addEventListener("click", closeKnowledgePromotionPanel);
 $("#execute-promotion").addEventListener("click", executeKnowledgePromotion);
 $("#wiki-query").addEventListener("keydown", (event) => {
@@ -1691,8 +1988,18 @@ $("#chat-input").addEventListener("compositionend", () => {
   });
 });
 $("#chat-input").addEventListener("keydown", (event) => {
+  if (event.key === "Tab" && event.shiftKey) {
+    event.preventDefault();
+    const input = event.currentTarget;
+    const start = input.selectionStart;
+    const end = input.selectionEnd;
+    input.value = `${input.value.slice(0, start)}\n${input.value.slice(end)}`;
+    input.selectionStart = input.selectionEnd = start + 1;
+    return;
+  }
   if (event.key !== "Enter") return;
   if (event.isComposing || state.chatComposing || event.keyCode === 229) return;
+  if (event.shiftKey) return;
   event.preventDefault();
   sendChat();
 });

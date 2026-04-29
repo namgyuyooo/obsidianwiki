@@ -366,6 +366,23 @@
         </section>
 
         <section id="wiki" class="view">
+          <section class="wiki-command-panel wiki-command-panel-primary">
+            <div class="panel-heading">
+              <div>
+                <h3>위키 관리 GLM 명령 콘솔</h3>
+                <p>자연어로 프로젝트 승격, 고객사 정리, 명칭 일괄수정, 링크 정합성 검토를 지시합니다. 결과는 적용 전 계획으로 저장되고 로그화됩니다.</p>
+              </div>
+              <span id="wiki-command-status">대기</span>
+            </div>
+            <textarea id="wiki-command-input" placeholder="예: 아사히카세히의 위키를 모두 모아 프로젝트, 고객사로 승격해. 참고로 아사히카세이->아사히카세히 영칭도 일괄수정"></textarea>
+            <div class="wiki-command-actions">
+              <button class="command-button accent" id="wiki-command-run" type="button">GLM 관리 계획 생성</button>
+              <button class="command-button" id="wiki-command-example" type="button">예시 입력</button>
+              <span>현재는 preview-only입니다. 실제 파일 적용 전 diff 검토가 필요합니다.</span>
+            </div>
+            <div id="wiki-command-result" class="wiki-command-result">아직 실행된 관리 명령이 없습니다.</div>
+          </section>
+
           <div class="notion-wiki-browser">
             <aside class="notion-sidebar">
               <div class="notion-sidebar-header">
@@ -554,7 +571,11 @@
               </div>
               <input id="project-hint" class="wide-input" placeholder="프로젝트 힌트, 선택사항" />
               <textarea id="knowledge-input" placeholder="새 지식, 회의 메모, 파일 경로, Drive mirror path를 한국어로 붙여넣기"></textarea>
-              <button id="digest-button" class="command-button accent">한국어 다이제스트 생성</button>
+              <div class="ingest-actions">
+                <button id="digest-button" class="command-button">한국어 다이제스트 생성</button>
+                <button id="knowledge-promote-button" class="command-button accent" type="button">승격 후보 저장</button>
+              </div>
+              <div id="knowledge-promote-status" class="promotion-result">승격 후보를 저장하면 확인 가능한 Markdown과 로그가 생성됩니다.</div>
             </section>
             <section class="panel">
               <div class="panel-heading">
@@ -613,8 +634,11 @@
                 <div id="promotion-result" class="promotion-result"></div>
               </div>
               <div class="chat-input-row">
-                <input id="chat-input" placeholder="프로젝트 상태, 리스크, 다음 액션을 물어보세요" />
-                <button id="chat-send" class="command-button">전송</button>
+                <textarea id="chat-input" rows="2" placeholder="프로젝트 상태, 리스크, 다음 액션을 물어보세요. Shift+Enter 또는 Shift+Tab은 줄바꿈"></textarea>
+                <div class="chat-send-stack">
+                  <button id="chat-send" class="command-button">전송</button>
+                  <button id="chat-stop" class="command-button danger" type="button" disabled>추론 중지</button>
+                </div>
               </div>
             </section>
 

@@ -5,7 +5,7 @@ project_name: "기본 업무 챗"
 status: "active"
 knowledge_role: auxiliary_not_decision
 created: 2026-04-29T04:11:08.843Z
-updated: 2026-04-29T05:08:46.742Z
+updated: 2026-04-29T05:41:11.376Z
 source: wiki_api chat_projects.json
 ---
 
@@ -47,6 +47,10 @@ source: wiki_api chat_projects.json
 > **5) 근거**
 > *   `obsidian/Wiki/Common/Drive_Wikify_Batch_Operating_Model.md` (배치 운영 기준)
 > *   `obsidian/Wiki/Common/RTM_YNG_Evidence_Log_2026-04-21.md` (검증된 핵심 근거)
+
+### 3. assistant · 2026-04-29T05:41:02.020Z
+
+> 현재 테스트입니다.
 
 ## 승격 규칙
 - 대화 중 나온 사실은 원문 근거가 확인되기 전까지 확정 지식으로 쓰지 않는다.

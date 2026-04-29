@@ -1,7 +1,7 @@
 ---
 type: global_chat_instruction
 knowledge_role: global_operating_rule
-updated: 2026-04-29T05:08:46.744Z
+updated: 2026-04-29T05:40:54.646Z
 source: wiki_api chat_global_settings.json
 ---
 
