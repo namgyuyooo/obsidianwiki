@@ -10,7 +10,11 @@ source: "Global wiki operations log"
 이 파일은 위키 운영의 append-only 로그입니다.
 
 ## 2026-04-29
-- `automation/wiki_api/`, `automation/wiki_frontend/`: OpenClaw Webhook/API Key를 GLM 설정 재사용 구조로 변경, 전용 값은 override로만 사용
+- `automation/wiki_api/`, `automation/wiki_frontend/`: GLM thinking 기본 활성화 설정 추가, 프로젝트별 GLM 챗 메모리/대화내용을 `auxiliary_not_decision` L1 memory 문서로 자동 동기화
+- `automation/wiki_api/`, `automation/wiki_frontend/`: `위키` 탭 신규 생성, Markdown 직접 조회/index API와 `[[wikilink]]` 기반 Obsidian식 그래프맵 시각화 추가
+- `automation/wiki_frontend/`, `automation/wiki_api/`: `운영`에서 수집 실행 동선을 분리해 `수집 파이프라인` 탭을 추가하고, Paperclip을 독립 작업대가 아니라 본 위키/GLM 챗 컨텍스트 브리지로 재정의
+- `automation/wiki_api/`, `automation/wiki_frontend/`: GLM 챗을 GPT/Claude식 3패널 구조로 전환, 프로젝트별 지침/메모리/대화 이력 생성·수정·삭제 API와 UI 추가
+- `automation/wiki_api/`, `automation/wiki_frontend/`: OpenClaw Webhook/API Key를 GLM 설정 재사용 구조로 변경, GLM fallback은 `/chat/completions`로 정규화해 OpenClaw 계획 JSON을 받도록 수정
 - `automation/wiki_api/`, `automation/wiki_frontend/`: 운영 스킬 카탈로그 추가, 보고서 작성용 MD/코딩 작업/근거 검증 runtime draft 생성 기능 구현
 - [[Wiki/Common/Wiki_Ops_Skill_Catalog]]: 적용 스킬, 로컬 플러그인 스킬, MCP 후보와 안전 기준 등록
 - `automation/wiki_api/`: GLM 챗을 위키 설명형 응답에서 실제 프로젝트 업무 운영 응답으로 전환하고 Markdown 원문 excerpt, 자동화 상태, 커버리지를 컨텍스트로 주입

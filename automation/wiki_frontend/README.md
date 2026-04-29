@@ -9,12 +9,14 @@
 - 예약 기반 자동 실행
 - OpenClaw 자동화 호출
 - 전체 Google Drive 수집 상태 바
+- 사용자가 순서대로 실행할 수 있는 `수집 파이프라인` 탭
+- 위키 직접 조회와 Obsidian식 그래프맵
 - 운영 설정 조회/수정
 - 위키 검색, 근거 Markdown 선택, 선택 근거 GLM 정리
 - 신규 지식 주입과 LLM digest preview
 - 처리 결과 확인
-- GLM 기반 업무 운영 chat
-- Paperclip task/control plane 전용 작업대
+- GPT/Claude식 프로젝트별 GLM 업무 운영 chat
+- Paperclip 기반 위키/GLM 컨텍스트 브리지
 - 운영 스킬 카탈로그와 runtime MD draft 생성
 
 ## 현재 상태
@@ -28,11 +30,31 @@
 - 사용자가 체크한 Markdown만 `선택 근거 GLM 정리`로 보낸다.
 - GLM 정리는 선택된 path의 원문 excerpt만 근거로 사용한다.
 
+## 위키 탭
+
+- `GET /api/wiki/index`로 `obsidian/Wiki/`와 `obsidian/L1_memory/`의 Markdown 목록을 직접 조회한다.
+- 좌측 문서 목록에서 제목, 경로, frontmatter type 기준으로 필터링할 수 있다.
+- 중앙 뷰어는 Markdown을 읽기 쉬운 HTML preview로 렌더링한다.
+- 우측 그래프맵은 `[[wikilink]]`와 `.md` 링크를 기반으로 노드/링크를 시각화한다.
+
 ## GLM 챗
 
 - GLM 챗은 위키 검색 결과를 설명하지 않고, 위키를 근거 저장소로 사용해 실제 업무 상태를 정리한다.
 - 기본 응답 관점은 현재 업무상태, 진행/완료, 리스크/충돌, 다음 액션, 근거다.
 - `위키 검색 결과`, `스니펫`, `메타데이터` 같은 메타 설명을 피하고 프로젝트 자체를 바로 다룬다.
+- Paperclip 상태, agent template, 최근 task는 GLM 챗의 운영 힌트로 들어가며 별도 실행 결과처럼 과장하지 않는다.
+- 화면은 좌측 프로젝트 목록, 중앙 대화, 우측 지침/메모리 패널 구조다.
+- 프로젝트별 지침, 메모리, 대화 이력은 `automation/wiki_api/runtime/chat_projects.json`에 저장된다.
+- 같은 내용은 `obsidian/L1_memory/GLM_Chat_Projects/*.md`에 보조 지식으로 자동 동기화된다.
+- 대화내역은 결정된 지식이 아닐 수 있으므로 GLM과 위키에서는 `auxiliary_not_decision`으로 취급한다.
+- GLM 호출은 기본적으로 `GLM_THINKING_TYPE=enabled`, `GLM_THINKING_BUDGET_TOKENS=8192`를 사용해 깊게 검토하도록 유도한다.
+
+## 수집 파이프라인
+
+- 사용자는 `rclone copy 미리보기 -> manifest 생성 -> 위키화 실행 -> 커버리지 확인` 순서만 따라가면 된다.
+- `전체 흐름 미리보기`는 dry-run 기준으로 하루 종일 돌릴 작업을 안전하게 점검하는 용도다.
+- Drive 경로 기본값은 `gdrive: 최상위`이며, `RCLONE_REMOTE_PATH`를 비우면 전체 Drive 대상이 된다.
+- 실행 로그와 중지 버튼은 이 탭에 모아 두고, 사이드바에는 어디서든 볼 수 있는 간단한 실행 상태만 유지한다.
 
 ## 열기
 
@@ -50,8 +72,9 @@ http://127.0.0.1:8787
 
 ## Paperclip 탭
 
+- Paperclip은 본 위키와 GLM 챗이 사용할 컨텍스트 브리지다.
 - `Agent Templates`: Drive Collector, Manifest Builder, Wiki Ingest Operator, OpenClaw Orchestrator, Validator 템플릿을 표시한다.
-- `Task 생성`: 템플릿을 골라 local queue에 추가하거나 즉시 실행한다.
+- `컨텍스트 Task 생성`: 템플릿을 골라 local queue에 추가하거나 즉시 실행한다.
 - `Task Queue`: 최근 Paperclip task 상태를 보여준다.
 - `Event Log`: task 생성/완료 이벤트를 append-only로 남긴다.
 

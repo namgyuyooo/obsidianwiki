@@ -8,7 +8,7 @@ source: "Local wiki frontend product and architecture plan"
 # Wiki Frontend Product Plan
 
 이 프론트엔드는 Obsidian을 대체하는 앱이 아니라, 위키 운영을 위한 로컬 콘솔이다.
-핵심 화면은 `자동화 트리거`, `위키 검색/조회`, `신규 지식 주입`, `LLM 다이제스트 결과`, `개인용 로컬 LLM 챗`이다.
+핵심 화면은 `운영`, `수집 파이프라인`, `위키 직접 조회`, `위키 검색/조회`, `신규 지식 주입`, `LLM 다이제스트 결과`, `GLM 업무 챗`, `Paperclip 컨텍스트 브리지`다.
 
 ## 목표 화면
 
@@ -16,18 +16,55 @@ source: "Local wiki frontend product and architecture plan"
 
 보여줄 것:
 
-- `rclone-copy`, `build-manifest`, `run`, `full-cycle` 실행 버튼
 - 현재 `.env` 대상 Drive, mirror root, manifest path
 - 최근 run output, validation pass/fail, cleanup action
 - `deletion_log.jsonl` 요약
 - 안전 상태: `DRIVE_DELETE_SOURCE=false`
+- 예약 실행, 운영 설정, 스킬 카탈로그
 
 금지:
 
 - 원본 Google Drive 삭제 버튼
 - `rclone sync`, `rclone delete`, `rclone purge`
 
-### 2. Wiki Search and Reader
+### 1-A. Drive Collection Pipeline
+
+사용자 동선:
+
+- `rclone copy 미리보기`
+- `manifest 생성`
+- `위키화 실행`
+- `전체 흐름 미리보기`
+- `오픈클로/GLM 트리거`
+- `현재 작업 중지`
+
+설계 의도:
+
+- 운영 설정과 수집 실행을 분리해 사용자가 “지금 무엇을 누르면 되는지”만 보게 한다.
+- Drive 경로 기본값은 `gdrive: 최상위`다.
+- 실행 로그와 재개 기준은 수집 파이프라인 탭에 모으고, 사이드바에는 어디서나 보이는 현재 상태만 둔다.
+
+### 2. Wiki Direct Browser
+
+조회 대상:
+
+- `obsidian/Wiki/**/*.md`
+- `obsidian/L1_memory/**/*.md`
+
+보여줄 것:
+
+- 좌측 문서 목록과 title/path/type 필터
+- 중앙 Markdown preview
+- 우측 Obsidian식 link graph map
+- 그래프 노드 선택 시 같은 중앙 preview로 이동
+
+그래프 기준:
+
+- `[[wikilink]]`를 우선 link로 인식한다.
+- Markdown `.md` 링크도 보조 link로 인식한다.
+- 노드 크기는 연결 수로 표현한다.
+
+### 2-A. Wiki Search and Reader
 
 검색 대상:
 
@@ -100,6 +137,11 @@ GLM API가 맡을 일:
 - 사용자는 메인 LLM으로 GLM API를 사용한다.
 - digest와 chat을 같은 API 계층으로 묶으면 운영 설정과 비용 관리가 단순하다.
 - 위키 검색 결과를 context로 넣어 RAG-lite 방식으로 먼저 운영할 수 있다.
+- 프로젝트별 지침, 메모리, 최근 대화 이력을 저장해 GPT/Claude식 작업실 구조로 운영한다.
+- Paperclip 상태, agent template, 최근 task는 GLM 챗의 운영 힌트로 사용한다.
+- GLM 호출은 기본적으로 thinking을 활성화하고 충분한 budget을 둔다.
+- 프로젝트별 메모리와 대화내용은 L1 memory에 보조 지식으로 저장하되, 대화내역은 `결정/검증된 지식이 아닐 수 있음`을 명시한다.
+- 대화에서 나온 사실은 근거 Markdown으로 확인되거나 사용자가 결정해야만 프로젝트 본문 지식으로 승격한다.
 
 ## 권장 아키텍처
 
@@ -110,7 +152,7 @@ Browser UI
     -> drive_wikify CLI trigger
     -> GLM digest adapter
     -> GLM wiki chat adapter
-    -> Paperclip status/task bridge
+    -> Paperclip context/task bridge
 ```
 
 ## API Contract v0
@@ -138,7 +180,7 @@ Browser UI
 
 `POST /api/openclaw/trigger`
 
-- OpenClaw webhook trigger
+- GLM-backed OpenClaw automation trigger
 - sends safe drive_wikify task payload
 
 `POST /api/automation/trigger`
@@ -171,7 +213,15 @@ Browser UI
 
 `POST /api/chat/glm`
 
-- GLM-backed wiki chat
+- GLM-backed project operations chat
+
+`GET /api/chat/projects`
+
+- 프로젝트별 GLM 챗 지침, 메모리, 최근 대화 이력
+
+`POST /api/chat/projects`
+
+- GLM 챗 프로젝트 생성/수정
 
 `GET /api/paperclip/status`
 
@@ -218,6 +268,13 @@ Browser UI
 - operation settings는 allowlist 기반으로 `.env`를 수정한다.
 - `DRIVE_DELETE_SOURCE`는 수정 대상에서 제외하고 항상 `false`로 유지한다.
 - 전체 수집 상태는 `Drive_Wikify_Coverage_Tracker`, manifest, run output, local mirror cleanup log를 합쳐 표시한다.
+
+## 2026-04-29 v1 Screen Separation
+
+- `운영`은 상태/예약/설정/스킬 카탈로그로 정리했다.
+- `수집 파이프라인`은 보수적 Drive 수집부터 위키화 실행까지 사용자가 순서대로 누르는 화면으로 분리했다.
+- `Paperclip`은 별도 작업장이 아니라 본 위키와 GLM 챗이 활용하는 컨텍스트 브리지로 정의했다.
+- GLM 챗은 Paperclip 템플릿과 최근 task를 참고하지만, 이를 확정된 근거처럼 말하지 않도록 시스템 프롬프트에서 제한했다.
 - OpenClaw trigger는 전용 `OPENCLAW_WEBHOOK_URL`/`OPENCLAW_API_KEY`가 비어 있으면 `GLM_API_URL`/`GLM_API_KEY`를 재사용한다.
 - `rclone-copy`는 `rclone copy` 기반이며 dry-run 검증을 통과했다.
 - GLM 환경값이 없으면 local rule digest 또는 GLM 설정 요청 메시지로 fallback한다.

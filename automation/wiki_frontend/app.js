@@ -36,13 +36,21 @@ const state = {
   schedules: [],
   searchResults: [],
   selectedSearchPaths: new Set(),
+  wikiPages: [],
+  wikiGraph: { nodes: [], edges: [] },
+  activeWikiPath: "",
   skills: [],
+  chatProjects: [],
+  chatGlobal: { instructions: "", autoMemory: true },
+  activeChatProjectId: "default",
   chatComposing: false,
   chatSending: false,
 };
 
 const titles = {
   operations: "운영",
+  pipeline: "수집 파이프라인",
+  wiki: "위키",
   search: "위키 검색",
   ingest: "지식 주입",
   chat: "GLM 챗",
@@ -70,6 +78,8 @@ const settingLabels = {
   GLM_API_URL: "GLM API URL",
   GLM_API_KEY: "GLM API Key",
   GLM_MODEL: "GLM 모델",
+  GLM_THINKING_TYPE: "GLM thinking",
+  GLM_THINKING_BUDGET_TOKENS: "GLM thinking budget",
   OPENCLAW_WEBHOOK_URL: "OpenClaw GLM Webhook override",
   OPENCLAW_API_KEY: "OpenClaw GLM API Key override",
   PAPERCLIP_URL: "Paperclip URL",
@@ -87,6 +97,121 @@ function escapeHtml(value) {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#039;");
+}
+
+function inlineMarkdown(value) {
+  return escapeHtml(value)
+    .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+    .replace(/`([^`]+)`/g, "<code>$1</code>");
+}
+
+function renderMarkdownDocument(markdown) {
+  const lines = String(markdown || "").split("\n");
+  const html = [];
+  let inCode = false;
+  let codeLines = [];
+  let codeLang = "";
+  let inList = false;
+  let inTable = false;
+
+  function closeList() {
+    if (inList) {
+      html.push("</ul>");
+      inList = false;
+    }
+  }
+
+  function closeTable() {
+    if (inTable) {
+      html.push("</tbody></table>");
+      inTable = false;
+    }
+  }
+
+  function flushCode() {
+    html.push(`<section class="code-window"><div>${escapeHtml(codeLang || "code")}</div><pre><code>${escapeHtml(codeLines.join("\n"))}</code></pre></section>`);
+    codeLines = [];
+    codeLang = "";
+  }
+
+  for (const line of lines) {
+    const fence = line.match(/^```(.*)$/);
+    if (fence) {
+      if (inCode) {
+        flushCode();
+        inCode = false;
+      } else {
+        closeList();
+        closeTable();
+        inCode = true;
+        codeLang = fence[1].trim();
+      }
+      continue;
+    }
+    if (inCode) {
+      codeLines.push(line);
+      continue;
+    }
+
+    if (!line.trim()) {
+      closeList();
+      closeTable();
+      continue;
+    }
+
+    const heading = line.match(/^(#{1,4})\s+(.+)$/);
+    if (heading) {
+      closeList();
+      closeTable();
+      const level = Math.min(heading[1].length + 2, 6);
+      html.push(`<h${level}>${inlineMarkdown(heading[2])}</h${level}>`);
+      continue;
+    }
+
+    if (/^\|.+\|$/.test(line.trim())) {
+      const cells = line.trim().slice(1, -1).split("|").map((cell) => cell.trim());
+      if (cells.every((cell) => /^:?-{3,}:?$/.test(cell))) continue;
+      closeList();
+      if (!inTable) {
+        html.push("<table><tbody>");
+        inTable = true;
+      }
+      html.push(`<tr>${cells.map((cell) => `<td>${inlineMarkdown(cell)}</td>`).join("")}</tr>`);
+      continue;
+    }
+
+    const bullet = line.match(/^[-*]\s+(.+)$/);
+    if (bullet) {
+      closeTable();
+      if (!inList) {
+        html.push("<ul>");
+        inList = true;
+      }
+      html.push(`<li>${inlineMarkdown(bullet[1])}</li>`);
+      continue;
+    }
+
+    closeList();
+    closeTable();
+    html.push(`<p>${inlineMarkdown(line)}</p>`);
+  }
+
+  closeList();
+  closeTable();
+  if (inCode) flushCode();
+  return `<article class="markdown-preview">${html.join("")}</article>`;
+}
+
+function downloadText(filename, text) {
+  const blob = new Blob([text], { type: "text/markdown;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = filename || "wiki-ops-output.md";
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  URL.revokeObjectURL(url);
 }
 
 function renderMarkdownBullets(markdown) {
@@ -128,6 +253,8 @@ function renderStatus() {
   $("#manifest-status").textContent = state.status.manifest;
   $("#last-run").textContent = state.status.lastRun;
   $("#cleanup-status").textContent = state.status.cleanup;
+  const pipelineDrive = $("#pipeline-drive-default");
+  if (pipelineDrive) pipelineDrive.textContent = `기본 경로: ${state.status.targetDrive || "gdrive: 최상위"}`;
 }
 
 function renderEvents(target, events) {
@@ -139,6 +266,192 @@ function renderEvents(target, events) {
     item.innerHTML = `<strong>${event.command}</strong><small>${event.status}</small><p>${event.detail}</p>`;
     container.appendChild(item);
   });
+}
+
+function filteredWikiPages() {
+  const query = ($("#wiki-filter")?.value || "").trim().toLowerCase();
+  if (!query) return state.wikiPages;
+  return state.wikiPages.filter((page) => {
+    const text = [
+      page.title,
+      page.path,
+      page.section,
+      page.frontmatter?.type,
+      page.frontmatter?.source,
+    ].filter(Boolean).join(" ").toLowerCase();
+    return text.includes(query);
+  });
+}
+
+function renderWikiPages() {
+  const pages = filteredWikiPages();
+  $("#wiki-page-count").textContent = `${pages.length}건`;
+  $("#wiki-page-list").innerHTML = pages
+    .slice(0, 260)
+    .map((page) => [
+      `<button class="wiki-page-item ${page.path === state.activeWikiPath ? "active" : ""}" data-wiki-path="${escapeHtml(page.path)}" type="button">`,
+      `<strong>${escapeHtml(page.title)}</strong>`,
+      `<small>${escapeHtml(page.section)} · ${escapeHtml(page.frontmatter?.type || "page")}</small>`,
+      `<span>${escapeHtml(page.path)}</span>`,
+      `</button>`,
+    ].join(""))
+    .join("");
+  document.querySelectorAll("[data-wiki-path]").forEach((button) => {
+    button.addEventListener("click", () => openWikiPage(button.dataset.wikiPath));
+  });
+}
+
+function graphLayout(nodes, edges) {
+  const width = 720;
+  const height = 520;
+  const centerX = width / 2;
+  const centerY = height / 2;
+  const groups = [...new Set(nodes.map((node) => node.section || "Wiki"))];
+  const groupAngle = new Map(groups.map((group, index) => [group, (Math.PI * 2 * index) / Math.max(groups.length, 1)]));
+  return nodes.map((node, index) => {
+    const angle = groupAngle.get(node.section || "Wiki") + index * 0.43;
+    const radius = 88 + Math.min(185, (index % 38) * 4.8) + (node.degree || 0) * 2.5;
+    return {
+      ...node,
+      x: centerX + Math.cos(angle) * radius,
+      y: centerY + Math.sin(angle) * radius,
+      r: Math.max(5, Math.min(22, 5 + (node.degree || 0) * 1.2)),
+    };
+  });
+}
+
+function renderWikiGraph() {
+  const nodes = (state.wikiGraph.nodes || []).slice(0, 120);
+  const nodeIds = new Set(nodes.map((node) => node.id));
+  const edges = (state.wikiGraph.edges || []).filter((edge) => nodeIds.has(edge.source) && nodeIds.has(edge.target)).slice(0, 260);
+  const placed = graphLayout(nodes, edges);
+  const byId = new Map(placed.map((node) => [node.id, node]));
+  $("#wiki-graph-count").textContent = `${nodes.length} nodes · ${edges.length} links`;
+  $("#wiki-graph").innerHTML = [
+    `<div class="graph-canvas">`,
+    `<svg viewBox="0 0 720 520" class="graph-svg" aria-hidden="true">`,
+    `<g class="graph-links">`,
+    edges.map((edge) => {
+      const source = byId.get(edge.source);
+      const target = byId.get(edge.target);
+      if (!source || !target) return "";
+      return `<line x1="${source.x.toFixed(1)}" y1="${source.y.toFixed(1)}" x2="${target.x.toFixed(1)}" y2="${target.y.toFixed(1)}" />`;
+    }).join(""),
+    `</g>`,
+    `</svg>`,
+    placed.map((node) => [
+      `<button class="graph-node ${node.id === state.activeWikiPath ? "active" : ""}" data-graph-path="${escapeHtml(node.id)}" type="button" style="left:${(node.x / 720 * 100).toFixed(2)}%; top:${(node.y / 520 * 100).toFixed(2)}%; width:${(node.r * 2).toFixed(1)}px; height:${(node.r * 2).toFixed(1)}px;" title="${escapeHtml(node.title)}">`,
+      `<span>${escapeHtml(node.title)}</span>`,
+      `</button>`,
+    ].join("")).join(""),
+    `</div>`,
+  ].join("");
+  document.querySelectorAll("[data-graph-path]").forEach((button) => {
+    button.addEventListener("click", () => openWikiPage(button.dataset.graphPath));
+  });
+}
+
+async function loadWikiExplorer() {
+  const [indexPayload, graphPayload] = await Promise.all([
+    api("/api/wiki/index"),
+    api("/api/wiki/graph"),
+  ]);
+  if (!indexPayload.mock && indexPayload.pages) state.wikiPages = indexPayload.pages;
+  if (!graphPayload.mock && graphPayload.nodes) state.wikiGraph = graphPayload;
+  renderWikiPages();
+  renderWikiGraph();
+  if (!state.activeWikiPath && state.wikiPages[0]) {
+    await openWikiPage(state.wikiPages[0].path);
+  }
+}
+
+async function openWikiPage(path) {
+  if (!path) return;
+  state.activeWikiPath = path;
+  const page = state.wikiPages.find((item) => item.path === path) || { title: path, path };
+  $("#wiki-reader-title").textContent = page.title;
+  $("#wiki-reader-path").textContent = page.path;
+  $("#wiki-reader-body").textContent = "문서를 불러오는 중입니다.";
+  renderWikiPages();
+  renderWikiGraph();
+  const payload = await api(`/api/wiki/page?path=${encodeURIComponent(path)}`);
+  if (payload.error || payload.mock) {
+    $("#wiki-reader-body").textContent = payload.error || "문서 API 연결 대기";
+    return;
+  }
+  $("#wiki-reader-title").textContent = payload.title;
+  $("#wiki-reader-path").textContent = payload.path;
+  $("#wiki-reader-body").innerHTML = renderMarkdownDocument(payload.markdown);
+}
+
+function activeChatProject() {
+  return state.chatProjects.find((project) => project.id === state.activeChatProjectId) || state.chatProjects[0] || null;
+}
+
+function renderChatProjects() {
+  const project = activeChatProject();
+  $("#chat-project-count").textContent = `${state.chatProjects.length}개`;
+  $("#chat-global-instructions").value = state.chatGlobal.instructions || "";
+  $("#chat-auto-memory").checked = state.chatGlobal.autoMemory !== false;
+  $("#chat-project-list").innerHTML = state.chatProjects
+    .map((item) => `<button class="chat-project-item ${item.id === state.activeChatProjectId ? "active" : ""}" data-chat-project="${escapeHtml(item.id)}"><strong>${escapeHtml(item.name)}</strong><small>${escapeHtml((item.instructions || "지침 없음").slice(0, 72))}</small></button>`)
+    .join("");
+  document.querySelectorAll("[data-chat-project]").forEach((button) => {
+    button.addEventListener("click", () => {
+      state.activeChatProjectId = button.dataset.chatProject;
+      renderChatProjects();
+    });
+  });
+  $("#chat-project-select").innerHTML = state.chatProjects
+    .map((item) => `<option value="${escapeHtml(item.id)}">${escapeHtml(item.name)}</option>`)
+    .join("");
+  if (project) {
+    $("#chat-project-select").value = project.id;
+    $("#chat-active-title").textContent = project.name || "GLM 프로젝트";
+    $("#chat-project-name").value = project.name || "";
+    $("#chat-project-instructions").value = project.instructions || "";
+    $("#chat-log").innerHTML = "";
+    (project.messages || []).forEach((message) => appendMessage(message.role, message.content));
+  }
+  renderChatMemories();
+}
+
+function renderChatMemories() {
+  const project = activeChatProject();
+  const memories = project?.memories || [];
+  const rows = memories.map((memory) => ({
+    command: memory.title,
+    status: `${memory.source || "manual"} · ${memory.updatedAt || memory.createdAt}`,
+    detail: `${escapeHtml(memory.content)} <button class="inline-delete" data-memory-delete="${escapeHtml(memory.id)}">삭제</button>`,
+  }));
+  renderEvents("#chat-memory-list", rows.length ? rows : [{ command: "메모리 없음", status: "대기", detail: "프로젝트별 지침과 별개로 계속 기억할 내용을 추가하세요." }]);
+  document.querySelectorAll("[data-memory-delete]").forEach((button) => {
+    button.addEventListener("click", () => deleteChatMemory(button.dataset.memoryDelete));
+  });
+}
+
+async function loadChatProjects() {
+  const payload = await api("/api/chat/projects");
+  if (payload.mock || !payload.projects) return;
+  const previous = state.activeChatProjectId;
+  state.chatProjects = payload.projects;
+  if (payload.global) state.chatGlobal = payload.global;
+  state.activeChatProjectId = state.chatProjects.some((project) => project.id === previous)
+    ? previous
+    : state.chatProjects[0]?.id || "default";
+  renderChatProjects();
+}
+
+async function saveChatGlobal() {
+  const result = await api("/api/chat/global", {
+    method: "POST",
+    body: JSON.stringify({
+      instructions: $("#chat-global-instructions").value.trim(),
+      autoMemory: $("#chat-auto-memory").checked,
+    }),
+  });
+  if (result.global) state.chatGlobal = result.global;
+  renderChatProjects();
 }
 
 function latestRun() {
@@ -294,6 +607,7 @@ async function refreshStatus() {
     }));
     renderPaperclip(paperclip);
   }
+  if (!state.chatProjects.length) await loadChatProjects();
   const skills = await api("/api/skills/catalog");
   if (!skills.mock && skills.skills) {
     state.skills = skills.skills;
@@ -445,6 +759,63 @@ async function deleteSchedule(id) {
   await refreshStatus();
 }
 
+async function saveChatProject() {
+  const id = $("#chat-project-select").value || undefined;
+  const result = await api("/api/chat/projects", {
+    method: "POST",
+    body: JSON.stringify({
+      id,
+      name: $("#chat-project-name").value.trim(),
+      instructions: $("#chat-project-instructions").value.trim(),
+    }),
+  });
+  if (result.project) state.activeChatProjectId = result.project.id;
+  await loadChatProjects();
+}
+
+async function createNewChatProject() {
+  $("#chat-project-name").value = "새 GLM 프로젝트";
+  $("#chat-project-instructions").value = "이 프로젝트에만 적용되는 고객/범위/산출물/금지 표현을 적는다.";
+  const result = await api("/api/chat/projects", {
+    method: "POST",
+    body: JSON.stringify({
+      name: $("#chat-project-name").value.trim() || "새 GLM 프로젝트",
+      instructions: $("#chat-project-instructions").value.trim(),
+    }),
+  });
+  if (result.project) state.activeChatProjectId = result.project.id;
+  await loadChatProjects();
+}
+
+async function deleteChatProject() {
+  const id = state.activeChatProjectId;
+  if (!id) return;
+  await api(`/api/chat/projects/${encodeURIComponent(id)}`, { method: "DELETE" });
+  await loadChatProjects();
+}
+
+async function addChatMemory() {
+  if (!state.activeChatProjectId) return;
+  const result = await api(`/api/chat/projects/${encodeURIComponent(state.activeChatProjectId)}/memories`, {
+    method: "POST",
+    body: JSON.stringify({
+      title: $("#chat-memory-title").value.trim(),
+      content: $("#chat-memory-content").value.trim(),
+    }),
+  });
+  if (!result.error) {
+    $("#chat-memory-title").value = "";
+    $("#chat-memory-content").value = "";
+  }
+  await loadChatProjects();
+}
+
+async function deleteChatMemory(memoryId) {
+  if (!state.activeChatProjectId || !memoryId) return;
+  await api(`/api/chat/projects/${encodeURIComponent(state.activeChatProjectId)}/memories/${encodeURIComponent(memoryId)}`, { method: "DELETE" });
+  await loadChatProjects();
+}
+
 async function createSkillDraft() {
   const result = await api("/api/skills/draft", {
     method: "POST",
@@ -458,11 +829,12 @@ async function createSkillDraft() {
     $("#skill-output").textContent = `생성 실패: ${result.error}`;
     return;
   }
+  const fileName = (result.path || "wiki-ops-output.md").split("/").pop();
   $("#skill-output").innerHTML = [
-    "<strong>생성 완료</strong>",
-    `<small>${escapeHtml(result.path)}</small>`,
-    `<pre>${escapeHtml(result.markdown.slice(0, 1800))}${result.markdown.length > 1800 ? "\n..." : ""}</pre>`,
+    `<div class="output-actions"><div><strong>생성 완료</strong><small>${escapeHtml(result.path)}</small></div><button id="skill-download-button" class="command-button" type="button">MD 다운로드</button></div>`,
+    renderMarkdownDocument(result.markdown),
   ].join("");
+  $("#skill-download-button").addEventListener("click", () => downloadText(fileName, result.markdown));
 }
 
 async function refreshPaperclip() {
@@ -636,7 +1008,7 @@ async function sendChat() {
   try {
     const payload = await api("/api/chat/glm", {
       method: "POST",
-      body: JSON.stringify({ message: text }),
+      body: JSON.stringify({ message: text, projectId: state.activeChatProjectId }),
     });
     appendMessage(
       "assistant",
@@ -644,6 +1016,7 @@ async function sendChat() {
         ? "GLM API가 연결되면 위키 근거를 바탕으로 프로젝트 상태와 다음 액션을 정리합니다."
         : payload.message,
     );
+    await loadChatProjects();
   } finally {
     state.chatSending = false;
     $("#chat-send").disabled = false;
@@ -654,7 +1027,11 @@ async function sendChat() {
 function appendMessage(role, text) {
   const message = document.createElement("article");
   message.className = `message ${role}`;
-  message.textContent = text;
+  if (role === "assistant") {
+    message.innerHTML = renderMarkdownDocument(text);
+  } else {
+    message.textContent = text;
+  }
   $("#chat-log").appendChild(message);
 }
 
@@ -665,6 +1042,7 @@ document.querySelectorAll(".nav-item").forEach((button) => {
     button.classList.add("active");
     $(`#${button.dataset.view}`).classList.add("active");
     $("#view-title").textContent = titles[button.dataset.view];
+    if (button.dataset.view === "wiki" && !state.wikiPages.length) loadWikiExplorer();
   });
 });
 
@@ -679,6 +1057,20 @@ $("#stop-run").addEventListener("click", stopCurrentRun);
 $("#side-stop-run").addEventListener("click", stopCurrentRun);
 $("#schedule-form").addEventListener("submit", createSchedule);
 $("#skill-draft-button").addEventListener("click", createSkillDraft);
+$("#chat-project-select").addEventListener("change", (event) => {
+  state.activeChatProjectId = event.target.value;
+  renderChatProjects();
+});
+$("#chat-project-new").addEventListener("click", createNewChatProject);
+$("#chat-global-save").addEventListener("click", saveChatGlobal);
+$("#chat-project-save").addEventListener("click", saveChatProject);
+$("#chat-project-delete").addEventListener("click", deleteChatProject);
+$("#chat-memory-add").addEventListener("click", addChatMemory);
+$("#wiki-refresh").addEventListener("click", loadWikiExplorer);
+$("#wiki-filter").addEventListener("input", () => {
+  renderWikiPages();
+});
+$("#wiki-graph-fit").addEventListener("click", renderWikiGraph);
 $("#paperclip-refresh").addEventListener("click", refreshPaperclip);
 $("#paperclip-create-task").addEventListener("click", createPaperclipTask);
 $("#paperclip-trigger-task").addEventListener("click", triggerPaperclipTask);

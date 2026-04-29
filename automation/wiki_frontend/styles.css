@@ -282,6 +282,222 @@ select {
   gap: 18px;
 }
 
+.pipeline-hero {
+  margin-bottom: 18px;
+  padding: 22px;
+  border: 1px solid rgba(37, 95, 133, 0.2);
+  border-radius: 12px;
+  background:
+    radial-gradient(circle at top right, rgba(154, 106, 24, 0.16), transparent 36%),
+    linear-gradient(135deg, rgba(37, 95, 133, 0.12), rgba(36, 107, 79, 0.08)),
+    rgba(255, 255, 255, 0.92);
+  box-shadow: var(--shadow);
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  align-items: center;
+}
+
+.pipeline-hero h3,
+.pipeline-hero p {
+  margin: 0;
+}
+
+.pipeline-hero strong {
+  padding: 10px 14px;
+  border-radius: 999px;
+  color: var(--blue);
+  background: rgba(255, 255, 255, 0.82);
+  border: 1px solid rgba(37, 95, 133, 0.18);
+  white-space: nowrap;
+}
+
+.pipeline-steps {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.pipeline-step {
+  min-height: 210px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: var(--shadow);
+  display: grid;
+  gap: 10px;
+  align-content: start;
+}
+
+.pipeline-step span {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  color: white;
+  background: var(--green);
+  font-weight: 800;
+}
+
+.pipeline-step p,
+.pipeline-note {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.pipeline-step .command-button {
+  align-self: end;
+}
+
+.danger-step span {
+  background: var(--red);
+}
+
+.pipeline-run-grid {
+  align-items: start;
+}
+
+.wiki-browser {
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr) 360px;
+  gap: 16px;
+  min-height: calc(100vh - 120px);
+}
+
+.wiki-page-panel,
+.wiki-reader-panel,
+.wiki-graph-panel {
+  min-height: 0;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: var(--shadow);
+  padding: 14px;
+}
+
+.wiki-page-list {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+  max-height: calc(100vh - 255px);
+  overflow: auto;
+  padding-right: 4px;
+}
+
+.wiki-page-item {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: rgba(247, 249, 246, 0.82);
+  color: var(--ink);
+  cursor: pointer;
+  padding: 10px;
+  text-align: left;
+}
+
+.wiki-page-item.active {
+  border-color: var(--green);
+  background: rgba(36, 107, 79, 0.1);
+}
+
+.wiki-page-item strong,
+.wiki-page-item small,
+.wiki-page-item span {
+  display: block;
+}
+
+.wiki-page-item small,
+.wiki-page-item span {
+  color: var(--muted);
+  margin-top: 4px;
+  overflow-wrap: anywhere;
+}
+
+.wiki-reader-panel {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+}
+
+.wiki-reader-body {
+  max-height: calc(100vh - 210px);
+  overflow: auto;
+  padding: 16px;
+  border: 1px solid rgba(37, 95, 133, 0.14);
+  border-radius: 10px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.8), rgba(247, 249, 246, 0.86));
+}
+
+.graph-toolbar {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 10px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.wiki-graph {
+  min-height: 520px;
+  border: 1px solid rgba(24, 32, 29, 0.14);
+  border-radius: 12px;
+  background:
+    radial-gradient(circle at 30% 20%, rgba(37, 95, 133, 0.12), transparent 28%),
+    radial-gradient(circle at 70% 75%, rgba(36, 107, 79, 0.14), transparent 32%),
+    rgba(247, 249, 246, 0.88);
+  overflow: hidden;
+}
+
+.graph-canvas {
+  position: relative;
+  min-height: 520px;
+}
+
+.graph-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.graph-links line {
+  stroke: rgba(37, 95, 133, 0.22);
+  stroke-width: 1.2;
+}
+
+.graph-node {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  border: 2px solid rgba(255, 255, 255, 0.92);
+  border-radius: 999px;
+  background: var(--green);
+  box-shadow: 0 8px 18px rgba(24, 32, 29, 0.16);
+  cursor: pointer;
+}
+
+.graph-node.active {
+  background: var(--blue);
+  outline: 3px solid rgba(37, 95, 133, 0.2);
+}
+
+.graph-node span {
+  position: absolute;
+  left: 50%;
+  top: calc(100% + 4px);
+  transform: translateX(-50%);
+  width: 120px;
+  color: var(--ink);
+  font-size: 11px;
+  line-height: 1.2;
+  pointer-events: none;
+  text-align: center;
+  text-shadow: 0 1px 0 white;
+}
+
 .panel,
 .reader {
   padding: 18px;
@@ -528,6 +744,89 @@ textarea {
   overflow: auto;
 }
 
+.output-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+}
+
+.output-actions div {
+  display: grid;
+  gap: 4px;
+}
+
+.output-actions .command-button {
+  min-width: 130px;
+}
+
+.markdown-preview {
+  display: grid;
+  gap: 10px;
+  line-height: 1.65;
+}
+
+.markdown-preview h3,
+.markdown-preview h4,
+.markdown-preview h5,
+.markdown-preview h6,
+.markdown-preview p,
+.markdown-preview ul {
+  margin: 0;
+}
+
+.markdown-preview h3,
+.markdown-preview h4 {
+  margin-top: 6px;
+  color: var(--green);
+}
+
+.markdown-preview ul {
+  padding-left: 20px;
+}
+
+.markdown-preview code {
+  border-radius: 5px;
+  background: rgba(37, 95, 133, 0.09);
+  padding: 1px 5px;
+}
+
+.markdown-preview table {
+  width: 100%;
+  border-collapse: collapse;
+  overflow: hidden;
+  border-radius: 8px;
+}
+
+.markdown-preview td {
+  border: 1px solid var(--line);
+  padding: 8px;
+  vertical-align: top;
+  background: rgba(255, 255, 255, 0.7);
+}
+
+.code-window {
+  border: 1px solid rgba(24, 32, 29, 0.18);
+  border-radius: 8px;
+  overflow: hidden;
+  background: #17201c;
+}
+
+.code-window div {
+  padding: 8px 12px;
+  color: #b8c9c1;
+  background: rgba(255, 255, 255, 0.06);
+  font-size: 12px;
+}
+
+.code-window pre {
+  margin: 0;
+  padding: 12px;
+  max-height: 360px;
+  overflow: auto;
+  color: #eef7f1;
+}
+
 .skill-list {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -617,10 +916,124 @@ pre {
   gap: 10px;
 }
 
+.chat-workbench {
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr) 320px;
+  gap: 16px;
+  min-height: calc(100vh - 120px);
+}
+
+.chat-project-rail,
+.chat-main-panel,
+.chat-context-panel {
+  min-height: 0;
+}
+
+.chat-project-rail,
+.chat-main-panel,
+.context-card {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: var(--shadow);
+}
+
+.chat-project-rail,
+.chat-main-panel {
+  padding: 14px;
+}
+
+.rail-heading,
+.chat-main-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.rail-heading strong,
+.chat-main-header h3 {
+  display: block;
+  margin: 0;
+}
+
+.chat-project-list {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.chat-project-item {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: rgba(247, 249, 246, 0.82);
+  color: var(--ink);
+  cursor: pointer;
+  padding: 10px;
+  text-align: left;
+}
+
+.chat-project-item.active {
+  border-color: var(--blue);
+  background: rgba(37, 95, 133, 0.1);
+}
+
+.chat-project-item strong,
+.chat-project-item small {
+  display: block;
+}
+
+.chat-project-item small {
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+.chat-main-header select {
+  max-width: 220px;
+}
+
 .chat-log {
   min-height: 58vh;
+  max-height: calc(100vh - 260px);
   margin-bottom: 16px;
   align-content: start;
+  overflow: auto;
+  padding-right: 4px;
+}
+
+.chat-context-panel {
+  display: grid;
+  gap: 14px;
+  align-content: start;
+}
+
+.context-card {
+  padding: 14px;
+  display: grid;
+  gap: 10px;
+}
+
+.context-card textarea {
+  min-height: 120px;
+}
+
+.memory-toggle {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.memory-toggle input {
+  width: auto;
+}
+
+.chat-project-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
 }
 
 .paperclip-hero {
@@ -755,11 +1168,14 @@ pre {
 
   .metric-grid,
   .panel-grid,
+  .pipeline-steps,
+  .wiki-browser,
   .ingest-layout,
   .paperclip-layout,
   .schedule-form,
   .skill-composer,
   .skill-list,
+  .chat-workbench,
   .settings-grid {
     grid-template-columns: 1fr;
   }
@@ -776,5 +1192,19 @@ pre {
   .paperclip-hero {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .pipeline-hero {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .pipeline-hero strong {
+    white-space: normal;
+  }
+
+  .wiki-page-list,
+  .wiki-reader-body {
+    max-height: none;
   }
 }

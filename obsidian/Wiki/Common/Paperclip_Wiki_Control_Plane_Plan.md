@@ -8,7 +8,7 @@ source: "Paperclip public docs plus local Drive Wikify automation design"
 # Paperclip Wiki Control Plane Plan
 
 Paperclip은 이 위키의 저장소나 검색엔진을 대체하지 않는다.
-이 위키에서는 Paperclip을 `agent control plane`으로 두고, 실제 지식 저장과 근거 보존은 계속 `obsidian/Wiki/`, `obsidian/L1_memory/`, `automation/drive_wikify/`가 담당한다.
+이 위키에서는 Paperclip을 본 위키와 GLM 챗이 활용하는 `context bridge + agent control plane`으로 두고, 실제 지식 저장과 근거 보존은 계속 `obsidian/Wiki/`, `obsidian/L1_memory/`, `automation/drive_wikify/`가 담당한다.
 
 ## 적용 판단
 
@@ -20,6 +20,7 @@ Paperclip의 강점은 아래에 있다.
 
 위키 운영에 바로 맞는 지점:
 
+- GLM 챗이 참고할 수 있는 agent/template/task 상태 컨텍스트
 - 하루 종일 도는 Drive 수집 job의 상태판
 - `rclone-copy`, `build-manifest`, `run`, `validate` 같은 명령 트리거
 - OpenClaw/Codex/GLM 역할 분리
@@ -98,13 +99,13 @@ Paperclip task가 위키에 write하기 전 반드시 확인할 것:
 
 ## 결론
 
-Paperclip은 이 시스템의 `상위 작업 관리판`이다.
+Paperclip은 이 시스템의 `위키/GLM 컨텍스트 브리지이자 상위 작업 관리판`이다.
 위키 프론트엔드는 `로컬 지식 운영 화면`이고, `drive_wikify`는 실제 실행기다.
 따라서 전체 구조는 아래처럼 나눈다.
 
 ```text
 Paperclip
-  -> agents, goals, heartbeat, task audit
+  -> agents, goals, heartbeat, task audit, GLM context hints
 
 Wiki Frontend
   -> search, read, trigger, ingest, digest, local chat
@@ -116,15 +117,16 @@ Obsidian Wiki
   -> source-preserving long-term knowledge base
 ```
 
-## 2026-04-29 v1 Frontend Task Bridge
+## 2026-04-29 v1 Frontend Context Bridge
 
-`automation/wiki_api/`와 `automation/wiki_frontend/`에서 Paperclip 전용 작업대를 추가했다.
+`automation/wiki_api/`와 `automation/wiki_frontend/`에서 Paperclip을 전용 실행 화면이 아니라 위키/GLM 컨텍스트 브리지로 재정의했다.
 
 - `GET /api/paperclip/status`는 `PAPERCLIP_URL` reachability, agent template, task queue, event log를 함께 반환한다.
 - `GET /api/paperclip/templates`는 Drive Collector, Manifest Builder, Wiki Ingest Operator, OpenClaw Orchestrator, Validator 템플릿을 반환한다.
 - `POST /api/paperclip/tasks`는 선택 템플릿으로 local Paperclip task를 큐에 추가한다.
 - `POST /api/paperclip/trigger`는 task를 생성한 뒤 `rclone-copy --dry-run`, `build-manifest`, `run`, `openclaw`, `validate` 중 템플릿 명령을 실행한다.
-- frontend의 Paperclip 탭은 bridge 상태, task composer, agent templates, task queue, append-only event log를 표시한다.
+- frontend의 Paperclip 탭은 bridge 상태, 컨텍스트 task composer, agent templates, task queue, append-only event log를 표시한다.
+- GLM 챗은 Paperclip 상태, 템플릿, 최근 task를 운영 힌트로 받되 이를 확정된 실행 결과처럼 과장하지 않는다.
 - 모든 task payload에는 `driveDeleteSource=false`, `remoteDeleteAllowed=false`를 고정한다.
 
 다음 구현에서 붙일 것:
