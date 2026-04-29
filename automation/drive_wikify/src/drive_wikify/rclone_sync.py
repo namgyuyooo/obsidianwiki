@@ -13,9 +13,10 @@ def build_rclone_copy_command(
     tpslimit: float = 1.0,
     checkers: int = 1,
     transfers: int = 1,
+    exclude_patterns: list[str] | None = None,
 ) -> list[str]:
     source = f"{remote}:" if not remote_path else f"{remote}:{remote_path}"
-    return [
+    cmd = [
         "rclone",
         "copy",
         source,
@@ -45,6 +46,10 @@ def build_rclone_copy_command(
         "--log-level",
         "INFO",
     ]
+    for pattern in exclude_patterns or []:
+        if pattern.strip():
+            cmd.extend(["--exclude", pattern.strip()])
+    return cmd
 
 
 def run_rclone_copy(
@@ -55,6 +60,7 @@ def run_rclone_copy(
     tpslimit: float = 1.0,
     checkers: int = 1,
     transfers: int = 1,
+    exclude_patterns: list[str] | None = None,
     dry_run: bool = False,
 ) -> None:
     mirror_root.mkdir(parents=True, exist_ok=True)
@@ -66,6 +72,7 @@ def run_rclone_copy(
         tpslimit=tpslimit,
         checkers=checkers,
         transfers=transfers,
+        exclude_patterns=exclude_patterns,
     )
     if dry_run:
         print(" ".join(shlex.quote(part) for part in cmd))

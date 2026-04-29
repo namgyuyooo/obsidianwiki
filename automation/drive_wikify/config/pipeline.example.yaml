@@ -12,6 +12,8 @@ drive_wikify:
     - pdf
     - docx
     - pptx
+    - html
+    - htm
     - gdoc
     - gslides
   batch:
@@ -28,6 +30,8 @@ drive_wikify:
       - pdf
       - docx
       - pptx
+      - html
+      - htm
     parser_priority:
       hwp:
         - rhwp
@@ -42,6 +46,10 @@ drive_wikify:
         - docx_xml
       pptx:
         - pptx_xml
+      html:
+        - html_report_parser
+      htm:
+        - html_report_parser
         - slide_notes
   project_decision:
     create_new_project_if:

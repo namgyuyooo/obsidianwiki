@@ -165,6 +165,7 @@ class RuntimeConfig:
     rclone_tpslimit: float = 1.0
     rclone_checkers: int = 1
     rclone_transfers: int = 1
+    rclone_exclude_patterns: list[str] = field(default_factory=list)
     drive_name: str | None = None
     manifest_path: Path | None = None
     run_output_path: Path | None = None
@@ -203,7 +204,7 @@ class RuntimeConfig:
             log_page=(base / _require_string(payload, "LOG_PAGE")).resolve(),
             allowed_file_types=_as_list(
                 payload.get("ALLOWED_FILE_TYPES"),
-                ["hwp", "hwpx", "pdf", "docx", "pptx", "gdoc", "gslides"],
+                ["hwp", "hwpx", "pdf", "docx", "pptx", "html", "htm", "gdoc", "gslides"],
             ),
             max_folders_per_run=_as_int(payload.get("MAX_FOLDERS_PER_RUN"), 3),
             max_files_per_folder=_as_int(payload.get("MAX_FILES_PER_FOLDER"), 50),
@@ -223,6 +224,10 @@ class RuntimeConfig:
             rclone_tpslimit=_as_float(payload.get("RCLONE_TPSLIMIT"), 1.0),
             rclone_checkers=_as_int(payload.get("RCLONE_CHECKERS"), 1),
             rclone_transfers=_as_int(payload.get("RCLONE_TRANSFERS"), 1),
+            rclone_exclude_patterns=_as_list(
+                payload.get("RCLONE_EXCLUDE_PATTERNS"),
+                ["Github/**", "GitHub/**", "github/**", "Obsidian_wiki/**", "obsidianwiki/**"],
+            ),
             drive_name=payload.get("DRIVE_NAME"),
             manifest_path=(base / payload["MANIFEST_PATH"]).resolve() if payload.get("MANIFEST_PATH") else None,
             run_output_path=(base / payload["RUN_OUTPUT_PATH"]).resolve() if payload.get("RUN_OUTPUT_PATH") else None,

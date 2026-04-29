@@ -4,10 +4,14 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>위키 운영 콘솔</title>
-    <link rel="stylesheet" href="./styles.css" />
+    <link rel="stylesheet" href="./styles.css?v=20260429-spotlite-focus" />
   </head>
   <body>
     <main class="app-shell">
+      <button id="sidebar-toggle" class="sidebar-toggle" type="button" aria-expanded="true" aria-label="네비게이션 닫기">
+        <span class="sidebar-toggle-icon">☰</span>
+        <span class="sidebar-toggle-text">네비 닫기</span>
+      </button>
       <aside class="sidebar">
         <div class="brand">
           <span class="brand-mark">W</span>
@@ -51,22 +55,27 @@
 
       <section class="workspace">
         <header class="topbar">
-          <div>
+          <div class="topbar-title">
             <p class="eyebrow">로컬 컨트롤 플레인</p>
             <h2 id="view-title">Spotlite Work</h2>
           </div>
           <button id="refresh-status" class="command-button">새로고침</button>
         </header>
-        <nav id="section-anchors" class="section-anchors" aria-label="현재 탭 섹션"></nav>
+        <nav id="section-anchors" class="section-anchors" aria-label="현재 탭 섹션">
+          <div class="section-anchor-track"></div>
+        </nav>
 
         <section id="spotlite-work" class="view">
           <div class="spotlite-hero" data-anchor="오늘">
             <div>
               <span class="eyebrow">Spotlite Work</span>
               <h3>오늘과 이번주 업무 추진상황</h3>
-              <p>업무용 RTM 위키의 허브, 액션, 리스크, 결정 문서를 모아 오늘 볼 것과 이번주 처리할 일을 한 화면에 정리합니다.</p>
+              <p>진행 중 상태의 프로젝트만 모아 오늘 볼 것과 이번주 처리할 일을 한 화면에 정리합니다. Common/위키 관리 문서는 제외합니다.</p>
             </div>
-            <button id="spotlite-work-refresh" class="command-button accent" type="button">업무 Spotlite 갱신</button>
+            <div class="spotlite-actions">
+              <button id="spotlite-work-refresh" class="command-button" type="button">Spotlite 갱신</button>
+              <button id="spotlite-work-glm-refresh" class="command-button accent" type="button">GLM 정리 갱신</button>
+            </div>
           </div>
           <div id="spotlite-work-content" class="spotlite-board">
             <div class="spotlite-empty">업무 Spotlite를 불러오는 중입니다.</div>
@@ -98,9 +107,12 @@
               <div>
                 <span class="eyebrow">Spotlite Personal</span>
                 <h3>개인 오늘/이번주 정리</h3>
-                <p>개인용 위키와 개인 L1 메모에서 오늘 할 일, 이번주 할 일, 신경쓸 리스크를 분리해 보여줍니다.</p>
+                <p>개인용 위키에서 진행 중 상태의 항목만 모아 오늘 할 일, 이번주 할 일, 신경쓸 리스크를 분리해 보여줍니다.</p>
               </div>
-              <button id="spotlite-personal-refresh" class="command-button accent" type="button">개인 Spotlite 갱신</button>
+              <div class="spotlite-actions">
+                <button id="spotlite-personal-refresh" class="command-button" type="button">개인 Spotlite 갱신</button>
+                <button id="spotlite-personal-glm-refresh" class="command-button accent" type="button">GLM 정리 갱신</button>
+              </div>
             </div>
             <div id="spotlite-personal-content" class="spotlite-board">
               <div class="spotlite-empty">개인 Spotlite를 불러오는 중입니다.</div>
@@ -257,6 +269,10 @@
                 <input name="RCLONE_COPY_MAX_MINUTES" type="number" min="1" placeholder="기본 30분" />
               </label>
               <label>
+                <span>수집 제외 경로</span>
+                <input name="RCLONE_EXCLUDE_PATTERNS" placeholder="Github/**,GitHub/**,Obsidian_wiki/**" />
+              </label>
+              <label>
                 <span>Drive 표시명</span>
                 <input name="DRIVE_NAME" />
               </label>
@@ -304,7 +320,7 @@
               </label>
               <label>
                 <span>위키화 대상 파일</span>
-                <input name="ALLOWED_FILE_TYPES" placeholder="hwp,hwpx,pdf,docx,pptx,gdoc,gslides" />
+                <input name="ALLOWED_FILE_TYPES" placeholder="hwp,hwpx,pdf,docx,pptx,html,htm,gdoc,gslides" />
               </label>
               <label>
                 <span>GLM API URL</span>
@@ -387,7 +403,7 @@
             <div>
               <span class="eyebrow">Drive Wikify</span>
               <h3>수집 후 위키화 단순 실행</h3>
-              <p>사용자는 아래 순서만 보면 됩니다. 원본 Google Drive는 절대 삭제하지 않고, hwp/hwpx/pdf/docx/pptx 등은 로컬 mirror에 복사한 뒤 위키화합니다.</p>
+              <p>사용자는 아래 순서만 보면 됩니다. 원본 Google Drive는 절대 삭제하지 않고, hwp/hwpx/pdf/docx/pptx/html 보고서 등은 로컬 mirror에 복사한 뒤 위키화합니다.</p>
             </div>
             <strong id="pipeline-drive-default">기본 경로: gdrive: 최상위</strong>
           </div>
@@ -408,7 +424,7 @@
             <article class="pipeline-step">
               <span>3</span>
               <strong>Manifest 생성</strong>
-              <p>로컬 mirror에 내려온 hwp/hwpx/pdf/docx/pptx 등 문서 목록을 만듭니다.</p>
+              <p>로컬 mirror에 내려온 hwp/hwpx/pdf/docx/pptx/html 등 문서 목록을 만듭니다.</p>
               <button class="command-button" data-command="build-manifest">manifest 생성</button>
             </article>
             <article class="pipeline-step">
@@ -543,6 +559,7 @@
                   </button>
                   <div class="notion-nav-content" data-section="division">
                     <div class="notion-nav-item active" data-category="all">전체</div>
+                    <div class="notion-nav-item" data-category="latest">최신 문서</div>
                     <div class="notion-nav-item" data-category="project">프로젝트</div>
                     <div class="notion-nav-item" data-category="account">고객/계정</div>
                     <div class="notion-nav-item" data-category="operations">운영/자동화</div>
@@ -584,10 +601,13 @@
 
             <main class="notion-main">
               <header class="notion-header">
-                <div class="notion-breadcrumbs">
-                  <span class="notion-breadcrumb-item">Wiki</span>
-                  <span class="notion-breadcrumb-separator">/</span>
-                  <span id="notion-current-category" class="notion-breadcrumb-item">All</span>
+                <div class="notion-header-title">
+                  <div class="notion-breadcrumbs">
+                    <span class="notion-breadcrumb-item">Wiki</span>
+                    <span class="notion-breadcrumb-separator">/</span>
+                    <span id="notion-current-category" class="notion-breadcrumb-item">All</span>
+                  </div>
+                  <p>검색, 분류, 상태 필터를 조합해 위키를 조회합니다.</p>
                 </div>
                 <div class="notion-header-actions">
                   <select id="notion-project-filter" class="notion-view-select">
@@ -802,7 +822,7 @@
               <div class="chat-input-row">
                 <textarea id="chat-input" rows="2" placeholder="프로젝트 상태, 리스크, 다음 액션을 물어보세요. Shift+Enter 또는 Shift+Tab은 줄바꿈"></textarea>
                 <div class="chat-send-stack">
-                  <input id="chat-file-input" type="file" multiple accept=".hwp,.hwpx,.pdf,.docx,.pptx,.xlsx,.xls,.csv,.txt,.md,.json,image/*" hidden />
+                  <input id="chat-file-input" type="file" multiple accept=".hwp,.hwpx,.pdf,.docx,.pptx,.html,.htm,.xlsx,.xls,.csv,.txt,.md,.json,image/*" hidden />
                   <button id="chat-file-button" class="command-button" type="button">파일</button>
                   <button id="chat-send" class="command-button">전송</button>
                   <button id="chat-stop" class="command-button danger" type="button" disabled>추론 중지</button>
@@ -918,6 +938,6 @@
         </section>
       </section>
     </main>
-    <script src="./app.js"></script>
+    <script src="./app.js?v=20260429-spotlite-focus"></script>
   </body>
 </html>

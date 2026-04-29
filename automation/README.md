@@ -17,6 +17,7 @@
 - 실제 자동화 코드는 모두 `automation/` 아래에 둔다.
 - 원본 Google Drive는 절대 삭제하지 않는다.
 - 자동 정리는 `local mirror`에만 적용한다.
+- Drive의 `Github`/`GitHub`/`Obsidian_wiki` 계열 폴더는 본 위키 업로드본이 섞일 수 있으므로 수집 대상에서 제외한다.
 
 ## 제안 구조
 

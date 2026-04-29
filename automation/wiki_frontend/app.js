@@ -33,6 +33,7 @@ const state = {
   paperclipTasks: [],
   paperclipEvents: [],
   activeSpace: localStorage.getItem("wiki_ops_active_space") || "work",
+  sidebarCollapsed: localStorage.getItem("wiki_ops_sidebar_collapsed") === "true",
   running: [],
   schedules: [],
   driveTargets: [],
@@ -44,6 +45,7 @@ const state = {
   wikiManagementCommands: [],
   activeWikiManagementCommandId: "",
   activeProjectKey: "",
+  selectedAccountKeys: new Set(),
   wikiFilters: {
     division: "all",
     nature: "all",
@@ -93,6 +95,7 @@ const settingLabels = {
   RCLONE_CHECKERS: "checkers",
   RCLONE_TRANSFERS: "transfers",
   RCLONE_COPY_MAX_MINUTES: "수집 실행 시간 제한",
+  RCLONE_EXCLUDE_PATTERNS: "수집 제외 경로",
   DRIVE_NAME: "Drive 표시명",
   MANIFEST_PATH: "manifest 경로",
   RUN_OUTPUT_PATH: "run output 경로",
@@ -129,6 +132,23 @@ function wikiWorkspaceParam() {
 
 function $(selector) {
   return document.querySelector(selector);
+}
+
+function syncSidebarState() {
+  const shell = document.querySelector(".app-shell");
+  const toggle = $("#sidebar-toggle");
+  shell?.classList.toggle("sidebar-collapsed", state.sidebarCollapsed);
+  if (toggle) {
+    toggle.setAttribute("aria-expanded", String(!state.sidebarCollapsed));
+    toggle.setAttribute("aria-label", state.sidebarCollapsed ? "네비게이션 펼치기" : "네비게이션 닫기");
+    toggle.querySelector(".sidebar-toggle-text").textContent = state.sidebarCollapsed ? "네비 열기" : "네비 닫기";
+  }
+}
+
+function toggleSidebar() {
+  state.sidebarCollapsed = !state.sidebarCollapsed;
+  localStorage.setItem("wiki_ops_sidebar_collapsed", String(state.sidebarCollapsed));
+  syncSidebarState();
 }
 
 function escapeHtml(value) {
@@ -339,12 +359,20 @@ function renderSpotlite(scope, payload) {
     `<article><span>오늘</span><strong>${summary.today || 0}</strong></article>`,
     `<article><span>이번주</span><strong>${summary.week || 0}</strong></article>`,
     `<article><span>리스크</span><strong>${summary.risks || 0}</strong></article>`,
-    `<article><span>프로젝트</span><strong>${summary.projects || 0}</strong></article>`,
+    `<article><span>진행 프로젝트</span><strong>${summary.ongoingProjects || summary.projects || 0}</strong></article>`,
     `</section>`,
+    payload.digest ? [
+      `<section class="spotlite-glm-digest">`,
+      `<div class="spotlite-lane-head"><h3>GLM 실행 정리</h3><span>${escapeHtml(payload.digest.provider || "glm")} · ${escapeHtml(payload.generatedAt || "")}</span></div>`,
+      renderMarkdownDocument(payload.digest.markdown || payload.digest.summaryMarkdown || "GLM 정리 내용이 비어 있습니다."),
+      payload.digest.upstreamStatus ? `<p class="spotlite-warning">GLM 상태: ${escapeHtml(payload.digest.upstreamStatus)}</p>` : "",
+      `</section>`,
+    ].join("") : "",
     `<section class="spotlite-analysis">`,
     `<h3>주요 분석</h3>`,
     `<ul>${(payload.analysis || []).map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>`,
     `<small>${escapeHtml(payload.workspace?.label || scope)} · ${escapeHtml(payload.generatedAt || "")}</small>`,
+    payload.focus ? `<small>범위: ${escapeHtml(payload.focus.mode)} · 제외: ${escapeHtml(payload.focus.excluded)}</small>` : "",
     `</section>`,
     `<div class="spotlite-grid">`,
     spotliteLane("오늘 할 일", payload.today || [], "오늘로 명시된 항목이 없습니다. 운영 메모에서 오늘 처리할 일을 보강하세요."),
@@ -377,6 +405,17 @@ async function loadSpotlite(scope = "work") {
   const payload = await api(`/api/spotlite?scope=${encodeURIComponent(scope)}`);
   state.spotlite[scope] = payload;
   renderSpotlite(scope, payload);
+}
+
+async function refreshSpotliteGlm(scope = "work") {
+  const target = $(`#spotlite-${scope}-content`);
+  if (target) target.insertAdjacentHTML("afterbegin", `<div class="spotlite-empty">GLM이 진행 프로젝트 중심으로 Spotlite를 다시 정리하는 중입니다.</div>`);
+  const payload = await api("/api/spotlite/glm-refresh", {
+    method: "POST",
+    body: JSON.stringify({ scope }),
+  });
+  state.spotlite[scope] = payload.summary ? { ...payload.summary, digest: payload.digest, generatedAt: payload.generatedAt } : payload;
+  renderSpotlite(scope, state.spotlite[scope]);
 }
 
 function renderSpotliteTemplates(scope = "work") {
@@ -666,8 +705,8 @@ function pagesByProject() {
 function filteredNotionPages() {
   const category = state.notionCurrentCategory || "all";
   const query = state.wikiFilters.query.toLowerCase();
-  return state.wikiPages.filter((page) => {
-    if (category !== "all") {
+  const pages = state.wikiPages.filter((page) => {
+    if (category !== "all" && category !== "latest") {
       if (category.startsWith("kind:") && page.docKind !== category.replace("kind:", "")) return false;
       if (!category.startsWith("kind:") && page.division !== category) return false;
     }
@@ -687,7 +726,9 @@ function filteredNotionPages() {
       page.frontmatter?.type,
       page.frontmatter?.source,
     ].filter(Boolean).join(" ").toLowerCase().includes(query);
-  }).sort((a, b) => {
+  });
+  return pages.sort((a, b) => {
+    if (category === "latest") return String(b.updatedAt).localeCompare(String(a.updatedAt)) || a.title.localeCompare(b.title);
     if (state.wikiFilters.sortBy === "updated") return String(b.updatedAt).localeCompare(String(a.updatedAt));
     if (state.wikiFilters.sortBy === "type") return String(a.docKind).localeCompare(String(b.docKind)) || a.title.localeCompare(b.title);
     return a.title.localeCompare(b.title);
@@ -702,6 +743,12 @@ function renderProjectCard(group) {
   const status = group.pages.find((page) => page.workflowStatus && page.workflowStatus !== "unknown") || group.pages[0] || {};
   return [
     `<article class="notion-project-card status-${escapeHtml(status.workflowStatus || "unknown")}" data-project-key="${escapeHtml(group.key)}">`,
+    group.division === "account" ? [
+      `<label class="notion-bulk-check">`,
+      `<input type="checkbox" data-account-select="${escapeHtml(group.key)}" ${state.selectedAccountKeys.has(group.key) ? "checked" : ""} />`,
+      `<span>계정 선택</span>`,
+      `</label>`,
+    ].join("") : "",
     `<button class="notion-card-main" data-project-drill="${escapeHtml(group.key)}" type="button">`,
     `<span class="notion-card-kicker">${escapeHtml(divisionLabels[group.division] || group.division)} · ${escapeHtml(status.workflowStatusLabel || "미지정")}</span>`,
     `<strong>${escapeHtml(group.label)}</strong>`,
@@ -712,6 +759,30 @@ function renderProjectCard(group) {
     shortcutPages.map((page) => `<button type="button" data-notion-path="${escapeHtml(page.path)}">${escapeHtml(natureLabels[page.docKind] || page.docKind)}</button>`).join(""),
     `</div>`,
     `</article>`,
+  ].join("");
+}
+
+function renderAccountBulkToolbar() {
+  const accountGroups = pagesByProject().filter((group) => group.division === "account");
+  if (!accountGroups.length) return "";
+  const visibleAccountKeys = new Set(accountGroups.map((group) => group.key));
+  const selectedVisible = [...state.selectedAccountKeys].filter((key) => visibleAccountKeys.has(key));
+  const statusOptions = Object.entries(workflowStatusLabels)
+    .filter(([key]) => key !== "all")
+    .map(([key, label]) => `<option value="${escapeHtml(key)}">${escapeHtml(label)}</option>`)
+    .join("");
+  return [
+    `<section class="notion-bulk-toolbar" aria-label="고객계정 상태 일괄 변경">`,
+    `<div><strong>고객계정 상태 일괄 변경</strong><small>체크한 고객/계정 허브 상태를 한 번에 저장합니다.</small></div>`,
+    `<span id="account-bulk-count">선택 ${selectedVisible.length}건</span>`,
+    `<select id="account-bulk-status" class="notion-view-select">${statusOptions}</select>`,
+    `<input id="account-bulk-tags" placeholder="태그: 완료, 온고잉" />`,
+    `<input id="account-bulk-highlight" placeholder="전역 하이라이트 한 줄" />`,
+    `<input id="account-bulk-note" placeholder="변경 사유 메모" />`,
+    `<button id="account-bulk-apply" class="command-button accent" type="button" ${selectedVisible.length ? "" : "disabled"}>일괄 저장</button>`,
+    `<button id="account-bulk-clear" class="command-button" type="button">선택 해제</button>`,
+    `<span id="account-bulk-status-text"></span>`,
+    `</section>`,
   ].join("");
 }
 
@@ -736,35 +807,49 @@ function renderNotionWikiContent() {
   state.wikiFilters.sortBy = sortBy;
   const pages = filteredNotionPages();
   const content = $("#notion-content-area");
-  const categoryLabel = divisionLabels[state.notionCurrentCategory] || natureLabels[state.notionCurrentCategory?.replace?.("kind:", "")] || "전체";
+  const categoryLabel = state.notionCurrentCategory === "latest"
+    ? "최신 문서"
+    : divisionLabels[state.notionCurrentCategory] || natureLabels[state.notionCurrentCategory?.replace?.("kind:", "")] || "전체";
   $("#notion-current-category").textContent = state.activeProjectKey
     ? `${categoryLabel} / ${state.activeProjectKey}`
     : categoryLabel;
 
   if (!pages.length) {
-    content.innerHTML = `<div class="notion-empty-state"><div class="notion-empty-icon">문서 없음</div><h3>조건에 맞는 문서가 없습니다</h3><p>검색어 또는 필터를 줄여보세요.</p></div>`;
+    content.innerHTML = `${renderAccountBulkToolbar()}<div class="notion-empty-state"><div class="notion-empty-icon">문서 없음</div><h3>조건에 맞는 문서가 없습니다</h3><p>검색어 또는 필터를 줄여보세요.</p></div>`;
+    bindAccountBulkControls();
     return;
   }
 
+  let body = "";
   if (viewMode === "tree") {
     const groups = pagesByProject().map((group) => ({ ...group, pages: group.pages.filter((page) => pages.includes(page)) })).filter((group) => group.pages.length);
-    content.innerHTML = `<div class="notion-tree-list">${groups.map((group) => [
+    body = `<div class="notion-tree-list">${groups.map((group) => [
       `<section class="notion-tree-group">`,
       `<button class="notion-tree-heading" data-project-drill="${escapeHtml(group.key)}" type="button">${escapeHtml(group.label)} <span>${group.pages.length}</span></button>`,
       `<div class="notion-tree-pages">${group.pages.map(renderPageCard).join("")}</div>`,
       `</section>`,
     ].join("")).join("")}</div>`;
   } else if (viewMode === "list") {
-    content.innerHTML = `<div class="notion-page-list">${pages.map(renderPageCard).join("")}</div>`;
+    body = `<div class="notion-page-list">${pages.map(renderPageCard).join("")}</div>`;
   } else if (state.wikiFilters.projectKey === "all" && ["all", "project", "account"].includes(state.notionCurrentCategory)) {
     const groups = pagesByProject()
       .map((group) => ({ ...group, pages: group.pages.filter((page) => pages.includes(page)) }))
       .filter((group) => group.pages.length && ["project", "account"].includes(group.division));
-    content.innerHTML = `<div class="notion-card-grid">${groups.map(renderProjectCard).join("")}</div>`;
+    body = `<div class="notion-card-grid">${groups.map(renderProjectCard).join("")}</div>`;
   } else {
-    content.innerHTML = `<div class="notion-card-grid">${pages.map(renderPageCard).join("")}</div>`;
+    body = `<div class="notion-card-grid">${pages.map(renderPageCard).join("")}</div>`;
   }
+  content.innerHTML = `${renderAccountBulkToolbar()}${body}`;
+  bindAccountBulkControls();
 
+  document.querySelectorAll("[data-account-select]").forEach((input) => {
+    input.addEventListener("click", (event) => event.stopPropagation());
+    input.addEventListener("change", () => {
+      if (input.checked) state.selectedAccountKeys.add(input.dataset.accountSelect);
+      else state.selectedAccountKeys.delete(input.dataset.accountSelect);
+      renderNotionWikiContent();
+    });
+  });
   document.querySelectorAll("[data-notion-path]").forEach((button) => {
     button.addEventListener("click", (event) => {
       event.stopPropagation();
@@ -782,6 +867,41 @@ function renderNotionWikiContent() {
   });
 }
 
+function bindAccountBulkControls() {
+  $("#account-bulk-clear")?.addEventListener("click", () => {
+    state.selectedAccountKeys.clear();
+    renderNotionWikiContent();
+  });
+  $("#account-bulk-apply")?.addEventListener("click", applyAccountBulkStatus);
+}
+
+async function applyAccountBulkStatus() {
+  const keys = [...state.selectedAccountKeys];
+  if (!keys.length) return;
+  const statusEl = $("#account-bulk-status-text");
+  if (statusEl) statusEl.textContent = "저장 중";
+  const result = await api("/api/wiki/status", {
+    method: "POST",
+    body: JSON.stringify({
+      items: keys.map((key) => ({
+        scope: "project",
+        projectKey: key,
+        status: $("#account-bulk-status")?.value || "unknown",
+        tags: $("#account-bulk-tags")?.value || "",
+        highlight: $("#account-bulk-highlight")?.value || "",
+        note: $("#account-bulk-note")?.value || "고객계정 상태 일괄 변경",
+      })),
+    }),
+  });
+  if (result.error || result.mock) {
+    if (statusEl) statusEl.textContent = `저장 실패: ${result.error || "API 연결 대기"}`;
+    return;
+  }
+  state.selectedAccountKeys.clear();
+  if (statusEl) statusEl.textContent = `${result.count || keys.length}건 저장 완료`;
+  await loadNotionWikiBrowser();
+}
+
 async function loadNotionWikiBrowser() {
   const payload = await api(`/api/wiki/index?workspace=${encodeURIComponent(wikiWorkspaceParam())}`);
   if (payload.mock || !payload.pages) {
@@ -789,6 +909,7 @@ async function loadNotionWikiBrowser() {
     return;
   }
   state.wikiPages = payload.pages;
+  state.selectedAccountKeys.clear();
   updateNotionStats();
   updateWikiFilterControls();
   renderNotionWikiContent();
@@ -1695,22 +1816,28 @@ function renderSectionAnchors(viewId = "operations") {
   const container = $("#section-anchors");
   const view = document.getElementById(viewId);
   if (!container || !view) return;
+  let track = container.querySelector(".section-anchor-track");
+  if (!track) {
+    track = document.createElement("div");
+    track.className = "section-anchor-track";
+    container.appendChild(track);
+  }
   const sections = [...view.querySelectorAll("[data-anchor]")];
   if (!sections.length) {
-    container.innerHTML = "";
+    track.innerHTML = "";
     container.hidden = true;
     return;
   }
   container.hidden = false;
-  container.innerHTML = sections.map((section, index) => {
+  track.innerHTML = sections.map((section, index) => {
     const label = section.dataset.anchor;
     const id = section.id || `${viewId}-${slugForDom(label)}-${index}`;
     section.id = id;
-    return `<button type="button" data-anchor-target="${escapeHtml(id)}" class="${index === 0 ? "active" : ""}">${escapeHtml(label)}</button>`;
+    return `<button type="button" data-anchor-target="${escapeHtml(id)}" class="${index === 0 ? "active" : ""}"><span>${escapeHtml(label)}</span></button>`;
   }).join("");
-  container.querySelectorAll("[data-anchor-target]").forEach((button) => {
+  track.querySelectorAll("[data-anchor-target]").forEach((button) => {
     button.addEventListener("click", () => {
-      container.querySelectorAll("button").forEach((item) => item.classList.remove("active"));
+      track.querySelectorAll("button").forEach((item) => item.classList.remove("active"));
       button.classList.add("active");
       document.getElementById(button.dataset.anchorTarget)?.scrollIntoView({ behavior: "smooth", block: "start" });
     });
@@ -2531,6 +2658,8 @@ document.querySelectorAll(".nav-item").forEach((button) => {
   button.addEventListener("click", () => activateView(button.dataset.view));
 });
 
+$("#sidebar-toggle")?.addEventListener("click", toggleSidebar);
+
 document.querySelectorAll("[data-command]").forEach((button) => {
   button.addEventListener("click", () => triggerCommand(button));
 });
@@ -2538,7 +2667,9 @@ document.querySelectorAll("[data-command]").forEach((button) => {
 $("#refresh-status").addEventListener("click", refreshStatus);
 $("#wiki-space-select")?.addEventListener("change", (event) => activateWorkspace(event.target.value));
 $("#spotlite-work-refresh")?.addEventListener("click", () => loadSpotlite("work"));
+$("#spotlite-work-glm-refresh")?.addEventListener("click", () => refreshSpotliteGlm("work"));
 $("#spotlite-personal-refresh")?.addEventListener("click", () => loadSpotlite("personal"));
+$("#spotlite-personal-glm-refresh")?.addEventListener("click", () => refreshSpotliteGlm("personal"));
 $("#personal-unlock-button")?.addEventListener("click", unlockPersonalSpotlite);
 $("#personal-pin-input")?.addEventListener("keydown", (event) => {
   if (event.key === "Enter") unlockPersonalSpotlite();
@@ -2603,6 +2734,11 @@ document.querySelectorAll(".notion-nav-item").forEach((item) => {
     state.wikiFilters.projectKey = "all";
     const projectFilter = $("#notion-project-filter");
     if (projectFilter) projectFilter.value = "all";
+    if (category === "latest") {
+      state.wikiFilters.sortBy = "updated";
+      const sortSelect = $("#notion-sort-by");
+      if (sortSelect) sortSelect.value = "updated";
+    }
     renderNotionWikiContent();
     
     // Update breadcrumb
@@ -2697,6 +2833,7 @@ $("#chat-input").addEventListener("keydown", (event) => {
 });
 
 renderStatus();
+syncSidebarState();
 updateWorkspaceChrome();
 const hashView = location.hash?.slice(1);
 const initialView = hashView && (titles[hashView] || hashView === "spotlite") ? hashView : "spotlite";

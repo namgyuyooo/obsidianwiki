@@ -8,6 +8,7 @@
 - 자동 삭제는 성공 반영 후 `local mirror` 파일에만 적용한다.
 - `rclone`은 `sync`나 `purge`가 아니라 `copy`만 사용한다.
 - `DRIVE_DELETE_SOURCE`는 항상 `false`여야 하며, `true`면 실행이 즉시 실패한다.
+- Google Drive의 `Github`/`GitHub` 폴더와 업로드된 `Obsidian_wiki` 사본은 수집하지 않는다. 위키 자기 자신을 다시 수집하는 순환을 막기 위해 `RCLONE_EXCLUDE_PATTERNS`로 기본 제외한다.
 
 ## 설정
 
@@ -41,6 +42,7 @@
   - `RCLONE_TPSLIMIT`
   - `RCLONE_CHECKERS`
   - `RCLONE_TRANSFERS`
+  - `RCLONE_EXCLUDE_PATTERNS`
 - 배치:
   - `ALLOWED_FILE_TYPES`
   - `MAX_FOLDERS_PER_RUN`
@@ -52,7 +54,7 @@
 ## 권장 흐름
 
 1. `rclone-copy`로 Shared Drive 또는 폴더를 아주 보수적으로 `local mirror`에 누적
-2. `build-manifest`로 mirror에서 `hwp/hwpx/pdf/docx/pptx` 목록 생성
+2. `build-manifest`로 mirror에서 `hwp/hwpx/pdf/docx/pptx/html` 목록 생성
 3. `run`으로 배치를 위키 프로젝트 업데이트에 반영
 4. 검증이 통과한 파일만 `local mirror`에서 삭제하고 `deletion_log.jsonl`에 기록
 
@@ -85,6 +87,9 @@ PYTHONPATH=automation/drive_wikify/src \
 - `--checkers 1`
 - `--transfers 1`
 - `--bwlimit 1M`
+- `--exclude Github/**`
+- `--exclude GitHub/**`
+- `--exclude Obsidian_wiki/**`
 - 1배치 = 20~50개 파일
 - 1파일 = 8,000~15,000자 청크
 - `청크 요약 -> 파일 요약 -> 프로젝트 위키 반영`
@@ -101,6 +106,7 @@ PYTHONPATH=automation/drive_wikify/src \
 ## 형식 지원 상태
 
 - `hwpx`, `pdf`, `pptx`는 실배치에서 usable 수준으로 확인됨
+- `html`, `htm` 보고서는 `script/style/svg/canvas`를 제외하고 본문/헤딩 중심으로 추출함
 - `hwp`는 현재 fallback 경로 품질 편차가 있어 추가 보강이 필요함
 - `docx`는 추출 경로를 지원하지만 이번 실배치 대표 검증에는 아직 포함되지 않았음
 

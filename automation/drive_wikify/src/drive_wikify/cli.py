@@ -102,6 +102,7 @@ def main() -> int:
                 tpslimit=args.tpslimit if args.tpslimit is not None else config.rclone_tpslimit,
                 checkers=args.checkers if args.checkers is not None else config.rclone_checkers,
                 transfers=args.transfers if args.transfers is not None else config.rclone_transfers,
+                exclude_patterns=config.rclone_exclude_patterns,
                 dry_run=args.dry_run,
             )
         except ValueError as exc:

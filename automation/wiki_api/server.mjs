@@ -30,6 +30,7 @@ const chatUploadsRoot = join(apiRuntime, "chat_uploads");
 const wikiStatusesPath = join(apiRuntime, "wiki_statuses.json");
 const wikiStatusAuditPath = join(apiRuntime, "wiki_status_audit.jsonl");
 const chatRetractionsPath = join(apiRuntime, "chat_message_retractions.jsonl");
+const spotliteGlmPath = join(apiRuntime, "spotlite_glm_digest.json");
 const spotliteTemplateRoot = join(apiRuntime, "../templates");
 const chatProjectsPath = join(apiRuntime, "chat_projects.json");
 const chatGlobalSettingsPath = join(apiRuntime, "chat_global_settings.json");
@@ -49,6 +50,7 @@ const editableSettings = new Set([
   "RCLONE_CHECKERS",
   "RCLONE_TRANSFERS",
   "RCLONE_COPY_MAX_MINUTES",
+  "RCLONE_EXCLUDE_PATTERNS",
   "DRIVE_NAME",
   "MANIFEST_PATH",
   "RUN_OUTPUT_PATH",
@@ -334,7 +336,7 @@ function allowedManifestSuffixes(env = {}) {
     .split(",")
     .map((item) => item.trim().toLowerCase().replace(/^\./, ""))
     .filter(Boolean);
-  const values = configured.length ? configured : ["hwp", "hwpx", "pdf", "docx", "pptx"];
+  const values = configured.length ? configured : ["hwp", "hwpx", "pdf", "docx", "pptx", "html", "htm"];
   return new Set(values.map((item) => `.${item}`));
 }
 
@@ -523,8 +525,13 @@ function compactSpotliteLine(line) {
 
 async function spotliteSummary(scope = "work") {
   const workspace = scope === "personal" ? await ensureWikiWorkspace("personal") : wikiWorkspaces.rtm;
-  const roots = [workspace.wikiRoot, workspace.l1Root];
-  const files = (await Promise.all(roots.map(walkMarkdown))).flat();
+  const pages = await wikiIndex(workspace.id);
+  const ongoingProjectPages = pages.filter((page) => page.workflowStatus === "ongoing" && page.division === "project");
+  const focusProjectKeys = new Set(ongoingProjectPages.map((page) => page.projectKey).filter(Boolean));
+  const focusProjectLabels = [...new Set(ongoingProjectPages.map((page) => page.projectLabel).filter(Boolean))];
+  const files = ongoingProjectPages
+    .map((page) => managedWikiFullPath(page.path))
+    .filter((file) => file.startsWith(workspace.wikiRoot));
   const candidates = [];
   const projectMap = new Map();
   for (const file of files) {
@@ -534,6 +541,7 @@ async function spotliteSummary(scope = "work") {
     const title = titleFromMarkdown(path, markdown);
     const project = spotliteProjectFromPath(path);
     const classification = classifyWikiPage(path, frontmatter);
+    if (!focusProjectKeys.has(classification.projectKey)) continue;
     const lines = markdown.split("\n")
       .map(compactSpotliteLine)
       .filter((line) => line.length >= 8)
@@ -580,6 +588,8 @@ async function spotliteSummary(scope = "work") {
   const projects = [...projectMap.values()]
     .sort((a, b) => (b.actions + b.risks * 2 + b.count) - (a.actions + a.risks * 2 + a.count))
     .slice(0, 10);
+  const cachedGlm = await readJsonFile(spotliteGlmPath, null).catch(() => null);
+  const digest = cachedGlm?.scope === scope ? cachedGlm.digest : null;
   return {
     scope,
     workspace: {
@@ -588,6 +598,12 @@ async function spotliteSummary(scope = "work") {
       wikiRoot: relative(repoRoot, workspace.wikiRoot),
       l1Root: relative(repoRoot, workspace.l1Root),
     },
+    focus: {
+      mode: "ongoing-projects-only",
+      excluded: "Common, 운영/자동화, 로그/감사, 완료/보류/보관 프로젝트",
+      projectKeys: [...focusProjectKeys],
+      projectLabels: focusProjectLabels,
+    },
     generatedAt: new Date().toISOString(),
     summary: {
       totalSignals: candidates.length,
@@ -595,10 +611,12 @@ async function spotliteSummary(scope = "work") {
       week: week.length,
       risks: risks.length,
       projects: projects.length,
+      ongoingProjects: focusProjectKeys.size,
     },
     analysis: [
-      today.length ? `오늘 바로 볼 항목 ${today.length}개가 있습니다.` : "오늘로 명시된 항목은 아직 적습니다.",
-      week.length ? `이번주 처리 후보 ${week.length}개가 감지됐습니다.` : "이번주로 명시된 항목은 아직 적습니다.",
+      focusProjectKeys.size ? `진행 중 프로젝트 ${focusProjectKeys.size}개만 기준으로 봅니다.` : "진행 중으로 지정된 프로젝트가 없습니다.",
+      today.length ? `오늘 바로 볼 항목 ${today.length}개가 있습니다.` : "진행 중 프로젝트 안에서 오늘로 명시된 항목은 아직 적습니다.",
+      week.length ? `이번주 처리 후보 ${week.length}개가 감지됐습니다.` : "진행 중 프로젝트 안에서 이번주 항목은 아직 적습니다.",
       risks.length ? `리스크/이슈 후보 ${risks.length}개를 먼저 확인하는 편이 안전합니다.` : "리스크 후보는 많지 않습니다.",
       memos.length ? "운영 메모가 있는 허브를 우선 읽으면 진행 맥락을 빠르게 잡을 수 있습니다." : "허브 운영 메모 보강이 필요합니다.",
     ],
@@ -608,7 +626,84 @@ async function spotliteSummary(scope = "work") {
     memos,
     watch,
     projects,
+    digest,
   };
+}
+
+async function refreshSpotliteGlm(scope = "work") {
+  const summary = await spotliteSummary(scope);
+  const { values: env } = await readEnvFile();
+  const apiKey = process.env.GLM_API_KEY || env.GLM_API_KEY;
+  const apiUrl = process.env.GLM_API_URL || env.GLM_API_URL;
+  const model = process.env.GLM_MODEL || env.GLM_MODEL || "glm-5.1";
+  const localDigest = {
+    provider: "local",
+    markdown: [
+      "# Spotlite GLM 정리 대기",
+      "",
+      `- 진행 중 프로젝트: ${summary.summary.ongoingProjects || 0}개`,
+      `- 오늘 항목: ${summary.summary.today || 0}개`,
+      `- 이번주 항목: ${summary.summary.week || 0}개`,
+      `- 리스크: ${summary.summary.risks || 0}개`,
+    ].join("\n"),
+  };
+  if (!apiKey || !apiUrl || !summary.summary.ongoingProjects) {
+    const result = { scope, generatedAt: new Date().toISOString(), digest: localDigest, summary };
+    await writeJsonFile(spotliteGlmPath, result);
+    return result;
+  }
+  const compressed = {
+    focus: summary.focus,
+    projects: summary.projects,
+    today: summary.today.slice(0, 8),
+    week: summary.week.slice(0, 10),
+    risks: summary.risks.slice(0, 8),
+    memos: summary.memos.slice(0, 8),
+  };
+  try {
+    const { payload, endpoint } = await requestGlmChatCompletion(apiUrl, apiKey, {
+      model,
+      messages: [
+        {
+          role: "system",
+          content: [
+            "당신은 RTM PMO의 Spotlite 분석가다.",
+            "Common/위키관리/운영 자동화 이야기는 제외하고, 진행 중 프로젝트의 실제 업무 상태와 다음 액션만 정리한다.",
+            "출력은 JSON 객체만 반환한다: markdown, todayPriorities, weeklyPriorities, risks, missingInputs.",
+            "markdown은 한국어 Markdown으로 짧지만 실무적으로 작성한다.",
+          ].join(" "),
+        },
+        { role: "user", content: JSON.stringify(compressed) },
+      ],
+      temperature: 0.1,
+      max_tokens: 1800,
+      thinking: glmThinkingOptions(env),
+      response_format: { type: "json_object" },
+    });
+    let parsed;
+    try {
+      parsed = JSON.parse(glmMessageContent(payload));
+    } catch {
+      parsed = { markdown: glmMessageContent(payload), todayPriorities: [], weeklyPriorities: [], risks: [], missingInputs: [] };
+    }
+    const result = {
+      scope,
+      generatedAt: new Date().toISOString(),
+      digest: { provider: "glm", model, endpoint, ...parsed },
+      summary,
+    };
+    await writeJsonFile(spotliteGlmPath, result);
+    return result;
+  } catch (error) {
+    const result = {
+      scope,
+      generatedAt: new Date().toISOString(),
+      digest: { ...localDigest, upstreamStatus: error.message },
+      summary,
+    };
+    await writeJsonFile(spotliteGlmPath, result);
+    return result;
+  }
 }
 
 async function spotliteTemplates() {
@@ -863,25 +958,46 @@ function applyWikiStatus(page, store) {
   };
 }
 
-async function updateWikiStatus(body = {}) {
-  const scope = body.scope === "page" ? "page" : "project";
-  const key = scope === "page" ? String(body.path || body.key || "").trim() : String(body.projectKey || body.key || "").trim();
-  if (!key) throw new Error(scope === "page" ? "path is required" : "projectKey is required");
+function wikiStatusEntryFromBody(body = {}) {
   const status = normalizeWikiStatus(body.status);
   const tags = String(body.tags || "")
     .split(",")
     .map((tag) => tag.trim())
     .filter(Boolean);
-  const now = new Date().toISOString();
-  const store = await wikiStatusStore();
-  const entry = {
+  return {
     status,
     tags,
     note: String(body.note || "").trim(),
     highlight: String(body.highlight || "").trim(),
-    updatedAt: now,
+    updatedAt: new Date().toISOString(),
     updatedBy: "user_action",
   };
+}
+
+async function updateWikiStatus(body = {}) {
+  if (Array.isArray(body.items) && body.items.length) {
+    const store = await wikiStatusStore();
+    const now = new Date().toISOString();
+    const saved = [];
+    for (const item of body.items) {
+      const scope = item.scope === "page" ? "page" : "project";
+      const key = scope === "page" ? String(item.path || item.key || "").trim() : String(item.projectKey || item.key || "").trim();
+      if (!key) continue;
+      const entry = { ...wikiStatusEntryFromBody(item), updatedAt: now };
+      if (scope === "page") store.pages[key] = entry;
+      else store.projects[key] = entry;
+      saved.push({ scope, key, entry });
+    }
+    await writeJsonFile(wikiStatusesPath, store);
+    await appendJsonl(wikiStatusAuditPath, { timestamp: now, scope: "bulk", count: saved.length, items: saved });
+    return { status: "saved", mode: "bulk", count: saved.length, items: saved, catalog: wikiStatusCatalog };
+  }
+  const scope = body.scope === "page" ? "page" : "project";
+  const key = scope === "page" ? String(body.path || body.key || "").trim() : String(body.projectKey || body.key || "").trim();
+  if (!key) throw new Error(scope === "page" ? "path is required" : "projectKey is required");
+  const now = new Date().toISOString();
+  const store = await wikiStatusStore();
+  const entry = { ...wikiStatusEntryFromBody(body), updatedAt: now };
   if (scope === "page") store.pages[key] = entry;
   else store.projects[key] = entry;
   await writeJsonFile(wikiStatusesPath, store);
@@ -1252,6 +1368,21 @@ function isGenericDriveFolder(folder) {
   return /(^20\d{2}년?$|freenotes|personal|메모|백업|backup|chrome에서 저장됨|colab notebooks|sync with icloud|이력서|typing|타이핑|onedrive|원드라이브)/i.test(String(folder || "").trim());
 }
 
+function defaultDriveExcludePatterns(env = {}) {
+  return String(env.RCLONE_EXCLUDE_PATTERNS || "Github/**,GitHub/**,github/**,Obsidian_wiki/**,obsidianwiki/**")
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function isExcludedDrivePath(path, env = {}) {
+  const normalized = String(path || "").replace(/\\/g, "/").replace(/^\/+/, "").toLowerCase();
+  return defaultDriveExcludePatterns(env).some((pattern) => {
+    const base = pattern.replace(/\*\*.*$/, "").replace(/\*.*$/, "").replace(/\/+$/, "").toLowerCase();
+    return base && (normalized === base || normalized.startsWith(`${base}/`) || normalized.includes(`/${base}/`));
+  });
+}
+
 function isRecentlyChanged(modifiedAt) {
   if (!modifiedAt) return false;
   return new Date(modifiedAt).getTime() >= new Date("2026-04-01T00:00:00").getTime();
@@ -1362,6 +1493,7 @@ async function driveTargetAnalysis(options = {}) {
   const remote = env.RCLONE_REMOTE || "gdrive";
   const remoteRoot = env.RCLONE_REMOTE_PATH || "";
   const source = `${remote}:${remoteRoot}`.replace(/:$/, ":");
+  const excludeArgs = defaultDriveExcludePatterns(env).flatMap((pattern) => ["--exclude", pattern]);
   const pages = await wikiIndex();
   const coverage = await coverageSummary().catch(() => ({ rows: [], statuses: {}, documentsInManifest: 0, processedDocuments: 0 }));
   const manifest = await readJsonFile(join(driveRuntime, "manifest.json"), { documents: [] });
@@ -1395,7 +1527,9 @@ async function driveTargetAnalysis(options = {}) {
     "--tpslimit-burst",
     "1",
   ], { timeoutMs: Number(options.timeoutMs || 35000) });
-  const driveFolders = rclone.code === 0 ? parseRcloneLsd(rclone.stdout) : [];
+  const driveFolders = rclone.code === 0
+    ? parseRcloneLsd(rclone.stdout).filter((folder) => !isExcludedDrivePath(folder.name, env))
+    : [];
   const trackedFolders = new Set((coverage.rows || []).map((row) => row.folderPath).filter(Boolean));
   const manifestFolders = new Set((manifest.documents || []).map((doc) => doc.folder_path).filter(Boolean));
   const processedFiles = new Set((runOutput.results || []).map((result) => result.record?.file_path || result.file_path).filter(Boolean));
@@ -1403,6 +1537,7 @@ async function driveTargetAnalysis(options = {}) {
 
   for (const folderInfo of driveFolders) {
     const folder = folderInfo.name;
+    if (isExcludedDrivePath(folder, env)) continue;
     const bestProject = [...projectGroups.values()]
       .map((group) => ({ ...group, overlap: Math.max(overlapScore(folder, group.projectKey), overlapScore(folder, group.projectLabel)) }))
       .sort((a, b) => b.overlap - a.overlap)[0];
@@ -1453,7 +1588,7 @@ async function driveTargetAnalysis(options = {}) {
       tracked,
       manifested,
       reasons,
-      recommendedCommand: `rclone copy ${remote}:${remoteRoot ? `${remoteRoot}/${folder}` : folder} ${relative(repoRoot, join(driveRuntime, "mirror", safePathSegment(folder)))} --check-first --transfers 1 --checkers 1 --tpslimit ${env.RCLONE_TPSLIMIT || 1}`,
+      recommendedCommand: `rclone copy ${remote}:${remoteRoot ? `${remoteRoot}/${folder}` : folder} ${relative(repoRoot, join(driveRuntime, "mirror", safePathSegment(folder)))} --check-first --transfers 1 --checkers 1 --tpslimit ${env.RCLONE_TPSLIMIT || 1} ${excludeArgs.join(" ")}`,
     });
   }
 
@@ -1467,7 +1602,7 @@ async function driveTargetAnalysis(options = {}) {
         overlap: Math.max(overlapScore(folderInfo.name, group.projectKey), overlapScore(folderInfo.name, group.projectLabel)),
       }))
       .sort((a, b) => b.overlap - a.overlap)[0];
-    if (!relatedFolder || relatedFolder.overlap < 1) continue;
+    if (!relatedFolder || relatedFolder.overlap < 1 || isExcludedDrivePath(relatedFolder.folder, env)) continue;
     if (candidates.some((candidate) => candidate.remotePath.endsWith(relatedFolder.folder))) continue;
     candidates.push({
       remote,
@@ -1481,7 +1616,7 @@ async function driveTargetAnalysis(options = {}) {
       tracked: trackedFolders.has(`/${relatedFolder.folder}`),
       manifested: [...manifestFolders].some((item) => item.includes(relatedFolder.folder)),
       reasons: [`위키 프로젝트 ${group.projectLabel}에 ${missingKinds.slice(0, 5).join(", ")} 보강 필요`],
-      recommendedCommand: `rclone copy ${remote}:${remoteRoot ? `${remoteRoot}/${relatedFolder.folder}` : relatedFolder.folder} ${relative(repoRoot, join(driveRuntime, "mirror", safePathSegment(relatedFolder.folder)))} --check-first --transfers 1 --checkers 1 --tpslimit ${env.RCLONE_TPSLIMIT || 1}`,
+      recommendedCommand: `rclone copy ${remote}:${remoteRoot ? `${remoteRoot}/${relatedFolder.folder}` : relatedFolder.folder} ${relative(repoRoot, join(driveRuntime, "mirror", safePathSegment(relatedFolder.folder)))} --check-first --transfers 1 --checkers 1 --tpslimit ${env.RCLONE_TPSLIMIT || 1} ${excludeArgs.join(" ")}`,
     });
   }
 
@@ -1492,6 +1627,7 @@ async function driveTargetAnalysis(options = {}) {
       driveDeleteSource: false,
       remoteDeleteAllowed: false,
       commandSurface: "rclone lsd + selected rclone copy only",
+      excludedPatterns: defaultDriveExcludePatterns(env),
     },
     summary: {
       driveFolders: driveFolders.length,
@@ -1535,6 +1671,13 @@ async function driveInstructionTargetAnalysis(instruction = "") {
 
 async function targetRcloneCopy(remotePath, dryRun = true) {
   const { values: env } = await readEnvFile();
+  if (isExcludedDrivePath(remotePath, env)) {
+    return {
+      status: "blocked",
+      error: `Excluded Drive path: ${remotePath}`,
+      safety: "Google Drive Github/Obsidian_wiki folders are excluded to prevent self-ingestion loops.",
+    };
+  }
   const mirrorRoot = join(repoRoot, env.RCLONE_MIRROR_ROOT || "automation/drive_wikify/runtime/mirror", safePathSegment(remotePath));
   return runCommand("rclone-copy", Boolean(dryRun), {
     extraArgs: ["--remote-path", remotePath, "--mirror-root", mirrorRoot],
@@ -3966,12 +4109,15 @@ function paperclipSkillSystemPrompt(templateId) {
   if (templateId === "spreadsheet-stat-analyzer") {
     return "당신은 RTM의 데이터 분석 담당자입니다. 제공된 엑셀/CSV 구조와 기초통계를 바탕으로 업무적으로 중요한 패턴, 이상치, 결측, 리스크, 추가 분석 액션을 한국어 Markdown으로 정리하십시오. 수치는 입력 근거를 보존하십시오.";
   }
+  if (templateId === "html-report-reader") {
+    return "당신은 RTM의 HTML 보고서 분석 담당자입니다. 제공된 HTML 보고서 추출문을 기반으로 핵심 주장, 수치, 섹션 구조, 증거, 결정/리스크/다음 액션을 한국어 Markdown으로 정리하십시오. 스크립트나 차트 이미지로만 존재해 추출되지 않은 정보는 한계로 명시하십시오.";
+  }
   return "당신은 RTM 운영 스킬 실행자입니다. 입력을 사실 기반 한국어 Markdown 결과물로 정리하십시오.";
 }
 
 function extractLocalPaths(text, extensions = []) {
   const allowed = new Set(extensions.map((item) => item.toLowerCase()));
-  const matches = String(text || "").match(/(?:\/[^\s'"<>]+|[A-Za-z0-9_.\-가-힣][^\s'"<>]*)\.(?:hwp|hwpx|xlsx|xls|csv)/gi) || [];
+  const matches = String(text || "").match(/(?:\/[^\s'"<>]+|[A-Za-z0-9_.\-가-힣][^\s'"<>]*)\.(?:hwp|hwpx|xlsx|xls|csv|html|htm)/gi) || [];
   return [...new Set(matches)]
     .map((item) => item.trim().replace(/[),.;]+$/g, ""))
     .filter((item) => !allowed.size || allowed.has(extname(item).toLowerCase().replace(".", "")))
@@ -4136,9 +4282,9 @@ async function analyzeUploadedChatFile(file, fields = {}) {
   let templateId = "attachment-reader";
   let extracted = "";
   let analysis = "";
-  if ([".hwp", ".hwpx", ".pdf", ".docx", ".pptx"].includes(ext)) {
-    route = ext === ".hwp" || ext === ".hwpx" ? "rhwp-hwp-reader" : "document-reader";
-    templateId = "rhwp-hwp-reader";
+  if ([".hwp", ".hwpx", ".pdf", ".docx", ".pptx", ".html", ".htm"].includes(ext)) {
+    route = ext === ".hwp" || ext === ".hwpx" ? "rhwp-hwp-reader" : ext === ".html" || ext === ".htm" ? "html-report-reader" : "document-reader";
+    templateId = ext === ".html" || ext === ".htm" ? "html-report-reader" : "rhwp-hwp-reader";
     extracted = await extractHwpLike([savedPath]);
     analysis = await summarizeAttachmentWithGlm({ templateId, fileName, extracted, userNote: fields.note || "" });
   } else if ([".xlsx", ".xls", ".csv"].includes(ext)) {
@@ -4302,6 +4448,10 @@ const server = createServer(async (req, res) => {
       const scope = url.searchParams.get("scope") || "work";
       return sendJson(res, 200, await spotliteSummary(scope));
     }
+    if (pathname === "/api/spotlite/glm-refresh" && req.method === "POST") {
+      const body = await readBody(req);
+      return sendJson(res, 200, await refreshSpotliteGlm(body.scope || "work"));
+    }
     if (pathname === "/api/spotlite/templates" && req.method === "GET") {
       return sendJson(res, 200, await spotliteTemplates());
     }
@@ -4346,7 +4496,7 @@ const server = createServer(async (req, res) => {
       const body = await readBody(req);
       if (!body.remotePath) return sendJson(res, 400, { error: "remotePath is required" });
       const result = await targetRcloneCopy(body.remotePath, body.dryRun !== false);
-      return sendJson(res, result.status === "completed" ? 200 : 500, result);
+      return sendJson(res, ["completed", "blocked"].includes(result.status) ? 200 : 500, result);
     }
     if (pathname === "/api/skills/catalog" && req.method === "GET") {
       return sendJson(res, 200, { skills: skillCatalog() });
