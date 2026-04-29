@@ -451,7 +451,8 @@ textarea {
   margin-bottom: 10px;
 }
 
-.settings-panel {
+.settings-panel,
+.skills-panel {
   margin-top: 18px;
 }
 
@@ -483,6 +484,83 @@ textarea {
 .schedule-check input {
   width: auto;
   justify-self: start;
+}
+
+.skill-composer {
+  display: grid;
+  grid-template-columns: minmax(180px, 0.8fr) minmax(240px, 1fr) minmax(280px, 1.2fr) 150px;
+  gap: 12px;
+  align-items: end;
+  margin-bottom: 14px;
+}
+
+.skill-composer label {
+  display: grid;
+  gap: 6px;
+}
+
+.skill-composer label span {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.skill-composer textarea {
+  min-height: 86px;
+}
+
+.skill-output {
+  border: 1px solid rgba(37, 95, 133, 0.18);
+  border-radius: 8px;
+  background: rgba(247, 249, 246, 0.82);
+  padding: 12px;
+  margin-bottom: 14px;
+  display: grid;
+  gap: 8px;
+}
+
+.skill-output small {
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+
+.skill-output pre {
+  max-height: 260px;
+  overflow: auto;
+}
+
+.skill-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.skill-card {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px;
+  background: rgba(247, 249, 246, 0.82);
+}
+
+.skill-card.applied {
+  border-color: rgba(36, 107, 79, 0.34);
+}
+
+.skill-card.candidate {
+  border-color: rgba(154, 106, 24, 0.35);
+}
+
+.skill-card strong,
+.skill-card small {
+  display: block;
+}
+
+.skill-card small {
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+.skill-card p {
+  margin: 8px 0;
 }
 
 .settings-grid {
@@ -680,6 +758,8 @@ pre {
   .ingest-layout,
   .paperclip-layout,
   .schedule-form,
+  .skill-composer,
+  .skill-list,
   .settings-grid {
     grid-template-columns: 1fr;
   }

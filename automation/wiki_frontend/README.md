@@ -10,16 +10,29 @@
 - OpenClaw 자동화 호출
 - 전체 Google Drive 수집 상태 바
 - 운영 설정 조회/수정
-- 위키 검색과 조회
+- 위키 검색, 근거 Markdown 선택, 선택 근거 GLM 정리
 - 신규 지식 주입과 LLM digest preview
 - 처리 결과 확인
-- GLM 기반 개인용 wiki chat
+- GLM 기반 업무 운영 chat
 - Paperclip task/control plane 전용 작업대
+- 운영 스킬 카탈로그와 runtime MD draft 생성
 
 ## 현재 상태
 
 이 디렉터리는 v0 frontend다.
 `automation/wiki_api/` 서버와 연결되면 실제 wiki search, automation trigger, GLM chat을 호출하고, 서버가 없으면 mock fallback으로 동작한다.
+
+## 위키 검색
+
+- `검색`은 GLM을 호출하지 않고 Markdown 근거 목록만 빠르게 반환한다.
+- 사용자가 체크한 Markdown만 `선택 근거 GLM 정리`로 보낸다.
+- GLM 정리는 선택된 path의 원문 excerpt만 근거로 사용한다.
+
+## GLM 챗
+
+- GLM 챗은 위키 검색 결과를 설명하지 않고, 위키를 근거 저장소로 사용해 실제 업무 상태를 정리한다.
+- 기본 응답 관점은 현재 업무상태, 진행/완료, 리스크/충돌, 다음 액션, 근거다.
+- `위키 검색 결과`, `스니펫`, `메타데이터` 같은 메타 설명을 피하고 프로젝트 자체를 바로 다룬다.
 
 ## 열기
 
@@ -49,6 +62,13 @@ http://127.0.0.1:8787
 - 예약 실행은 `once`, `daily`, `interval` 모드를 지원하고 `automation/wiki_api/runtime/schedules.json`에 저장한다.
 - 예약 실행도 수동 실행과 같은 안전 allowlist를 사용한다.
 
+## 운영 스킬
+
+- 적용 완료: `보고서 작성용 MD 생성`, `코딩 작업 스킬`, `근거 검증 스킬`
+- 후보 표시: Graphify, Documents, Presentations, GitHub MCP, Playwright MCP, Filesystem/Fetch MCP, Sequential Thinking MCP
+- UI에서 생성한 초안은 `automation/wiki_api/runtime/skill_outputs/*.md`에 저장한다.
+- MCP 설치는 권한 경계가 생기므로 별도 승인 후 진행한다.
+
 ## 다음 단계
 
 - Paperclip 외부 API 스키마가 확정되면 local queue를 실제 Paperclip task create 호출과 연결
@@ -61,4 +81,4 @@ http://127.0.0.1:8787
 - destructive command는 UI command palette에 노출하지 않는다.
 - `운영 설정`에서 수정 가능한 값은 allowlist로 제한한다.
 - `DRIVE_DELETE_SOURCE`는 화면에서 잠겨 있으며 API에서도 수정할 수 없다.
-- OpenClaw 호출은 webhook만 사용하고 Drive 원본 삭제 명령을 포함하지 않는다.
+- OpenClaw 호출은 전용 override가 없으면 GLM API URL/key를 재사용하며 Drive 원본 삭제 명령을 포함하지 않는다.

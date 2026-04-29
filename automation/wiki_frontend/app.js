@@ -36,6 +36,9 @@ const state = {
   schedules: [],
   searchResults: [],
   selectedSearchPaths: new Set(),
+  skills: [],
+  chatComposing: false,
+  chatSending: false,
 };
 
 const titles = {
@@ -67,8 +70,8 @@ const settingLabels = {
   GLM_API_URL: "GLM API URL",
   GLM_API_KEY: "GLM API Key",
   GLM_MODEL: "GLM 모델",
-  OPENCLAW_WEBHOOK_URL: "OpenClaw Webhook",
-  OPENCLAW_API_KEY: "OpenClaw API Key",
+  OPENCLAW_WEBHOOK_URL: "OpenClaw GLM Webhook override",
+  OPENCLAW_API_KEY: "OpenClaw GLM API Key override",
   PAPERCLIP_URL: "Paperclip URL",
   PAPERCLIP_API_KEY: "Paperclip API Key",
 };
@@ -178,6 +181,26 @@ function renderSchedules() {
   });
 }
 
+function renderSkills() {
+  $("#skill-count").textContent = `${state.skills.length}개`;
+  const executable = state.skills.filter((skill) => skill.status === "applied");
+  const selected = $("#skill-select").value;
+  $("#skill-select").innerHTML = executable
+    .map((skill) => `<option value="${escapeHtml(skill.id)}">${escapeHtml(skill.name)}</option>`)
+    .join("");
+  if (selected && executable.some((skill) => skill.id === selected)) $("#skill-select").value = selected;
+
+  $("#skill-list").innerHTML = state.skills
+    .map((skill) => [
+      `<article class="skill-card ${escapeHtml(skill.status)}">`,
+      `<div><strong>${escapeHtml(skill.name)}</strong><small>${escapeHtml(skill.type)} · ${escapeHtml(skill.status)} · ${escapeHtml(skill.safety)}</small></div>`,
+      `<p>${escapeHtml(skill.description)}</p>`,
+      `<small>추천: ${escapeHtml((skill.bestFor || []).join(", "))}</small>`,
+      `</article>`,
+    ].join(""))
+    .join("");
+}
+
 function renderPaperclip(status) {
   if (!status) return;
   const templates = status.templates || state.paperclipTemplates || [];
@@ -270,6 +293,11 @@ async function refreshStatus() {
       detail: paperclip.url,
     }));
     renderPaperclip(paperclip);
+  }
+  const skills = await api("/api/skills/catalog");
+  if (!skills.mock && skills.skills) {
+    state.skills = skills.skills;
+    renderSkills();
   }
   renderStatus();
   await loadSettings();
@@ -415,6 +443,26 @@ async function createSchedule(event) {
 async function deleteSchedule(id) {
   await api(`/api/automation/schedules/${encodeURIComponent(id)}`, { method: "DELETE" });
   await refreshStatus();
+}
+
+async function createSkillDraft() {
+  const result = await api("/api/skills/draft", {
+    method: "POST",
+    body: JSON.stringify({
+      skillId: $("#skill-select").value,
+      title: $("#skill-title").value.trim(),
+      context: $("#skill-context").value.trim(),
+    }),
+  });
+  if (result.error) {
+    $("#skill-output").textContent = `생성 실패: ${result.error}`;
+    return;
+  }
+  $("#skill-output").innerHTML = [
+    "<strong>생성 완료</strong>",
+    `<small>${escapeHtml(result.path)}</small>`,
+    `<pre>${escapeHtml(result.markdown.slice(0, 1800))}${result.markdown.length > 1800 ? "\n..." : ""}</pre>`,
+  ].join("");
 }
 
 async function refreshPaperclip() {
@@ -576,22 +624,31 @@ async function generateDigest() {
 }
 
 async function sendChat() {
+  if (state.chatSending || state.chatComposing) return;
   const input = $("#chat-input");
   const text = input.value.trim();
   if (!text) return;
+  state.chatSending = true;
+  $("#chat-send").disabled = true;
   appendMessage("user", text);
   input.value = "";
 
-  const payload = await api("/api/chat/glm", {
-    method: "POST",
-    body: JSON.stringify({ message: text }),
-  });
-  appendMessage(
-    "assistant",
-    payload.mock
-      ? "GLM API가 연결되면 여기서 위키 검색 결과와 함께 답합니다."
-      : payload.message,
-  );
+  try {
+    const payload = await api("/api/chat/glm", {
+      method: "POST",
+      body: JSON.stringify({ message: text }),
+    });
+    appendMessage(
+      "assistant",
+      payload.mock
+        ? "GLM API가 연결되면 위키 근거를 바탕으로 프로젝트 상태와 다음 액션을 정리합니다."
+        : payload.message,
+    );
+  } finally {
+    state.chatSending = false;
+    $("#chat-send").disabled = false;
+    input.focus();
+  }
 }
 
 function appendMessage(role, text) {
@@ -621,6 +678,7 @@ $("#openclaw-trigger").addEventListener("click", triggerOpenClaw);
 $("#stop-run").addEventListener("click", stopCurrentRun);
 $("#side-stop-run").addEventListener("click", stopCurrentRun);
 $("#schedule-form").addEventListener("submit", createSchedule);
+$("#skill-draft-button").addEventListener("click", createSkillDraft);
 $("#paperclip-refresh").addEventListener("click", refreshPaperclip);
 $("#paperclip-create-task").addEventListener("click", createPaperclipTask);
 $("#paperclip-trigger-task").addEventListener("click", triggerPaperclipTask);
@@ -631,14 +689,26 @@ $("#chat-send").addEventListener("click", sendChat);
 $("#wiki-query").addEventListener("keydown", (event) => {
   if (event.key === "Enter") searchWiki();
 });
+$("#chat-input").addEventListener("compositionstart", () => {
+  state.chatComposing = true;
+});
+$("#chat-input").addEventListener("compositionend", () => {
+  requestAnimationFrame(() => {
+    state.chatComposing = false;
+  });
+});
 $("#chat-input").addEventListener("keydown", (event) => {
-  if (event.key === "Enter") sendChat();
+  if (event.key !== "Enter") return;
+  if (event.isComposing || state.chatComposing || event.keyCode === 229) return;
+  event.preventDefault();
+  sendChat();
 });
 
 renderStatus();
 renderEvents("#run-list", state.runs);
 renderAutomationState();
 renderSchedules();
+renderSkills();
 renderPaperclip({
   status: "초기화 중",
   url: "-",

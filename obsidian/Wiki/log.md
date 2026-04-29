@@ -10,6 +10,11 @@ source: "Global wiki operations log"
 이 파일은 위키 운영의 append-only 로그입니다.
 
 ## 2026-04-29
+- `automation/wiki_api/`, `automation/wiki_frontend/`: OpenClaw Webhook/API Key를 GLM 설정 재사용 구조로 변경, 전용 값은 override로만 사용
+- `automation/wiki_api/`, `automation/wiki_frontend/`: 운영 스킬 카탈로그 추가, 보고서 작성용 MD/코딩 작업/근거 검증 runtime draft 생성 기능 구현
+- [[Wiki/Common/Wiki_Ops_Skill_Catalog]]: 적용 스킬, 로컬 플러그인 스킬, MCP 후보와 안전 기준 등록
+- `automation/wiki_api/`: GLM 챗을 위키 설명형 응답에서 실제 프로젝트 업무 운영 응답으로 전환하고 Markdown 원문 excerpt, 자동화 상태, 커버리지를 컨텍스트로 주입
+- `automation/wiki_api/`, `automation/wiki_frontend/`: 위키 검색을 `검색 -> 사용자 근거 Markdown 선택 -> 선택 근거 GLM 정리` 흐름으로 변경해 불필요한 GLM 호출을 줄임
 - `automation/wiki_api/`, `automation/wiki_frontend/`: 자동화 실행 중 상태, stderr/stdout 요약, 실행 중지, `once`/`daily`/`interval` 예약 실행, 사이드바 상태 패널 추가
 - `automation/wiki_api/`: Node 기반 local API 서버 구현, frontend 서빙, wiki search/page, coverage summary, operation settings, OpenClaw trigger, automation trigger, digest fallback, GLM wiki chat, Paperclip status bridge 추가
 - `automation/wiki_frontend/`: 한글 UI 전환, 전체 Drive 수집 상태 바, OpenClaw 자동화 호출 버튼, 운영 설정 폼 추가, API 서버 연결, run history/Paperclip status refresh, backend 오류 표시 개선

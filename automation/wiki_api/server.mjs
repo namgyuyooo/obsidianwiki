@@ -16,6 +16,7 @@ const runHistoryPath = join(apiRuntime, "runs.json");
 const paperclipTasksPath = join(apiRuntime, "paperclip_tasks.json");
 const paperclipEventsPath = join(apiRuntime, "paperclip_events.json");
 const schedulesPath = join(apiRuntime, "schedules.json");
+const skillOutputsRoot = join(apiRuntime, "skill_outputs");
 const activeJobs = new Map();
 
 const host = process.env.WIKI_API_HOST || "127.0.0.1";
@@ -459,12 +460,15 @@ async function settingsPayload() {
 
 async function triggerOpenClaw(task) {
   const { values: env } = await readEnvFile();
-  const webhookUrl = process.env.OPENCLAW_WEBHOOK_URL || env.OPENCLAW_WEBHOOK_URL;
-  const apiKey = process.env.OPENCLAW_API_KEY || env.OPENCLAW_API_KEY;
+  const webhookUrl = process.env.OPENCLAW_WEBHOOK_URL || env.OPENCLAW_WEBHOOK_URL || process.env.GLM_API_URL || env.GLM_API_URL;
+  const apiKey = process.env.OPENCLAW_API_KEY || env.OPENCLAW_API_KEY || process.env.GLM_API_KEY || env.GLM_API_KEY;
+  const usesGlmFallback = !process.env.OPENCLAW_WEBHOOK_URL && !env.OPENCLAW_WEBHOOK_URL;
   const payload = {
     source: "wiki_api",
     task: task || "drive_wikify_cycle",
     cwd: repoRoot,
+    provider: usesGlmFallback ? "glm" : "openclaw-webhook",
+    model: process.env.GLM_MODEL || env.GLM_MODEL || "glm-5.1",
     safety: {
       driveDeleteSource: false,
       remoteDeleteAllowed: false,
@@ -483,12 +487,62 @@ async function triggerOpenClaw(task) {
       command: "openclaw-trigger",
       status: "not_configured",
       code: 0,
-      stdout: "OPENCLAW_WEBHOOK_URL is not configured.",
+      stdout: "Neither OPENCLAW_WEBHOOK_URL nor GLM_API_URL is configured.",
       stderr: "",
       createdAt: new Date().toISOString(),
     };
     await appendRunHistory(entry);
     return { ...entry, payload };
+  }
+
+  if (usesGlmFallback) {
+    try {
+      const { payload: glmPayload, endpoint } = await requestGlmChatCompletion(webhookUrl, apiKey, {
+        model: payload.model,
+        messages: [
+          {
+            role: "system",
+            content: [
+              "당신은 OpenClaw 역할을 대신하는 Drive Wikify 자동화 오케스트레이터다.",
+              "명령을 실제로 실행하지 말고, 제공된 payload 기준으로 안전한 실행 계획과 검증 게이트를 JSON으로 반환한다.",
+              "원본 Google Drive 삭제는 절대 금지다.",
+            ].join(" "),
+          },
+          {
+            role: "user",
+            content: JSON.stringify(payload),
+          },
+        ],
+        temperature: 0.1,
+        max_tokens: 900,
+        thinking: { type: "disabled" },
+        response_format: { type: "json_object" },
+      });
+      const entry = {
+        runId: `${Date.now()}-openclaw`,
+        command: "openclaw-trigger",
+        status: "sent",
+        code: 200,
+        stdout: glmMessageContent(glmPayload).slice(-8000),
+        stderr: "",
+        endpoint,
+        createdAt: new Date().toISOString(),
+      };
+      await appendRunHistory(entry);
+      return { ...entry, payload, raw: glmPayload };
+    } catch (error) {
+      const entry = {
+        runId: `${Date.now()}-openclaw`,
+        command: "openclaw-trigger",
+        status: "failed",
+        code: 500,
+        stdout: "",
+        stderr: error.message,
+        createdAt: new Date().toISOString(),
+      };
+      await appendRunHistory(entry);
+      return { ...entry, payload };
+    }
   }
 
   const headers = { "Content-Type": "application/json" };
@@ -831,8 +885,39 @@ async function glmDigest(text, projectHint) {
   }
 }
 
+async function operationalWikiContext(message) {
+  const matches = (await searchWiki(message)).slice(0, 6);
+  const pages = [];
+  for (const item of matches) {
+    const page = await pageByPath(item.path).catch(() => null);
+    pages.push({
+      title: item.title,
+      path: item.path,
+      frontmatter: item.frontmatter,
+      snippet: item.snippet,
+      excerpt: page?.markdown?.slice(0, 5000) || item.snippet,
+    });
+  }
+  const automation = await automationSnapshot().catch(() => ({ running: [], runs: [], schedules: [] }));
+  const coverage = await coverageSummary().catch(() => null);
+  return {
+    evidence: pages,
+    ops: {
+      running: automation.running,
+      latestRuns: automation.runs.slice(0, 5).map((run) => ({
+        command: run.command,
+        status: run.status,
+        stderr: run.stderr,
+        createdAt: run.createdAt,
+      })),
+      schedules: automation.schedules.slice(0, 5),
+      coverage,
+    },
+  };
+}
+
 async function glmChat(message) {
-  const context = (await searchWiki(message)).slice(0, 5);
+  const context = await operationalWikiContext(message);
   const { values: env } = await readEnvFile();
   const apiKey = process.env.GLM_API_KEY || env.GLM_API_KEY;
   const apiUrl = process.env.GLM_API_URL || env.GLM_API_URL;
@@ -840,7 +925,7 @@ async function glmChat(message) {
   if (!apiKey || !apiUrl) {
     return {
       provider: "fallback",
-      message: "GLM_API_URL과 GLM_API_KEY를 운영 설정에 넣으면 GLM 챗이 연결됩니다.",
+      message: "GLM_API_URL과 GLM_API_KEY를 운영 설정에 넣으면 위키 기반 업무 운영 챗이 연결됩니다.",
       context,
     };
   }
@@ -850,15 +935,22 @@ async function glmChat(message) {
         messages: [
           {
             role: "system",
-            content: "당신은 로컬 위키 운영 보조자다. 한국어로 답하고, 제공된 위키 검색 맥락을 우선 사용하며, 근거 없는 단정은 피한다.",
+            content: [
+              "당신은 위키 검색 결과를 설명하는 챗봇이 아니라, 로컬 Obsidian 위키를 근거 저장소로 쓰는 한국어 업무 운영 매니저다.",
+              "목표는 사용자의 실제 프로젝트 업무를 관리하는 것이다: 현재 상태, 막힌 점, 다음 액션, 담당/증거/리스크를 정리한다.",
+              "금지: '제공된 위키 검색 결과', '스니펫', '메타데이터를 종합하면', '현재 위키에 색인된' 같은 메타 표현으로 시작하지 마라.",
+              "위키나 검색 시스템 자체를 설명하지 말고, 프로젝트/업무 대상에 대해 바로 답하라.",
+              "근거는 path로 짧게 붙인다. 확실하지 않으면 '확인 필요'로 표시하고, 무엇을 열어봐야 하는지 제안한다.",
+              "기본 형식: 1) 현재 업무상태 2) 진행/완료 3) 리스크/충돌 4) 다음 액션 5) 근거.",
+            ].join(" "),
           },
           {
             role: "user",
-            content: JSON.stringify({ question: message, wiki_context: context }),
+            content: JSON.stringify({ task_request: message, wiki_evidence_and_ops_context: context }),
           },
         ],
         temperature: 0.2,
-        max_tokens: 900,
+        max_tokens: 1400,
         thinking: { type: "disabled" },
     });
     return {
@@ -905,6 +997,227 @@ async function paperclipStatus() {
       events: events.slice(0, 30),
     };
   }
+}
+
+function skillCatalog() {
+  return [
+    {
+      id: "report-md-writer",
+      name: "보고서 작성용 MD 생성",
+      type: "local-template",
+      status: "applied",
+      safety: "local_draft_only",
+      description: "위키 근거를 바탕으로 보고서 목차, 핵심 주장, 근거표, 확인 필요 항목을 담은 Markdown 초안을 만든다.",
+      bestFor: ["정부과제 보고서", "PoC 결과보고서", "고객 제출 전 초안"],
+      output: "automation/wiki_api/runtime/skill_outputs/*.md",
+    },
+    {
+      id: "coding-task-planner",
+      name: "코딩 작업 스킬",
+      type: "local-template",
+      status: "applied",
+      safety: "planning_only",
+      description: "기능 구현/버그 수정 작업을 목표, 영향 파일, 테스트, 롤백 기준으로 쪼개는 작업 지시 MD를 만든다.",
+      bestFor: ["프론트엔드 개선", "자동화 API 추가", "테스트 계획"],
+      output: "automation/wiki_api/runtime/skill_outputs/*.md",
+    },
+    {
+      id: "evidence-auditor",
+      name: "근거 검증 스킬",
+      type: "local-template",
+      status: "applied",
+      safety: "read_only",
+      description: "문장/수치/출처/충돌 후보를 분리해 검수 체크리스트를 만든다.",
+      bestFor: ["보고서 제출 전 검수", "위키 충돌 정리", "출처 누락 탐지"],
+      output: "automation/wiki_api/runtime/skill_outputs/*.md",
+    },
+    {
+      id: "graphify",
+      name: "Graphify 지식그래프",
+      type: "installed-skill",
+      status: "available",
+      safety: "local_artifact",
+      description: "문서/코드/이미지를 knowledge graph, clustered communities, HTML/JSON/audit report로 변환한다.",
+      bestFor: ["프로젝트 관계도", "근거 클러스터링", "대형 위키 구조 분석"],
+      output: "HTML + JSON + audit report",
+    },
+    {
+      id: "documents",
+      name: "Documents / DOCX 작성",
+      type: "available-plugin-skill",
+      status: "available",
+      safety: "local_file_write",
+      description: "DOCX 생성/편집/렌더 검증 워크플로우에 적합하다.",
+      bestFor: ["제출용 Word 보고서", "검토본 렌더링", "페이지 단위 QA"],
+      output: ".docx",
+    },
+    {
+      id: "presentations",
+      name: "Presentations / PPTX 작성",
+      type: "available-plugin-skill",
+      status: "available",
+      safety: "local_file_write",
+      description: "PowerPoint 작성, 수정, 렌더 검증에 적합하다.",
+      bestFor: ["고객 발표자료", "PoC 결과 발표", "프로젝트 킥오프"],
+      output: ".pptx",
+    },
+    {
+      id: "github-mcp",
+      name: "GitHub MCP Server",
+      type: "recommended-mcp",
+      status: "candidate",
+      safety: "requires_token_and_scopes",
+      description: "GitHub 공식 MCP 계열. 이슈/PR/코드 검색/저장소 운영에 유용하지만 토큰 권한 관리가 필요하다.",
+      bestFor: ["코딩 작업 관리", "PR/Issue 연동", "릴리즈 기록"],
+      installHint: "승인 후 GitHub 토큰 scope를 제한해 연결",
+    },
+    {
+      id: "playwright-mcp",
+      name: "Microsoft Playwright MCP",
+      type: "recommended-mcp",
+      status: "candidate",
+      safety: "browser_access",
+      description: "Microsoft의 Playwright MCP. 로컬 프론트엔드 UI 테스트와 브라우저 자동화에 적합하다.",
+      bestFor: ["127.0.0.1 UI 테스트", "회귀 테스트", "스크린 기반 확인"],
+      installHint: "승인 후 npx @playwright/mcp 연결",
+    },
+    {
+      id: "filesystem-fetch-mcp",
+      name: "Filesystem / Fetch MCP",
+      type: "recommended-mcp",
+      status: "candidate",
+      safety: "strict_allowlist_required",
+      description: "MCP reference 계열 파일/웹 fetch 서버. 이 프로젝트에서는 경로 allowlist와 읽기 전용 우선 설정이 필요하다.",
+      bestFor: ["로컬 자료 읽기", "웹 근거 fetch", "문서 수집"],
+      installHint: "승인 후 repo/runtime 범위 allowlist로 제한",
+    },
+    {
+      id: "sequential-thinking",
+      name: "Sequential Thinking MCP",
+      type: "popular-community-mcp",
+      status: "candidate",
+      safety: "low_data_access_but_review_needed",
+      description: "복잡한 판단을 단계적으로 쪼개는 커뮤니티 인기 MCP. 데이터 접근은 낮지만 공급망 검토가 필요하다.",
+      bestFor: ["프로젝트 분기 판단", "충돌 원인 추론", "큰 보고서 구조화"],
+      installHint: "승인 후 패키지 출처와 버전 pin 확인",
+    },
+  ];
+}
+
+function slugifyName(value) {
+  return String(value || "skill-output")
+    .trim()
+    .replace(/[^\p{L}\p{N}._-]+/gu, "_")
+    .replace(/^_+|_+$/g, "")
+    .slice(0, 80) || "skill-output";
+}
+
+async function createSkillDraft(body) {
+  const catalog = skillCatalog();
+  const skill = catalog.find((item) => item.id === body.skillId);
+  if (!skill) throw new Error(`Unknown skill: ${body.skillId}`);
+  if (!["report-md-writer", "coding-task-planner", "evidence-auditor"].includes(skill.id)) {
+    throw new Error("This skill requires a separate tool/plugin run and is not auto-executed from the UI.");
+  }
+  const title = body.title || skill.name;
+  const context = body.context || "";
+  const now = new Date().toISOString();
+  const sections = {
+    "report-md-writer": [
+      `# ${title}`,
+      "",
+      "## 목적",
+      "- 이 보고서가 답해야 하는 업무 질문:",
+      "",
+      "## 핵심 결론 초안",
+      "- 결론 1:",
+      "- 결론 2:",
+      "",
+      "## 근거 표",
+      "| 주장 | 근거 Markdown / 원문 | 수치 | 확인 필요 |",
+      "| --- | --- | --- | --- |",
+      "|  |  |  |  |",
+      "",
+      "## 리스크와 충돌",
+      "- 충돌 후보:",
+      "- 과장 위험:",
+      "",
+      "## 다음 액션",
+      "- 담당자/기한/확인 파일:",
+    ],
+    "coding-task-planner": [
+      `# ${title}`,
+      "",
+      "## 목표",
+      "- 사용자 가치:",
+      "",
+      "## 변경 범위",
+      "- 예상 파일:",
+      "- 건드리지 않을 것:",
+      "",
+      "## 구현 단계",
+      "1. 현 구조 확인",
+      "2. 최소 변경 구현",
+      "3. 문법/스모크 테스트",
+      "4. 문서 업데이트",
+      "",
+      "## 검증",
+      "- 명령:",
+      "- 기대 결과:",
+      "",
+      "## 롤백 기준",
+      "- 실패 시 되돌릴 단위:",
+    ],
+    "evidence-auditor": [
+      `# ${title}`,
+      "",
+      "## 검수 대상",
+      "- 문서/프로젝트:",
+      "",
+      "## 수치 검증",
+      "| 수치 | 출처 | 같은 의미로 재사용 가능 여부 |",
+      "| --- | --- | --- |",
+      "|  |  |  |",
+      "",
+      "## 표현 검증",
+      "- 원문 표현 유지 필요:",
+      "- 해석/추론으로 분리할 문장:",
+      "",
+      "## 충돌 후보",
+      "- 버전 차이:",
+      "- 범위 차이:",
+      "",
+      "## 판정",
+      "- 그대로 사용:",
+      "- 수정 후 사용:",
+      "- 보류:",
+    ],
+  };
+  const markdown = [
+    "---",
+    "type: skill_output",
+    `skill: ${skill.id}`,
+    `created: ${now}`,
+    "source: wiki ops skill catalog",
+    "---",
+    "",
+    ...sections[skill.id],
+    "",
+    "## 입력 컨텍스트",
+    context || "- 없음",
+    "",
+    "## 안전 메모",
+    "- 이 파일은 로컬 runtime draft이며, 원본 Google Drive 삭제나 외부 전송을 수행하지 않는다.",
+  ].join("\n");
+  await mkdir(skillOutputsRoot, { recursive: true });
+  const fileName = `${now.replace(/[:.]/g, "-")}_${slugifyName(title)}.md`;
+  const path = join(skillOutputsRoot, fileName);
+  await writeFile(path, markdown, "utf-8");
+  return {
+    skill,
+    path: relative(repoRoot, path),
+    markdown,
+  };
 }
 
 function paperclipTemplates() {
@@ -1082,6 +1395,13 @@ const server = createServer(async (req, res) => {
       const body = await readBody(req);
       const result = body.command === "full-cycle" ? await fullCycle(Boolean(body.dryRun)) : await runCommand(body.command, Boolean(body.dryRun));
       return sendJson(res, result.status === "completed" ? 200 : 500, result);
+    }
+    if (pathname === "/api/skills/catalog" && req.method === "GET") {
+      return sendJson(res, 200, { skills: skillCatalog() });
+    }
+    if (pathname === "/api/skills/draft" && req.method === "POST") {
+      const body = await readBody(req);
+      return sendJson(res, 200, await createSkillDraft(body));
     }
     if (pathname === "/api/openclaw/trigger" && req.method === "POST") {
       const body = await readBody(req);

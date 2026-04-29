@@ -156,6 +156,30 @@
             <div id="schedule-list" class="event-list"></div>
           </section>
 
+          <section class="panel skills-panel">
+            <div class="panel-heading">
+              <h3>운영 스킬 카탈로그</h3>
+              <span id="skill-count">0개</span>
+            </div>
+            <div class="skill-composer">
+              <label>
+                <span>스킬</span>
+                <select id="skill-select"></select>
+              </label>
+              <label>
+                <span>초안 제목</span>
+                <input id="skill-title" placeholder="예: 아사히카세이 진행 보고서 초안" />
+              </label>
+              <label class="skill-context-field">
+                <span>컨텍스트 / 지시</span>
+                <textarea id="skill-context" placeholder="근거 파일, 보고서 목적, 코딩 요구사항 등을 적어두면 md 초안에 포함됩니다."></textarea>
+              </label>
+              <button id="skill-draft-button" class="command-button accent" type="button">MD 초안 생성</button>
+            </div>
+            <div id="skill-output" class="skill-output">스킬을 선택해 runtime draft를 만들 수 있습니다.</div>
+            <div id="skill-list" class="skill-list"></div>
+          </section>
+
           <section class="panel settings-panel">
             <div class="panel-heading">
               <h3>운영 설정</h3>
@@ -249,11 +273,11 @@
                 <input name="GLM_MODEL" />
               </label>
               <label>
-                <span>OpenClaw Webhook</span>
-                <input name="OPENCLAW_WEBHOOK_URL" />
+                <span>OpenClaw GLM Webhook override</span>
+                <input name="OPENCLAW_WEBHOOK_URL" placeholder="비우면 GLM_API_URL 사용" />
               </label>
               <label>
-                <span>OpenClaw API Key</span>
+                <span>OpenClaw GLM API Key override</span>
                 <input name="OPENCLAW_API_KEY" type="password" autocomplete="off" />
               </label>
               <label>
@@ -333,7 +357,7 @@
         <section id="chat" class="view">
           <div id="chat-log" class="chat-log"></div>
           <div class="chat-input-row">
-            <input id="chat-input" placeholder="GLM에게 위키 맥락으로 질문" />
+            <input id="chat-input" placeholder="프로젝트 상태, 리스크, 다음 액션을 물어보세요" />
             <button id="chat-send" class="command-button">전송</button>
           </div>
         </section>

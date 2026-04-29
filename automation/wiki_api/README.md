@@ -46,7 +46,7 @@ http://127.0.0.1:8787
 - `GLM_API_KEY`: GLM digest/chat에서 사용
 - `GLM_API_URL`: GLM endpoint. Z.ai Lite Coding Plan은 `https://api.z.ai/api/coding/paas/v4` 사용
 - `GLM_MODEL`: GLM 모델명
-- `OPENCLAW_WEBHOOK_URL`: OpenClaw webhook endpoint
-- `OPENCLAW_API_KEY`: OpenClaw webhook bearer token
+- `OPENCLAW_WEBHOOK_URL`: OpenClaw 전용 override. 비우면 `GLM_API_URL` 사용
+- `OPENCLAW_API_KEY`: OpenClaw 전용 override. 비우면 `GLM_API_KEY` 사용
 - `PAPERCLIP_URL`: Paperclip 상태 확인 URL, 기본 `http://127.0.0.1:3000`
 - `PAPERCLIP_API_KEY`: Paperclip bridge bearer token 후보

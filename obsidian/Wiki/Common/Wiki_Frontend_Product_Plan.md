@@ -218,7 +218,7 @@ Browser UI
 - operation settings는 allowlist 기반으로 `.env`를 수정한다.
 - `DRIVE_DELETE_SOURCE`는 수정 대상에서 제외하고 항상 `false`로 유지한다.
 - 전체 수집 상태는 `Drive_Wikify_Coverage_Tracker`, manifest, run output, local mirror cleanup log를 합쳐 표시한다.
-- OpenClaw trigger는 `OPENCLAW_WEBHOOK_URL`이 없으면 `not_configured`로 기록만 남긴다.
+- OpenClaw trigger는 전용 `OPENCLAW_WEBHOOK_URL`/`OPENCLAW_API_KEY`가 비어 있으면 `GLM_API_URL`/`GLM_API_KEY`를 재사용한다.
 - `rclone-copy`는 `rclone copy` 기반이며 dry-run 검증을 통과했다.
 - GLM 환경값이 없으면 local rule digest 또는 GLM 설정 요청 메시지로 fallback한다.
 - Paperclip은 `PAPERCLIP_URL`에 대한 reachability bridge만 구현했다.

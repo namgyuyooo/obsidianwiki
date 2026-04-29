@@ -32,6 +32,7 @@ source: ""
 - [[Wiki/Common/Drive_Wikify_Model_Prompt_Set]]: `GLM`과 `오픈클로`를 분리 사용하는 프롬프트 계약
 - [[Wiki/Common/Paperclip_Wiki_Control_Plane_Plan]]: Paperclip을 위키 운영 control plane으로 적용하는 방안
 - [[Wiki/Common/Wiki_Frontend_Product_Plan]]: 자동화 트리거, 위키 검색, 지식 주입, LLM 챗을 포함한 로컬 프론트엔드 계획
+- [[Wiki/Common/Wiki_Ops_Skill_Catalog]]: 운영 화면에 붙인 스킬/MCP 후보와 안전 기준
 - [[Wiki/Common/Government_RnD_Reusable_Wiki_Hub]]: 정부 R&D 과제용 공통 자료, 표현 자산, 위키 운영 규칙 허브
 - [[Wiki/Common/RTM_Government_RnD_Folder_Index]]: RTM 정부과제 폴더 단위 위키 인덱스
 - [[Wiki/Common/RTM_YNG_Company_Profile_2026-04-21]]: PPTX/HWP/HWPX까지 반영한 RTM 회사 공통정보 허브

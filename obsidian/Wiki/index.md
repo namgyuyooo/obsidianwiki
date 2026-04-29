@@ -103,6 +103,7 @@ Drive 소스 기반으로 구축된 RTM_YNG 계열 프로젝트 페이지 (L1_me
 - [[Wiki/Common/Search_Evidence_Deletion_Registry]]: 검색 증적 삭제 실제 근거 링크와 프로젝트 연결 레지스트리
 - [[Wiki/Common/Paperclip_Wiki_Control_Plane_Plan]]: Paperclip agent/task/heartbeat를 Drive Wikify 운영에 연결하는 계획
 - [[Wiki/Common/Wiki_Frontend_Product_Plan]]: 로컬 콘솔의 API contract와 화면 구성
+- [[Wiki/Common/Wiki_Ops_Skill_Catalog]]: 보고서/코딩/검증 스킬과 MCP 후보 운영 기준
 
 ## Usage Notes
 
