@@ -49,9 +49,9 @@ def _required_path(value: str | None, config_value: Path | None, label: str) -> 
 
 
 def _required_string(value: str | None, config_value: str | None, label: str) -> str:
-    if value:
+    if value is not None:
         return value
-    if config_value:
+    if config_value is not None:
         return config_value
     raise ValueError(f"Missing required setting: {label}")
 

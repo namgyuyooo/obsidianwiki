@@ -1,0 +1,412 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>위키 운영 콘솔</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <aside class="sidebar">
+        <div class="brand">
+          <span class="brand-mark">W</span>
+          <div>
+            <h1>Wiki Ops</h1>
+            <p>수집, 검색, 다이제스트, 챗</p>
+          </div>
+        </div>
+
+        <nav class="nav-list" aria-label="Primary">
+          <button class="nav-item active" data-view="operations">운영</button>
+          <button class="nav-item" data-view="search">위키 검색</button>
+          <button class="nav-item" data-view="ingest">지식 주입</button>
+          <button class="nav-item" data-view="chat">GLM 챗</button>
+          <button class="nav-item" data-view="paperclip">Paperclip</button>
+        </nav>
+
+        <section class="side-run-panel">
+          <div class="side-run-head">
+            <strong id="side-run-status">자동화 대기</strong>
+            <button id="side-stop-run" type="button">중지</button>
+          </div>
+          <p id="side-run-command">실행 중인 작업 없음</p>
+          <small id="side-run-detail">에러와 진행 로그가 여기에 표시됩니다.</small>
+        </section>
+
+        <section class="safety-panel">
+          <span class="status-dot"></span>
+          <div>
+            <strong>원본 Drive 보호 중</strong>
+            <p>DRIVE_DELETE_SOURCE=false</p>
+          </div>
+        </section>
+      </aside>
+
+      <section class="workspace">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">로컬 컨트롤 플레인</p>
+            <h2 id="view-title">운영</h2>
+          </div>
+          <button id="refresh-status" class="command-button">새로고침</button>
+        </header>
+
+        <section id="operations" class="view active">
+          <div class="metric-grid">
+            <article class="metric">
+              <span>대상 Drive</span>
+              <strong id="target-drive">불러오는 중</strong>
+            </article>
+            <article class="metric">
+              <span>Manifest</span>
+              <strong id="manifest-status">불러오는 중</strong>
+            </article>
+            <article class="metric">
+              <span>최근 실행</span>
+              <strong id="last-run">불러오는 중</strong>
+            </article>
+            <article class="metric">
+              <span>정리 정책</span>
+              <strong id="cleanup-status">로컬만</strong>
+            </article>
+          </div>
+
+          <section class="coverage-strip">
+            <div class="coverage-copy">
+              <span id="coverage-label">전체 Google Drive 수집 상태</span>
+              <strong id="coverage-percent">0%</strong>
+            </div>
+            <div class="coverage-track" aria-hidden="true">
+              <span id="coverage-fill"></span>
+            </div>
+            <div id="coverage-details" class="coverage-details">커버리지 불러오는 중</div>
+          </section>
+
+          <div class="panel-grid">
+            <section class="panel">
+              <div class="panel-heading">
+                <h3>자동화 실행</h3>
+                <span id="automation-live-status">먼저 dry-run</span>
+              </div>
+              <div class="command-grid">
+                <button class="command-button" data-command="rclone-copy" data-dry-run="true">rclone copy 미리보기</button>
+                <button class="command-button" data-command="build-manifest">manifest 생성</button>
+                <button class="command-button" data-command="run">위키화 실행</button>
+                <button class="command-button accent" data-command="full-cycle" data-dry-run="true">전체 흐름 미리보기</button>
+                <button class="command-button accent" id="openclaw-trigger" type="button">오픈클로 자동화 호출</button>
+                <button class="command-button danger" id="stop-run" type="button">현재 작업 중지</button>
+              </div>
+            </section>
+
+            <section class="panel">
+              <div class="panel-heading">
+                <h3>실행 결과</h3>
+                <span id="run-count">0건</span>
+              </div>
+              <div id="run-list" class="event-list"></div>
+            </section>
+          </div>
+
+          <section class="panel schedule-panel">
+            <div class="panel-heading">
+              <h3>예약 실행</h3>
+              <span id="schedule-count">0건</span>
+            </div>
+            <form id="schedule-form" class="schedule-form">
+              <label>
+                <span>이름</span>
+                <input name="name" placeholder="예: 새벽 Drive 수집" />
+              </label>
+              <label>
+                <span>명령</span>
+                <select name="command">
+                  <option value="rclone-copy">rclone copy</option>
+                  <option value="build-manifest">manifest 생성</option>
+                  <option value="run">위키화 실행</option>
+                  <option value="full-cycle">전체 흐름</option>
+                </select>
+              </label>
+              <label>
+                <span>모드</span>
+                <select name="mode">
+                  <option value="daily">매일 특정 시간</option>
+                  <option value="interval">간격 반복</option>
+                  <option value="once">한 번만</option>
+                </select>
+              </label>
+              <label>
+                <span>실행 시각</span>
+                <input name="timeOfDay" type="time" value="03:00" />
+              </label>
+              <label>
+                <span>간격 분</span>
+                <input name="intervalMinutes" type="number" min="1" value="240" />
+              </label>
+              <label>
+                <span>1회 실행 일시</span>
+                <input name="runAt" type="datetime-local" />
+              </label>
+              <label class="schedule-check">
+                <span>dry-run</span>
+                <input name="dryRun" type="checkbox" checked />
+              </label>
+              <button class="command-button accent" type="submit">예약 추가</button>
+            </form>
+            <div id="schedule-list" class="event-list"></div>
+          </section>
+
+          <section class="panel settings-panel">
+            <div class="panel-heading">
+              <h3>운영 설정</h3>
+              <span id="settings-status">.env에서 불러오기</span>
+            </div>
+            <form id="operation-settings" class="settings-grid">
+              <label>
+                <span>rclone remote</span>
+                <input name="RCLONE_REMOTE" />
+              </label>
+              <label>
+                <span>Drive 경로</span>
+                <input name="RCLONE_REMOTE_PATH" placeholder="비우면 gdrive: 최상위" />
+              </label>
+              <label>
+                <span>로컬 mirror 경로</span>
+                <input name="RCLONE_MIRROR_ROOT" />
+              </label>
+              <label>
+                <span>대역폭 제한</span>
+                <input name="RCLONE_BWLIMIT" />
+              </label>
+              <label>
+                <span>TPS 제한</span>
+                <input name="RCLONE_TPSLIMIT" />
+              </label>
+              <label>
+                <span>checkers</span>
+                <input name="RCLONE_CHECKERS" />
+              </label>
+              <label>
+                <span>transfers</span>
+                <input name="RCLONE_TRANSFERS" />
+              </label>
+              <label>
+                <span>Drive 표시명</span>
+                <input name="DRIVE_NAME" />
+              </label>
+              <label>
+                <span>manifest 경로</span>
+                <input name="MANIFEST_PATH" />
+              </label>
+              <label>
+                <span>run output 경로</span>
+                <input name="RUN_OUTPUT_PATH" />
+              </label>
+              <label>
+                <span>폴더/회</span>
+                <input name="MAX_FOLDERS_PER_RUN" />
+              </label>
+              <label>
+                <span>파일/폴더</span>
+                <input name="MAX_FILES_PER_FOLDER" />
+              </label>
+              <label>
+                <span>최대 fetch</span>
+                <input name="MAX_FETCH_DOCS" />
+              </label>
+              <label>
+                <span>청크 최소</span>
+                <input name="CHUNK_SIZE_MIN_CHARS" />
+              </label>
+              <label>
+                <span>청크 최대</span>
+                <input name="CHUNK_SIZE_MAX_CHARS" />
+              </label>
+              <label>
+                <span>로컬 mirror 정리</span>
+                <select name="CLEANUP_LOCAL_MIRROR">
+                  <option value="true">true</option>
+                  <option value="false">false</option>
+                </select>
+              </label>
+              <label>
+                <span>프로젝트 자동 생성</span>
+                <select name="AUTO_CREATE_PROJECT_SPACE">
+                  <option value="true">true</option>
+                  <option value="false">false</option>
+                </select>
+              </label>
+              <label>
+                <span>GLM API URL</span>
+                <input name="GLM_API_URL" />
+              </label>
+              <label>
+                <span>GLM API Key</span>
+                <input name="GLM_API_KEY" type="password" autocomplete="off" />
+              </label>
+              <label>
+                <span>GLM 모델</span>
+                <input name="GLM_MODEL" />
+              </label>
+              <label>
+                <span>OpenClaw Webhook</span>
+                <input name="OPENCLAW_WEBHOOK_URL" />
+              </label>
+              <label>
+                <span>OpenClaw API Key</span>
+                <input name="OPENCLAW_API_KEY" type="password" autocomplete="off" />
+              </label>
+              <label>
+                <span>Paperclip URL</span>
+                <input name="PAPERCLIP_URL" />
+              </label>
+              <label>
+                <span>Paperclip API Key</span>
+                <input name="PAPERCLIP_API_KEY" type="password" autocomplete="off" />
+              </label>
+              <label>
+                <span>원본 Drive 삭제</span>
+                <input name="DRIVE_DELETE_SOURCE" value="false" disabled />
+              </label>
+              <button class="command-button accent settings-save" type="submit">설정 저장</button>
+            </form>
+          </section>
+        </section>
+
+        <section id="search" class="view">
+          <div class="search-row">
+            <input id="wiki-query" type="search" placeholder="프로젝트, 문서명, 수치, 충돌 키워드 검색" />
+            <button id="wiki-search-button" class="command-button">검색</button>
+          </div>
+          <div class="search-workspace">
+            <section class="panel search-brief-panel">
+              <div class="panel-heading">
+                <h3>검색 정리</h3>
+                <span id="search-brief-provider">사용자 선택 후 정리</span>
+              </div>
+              <div id="search-brief" class="brief-body">
+                먼저 검색 결과에서 근거 Markdown을 선택한 뒤 GLM 정리를 실행하세요.
+              </div>
+            </section>
+            <section class="panel evidence-panel">
+              <div class="panel-heading">
+                <h3>근거 Markdown</h3>
+                <span id="search-result-count">0건</span>
+              </div>
+              <div class="selection-toolbar">
+                <span id="selected-result-count">선택 0건</span>
+                <button id="summarize-selected" class="command-button accent" type="button">선택 근거 GLM 정리</button>
+              </div>
+              <div id="search-results" class="result-list"></div>
+            </section>
+            <article class="reader">
+              <div class="panel-heading">
+                <h3 id="reader-title">문서 보기</h3>
+                <span id="reader-path">검색 결과를 선택</span>
+              </div>
+              <pre id="reader-body"></pre>
+            </article>
+          </div>
+        </section>
+
+        <section id="ingest" class="view">
+          <div class="ingest-layout">
+            <section class="panel">
+              <div class="panel-heading">
+                <h3>새 지식</h3>
+                <span>쓰기 전 미리보기</span>
+              </div>
+              <input id="project-hint" class="wide-input" placeholder="프로젝트 힌트, 선택" />
+              <textarea id="knowledge-input" placeholder="새 지식, 회의 메모, 파일 경로, Drive mirror path를 붙여넣기"></textarea>
+              <button id="digest-button" class="command-button accent">다이제스트 생성</button>
+            </section>
+            <section class="panel">
+              <div class="panel-heading">
+                <h3>다이제스트 결과</h3>
+                <span>GLM 초안</span>
+              </div>
+              <pre id="digest-output"></pre>
+            </section>
+          </div>
+        </section>
+
+        <section id="chat" class="view">
+          <div id="chat-log" class="chat-log"></div>
+          <div class="chat-input-row">
+            <input id="chat-input" placeholder="GLM에게 위키 맥락으로 질문" />
+            <button id="chat-send" class="command-button">전송</button>
+          </div>
+        </section>
+
+        <section id="paperclip" class="view">
+          <div class="paperclip-hero">
+            <div>
+              <span class="eyebrow">Agent Control Plane</span>
+              <h3>Paperclip 전용 작업대</h3>
+              <p>Drive 수집, manifest, 위키화, OpenClaw 위임, 검수를 task 단위로 큐에 쌓고 실행합니다.</p>
+            </div>
+            <button id="paperclip-refresh" class="command-button">Paperclip 새로고침</button>
+          </div>
+          <div class="paperclip-layout">
+            <section class="panel paperclip-status-card">
+              <div class="panel-heading">
+                <h3>브리지 상태</h3>
+                <span id="paperclip-status">mock</span>
+              </div>
+              <div class="paperclip-metrics">
+                <div><span>URL</span><strong id="paperclip-url">-</strong></div>
+                <div><span>Task</span><strong id="paperclip-task-count">0건</strong></div>
+                <div><span>Event</span><strong id="paperclip-event-count">0건</strong></div>
+              </div>
+              <p class="paperclip-note">원본 Google Drive 삭제는 모든 Paperclip task에서 금지됩니다. cleanup은 로컬 mirror만 의미합니다.</p>
+            </section>
+            <section class="panel paperclip-composer">
+              <div class="panel-heading">
+                <h3>Task 생성</h3>
+                <span>local queue</span>
+              </div>
+              <label>
+                <span>템플릿</span>
+                <select id="paperclip-template"></select>
+              </label>
+              <label>
+                <span>작업 제목</span>
+                <input id="paperclip-title" placeholder="비워두면 템플릿 제목 사용" />
+              </label>
+              <label>
+                <span>메모 / 지시</span>
+                <textarea id="paperclip-payload" placeholder="이번 task에 남길 지시, 경로, 판단 기준"></textarea>
+              </label>
+              <div class="paperclip-actions">
+                <button id="paperclip-create-task" class="command-button">큐에 추가</button>
+                <button id="paperclip-trigger-task" class="command-button accent">추가 후 실행</button>
+              </div>
+            </section>
+            <section class="panel paperclip-template-panel">
+              <div class="panel-heading">
+                <h3>Agent Templates</h3>
+                <span id="paperclip-template-count">0개</span>
+              </div>
+              <div id="paperclip-templates" class="template-list"></div>
+            </section>
+            <section class="panel paperclip-queue-panel">
+              <div class="panel-heading">
+                <h3>Task Queue</h3>
+                <span>최근 작업</span>
+              </div>
+              <div id="paperclip-tasks" class="event-list"></div>
+            </section>
+            <section class="panel paperclip-event-panel">
+              <div class="panel-heading">
+                <h3>Event Log</h3>
+                <span>append-only</span>
+              </div>
+              <div id="paperclip-events" class="event-list"></div>
+            </section>
+          </div>
+        </section>
+      </section>
+    </main>
+    <script src="./app.js"></script>
+  </body>
+</html>

@@ -32,6 +32,8 @@ source: "Global wiki index initialized from existing project hubs"
 - [[Wiki/Common/Drive_Wikify_Automation_Loop]]: 수집부터 대기까지 반복하는 자동 루프 설계
 - [[Wiki/Common/Drive_Wikify_Coverage_Tracker]]: Drive 폴더 큐와 재개 상태 추적기
 - [[Wiki/Common/Drive_Wikify_Model_Prompt_Set]]: `GLM` + `오픈클로` 모델 분업 프롬프트
+- [[Wiki/Common/Paperclip_Wiki_Control_Plane_Plan]]: Paperclip 기반 위키 운영 control plane 적용안
+- [[Wiki/Common/Wiki_Frontend_Product_Plan]]: 위키 운영 프론트엔드 제품/아키텍처 계획
 - [[Wiki/Common/Government_RnD_Reusable_Wiki_Hub]]: 정부 R&D 과제 재활용용 공통 표현, 역할, 자료 체크리스트 허브
 - [[Wiki/Common/RTM_Government_RnD_Folder_Index]]: RTM 정부과제 폴더 단위 위키 인덱스
 - [[Wiki/Common/RTM_Government_RnD_Appeal_Bank]]: 알티엠 정부과제용 어필 포인트 뱅크
@@ -99,6 +101,8 @@ Drive 소스 기반으로 구축된 RTM_YNG 계열 프로젝트 페이지 (L1_me
 - [[Wiki/Common/RTM_Government_RnD_Reference_Bank]]: 정부과제 유사실적/사업화용 알티엠 레퍼런스 자산
 - [[Wiki/Common/RTM_Government_RnD_Complete_Template]]: 정부과제 초안 작성용 알티엠 완성본 템플릿
 - [[Wiki/Common/Search_Evidence_Deletion_Registry]]: 검색 증적 삭제 실제 근거 링크와 프로젝트 연결 레지스트리
+- [[Wiki/Common/Paperclip_Wiki_Control_Plane_Plan]]: Paperclip agent/task/heartbeat를 Drive Wikify 운영에 연결하는 계획
+- [[Wiki/Common/Wiki_Frontend_Product_Plan]]: 로컬 콘솔의 API contract와 화면 구성
 
 ## Usage Notes
 

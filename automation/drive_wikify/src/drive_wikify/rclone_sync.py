@@ -14,7 +14,7 @@ def build_rclone_copy_command(
     checkers: int = 1,
     transfers: int = 1,
 ) -> list[str]:
-    source = f"{remote}:{remote_path}".rstrip(":")
+    source = f"{remote}:" if not remote_path else f"{remote}:{remote_path}"
     return [
         "rclone",
         "copy",

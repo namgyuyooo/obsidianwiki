@@ -48,3 +48,4 @@ Thumbs.db
 
 # Local automation settings
 automation/drive_wikify/config/.env
+automation/wiki_api/runtime/

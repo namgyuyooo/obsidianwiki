@@ -32,6 +32,8 @@ automation/
 │   ├── prompts/
 │   ├── runtime/
 │   └── src/
+├── wiki_api/
+└── wiki_frontend/
 ```
 
 ## 위키와의 경계

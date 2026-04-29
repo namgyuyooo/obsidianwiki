@@ -10,6 +10,12 @@ source: "Global wiki operations log"
 이 파일은 위키 운영의 append-only 로그입니다.
 
 ## 2026-04-29
+- `automation/wiki_api/`, `automation/wiki_frontend/`: 자동화 실행 중 상태, stderr/stdout 요약, 실행 중지, `once`/`daily`/`interval` 예약 실행, 사이드바 상태 패널 추가
+- `automation/wiki_api/`: Node 기반 local API 서버 구현, frontend 서빙, wiki search/page, coverage summary, operation settings, OpenClaw trigger, automation trigger, digest fallback, GLM wiki chat, Paperclip status bridge 추가
+- `automation/wiki_frontend/`: 한글 UI 전환, 전체 Drive 수집 상태 바, OpenClaw 자동화 호출 버튼, 운영 설정 폼 추가, API 서버 연결, run history/Paperclip status refresh, backend 오류 표시 개선
+- [[Wiki/Common/Paperclip_Wiki_Control_Plane_Plan]]: Paperclip을 위키 운영 상위 control plane으로 붙이는 역할/agent/안전 게이트 계획 추가
+- [[Wiki/Common/Wiki_Frontend_Product_Plan]]: 자동화 트리거, 위키 검색/조회, 신규 지식 주입, GLM digest/chat을 포함한 프론트엔드 계획 추가
+- `automation/wiki_frontend/`: local dashboard static prototype 생성
 - `automation/drive_wikify`: 주 설정 체계를 `.env` 중심으로 재정렬하고 `DRIVE_DELETE_SOURCE=false` 안전 규칙 추가
 - `automation/README.md`, `automation/drive_wikify/README.md`, `runtime/README.md`, `src/README.md`: 원본 Google Drive 삭제 금지와 local mirror 정리 원칙 명시
 - `Drive_Wikify_Automation_Loop.md`, `Drive_Wikify_Batch_Operating_Model.md`: `.env` 기반 설정 위치와 local mirror only cleanup 규칙 반영
