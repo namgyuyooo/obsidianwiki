@@ -32,6 +32,7 @@ const state = {
   paperclipTemplates: [],
   paperclipTasks: [],
   paperclipEvents: [],
+  activeSpace: localStorage.getItem("wiki_ops_active_space") || "work",
   running: [],
   schedules: [],
   driveTargets: [],
@@ -46,6 +47,7 @@ const state = {
   wikiFilters: {
     division: "all",
     nature: "all",
+    status: "all",
     projectKey: "all",
     query: "",
     viewMode: "grid",
@@ -54,6 +56,7 @@ const state = {
   skills: [],
   chatProjects: [],
   chatGlobal: { instructions: "", autoMemory: true },
+  chatAttachments: [],
   activeChatProjectId: "default",
   chatComposing: false,
   chatSending: false,
@@ -70,6 +73,7 @@ const state = {
 };
 
 const titles = {
+  spotlite: "Spotlite",
   "spotlite-work": "Spotlite Work",
   "spotlite-personal": "Spotlite Personal",
   operations: "운영",
@@ -117,6 +121,10 @@ const settingLabels = {
 
 function personalSpotlitePin() {
   return localStorage.getItem("spotlite_personal_pin") || "0953";
+}
+
+function wikiWorkspaceParam() {
+  return state.activeSpace === "personal" ? "personal" : "rtm";
 }
 
 function $(selector) {
@@ -521,7 +529,7 @@ function renderWikiGraph() {
 
 async function loadWikiExplorer() {
   const [indexPayload, graphPayload] = await Promise.all([
-    api("/api/wiki/index"),
+    api(`/api/wiki/index?workspace=${encodeURIComponent(wikiWorkspaceParam())}`),
     api("/api/wiki/graph"),
   ]);
   if (!indexPayload.mock && indexPayload.pages) state.wikiPages = indexPayload.pages;
@@ -578,6 +586,16 @@ const natureLabels = {
   knowledge: "지식",
 };
 
+const workflowStatusLabels = {
+  all: "상태 전체",
+  completed: "완료",
+  ongoing: "진행 중",
+  hold: "보류",
+  planned: "계획",
+  archived: "보관",
+  unknown: "미지정",
+};
+
 const wikiManagementExampleCommand = "아사히카세히의 위키를 모두 모아 프로젝트, 고객사로 승격해. 참고로 아사히카세이->아사히카세히 영칭도 일괄수정";
 
 const projectShortcutKinds = ["hub", "overview", "sources", "evidence", "actions", "risks", "decisions", "conflict", "changelog"];
@@ -605,8 +623,10 @@ function resolveWikiTarget(target) {
 function updateNotionStats() {
   const total = state.wikiPages.length;
   const divisions = new Set(state.wikiPages.map((page) => page.division || "operations"));
+  const ongoing = state.wikiPages.filter((page) => page.workflowStatus === "ongoing").length;
+  const completed = state.wikiPages.filter((page) => page.workflowStatus === "completed").length;
   $("#notion-total-pages").textContent = `${total}`;
-  $("#notion-total-categories").textContent = `${divisions.size}`;
+  $("#notion-total-categories").textContent = `${divisions.size} · 진행 ${ongoing} · 완료 ${completed}`;
 }
 
 function updateWikiFilterControls() {
@@ -653,6 +673,7 @@ function filteredNotionPages() {
     }
     if (state.wikiFilters.division !== "all" && page.division !== state.wikiFilters.division) return false;
     if (state.wikiFilters.nature !== "all" && page.docKind !== state.wikiFilters.nature) return false;
+    if (state.wikiFilters.status !== "all" && page.workflowStatus !== state.wikiFilters.status) return false;
     if (state.wikiFilters.projectKey !== "all" && page.projectKey !== state.wikiFilters.projectKey) return false;
     if (!query) return true;
     return [
@@ -661,6 +682,8 @@ function filteredNotionPages() {
       page.projectLabel,
       page.division,
       page.docKind,
+      page.workflowStatusLabel,
+      ...(page.workflowTags || []),
       page.frontmatter?.type,
       page.frontmatter?.source,
     ].filter(Boolean).join(" ").toLowerCase().includes(query);
@@ -676,11 +699,13 @@ function renderProjectCard(group) {
     .map((kind) => group.pages.find((page) => page.docKind === kind))
     .filter(Boolean);
   const updated = group.pages.map((page) => page.updatedAt).sort().at(-1) || "";
+  const status = group.pages.find((page) => page.workflowStatus && page.workflowStatus !== "unknown") || group.pages[0] || {};
   return [
-    `<article class="notion-project-card" data-project-key="${escapeHtml(group.key)}">`,
+    `<article class="notion-project-card status-${escapeHtml(status.workflowStatus || "unknown")}" data-project-key="${escapeHtml(group.key)}">`,
     `<button class="notion-card-main" data-project-drill="${escapeHtml(group.key)}" type="button">`,
-    `<span class="notion-card-kicker">${escapeHtml(divisionLabels[group.division] || group.division)}</span>`,
+    `<span class="notion-card-kicker">${escapeHtml(divisionLabels[group.division] || group.division)} · ${escapeHtml(status.workflowStatusLabel || "미지정")}</span>`,
     `<strong>${escapeHtml(group.label)}</strong>`,
+    status.workflowStatusHighlight ? `<em class="wiki-status-highlight">${escapeHtml(status.workflowStatusHighlight)}</em>` : "",
     `<small>${group.pages.length} docs · ${escapeHtml(updated.slice(0, 10) || "updated unknown")}</small>`,
     `</button>`,
     `<div class="notion-shortcuts">`,
@@ -692,11 +717,13 @@ function renderProjectCard(group) {
 
 function renderPageCard(page) {
   return [
-    `<article class="notion-page-card ${page.path === state.activeWikiPath ? "active" : ""}">`,
+    `<article class="notion-page-card status-${escapeHtml(page.workflowStatus || "unknown")} ${page.path === state.activeWikiPath ? "active" : ""}">`,
     `<button class="notion-card-main" data-notion-path="${escapeHtml(page.path)}" type="button">`,
-    `<span class="notion-card-kicker">${escapeHtml(divisionLabels[page.division] || page.division)} · ${escapeHtml(natureLabels[page.docKind] || page.docKind)}</span>`,
+    `<span class="notion-card-kicker">${escapeHtml(divisionLabels[page.division] || page.division)} · ${escapeHtml(natureLabels[page.docKind] || page.docKind)} · ${escapeHtml(page.workflowStatusLabel || "미지정")}</span>`,
     `<strong>${escapeHtml(page.title)}</strong>`,
+    page.workflowStatusHighlight ? `<em class="wiki-status-highlight">${escapeHtml(page.workflowStatusHighlight)}</em>` : "",
     `<small>${escapeHtml(page.projectLabel || page.section)} · ${escapeHtml(page.path)}</small>`,
+    page.workflowTags?.length ? `<div class="wiki-status-tags">${page.workflowTags.map((tag) => `<span>${escapeHtml(tag)}</span>`).join("")}</div>` : "",
     `</button>`,
     `</article>`,
   ].join("");
@@ -756,7 +783,7 @@ function renderNotionWikiContent() {
 }
 
 async function loadNotionWikiBrowser() {
-  const payload = await api("/api/wiki/index");
+  const payload = await api(`/api/wiki/index?workspace=${encodeURIComponent(wikiWorkspaceParam())}`);
   if (payload.mock || !payload.pages) {
     $("#notion-content-area").innerHTML = `<div class="notion-empty-state"><h3>위키 API 연결 대기</h3><p>${escapeHtml(payload.error || "서버 응답을 확인하세요.")}</p></div>`;
     return;
@@ -782,15 +809,73 @@ async function openNotionWikiPage(path) {
   }
   $("#notion-details-content").innerHTML = [
     `<div class="notion-doc-title">`,
-    `<span>${escapeHtml(divisionLabels[page.division] || page.division || "Wiki")} / ${escapeHtml(page.projectLabel || page.section || "")}</span>`,
+    `<span>${escapeHtml(divisionLabels[page.division] || page.division || "Wiki")} / ${escapeHtml(page.projectLabel || page.section || "")} / ${escapeHtml(page.workflowStatusLabel || "미지정")}</span>`,
     `<h2>${escapeHtml(payload.title)}</h2>`,
     `<code>${escapeHtml(payload.path)}</code>`,
+    page.workflowStatusHighlight ? `<p class="wiki-status-highlight">${escapeHtml(page.workflowStatusHighlight)}</p>` : "",
     `</div>`,
+    `<form class="wiki-status-editor" id="wiki-status-editor">`,
+    `<label><span>상태</span><select name="status">${Object.entries(workflowStatusLabels).filter(([key]) => key !== "all").map(([key, label]) => `<option value="${escapeHtml(key)}" ${page.workflowStatus === key ? "selected" : ""}>${escapeHtml(label)}</option>`).join("")}</select></label>`,
+    `<label><span>태그</span><input name="tags" value="${escapeHtml((page.workflowTags || []).join(", "))}" placeholder="완료, 온고잉, 중요" /></label>`,
+    `<label><span>하이라이트</span><input name="highlight" value="${escapeHtml(page.workflowStatusHighlight || "")}" placeholder="전역에 표시할 운영 상태 한 줄" /></label>`,
+    `<label><span>메모</span><input name="note" value="${escapeHtml(page.workflowNote || "")}" placeholder="사용자 상태 변경 이유" /></label>`,
+    `<div class="wiki-editor-actions"><button class="command-button accent" type="submit">상태 저장</button><button class="command-button" id="wiki-edit-toggle" type="button">본문 수정</button><span id="wiki-edit-status">사용자 액션으로 상태를 관리합니다.</span></div>`,
+    `</form>`,
+    `<section class="wiki-page-editor" id="wiki-page-editor" hidden>`,
+    `<textarea id="wiki-page-markdown">${escapeHtml(payload.markdown)}</textarea>`,
+    `<div class="wiki-editor-actions"><button class="command-button accent" id="wiki-page-save" type="button">Markdown 저장</button><button class="command-button" id="wiki-page-cancel" type="button">닫기</button></div>`,
+    `</section>`,
     renderMarkdownDocument(payload.markdown),
   ].join("");
+  $("#wiki-status-editor")?.addEventListener("submit", (event) => saveWikiStatus(event, page));
+  $("#wiki-edit-toggle")?.addEventListener("click", () => { $("#wiki-page-editor").hidden = false; });
+  $("#wiki-page-cancel")?.addEventListener("click", () => { $("#wiki-page-editor").hidden = true; });
+  $("#wiki-page-save")?.addEventListener("click", () => saveWikiPageMarkdown(payload.path));
   $("#notion-doc-type").textContent = natureLabels[page.docKind] || page.docKind || payload.frontmatter?.type || "문서";
   $("#notion-doc-updated").textContent = page.updatedAt?.slice(0, 10) || payload.frontmatter?.updated || "updated unknown";
   renderNotionWikiContent();
+}
+
+async function saveWikiStatus(event, page) {
+  event.preventDefault();
+  const form = event.currentTarget;
+  const data = new FormData(form);
+  $("#wiki-edit-status").textContent = "상태 저장 중";
+  const result = await api("/api/wiki/status", {
+    method: "POST",
+    body: JSON.stringify({
+      scope: page.isProjectHub || ["project", "account"].includes(page.division) ? "project" : "page",
+      projectKey: page.projectKey,
+      path: page.path,
+      status: data.get("status"),
+      tags: data.get("tags"),
+      highlight: data.get("highlight"),
+      note: data.get("note"),
+    }),
+  });
+  if (result.error || result.mock) {
+    $("#wiki-edit-status").textContent = `상태 저장 실패: ${result.error || "API 연결 대기"}`;
+    return;
+  }
+  $("#wiki-edit-status").textContent = "상태 저장 완료";
+  await loadNotionWikiBrowser();
+  await openNotionWikiPage(page.path);
+}
+
+async function saveWikiPageMarkdown(path) {
+  const markdown = $("#wiki-page-markdown")?.value || "";
+  $("#wiki-edit-status").textContent = "Markdown 저장 중";
+  const result = await api("/api/wiki/page", {
+    method: "PUT",
+    body: JSON.stringify({ path, markdown }),
+  });
+  if (result.error || result.mock) {
+    $("#wiki-edit-status").textContent = `Markdown 저장 실패: ${result.error || "API 연결 대기"}`;
+    return;
+  }
+  $("#wiki-edit-status").textContent = "Markdown 저장 완료";
+  await loadNotionWikiBrowser();
+  await openNotionWikiPage(result.path || path);
 }
 
 function renderWikiManagementCommand(entry) {
@@ -937,24 +1022,30 @@ function initializeNotionWikiBrowser() {
 }
 
 function activeChatProject() {
-  return state.chatProjects.find((project) => project.id === state.activeChatProjectId) || state.chatProjects[0] || null;
+  const projects = chatProjectsForSpace();
+  return projects.find((project) => project.id === state.activeChatProjectId) || projects[0] || null;
+}
+
+function chatProjectsForSpace() {
+  return state.chatProjects.filter((project) => (project.workspace || "work") === state.activeSpace);
 }
 
 function renderChatProjects() {
   const project = activeChatProject();
-  $("#chat-project-count").textContent = `${state.chatProjects.length}개`;
+  const projects = chatProjectsForSpace();
+  $("#chat-project-count").textContent = `${projects.length}개`;
   $("#chat-global-instructions").value = state.chatGlobal.instructions || "";
   $("#chat-auto-memory").checked = state.chatGlobal.autoMemory !== false;
-  $("#chat-project-list").innerHTML = state.chatProjects
+  $("#chat-project-list").innerHTML = projects
     .map((item) => `<button class="chat-project-item ${item.id === state.activeChatProjectId ? "active" : ""}" data-chat-project="${escapeHtml(item.id)}"><strong>${escapeHtml(item.name)}</strong><small>${escapeHtml((item.instructions || "지침 없음").slice(0, 72))}</small></button>`)
-    .join("");
+    .join("") || `<article class="chat-project-empty">${workspaceLabel()} 프로젝트가 없습니다. 새 프로젝트를 만들면 이 공간에만 표시됩니다.</article>`;
   document.querySelectorAll("[data-chat-project]").forEach((button) => {
     button.addEventListener("click", () => {
       state.activeChatProjectId = button.dataset.chatProject;
       renderChatProjects();
     });
   });
-  $("#chat-project-select").innerHTML = state.chatProjects
+  $("#chat-project-select").innerHTML = projects
     .map((item) => `<option value="${escapeHtml(item.id)}">${escapeHtml(item.name)}</option>`)
     .join("");
   if (project) {
@@ -999,8 +1090,77 @@ function setChatPhase(phase, detail = "") {
   $("#chat-status-detail").textContent = detail || "GLM 응답 대기 중에는 다음 메시지를 잠급니다.";
   $("#chat-send").disabled = state.chatSending;
   $("#chat-stop").disabled = !["sending", "thinking"].includes(phase);
+  $("#chat-file-button").disabled = state.chatSending;
   $("#chat-input").disabled = state.chatSending;
   $("#chat-project-select").disabled = state.chatSending;
+}
+
+function renderChatAttachments() {
+  const container = $("#chat-attachment-list");
+  if (!container) return;
+  container.hidden = !state.chatAttachments.length;
+  container.innerHTML = state.chatAttachments.map((item) => [
+    `<article class="chat-attachment-card">`,
+    `<div><strong>${escapeHtml(item.fileName)}</strong><small>${escapeHtml(item.route)} · ${Math.round((item.size || 0) / 1024)}KB</small></div>`,
+    `<p>${escapeHtml((item.analysis || "").replace(new RegExp("[#*_`>-]", "g"), "").slice(0, 220))}</p>`,
+    item.analysisPath ? `<button class="inline-delete" data-attachment-open="${escapeHtml(item.analysisPath)}" type="button">분석 보기</button>` : "",
+    `<button class="inline-delete" data-attachment-remove="${escapeHtml(item.id)}" type="button">제거</button>`,
+    `</article>`,
+  ].join("")).join("");
+  container.querySelectorAll("[data-attachment-remove]").forEach((button) => {
+    button.addEventListener("click", () => {
+      state.chatAttachments = state.chatAttachments.filter((item) => item.id !== button.dataset.attachmentRemove);
+      renderChatAttachments();
+    });
+  });
+  container.querySelectorAll("[data-attachment-open]").forEach((button) => {
+    button.addEventListener("click", () => {
+      document.querySelector("[data-view='wiki']")?.click();
+      openNotionWikiPage(button.dataset.attachmentOpen);
+    });
+  });
+}
+
+function chatAttachmentContext() {
+  if (!state.chatAttachments.length) return "";
+  return [
+    "",
+    "## 첨부 파일 분석 컨텍스트",
+    "- 아래 내용은 사용자가 방금 업로드한 파일을 형식별 스킬/VLM 경로로 분석한 보조 컨텍스트다.",
+    "- 파일 분석 결과도 확정 지식이 아니라, 원본 파일과 위키 근거 확인 전까지 보조 근거로만 사용한다.",
+    "",
+    ...state.chatAttachments.map((item, index) => [
+      `### 첨부 ${index + 1}. ${item.fileName}`,
+      `- route: ${item.route}`,
+      `- saved_path: ${item.path}`,
+      item.analysisPath ? `- analysis_md: ${item.analysisPath}` : "",
+      "",
+      item.analysis || "- 분석 결과 없음",
+    ].filter(Boolean).join("\n")),
+  ].join("\n");
+}
+
+async function uploadChatFiles(event) {
+  const files = [...(event.target.files || [])];
+  if (!files.length) return;
+  setChatPhase("sending", `파일 ${files.length}개를 분석 중입니다.`);
+  try {
+    for (const file of files) {
+      const form = new FormData();
+      form.append("file", file);
+      form.append("note", $("#chat-input")?.value || "");
+      const response = await fetch("/api/chat/files", { method: "POST", body: form });
+      const payload = await response.json();
+      if (!response.ok || payload.error) throw new Error(payload.error || `HTTP ${response.status}`);
+      state.chatAttachments.push(...(payload.attachments || []));
+      renderChatAttachments();
+    }
+    setChatPhase("idle", "파일 분석 완료. 메시지를 보내면 분석 컨텍스트가 함께 전달됩니다.");
+  } catch (error) {
+    setChatPhase("failed", `파일 업로드/분석 실패: ${error.message}`);
+  } finally {
+    event.target.value = "";
+  }
 }
 
 function appendThinkingMessage() {
@@ -1025,9 +1185,10 @@ async function loadChatProjects() {
   const previous = state.activeChatProjectId;
   state.chatProjects = payload.projects;
   if (payload.global) state.chatGlobal = payload.global;
-  state.activeChatProjectId = state.chatProjects.some((project) => project.id === previous)
+  const projects = chatProjectsForSpace();
+  state.activeChatProjectId = projects.some((project) => project.id === previous)
     ? previous
-    : state.chatProjects[0]?.id || "default";
+    : projects[0]?.id || "";
   renderChatProjects();
 }
 
@@ -1131,6 +1292,7 @@ function renderPaperclip(status) {
       `<strong>${escapeHtml(template.agent)}</strong>`,
       `<small>${escapeHtml(template.id)} · ${escapeHtml(template.safety)}</small>`,
       `<p>${escapeHtml(template.description)}</p>`,
+      template.inputHint ? `<small>입력: ${escapeHtml(template.inputHint)}</small>` : "",
       `</article>`,
     ].join(""))
     .join("");
@@ -1138,9 +1300,26 @@ function renderPaperclip(status) {
   const taskEvents = tasks.map((task) => ({
     command: task.title,
     status: `${task.status} · ${task.agent}`,
-    detail: `${task.command}${task.dryRun ? " --dry-run" : ""} · ${task.createdAt}`,
+    detail: [
+      `${task.command}${task.dryRun ? " --dry-run" : ""}`,
+      task.result?.path ? `<button class="inline-delete" data-paperclip-open="${escapeHtml(task.result.path)}">결과 보기</button>` : "",
+      task.result?.markdown ? `<button class="inline-delete" data-paperclip-download="${escapeHtml(task.id)}">MD 다운로드</button>` : "",
+      task.createdAt,
+    ].filter(Boolean).join(" · "),
   }));
   renderEvents("#paperclip-tasks", taskEvents.length ? taskEvents : [{ command: "작업 없음", status: "대기", detail: "템플릿에서 task를 생성하세요." }]);
+  document.querySelectorAll("[data-paperclip-open]").forEach((button) => {
+    button.addEventListener("click", () => {
+      document.querySelector("[data-view='wiki']")?.click();
+      openNotionWikiPage(button.dataset.paperclipOpen);
+    });
+  });
+  document.querySelectorAll("[data-paperclip-download]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const task = tasks.find((item) => item.id === button.dataset.paperclipDownload);
+      downloadText(`${task?.templateId || "paperclip-output"}.md`, task?.result?.markdown || "");
+    });
+  });
 
   const eventRows = events.map((event) => ({
     command: event.type,
@@ -1538,19 +1717,59 @@ function renderSectionAnchors(viewId = "operations") {
   });
 }
 
+function workspaceLabel() {
+  return state.activeSpace === "personal" ? "개인용" : "업무용(RTM)";
+}
+
+function resolveViewId(viewId) {
+  if (viewId === "spotlite") return state.activeSpace === "personal" ? "spotlite-personal" : "spotlite-work";
+  return viewId;
+}
+
+function logicalViewId(viewId) {
+  if (["spotlite-work", "spotlite-personal"].includes(viewId)) return "spotlite";
+  return viewId;
+}
+
+function updateWorkspaceChrome() {
+  const isPersonal = state.activeSpace === "personal";
+  document.body.dataset.workspace = state.activeSpace;
+  const selector = $("#wiki-space-select");
+  if (selector) selector.value = state.activeSpace;
+  $("#spotlite-nav-item").textContent = isPersonal ? "개인 Spotlite" : "업무 Spotlite";
+  $("#wiki-nav-item").textContent = isPersonal ? "개인 위키" : "업무 위키";
+  $("#ingest-nav-item").textContent = isPersonal ? "개인 지식 주입" : "업무 지식 주입";
+  $("#chat-nav-item").textContent = isPersonal ? "개인 GLM 챗" : "업무 GLM 챗";
+}
+
+function activateWorkspace(space) {
+  state.activeSpace = space === "personal" ? "personal" : "work";
+  localStorage.setItem("wiki_ops_active_space", state.activeSpace);
+  state.wikiPages = [];
+  state.activeWikiPath = "";
+  state.activeProjectKey = "";
+  updateWorkspaceChrome();
+  loadChatProjects();
+  const current = document.querySelector(".view.active")?.id || "spotlite-work";
+  activateView(logicalViewId(current));
+}
+
 function activateView(viewId) {
-  document.querySelectorAll(".nav-item").forEach((item) => item.classList.toggle("active", item.dataset.view === viewId));
-  document.querySelectorAll(".view").forEach((view) => view.classList.toggle("active", view.id === viewId));
-  $("#view-title").textContent = titles[viewId] || viewId;
-  const spaceSelect = $("#wiki-space-select");
-  if (spaceSelect && ["spotlite-work", "spotlite-personal"].includes(viewId)) spaceSelect.value = viewId;
-  renderSectionAnchors(viewId);
-  if (viewId === "spotlite-work" && !state.spotlite.work) loadSpotlite("work");
-  if (viewId === "spotlite-work") renderSpotliteTemplates("work");
-  if (viewId === "spotlite-personal") renderPersonalLock();
-  if (viewId === "spotlite-personal") renderSpotliteTemplates("personal");
-  if (viewId === "wiki" && !state.wikiPages.length) loadNotionWikiBrowser();
-  history.replaceState(null, "", `#${viewId}`);
+  const logicalId = logicalViewId(viewId);
+  const actualViewId = resolveViewId(logicalId);
+  document.querySelectorAll(".nav-item").forEach((item) => item.classList.toggle("active", item.dataset.view === logicalId));
+  document.querySelectorAll(".view").forEach((view) => view.classList.toggle("active", view.id === actualViewId));
+  $("#view-title").textContent = logicalId === "spotlite"
+    ? (state.activeSpace === "personal" ? "개인 Spotlite" : "업무 Spotlite")
+    : `${workspaceLabel()} · ${titles[actualViewId] || titles[logicalId] || actualViewId}`;
+  updateWorkspaceChrome();
+  renderSectionAnchors(actualViewId);
+  if (actualViewId === "spotlite-work" && !state.spotlite.work) loadSpotlite("work");
+  if (actualViewId === "spotlite-work") renderSpotliteTemplates("work");
+  if (actualViewId === "spotlite-personal") renderPersonalLock();
+  if (actualViewId === "spotlite-personal") renderSpotliteTemplates("personal");
+  if (actualViewId === "wiki") loadNotionWikiBrowser();
+  history.replaceState(null, "", `#${logicalId}`);
   $(".workspace")?.scrollTo?.({ top: 0, behavior: "smooth" });
 }
 
@@ -1649,6 +1868,7 @@ async function saveChatProject() {
       id,
       name: $("#chat-project-name").value.trim(),
       instructions: $("#chat-project-instructions").value.trim(),
+      workspace: state.activeSpace,
     }),
   });
   if (result.project) state.activeChatProjectId = result.project.id;
@@ -1663,10 +1883,28 @@ async function createNewChatProject() {
     body: JSON.stringify({
       name: $("#chat-project-name").value.trim() || "새 GLM 프로젝트",
       instructions: $("#chat-project-instructions").value.trim(),
+      workspace: state.activeSpace,
     }),
   });
   if (result.project) state.activeChatProjectId = result.project.id;
   await loadChatProjects();
+}
+
+async function ensureActiveChatProject() {
+  if (activeChatProject()) return activeChatProject();
+  const result = await api("/api/chat/projects", {
+    method: "POST",
+    body: JSON.stringify({
+      name: state.activeSpace === "personal" ? "기본 개인 챗" : "기본 업무 챗",
+      instructions: state.activeSpace === "personal"
+        ? "개인용 위키와 개인 메모리 범위에서만 답한다."
+        : "업무용 RTM 위키와 고객 프로젝트 운영 범위에서 답한다.",
+      workspace: state.activeSpace,
+    }),
+  });
+  if (result.project) state.activeChatProjectId = result.project.id;
+  await loadChatProjects();
+  return activeChatProject();
 }
 
 async function deleteChatProject() {
@@ -1790,7 +2028,7 @@ async function searchWiki() {
 
   $("#search-brief-provider").textContent = "검색 완료 대기";
   $("#search-brief").textContent = "검색은 빠르게 수행하고, GLM 정리는 선택 후 실행합니다.";
-  const payload = await api(`/api/wiki/search?q=${encodeURIComponent(query)}`);
+  const payload = await api(`/api/wiki/search?q=${encodeURIComponent(query)}&workspace=${encodeURIComponent(wikiWorkspaceParam())}`);
   const items = payload.mock
     ? [
         {
@@ -1845,7 +2083,7 @@ async function summarizeSelectedResults() {
   $("#search-brief").textContent = `${paths.length}개 선택 근거를 ${mode} 압축 카드로 정리하는 중입니다.`;
   const payload = await api("/api/wiki/search/brief", {
     method: "POST",
-    body: JSON.stringify({ query, paths, mode }),
+    body: JSON.stringify({ query, paths, mode, workspace: wikiWorkspaceParam() }),
   });
   if (payload.error) {
     $("#search-brief-provider").textContent = "정리 실패";
@@ -2006,21 +2244,27 @@ function formatDigestObject(data, meta = {}) {
 
 async function sendChat() {
   if (state.chatSending || state.chatComposing) return;
+  await ensureActiveChatProject();
   const input = $("#chat-input");
   const text = input.value.trim();
-  if (!text) return;
-  state.lastChatText = text;
+  const attachmentContext = chatAttachmentContext();
+  if (!text && !attachmentContext) return;
+  const messageText = [text || "첨부 파일을 분석해 업무 관점으로 정리해줘.", attachmentContext].filter(Boolean).join("\n\n");
+  state.lastChatText = messageText;
   state.pendingUserMessageId = "";
+  const sentAttachments = [...state.chatAttachments];
   setChatPhase("sending", "메시지를 저장하고 GLM 요청을 준비 중입니다.");
-  appendMessage("user", text);
+  appendMessage("user", messageText);
   input.value = "";
+  state.chatAttachments = [];
+  renderChatAttachments();
 
   try {
     const streaming = appendStreamingAssistantMessage();
     setChatPhase("thinking", "GLM 스트리밍 thinking/reasoning 중입니다. 응답이 끝날 때까지 다음 메시지를 잠급니다.");
     let finalStatus = "completed";
     let failure = "";
-    await apiStream("/api/chat/glm/stream", { message: text, projectId: state.activeChatProjectId }, {
+    await apiStream("/api/chat/glm/stream", { message: messageText, projectId: state.activeChatProjectId, workspace: wikiWorkspaceParam() }, {
       status: (data) => {
         const thinkingBudget = data.thinking?.budget_tokens ? ` · thinking ${data.thinking.budget_tokens} tokens` : "";
         const contextMode = data.tokenBudget?.mode ? ` · context ${data.tokenBudget.mode}/${data.tokenBudget.maxCards} cards` : "";
@@ -2049,6 +2293,8 @@ async function sendChat() {
     });
     if (failure) {
       input.value = text;
+      state.chatAttachments = sentAttachments;
+      renderChatAttachments();
       setChatPhase("failed", "실패했습니다. 내용을 수정하거나 다시 전송할 수 있습니다.");
       return;
     }
@@ -2058,6 +2304,8 @@ async function sendChat() {
   } catch (error) {
     appendMessage("assistant error", `GLM 채팅 실패: ${error.message}`);
     input.value = text;
+    state.chatAttachments = sentAttachments;
+    renderChatAttachments();
     setChatPhase("failed", "실패했습니다. 내용을 수정하거나 다시 전송할 수 있습니다.");
   } finally {
     removeThinkingMessage();
@@ -2136,7 +2384,8 @@ async function deleteChatMessage(messageId) {
     return;
   }
   await loadChatProjects();
-  setChatPhase("idle", payload.deleted ? "메시지를 삭제했습니다." : "삭제할 메시지를 찾지 못했습니다.");
+  const count = payload.retractedPromotionPaths?.length || 0;
+  setChatPhase("idle", payload.deleted ? `메시지와 L1 보조 증적을 철회했습니다. 승격 후보 ${count}건 삭제.` : "삭제할 메시지를 찾지 못했습니다.");
 }
 
 function appendMessage(role, text, id = "") {
@@ -2197,7 +2446,7 @@ function attachMessageActions(message, role, text, messageId = "") {
     });
   }
   if (messageId && !messageId.startsWith("local-")) {
-    addAction("삭제", "이 메시지를 프로젝트 대화내역에서 삭제합니다.", () => deleteChatMessage(messageId));
+    addAction("삭제", "대화내역, L1 보조 증적, 해당 지식승격 후보를 함께 철회합니다.", () => deleteChatMessage(messageId));
   }
   message.appendChild(actions);
 }
@@ -2208,6 +2457,7 @@ function openKnowledgePromotionPanel(content, messageId) {
   const resultDiv = $("#promotion-result");
   
   textarea.value = content;
+  panel.dataset.sourceMessageId = messageId || "";
   panel.style.display = "grid";
   resultDiv.innerHTML = '<div class="loading">승격할 도구를 선택하고 실행하세요.</div>';
   
@@ -2220,6 +2470,7 @@ function closeKnowledgePromotionPanel() {
   $("#promotion-content").value = "";
   $("#promotion-project-hint").value = "";
   $("#promotion-result").innerHTML = "";
+  $("#knowledge-promotion-panel").dataset.sourceMessageId = "";
 }
 
 async function executeKnowledgePromotion() {
@@ -2246,7 +2497,12 @@ async function executeKnowledgePromotion() {
     } else if (tool === "evidence") {
       result = await api("/api/chat/evidence", {
         method: "POST",
-        body: JSON.stringify({ content, projectHint }),
+        body: JSON.stringify({
+          content,
+          projectHint,
+          sourceProjectId: state.activeChatProjectId,
+          sourceMessageId: $("#knowledge-promotion-panel").dataset.sourceMessageId || "",
+        }),
       });
       renderPromotionResult(resultDiv, result);
     } else if (tool === "memory") {
@@ -2280,7 +2536,7 @@ document.querySelectorAll("[data-command]").forEach((button) => {
 });
 
 $("#refresh-status").addEventListener("click", refreshStatus);
-$("#wiki-space-select")?.addEventListener("change", (event) => activateView(event.target.value));
+$("#wiki-space-select")?.addEventListener("change", (event) => activateWorkspace(event.target.value));
 $("#spotlite-work-refresh")?.addEventListener("click", () => loadSpotlite("work"));
 $("#spotlite-personal-refresh")?.addEventListener("click", () => loadSpotlite("personal"));
 $("#personal-unlock-button")?.addEventListener("click", unlockPersonalSpotlite);
@@ -2292,6 +2548,11 @@ $("#openclaw-trigger").addEventListener("click", triggerOpenClaw);
 $("#stop-run").addEventListener("click", stopCurrentRun);
 $("#side-stop-run").addEventListener("click", stopCurrentRun);
 $("#target-analysis-button").addEventListener("click", analyzeDriveTargets);
+$("#drive-instruction-analyze")?.addEventListener("click", analyzeDriveInstructionTargets);
+$("#drive-instruction-example")?.addEventListener("click", () => {
+  $("#drive-instruction-input").value = "쏘닉스 찾아 자료를 수집해서 위키화해.";
+  $("#drive-instruction-input").focus();
+});
 $("#schedule-form").addEventListener("submit", createSchedule);
 $("#skill-draft-button").addEventListener("click", createSkillDraft);
 $("#chat-project-select").addEventListener("change", (event) => {
@@ -2363,6 +2624,10 @@ $("#notion-nature-filter")?.addEventListener("change", (event) => {
   state.wikiFilters.nature = event.target.value;
   renderNotionWikiContent();
 });
+$("#notion-status-filter")?.addEventListener("change", (event) => {
+  state.wikiFilters.status = event.target.value;
+  renderNotionWikiContent();
+});
 $("#notion-project-filter")?.addEventListener("change", (event) => {
   state.wikiFilters.projectKey = event.target.value;
   state.activeProjectKey = event.target.value === "all" ? "" : event.target.value;
@@ -2395,6 +2660,8 @@ $("#digest-button").addEventListener("click", generateDigest);
 $("#knowledge-promote-button").addEventListener("click", promoteKnowledgeFromIngest);
 $("#chat-send").addEventListener("click", sendChat);
 $("#chat-stop").addEventListener("click", stopChatReasoning);
+$("#chat-file-button")?.addEventListener("click", () => $("#chat-file-input")?.click());
+$("#chat-file-input")?.addEventListener("change", uploadChatFiles);
 $("#chat-settings-open").addEventListener("click", openChatSettingsModal);
 $("#chat-settings-close").addEventListener("click", closeChatSettingsModal);
 $("#chat-settings-cancel").addEventListener("click", closeChatSettingsModal);
@@ -2430,7 +2697,9 @@ $("#chat-input").addEventListener("keydown", (event) => {
 });
 
 renderStatus();
-const initialView = location.hash?.slice(1) && titles[location.hash.slice(1)] ? location.hash.slice(1) : "spotlite-work";
+updateWorkspaceChrome();
+const hashView = location.hash?.slice(1);
+const initialView = hashView && (titles[hashView] || hashView === "spotlite") ? hashView : "spotlite";
 activateView(initialView);
 renderEvents("#run-list", state.runs);
 renderAutomationState();

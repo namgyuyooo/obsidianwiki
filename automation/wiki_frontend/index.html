@@ -15,20 +15,19 @@
             <h1>Wiki Ops</h1>
             <p>수집, 검색, 다이제스트, 챗</p>
             <select id="wiki-space-select" class="brand-space-select" aria-label="Wiki Ops 공간 선택">
-              <option value="spotlite-work">업무용(RTM)</option>
-              <option value="spotlite-personal">개인용</option>
+              <option value="work">업무용(RTM)</option>
+              <option value="personal">개인용</option>
             </select>
           </div>
         </div>
 
         <nav class="nav-list" aria-label="Primary">
-          <button class="nav-item active" data-view="spotlite-work">업무 Spotlite</button>
-          <button class="nav-item" data-view="spotlite-personal">개인 Spotlite</button>
+          <button class="nav-item active" id="spotlite-nav-item" data-view="spotlite">업무 Spotlite</button>
           <button class="nav-item" data-view="operations">운영</button>
           <button class="nav-item" data-view="pipeline">수집 파이프라인</button>
-          <button class="nav-item" data-view="wiki">위키</button>
-          <button class="nav-item" data-view="ingest">지식 주입</button>
-          <button class="nav-item" data-view="chat">GLM 챗</button>
+          <button class="nav-item" id="wiki-nav-item" data-view="wiki">업무 위키</button>
+          <button class="nav-item" id="ingest-nav-item" data-view="ingest">업무 지식 주입</button>
+          <button class="nav-item" id="chat-nav-item" data-view="chat">업무 GLM 챗</button>
           <button class="nav-item" data-view="paperclip">Paperclip</button>
         </nav>
 
@@ -615,6 +614,15 @@
                     <option value="conflict">충돌</option>
                     <option value="changelog">변경이력</option>
                   </select>
+                  <select id="notion-status-filter" class="notion-view-select">
+                    <option value="all">상태 전체</option>
+                    <option value="ongoing">진행 중</option>
+                    <option value="completed">완료</option>
+                    <option value="hold">보류</option>
+                    <option value="planned">계획</option>
+                    <option value="archived">보관</option>
+                    <option value="unknown">미지정</option>
+                  </select>
                   <select id="notion-view-mode" class="notion-view-select">
                     <option value="grid">카드 보기</option>
                     <option value="list">리스트 보기</option>
@@ -738,6 +746,7 @@
               </div>
               <div id="chat-log" class="chat-log"></div>
               <div id="chat-status-detail" class="chat-status-detail">GLM 응답 대기 중에는 다음 메시지를 잠급니다.</div>
+              <div id="chat-attachment-list" class="chat-attachment-list" hidden></div>
               <dialog id="chat-settings-modal" class="chat-settings-modal">
                 <form method="dialog" class="chat-settings-card">
                   <div class="promotion-panel-header">
@@ -793,6 +802,8 @@
               <div class="chat-input-row">
                 <textarea id="chat-input" rows="2" placeholder="프로젝트 상태, 리스크, 다음 액션을 물어보세요. Shift+Enter 또는 Shift+Tab은 줄바꿈"></textarea>
                 <div class="chat-send-stack">
+                  <input id="chat-file-input" type="file" multiple accept=".hwp,.hwpx,.pdf,.docx,.pptx,.xlsx,.xls,.csv,.txt,.md,.json,image/*" hidden />
+                  <button id="chat-file-button" class="command-button" type="button">파일</button>
                   <button id="chat-send" class="command-button">전송</button>
                   <button id="chat-stop" class="command-button danger" type="button" disabled>추론 중지</button>
                 </div>

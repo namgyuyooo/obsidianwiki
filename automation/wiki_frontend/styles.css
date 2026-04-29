@@ -676,6 +676,69 @@ select {
   font-size: 13px;
 }
 
+.drive-instruction-box {
+  border: 1px solid rgba(37, 95, 133, 0.16);
+  border-radius: 16px;
+  background: rgba(247, 249, 246, 0.68);
+  display: grid;
+  gap: 10px;
+  margin: 12px 0;
+  padding: 14px;
+}
+
+.drive-instruction-box textarea {
+  min-height: 82px;
+}
+
+.drive-instruction-box label span {
+  color: var(--muted);
+  display: block;
+  font-size: 12px;
+  font-weight: 800;
+  margin-bottom: 6px;
+}
+
+.drive-instruction-actions {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.drive-instruction-actions span,
+.drive-plan-card small {
+  color: var(--muted);
+}
+
+.drive-instruction-plan {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.drive-plan-card {
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: white;
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+}
+
+.drive-plan-card p {
+  margin: 0;
+}
+
+.drive-plan-card span {
+  border-radius: 999px;
+  background: rgba(36, 107, 79, 0.1);
+  color: var(--green);
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 800;
+  margin: 2px 4px 2px 0;
+  padding: 4px 8px;
+}
+
 .target-candidate-list {
   display: grid;
   gap: 10px;
@@ -1071,6 +1134,23 @@ select {
   box-shadow: 0 0 0 3px rgba(36, 107, 79, 0.12);
 }
 
+.notion-project-card.status-completed,
+.notion-page-card.status-completed {
+  border-color: rgba(36, 107, 79, 0.42);
+  background: linear-gradient(180deg, rgba(240, 248, 240, 0.96), rgba(247, 249, 246, 0.88));
+}
+
+.notion-project-card.status-ongoing,
+.notion-page-card.status-ongoing {
+  border-color: rgba(37, 95, 133, 0.42);
+  background: linear-gradient(180deg, rgba(235, 245, 249, 0.96), rgba(247, 249, 246, 0.88));
+}
+
+.notion-project-card.status-hold,
+.notion-page-card.status-hold {
+  border-color: rgba(176, 113, 42, 0.42);
+}
+
 .notion-card-main {
   display: grid;
   gap: 7px;
@@ -1086,6 +1166,29 @@ select {
 
 .notion-card-main small {
   overflow-wrap: anywhere;
+}
+
+.wiki-status-highlight {
+  color: var(--blue);
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 700;
+  margin: 0;
+}
+
+.wiki-status-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.wiki-status-tags span {
+  border: 1px solid rgba(37, 95, 133, 0.2);
+  border-radius: 999px;
+  background: rgba(37, 95, 133, 0.08);
+  color: var(--blue);
+  font-size: 11px;
+  padding: 3px 7px;
 }
 
 .notion-shortcuts {
@@ -1162,6 +1265,45 @@ select {
 .notion-doc-title code {
   white-space: normal;
   overflow-wrap: anywhere;
+}
+
+.wiki-status-editor,
+.wiki-page-editor {
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: rgba(247, 249, 246, 0.74);
+  display: grid;
+  gap: 10px;
+  margin: 0 0 16px;
+  padding: 12px;
+}
+
+.wiki-status-editor {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.wiki-status-editor label,
+.wiki-page-editor label {
+  display: grid;
+  gap: 5px;
+}
+
+.wiki-status-editor label span {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.wiki-editor-actions {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  grid-column: 1 / -1;
+}
+
+#wiki-page-markdown {
+  font-family: "SFMono-Regular", "Menlo", monospace;
+  min-height: 420px;
 }
 
 .wiki-internal-link {
@@ -1518,6 +1660,38 @@ select {
 .chat-send-stack {
   display: grid;
   gap: 8px;
+}
+
+.chat-attachment-list {
+  border-top: 1px solid var(--line);
+  display: grid;
+  gap: 8px;
+  max-height: 190px;
+  overflow: auto;
+  padding: 10px 12px;
+}
+
+.chat-attachment-card {
+  align-items: center;
+  background: rgba(247, 249, 246, 0.82);
+  border: 1px solid rgba(37, 95, 133, 0.16);
+  border-radius: 12px;
+  display: grid;
+  gap: 6px;
+  grid-template-columns: minmax(170px, 0.8fr) minmax(240px, 1fr) auto auto;
+  padding: 10px;
+}
+
+.chat-attachment-card strong,
+.chat-attachment-card small {
+  display: block;
+}
+
+.chat-attachment-card small,
+.chat-attachment-card p {
+  color: var(--muted);
+  font-size: 12px;
+  margin: 0;
 }
 
 .wiki-search-console {
