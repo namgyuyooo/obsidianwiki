@@ -13,6 +13,8 @@ const personalL1Root = join(repoRoot, "obsidian/Personal_L1_memory");
 const driveWikifySrc = join(repoRoot, "automation/drive_wikify/src");
 const driveWikifyEnv = join(repoRoot, "automation/drive_wikify/config/.env");
 const driveRuntime = join(repoRoot, "automation/drive_wikify/runtime");
+const wikiSparseIndexPath = join(driveRuntime, "wiki_sparse_index.json");
+const wikiGraphSnapshotPath = join(driveRuntime, "wiki_graph_snapshot.json");
 const apiRuntime = join(repoRoot, "automation/wiki_api/runtime");
 const runHistoryPath = join(apiRuntime, "runs.json");
 const driveCollectionStatePath = join(apiRuntime, "drive_collection_state.json");
@@ -38,6 +40,7 @@ const activeJobs = new Map();
 const activeChatRequests = new Map();
 const activeChatControllers = new Map();
 let runHistoryWrite = Promise.resolve();
+const autoSkillAllowedRoots = [repoRoot, driveRuntime, chatUploadsRoot];
 
 const host = process.env.WIKI_API_HOST || "127.0.0.1";
 const port = Number(process.env.WIKI_API_PORT || 8787);
@@ -472,6 +475,25 @@ function dateWithinDays(dateText, days) {
   return date <= limit;
 }
 
+async function todayKstDate() {
+  const script = [
+    "from datetime import datetime",
+    "from zoneinfo import ZoneInfo",
+    "print(datetime.now(ZoneInfo('Asia/Seoul')).strftime('%Y-%m-%d'))",
+  ].join("\n");
+  const result = await runCapture(resolvePythonBin(), ["-c", script], { timeoutMs: 3000 }).catch(() => null);
+  const value = result?.stdout?.trim();
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value || "")) return value;
+  return new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Seoul" }).format(new Date());
+}
+
+function datePartKst(value) {
+  if (!value) return "";
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  return new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Seoul" }).format(date);
+}
+
 function spotliteProjectFromPath(path) {
   const parts = String(path || "").split("/");
   const section = path.startsWith("obsidian/L1_memory/") || path.startsWith("obsidian/Personal_L1_memory/")
@@ -524,6 +546,7 @@ function isSpotliteBusinessLine(line, path = "") {
   if (/사용자\s*상태\s*지정\s*필요|현재\s*허브는\s*실제\s*업무|원문\s*근거를\s*우선\s*확인|담당자,\s*고객\s*대응,\s*산출물/i.test(text)) return false;
   if (/연결된\s*근거\s*문서|액션\/리스크\/결정|최신\s*진행상황|상태로\s*갱신|실행\s*항목을\s*보강/i.test(text)) return false;
   if (/^(type|성격)\s*:\s*|리스크와\s*불확실성을\s*관리|출처\s*목록|근거와\s*관찰\s*사항/i.test(String(line || "").trim())) return false;
+  if (/\[\[wiki\/|고객사\s*허브|action\s*items\s*:|risks\s*:|진행상황\s*확인\s*필요|일시\s*\|\s*추진내용|확정된\s*결정만|관리\s*이력이\s*아니라/i.test(text)) return false;
   return true;
 }
 
@@ -539,6 +562,7 @@ function compactSpotliteLine(line) {
 
 async function spotliteSummary(scope = "work") {
   const workspace = scope === "personal" ? await ensureWikiWorkspace("personal") : wikiWorkspaces.rtm;
+  const todayDate = await todayKstDate();
   const pages = await wikiIndex(workspace.id);
   const ongoingProjectPages = pages.filter((page) => page.workflowStatus === "ongoing" && page.division === "project");
   const focusProjectKeys = new Set(ongoingProjectPages.map((page) => page.projectKey).filter(Boolean));
@@ -547,8 +571,10 @@ async function spotliteSummary(scope = "work") {
     .map((page) => managedWikiFullPath(page.path))
     .filter((file) => file.startsWith(workspace.wikiRoot));
   const candidates = [];
+  const todayUpdates = [];
   const projectMap = new Map();
   for (const file of files) {
+    const fileStat = await stat(file).catch(() => null);
     const markdown = await readFile(file, "utf-8").catch(() => "");
     const path = relative(repoRoot, file);
     const frontmatter = parseFrontmatter(markdown);
@@ -556,6 +582,20 @@ async function spotliteSummary(scope = "work") {
     const project = spotliteProjectFromPath(path);
     const classification = classifyWikiPage(path, frontmatter);
     if (!focusProjectKeys.has(classification.projectKey)) continue;
+    const updatedDate = datePartKst(fileStat?.mtime || frontmatter.updated || frontmatter.date);
+    if (updatedDate === todayDate) {
+      todayUpdates.push({
+        title,
+        path,
+        project,
+        line: `오늘 위키화/수정됨: ${title}`,
+        kind: "today-update",
+        bucket: "today",
+        score: 9,
+        docKind: classification.docKind,
+        updatedAt: fileStat?.mtime?.toISOString?.() || "",
+      });
+    }
     const lines = markdown.split("\n")
       .map(compactSpotliteLine)
       .filter((line) => line.length >= 8)
@@ -595,7 +635,7 @@ async function spotliteSummary(scope = "work") {
     }
   }
   const ranked = candidates.sort((a, b) => b.score - a.score || a.project.localeCompare(b.project));
-  const today = ranked.filter((item) => item.bucket === "today").slice(0, 12);
+  const today = [...todayUpdates, ...ranked.filter((item) => item.bucket === "today")].slice(0, 16);
   const week = ranked.filter((item) => item.bucket === "week").slice(0, 18);
   const risks = ranked.filter((item) => item.kind === "risk").slice(0, 12);
   const memos = ranked.filter((item) => item.kind === "memo" || /운영 메모|진행 맥락|실무 판단|다음 확인/.test(item.line)).slice(0, 12);
@@ -623,6 +663,7 @@ async function spotliteSummary(scope = "work") {
     summary: {
       totalSignals: candidates.length,
       today: today.length,
+      todayUpdates: todayUpdates.length,
       week: week.length,
       risks: risks.length,
       projects: projects.length,
@@ -630,7 +671,7 @@ async function spotliteSummary(scope = "work") {
     },
     analysis: [
       focusProjectKeys.size ? `진행 중 프로젝트 ${focusProjectKeys.size}개만 기준으로 봅니다.` : "진행 중으로 지정된 프로젝트가 없습니다.",
-      today.length ? `오늘 바로 볼 항목 ${today.length}개가 있습니다.` : "진행 중 프로젝트 안에서 오늘로 명시된 항목은 아직 적습니다.",
+      todayUpdates.length ? `Python KST 오늘(${todayDate}) 기준 오늘 위키화/수정된 진행 프로젝트 문서 ${todayUpdates.length}건을 우선 표시합니다.` : `Python KST 오늘(${todayDate}) 기준 새로 위키화/수정된 진행 프로젝트 문서는 없습니다.`,
       week.length ? `이번주 처리 후보 ${week.length}개가 감지됐습니다.` : "진행 중 프로젝트 안에서 이번주 항목은 아직 적습니다.",
       risks.length ? `리스크/이슈 후보 ${risks.length}개를 먼저 확인하는 편이 안전합니다.` : "리스크 후보는 많지 않습니다.",
       memos.length ? "프로젝트 운영 메모에서 실무 맥락 후보를 찾았습니다." : "현재 문서에는 실무 액션으로 확정할 만한 메모가 부족합니다.",
@@ -799,6 +840,159 @@ function wikiRootsForWorkspace(workspaceId = "rtm") {
   return [workspace.wikiRoot, workspace.l1Root];
 }
 
+function sparseTerms(text = "") {
+  return [...new Set(
+    String(text || "")
+      .toLowerCase()
+      .match(/[0-9a-z가-힣_]{2,}/giu) || [],
+  )];
+}
+
+function docKindPriorityBoost(docKind = "", path = "") {
+  const normalizedPath = String(path || "").toLowerCase();
+  if (docKind === "evidence" || /evidence_log/.test(normalizedPath)) return 18;
+  if (docKind === "conflict" || /conflict_register/.test(normalizedPath)) return 16;
+  if (docKind === "hub") return 14;
+  if (docKind === "memory" || /\/l1_memory\//i.test(path)) return 14;
+  if (docKind === "overview") return 9;
+  if (docKind === "decisions") return 8;
+  if (docKind === "risks") return 8;
+  if (docKind === "changelog") return 6;
+  return 0;
+}
+
+function localPathAllowedForAutoSkill(path) {
+  const fullPath = resolve(path || "");
+  return autoSkillAllowedRoots.some((root) => fullPath === root || fullPath.startsWith(`${root}/`));
+}
+
+async function sparseWikiSearch(query, workspaceId = "rtm", limit = 12) {
+  if (workspaceId === "personal") {
+    return (await searchWiki(query, workspaceId)).slice(0, limit).map((item) => ({
+      ...item,
+      retrieval_source: "fallback_substring",
+      matched_terms: sparseTerms(query).filter((term) => `${item.title} ${item.path} ${item.snippet}`.toLowerCase().includes(term)),
+    }));
+  }
+  const payload = await readJsonFile(wikiSparseIndexPath, null);
+  if (!payload?.documents || !payload?.terms) {
+    return (await searchWiki(query, workspaceId)).slice(0, limit).map((item) => ({
+      ...item,
+      retrieval_source: "fallback_substring",
+      matched_terms: sparseTerms(query).filter((term) => `${item.title} ${item.path} ${item.snippet}`.toLowerCase().includes(term)),
+    }));
+  }
+  const documents = new Map((payload.documents || []).map((item) => [item.path, item]));
+  const scores = new Map();
+  const matchedTerms = new Map();
+  for (const term of sparseTerms(query)) {
+    for (const posting of payload.terms?.[term] || []) {
+      const path = posting.path;
+      const current = scores.get(path) || 0;
+      scores.set(path, current + Number(posting.score || 0));
+      matchedTerms.set(path, [...new Set([...(matchedTerms.get(path) || []), term])]);
+    }
+  }
+  const ranked = [...scores.entries()]
+    .map(([path, score]) => {
+      const doc = documents.get(path) || {};
+      return {
+        title: doc.title || titleFromMarkdown(path, ""),
+        path,
+        frontmatter: { type: doc.type || "", updated: doc.updated || "" },
+        snippet: `${doc.headings?.slice(0, 3).join(" / ") || doc.title || path}`,
+        score,
+        matched_terms: matchedTerms.get(path) || [],
+        retrieval_source: "sparse_bm25",
+      };
+    })
+    .sort((a, b) => b.score - a.score || a.path.localeCompare(b.path));
+  return ranked.slice(0, limit);
+}
+
+async function expandGraphNeighbors(seedPaths = [], workspaceId = "rtm", policy = {}) {
+  const payload = await readJsonFile(wikiGraphSnapshotPath, null);
+  if (!payload?.nodes || !payload?.edges) return [];
+  const allowedRoots = workspaceId === "personal"
+    ? ["obsidian/Personal_Wiki/", "obsidian/Personal_L1_memory/"]
+    : ["obsidian/Wiki/", "obsidian/L1_memory/"];
+  const allowedPath = (path) => allowedRoots.some((prefix) => String(path || "").startsWith(prefix));
+  const byId = new Map((payload.nodes || []).map((node) => [node.id, node]));
+  const adjacency = new Map();
+  for (const edge of payload.edges || []) {
+    if (!adjacency.has(edge.source)) adjacency.set(edge.source, []);
+    if (!adjacency.has(edge.target)) adjacency.set(edge.target, []);
+    adjacency.get(edge.source).push(edge.target);
+    adjacency.get(edge.target).push(edge.source);
+  }
+  const limit1 = Number(policy.firstHopLimit || 18);
+  const limit2 = Number(policy.secondHopLimit || 24);
+  const expansions = [];
+  const seen = new Set(seedPaths);
+  const firstHop = [];
+  for (const seed of seedPaths.slice(0, Number(policy.seedLimit || 6))) {
+    for (const neighbor of adjacency.get(seed) || []) {
+      if (seen.has(neighbor) || !allowedPath(neighbor)) continue;
+      seen.add(neighbor);
+      firstHop.push({ path: neighbor, graph_hops: 1, via: seed, retrieval_source: "graph_1hop", node: byId.get(neighbor) });
+    }
+  }
+  const rankedFirstHop = firstHop
+    .sort((a, b) => ((b.node?.degree || 0) + docKindPriorityBoost(classifyWikiPage(b.path, { type: b.node?.type || "" }).docKind, b.path))
+      - ((a.node?.degree || 0) + docKindPriorityBoost(classifyWikiPage(a.path, { type: a.node?.type || "" }).docKind, a.path)))
+    .slice(0, limit1);
+  expansions.push(...rankedFirstHop);
+
+  const secondHop = [];
+  for (const item of rankedFirstHop) {
+    for (const neighbor of adjacency.get(item.path) || []) {
+      if (seen.has(neighbor) || !allowedPath(neighbor)) continue;
+      const classification = classifyWikiPage(neighbor, { type: byId.get(neighbor)?.type || "" });
+      const eligibleSecondHop = classification.division === "common"
+        || classification.docKind === "memory"
+        || classification.docKind === "evidence"
+        || classification.docKind === "conflict"
+        || classification.docKind === "hub";
+      if (!eligibleSecondHop) continue;
+      seen.add(neighbor);
+      secondHop.push({ path: neighbor, graph_hops: 2, via: item.path, retrieval_source: "graph_2hop", node: byId.get(neighbor) });
+    }
+  }
+  expansions.push(...secondHop
+    .sort((a, b) => ((b.node?.degree || 0) + docKindPriorityBoost(classifyWikiPage(b.path, { type: b.node?.type || "" }).docKind, b.path))
+      - ((a.node?.degree || 0) + docKindPriorityBoost(classifyWikiPage(a.path, { type: a.node?.type || "" }).docKind, a.path)))
+    .slice(0, limit2));
+  return expansions;
+}
+
+function rerankEvidenceCandidates(candidates = [], biasPolicy = {}) {
+  const mode = biasPolicy.mode || "evidence_l1_first";
+  const projectCounts = new Map();
+  for (const candidate of candidates) {
+    const classification = candidate.classification || classifyWikiPage(candidate.path, candidate.frontmatter || {});
+    projectCounts.set(classification.projectKey, (projectCounts.get(classification.projectKey) || 0) + 1);
+  }
+  return candidates
+    .map((candidate) => {
+      const classification = candidate.classification || classifyWikiPage(candidate.path, candidate.frontmatter || {});
+      const kindBoost = docKindPriorityBoost(classification.docKind, candidate.path);
+      const l1Boost = classification.docKind === "memory" || classification.division === "memory" ? 4 : 0;
+      const graphBoost = candidate.graph_hops === 1 ? 2 : candidate.graph_hops === 2 ? 1 : 0;
+      const denseProjectPenalty = (projectCounts.get(classification.projectKey) || 0) > 8 && classification.division === "common" ? 1.5 : 0;
+      const finalScore = Number(candidate.score || 0) + kindBoost + l1Boost + graphBoost - denseProjectPenalty;
+      const priorityReason = mode === "evidence_l1_first"
+        ? `${classification.docKind || "knowledge"} boost ${kindBoost + l1Boost}`
+        : `${classification.docKind || "knowledge"} score`;
+      return {
+        ...candidate,
+        classification,
+        finalScore,
+        priority_reason: priorityReason,
+      };
+    })
+    .sort((a, b) => b.finalScore - a.finalScore || a.path.localeCompare(b.path));
+}
+
 async function searchWiki(query, workspaceId = "rtm") {
   const roots = wikiRootsForWorkspace(workspaceId);
   const files = (await Promise.all(roots.map(walkMarkdown))).flat();
@@ -941,6 +1135,14 @@ function defaultWikiStatusForPage(page) {
   return { status: "unknown", tags: [], source: "default" };
 }
 
+function isWikiStatusManaged(page) {
+  const type = String(page.frontmatter?.type || "").toLowerCase();
+  const path = String(page.path || "");
+  if (type === "global_chat_instruction" || type === "auxiliary_chat_project_memory") return false;
+  if (/obsidian\/(?:personal_)?l1_memory\/glm_(?:global_instructions|chat_projects)\b/i.test(path)) return false;
+  return true;
+}
+
 async function wikiStatusStore() {
   const store = await readJsonFile(wikiStatusesPath, null);
   if (store?.projects && store?.pages) return store;
@@ -958,6 +1160,19 @@ async function wikiStatusStore() {
 }
 
 function applyWikiStatus(page, store) {
+  if (!isWikiStatusManaged(page)) {
+    return {
+      ...page,
+      statusManaged: false,
+      workflowStatus: "not_applicable",
+      workflowStatusLabel: "상태관리 제외",
+      workflowStatusColor: "muted",
+      workflowStatusHighlight: "",
+      workflowStatusSource: "not_applicable",
+      workflowTags: [],
+      workflowNote: "GLM 대화/지침 보조문서는 업무 진행 상태 관리 대상이 아닙니다.",
+    };
+  }
   const fallback = defaultWikiStatusForPage(page);
   const projectOverride = store.projects?.[page.projectKey] || null;
   const pageOverride = store.pages?.[page.path] || null;
@@ -974,14 +1189,15 @@ function applyWikiStatus(page, store) {
     workflowStatusSource: pageOverride ? "page_user" : projectOverride ? "project_user" : fallback.source,
     workflowTags: tags,
     workflowNote: picked.note || "",
+    statusManaged: true,
   };
 }
 
 function wikiStatusEntryFromBody(body = {}) {
   const status = normalizeWikiStatus(body.status);
   const tags = String(body.tags || "")
-    .split(",")
-    .map((tag) => tag.trim())
+    .split(/[,，;；\n]+/)
+    .map((tag) => tag.trim().replace(/^#/, ""))
     .filter(Boolean);
   return {
     status,
@@ -2391,8 +2607,42 @@ function rcloneCopyTimeoutMinutes(env = {}, meta = {}) {
   return Number(env.RCLONE_COPY_MAX_MINUTES || 30);
 }
 
+function parseRcloneProgressText(text = "") {
+  const normalized = String(text || "").replace(/\r/g, "\n");
+  const lines = normalized.split("\n").map((line) => line.trim()).filter(Boolean);
+  const progress = {
+    summary: "",
+    transferred: "",
+    percent: null,
+    speed: "",
+    eta: "",
+    currentFile: "",
+    lastLogLine: lines.at(-1) || "",
+    recentLines: lines.slice(-8),
+    updatedAt: new Date().toISOString(),
+  };
+  for (const line of lines.slice(-80)) {
+    if (/Transferred:/i.test(line)) {
+      progress.summary = line;
+      const transferred = line.match(/Transferred:\s*([^,]+(?:,\s*[^,]+)?)/i);
+      if (transferred) progress.transferred = transferred[1].trim();
+      const percent = line.match(/(\d+(?:\.\d+)?)%/);
+      if (percent) progress.percent = Number(percent[1]);
+      const speed = line.match(/,\s*([^,]+\/s),/i);
+      if (speed) progress.speed = speed[1].trim();
+      const eta = line.match(/ETA\s+([^,\s]+)/i);
+      if (eta) progress.eta = eta[1].trim();
+    }
+    const fileMatch = line.match(/(?:^|\s)(?:Transferring|Transferred|Copied|Checks?):\s*(.+)$/i)
+      || line.match(/^\*\s+(.+?):\s*(?:transferring|copied|checking)/i)
+      || line.match(/INFO\s+:\s+(.+?):\s+(?:Copied|Updated|Deleted|Skipped|Transferred|Checks?)/i);
+    if (fileMatch) progress.currentFile = fileMatch[1].trim();
+  }
+  return progress;
+}
+
 async function runCommand(command, dryRun, meta = {}) {
-  const allowed = new Set(["rclone-copy", "build-manifest", "run"]);
+  const allowed = new Set(["rclone-copy", "build-manifest", "run", "refresh-global"]);
   if (!allowed.has(command)) {
     throw new Error(`Unsupported automation command: ${command}`);
   }
@@ -2409,7 +2659,9 @@ async function runCommand(command, dryRun, meta = {}) {
   const copyTimeoutMinutes = command === "rclone-copy" && !dryRun ? rcloneCopyTimeoutMinutes(configEnv, meta) : null;
   const timeoutMs = command === "rclone-copy" && !dryRun
     ? Math.max(1, Number(copyTimeoutMinutes || 30)) * 60 * 1000
-    : 1000 * 60 * 5;
+    : command === "refresh-global"
+      ? 1000 * 60 * 3
+      : 1000 * 60 * 5;
   const manifestBeforePromise = command === "rclone-copy" && !dryRun ? manifestSnapshot(configEnv).catch(() => null) : Promise.resolve(null);
   const python = resolvePythonBin();
   const runId = `${Date.now()}-${command}`;
@@ -2439,6 +2691,7 @@ async function runCommand(command, dryRun, meta = {}) {
     await appendRunHistory(entry);
     let stdout = "";
     let stderr = "";
+    let progress = parseRcloneProgressText("");
     let stopped = false;
     let timedOut = false;
     const child = spawn(python, args, { cwd: repoRoot, env });
@@ -2448,11 +2701,21 @@ async function runCommand(command, dryRun, meta = {}) {
       child.kill("SIGTERM");
       stderr += `\nReached configured collection window (${Math.round(timeoutMs / 60000)} minutes). Stopped safely; rerun will resume from local mirror.`;
     }, timeoutMs);
+    const updateProgress = () => {
+      progress = command === "rclone-copy"
+        ? parseRcloneProgressText(`${stdout}\n${stderr}`)
+        : { lastLogLine: `${stdout}\n${stderr}`.trim().split("\n").filter(Boolean).at(-1) || "", updatedAt: new Date().toISOString() };
+      const job = activeJobs.get(runId);
+      if (job) job.progress = progress;
+      return progress;
+    };
     activeJobs.set(runId, {
       runId,
       command: commandLabel,
+      status: "running",
       child,
       startedAt,
+      progress,
       stop: () => {
         stopped = true;
         stderr += "\nStopped by user.";
@@ -2461,11 +2724,11 @@ async function runCommand(command, dryRun, meta = {}) {
     });
     child.stdout.on("data", (chunk) => {
       stdout += chunk.toString();
-      updateRunHistory(runId, { stdout: stdout.slice(-8000), stderr: stderr.slice(-8000) }).catch(() => {});
+      updateRunHistory(runId, { stdout: stdout.slice(-8000), stderr: stderr.slice(-8000), progress: updateProgress() }).catch(() => {});
     });
     child.stderr.on("data", (chunk) => {
       stderr += chunk.toString();
-      updateRunHistory(runId, { stdout: stdout.slice(-8000), stderr: stderr.slice(-8000) }).catch(() => {});
+      updateRunHistory(runId, { stdout: stdout.slice(-8000), stderr: stderr.slice(-8000), progress: updateProgress() }).catch(() => {});
     });
     child.on("error", async (error) => {
       clearTimeout(timeout);
@@ -2476,6 +2739,7 @@ async function runCommand(command, dryRun, meta = {}) {
         code: 127,
         stdout: stdout.slice(-8000),
         stderr: stderr.slice(-8000),
+        progress: updateProgress(),
         finishedAt: new Date().toISOString(),
       });
       resolvePromise(finalEntry);
@@ -2495,6 +2759,7 @@ async function runCommand(command, dryRun, meta = {}) {
         code,
         stdout: stdout.slice(-8000),
         stderr: stderr.slice(-8000),
+        progress: updateProgress(),
         manifestAfter,
         collectionSummary: manifestAfter ? {
           manifestBeforeDocuments: manifestBefore?.documents ?? null,
@@ -2554,7 +2819,9 @@ async function automationSnapshot() {
     running: [...activeJobs.values()].map((job) => ({
       runId: job.runId,
       command: job.command,
+      status: job.status || "running",
       startedAt: job.startedAt,
+      progress: job.progress || {},
     })),
     runs: normalizedRuns,
     schedules,
@@ -2838,32 +3105,246 @@ async function glmDigest(text, projectHint) {
   }
 }
 
-async function operationalWikiContext(message, mode = "standard", workspaceId = "rtm") {
+function routeChatSkills(message, evidence = [], paperclip = null) {
+  const text = String(message || "");
+  const lower = text.toLowerCase();
+  const localPaths = extractLocalPaths(text, ["hwp", "hwpx", "xlsx", "xls", "csv", "html", "htm"]);
+  const needsHwp = localPaths.some((path) => [".hwp", ".hwpx"].includes(extname(path).toLowerCase())) || /\.(hwp|hwpx)\b/i.test(text);
+  const needsSpreadsheet = localPaths.some((path) => [".xlsx", ".xls", ".csv"].includes(extname(path).toLowerCase())) || /\.(xlsx|xls|csv)\b/i.test(text);
+  const needsValidation = /검수|검증|coverage|커버리지|누락|충돌|conflict|정합|리스크 점검|근거 점검/i.test(lower)
+    || evidence.some((item) => item.docKind === "conflict" || (item.conflicts || []).length);
+  const blockedWriteActions = [];
+  const suggestedTemplateIds = [];
+  if (/위키화|반영|실행|run\b|ingest|수집|manifest|rclone|openclaw|동기화/i.test(lower)) {
+    if (/manifest|목록/i.test(lower)) suggestedTemplateIds.push("manifest-builder");
+    if (/rclone|수집/i.test(lower)) suggestedTemplateIds.push("drive-collector");
+    if (/openclaw/i.test(lower)) suggestedTemplateIds.push("openclaw-cycle");
+    if (/위키화|반영|ingest|run\b|동기화/i.test(lower)) suggestedTemplateIds.push("wiki-ingest-operator");
+    blockedWriteActions.push("wiki_or_drive_write_requested");
+  }
+  if (needsHwp) suggestedTemplateIds.push("rhwp-hwp-reader");
+  if (needsSpreadsheet) suggestedTemplateIds.push("spreadsheet-stat-analyzer");
+  if (needsValidation) suggestedTemplateIds.push("validator");
+  const availableTemplates = new Set((paperclip?.templates || []).map((item) => item.id));
+  return {
+    needs_reading_skill: needsHwp || needsSpreadsheet,
+    needs_validation_skill: needsValidation,
+    suggested_template_ids: [...new Set(suggestedTemplateIds)].filter((id) => availableTemplates.size ? availableTemplates.has(id) : true),
+    blocked_write_actions: [...new Set(blockedWriteActions)],
+    reason: [
+      needsHwp ? "hwp/hwpx 문서 해석 필요" : "",
+      needsSpreadsheet ? "xlsx/csv 통계 해석 필요" : "",
+      needsValidation ? "coverage/충돌 검수 필요" : "",
+      blockedWriteActions.length ? "write/run 계열은 추천만 허용" : "",
+    ].filter(Boolean).join(" / "),
+    local_paths: localPaths.map((path) => ({
+      path,
+      allowed: localPathAllowedForAutoSkill(path),
+      ext: extname(path).toLowerCase(),
+    })),
+  };
+}
+
+async function autoRunAllowedSkills(route, options = {}) {
+  const autoRuns = [];
+  const recommendedTasks = [];
+  const blockedActions = [...new Set(route.blocked_write_actions || [])];
+  for (const templateId of route.suggested_template_ids || []) {
+    if (["wiki-ingest-operator", "drive-collector", "manifest-builder", "openclaw-cycle"].includes(templateId)) {
+      recommendedTasks.push({
+        templateId,
+        approval: "required",
+        reason: "run/write 계열은 GLM 채팅에서 자동 실행하지 않음",
+      });
+      continue;
+    }
+    if (templateId === "validator") {
+      const coverage = await coverageSummary().catch((error) => ({ error: error.message }));
+      autoRuns.push({
+        templateId,
+        status: "completed",
+        mode: "validator_summary",
+        provenance: "coverageSummary()",
+        result: coverage,
+      });
+      continue;
+    }
+    const allowedPaths = (route.local_paths || []).filter((item) => item.allowed);
+    const blockedPaths = (route.local_paths || []).filter((item) => !item.allowed);
+    if (blockedPaths.length) {
+      blockedActions.push(`path_outside_allowed_root:${blockedPaths.map((item) => item.path).join(",")}`);
+    }
+    const matchingPaths = allowedPaths
+      .filter((item) => templateId === "rhwp-hwp-reader"
+        ? [".hwp", ".hwpx", ".pdf", ".docx", ".pptx", ".html", ".htm"].includes(item.ext)
+        : [".xlsx", ".xls", ".csv"].includes(item.ext))
+      .map((item) => item.path);
+    if (!matchingPaths.length) {
+      recommendedTasks.push({
+        templateId,
+        approval: "required",
+        reason: "자동 실행 가능한 허용 경로가 없어서 추천만 생성",
+      });
+      continue;
+    }
+    const fakeTask = {
+      id: `auto-${Date.now()}-${templateId}`,
+      templateId,
+      title: `GLM auto ${templateId}`,
+      payload: { note: matchingPaths.join("\n") },
+    };
+    try {
+      const result = await runPaperclipGlmSkill(fakeTask);
+      let summary = "";
+      if (result.path) {
+        const markdown = await readFile(resolve(repoRoot, result.path), "utf-8").catch(() => "");
+        summary = markdown.replace(/^---[\s\S]*?---\n?/, "").slice(0, 2200);
+      }
+      autoRuns.push({
+        templateId,
+        status: result.status || "completed",
+        mode: "read_only_skill",
+        provenance: result.extractedSources || matchingPaths.map((path) => relative(repoRoot, path)),
+        outputPath: result.path,
+        summary,
+      });
+    } catch (error) {
+      autoRuns.push({
+        templateId,
+        status: "failed",
+        mode: "read_only_skill",
+        error: error.message,
+        provenance: matchingPaths.map((path) => relative(repoRoot, path)),
+      });
+    }
+  }
+  return {
+    autoRuns,
+    recommendedTasks,
+    blockedActions: [...new Set(blockedActions)],
+  };
+}
+
+async function buildGlmChatContext(message, project, workspaceId = "rtm", mode = "standard") {
   const budget = contextBudget(mode);
-  const matches = (await searchWiki(message, workspaceId)).slice(0, budget.maxCards);
-  const pages = [];
-  for (const item of matches) {
+  const sparseHits = await sparseWikiSearch(`${project?.name || ""} ${message}`, workspaceId, Math.max(budget.maxCards + 2, 8));
+  const seedPaths = sparseHits.slice(0, Math.min(6, sparseHits.length)).map((item) => item.path);
+  const graphExpandedHits = await expandGraphNeighbors(seedPaths, workspaceId, {
+    seedLimit: Math.min(6, sparseHits.length),
+    firstHopLimit: Math.max(10, budget.maxCards * 2),
+    secondHopLimit: Math.max(12, budget.maxCards * 2),
+  });
+  const candidateMap = new Map();
+  for (const hit of sparseHits) {
+    const classification = classifyWikiPage(hit.path, hit.frontmatter || {});
+    candidateMap.set(hit.path, {
+      ...hit,
+      graph_hops: 0,
+      classification,
+      docKind: classification.docKind,
+      division: classification.division,
+      projectKey: classification.projectKey,
+    });
+  }
+  for (const hit of graphExpandedHits) {
+    if (candidateMap.has(hit.path)) continue;
+    const classification = classifyWikiPage(hit.path, { type: hit.node?.type || "" });
+    candidateMap.set(hit.path, {
+      title: hit.node?.title || titleFromMarkdown(hit.path, ""),
+      path: hit.path,
+      frontmatter: { type: hit.node?.type || "" },
+      snippet: hit.node?.title || hit.path,
+      score: Math.max(0.25, Number(hit.node?.degree || 0) / 10),
+      matched_terms: [],
+      retrieval_source: hit.retrieval_source,
+      graph_hops: hit.graph_hops,
+      classification,
+      docKind: classification.docKind,
+      division: classification.division,
+      projectKey: classification.projectKey,
+    });
+  }
+  const reranked = rerankEvidenceCandidates([...candidateMap.values()], { mode: "evidence_l1_first" });
+  const evidence = [];
+  for (const item of reranked.slice(0, budget.maxCards)) {
     const card = await wikiContextCardForResult(item, message, mode).catch(() => ({
       title: item.title,
       path: item.path,
       snippet: item.snippet,
       score: item.score,
+      docKind: item.docKind,
+      division: item.division,
+      projectKey: item.projectKey,
+      keyLines: [],
+      conflicts: [],
     }));
-    pages.push(card);
+    evidence.push({
+      ...card,
+      retrieval_source: item.retrieval_source || "sparse_bm25",
+      graph_hops: item.graph_hops || 0,
+      priority_reason: item.priority_reason || "",
+    });
   }
   const automation = await automationSnapshot().catch(() => ({ running: [], runs: [], schedules: [] }));
   const coverage = await coverageSummary().catch(() => null);
   const paperclip = await paperclipStatus().catch(() => null);
+  const route = routeChatSkills(message, evidence, paperclip);
+  const autoSkill = await autoRunAllowedSkills(route, { workspaceId });
+  const coverageWarnings = [];
+  if (coverage?.statuses?.hold) coverageWarnings.push(`coverage_hold:${coverage.statuses.hold}`);
+  if (coverage?.statuses?.retry) coverageWarnings.push(`coverage_retry:${coverage.statuses.retry}`);
+  if (coverage?.documentsInManifest === 0) coverageWarnings.push("manifest_empty");
+  const conflictHotspots = evidence
+    .filter((item) => item.docKind === "conflict" || (item.conflicts || []).length)
+    .slice(0, 6)
+    .map((item) => ({
+      path: item.path,
+      title: item.title,
+      conflicts: (item.conflicts || []).slice(0, 3),
+    }));
   return {
     tokenBudget: {
       mode,
-      inputStrategy: "compressed_wiki_cards_plus_ops_snapshot",
+      inputStrategy: "sparse_graph_skill_orchestrated_cards",
       maxCards: budget.maxCards,
       recentTurns: budget.recentTurns,
       maxMemoryItems: budget.maxMemoryItems,
-      estimatedEvidenceChars: pages.reduce((sum, page) => sum + (page.estimatedChars || estimateChars(page)), 0),
+      estimatedEvidenceChars: evidence.reduce((sum, page) => sum + (page.estimatedChars || estimateChars(page)), 0),
     },
-    evidence: pages,
+    evidence,
+    retrieval: {
+      mode,
+      sparseHits: sparseHits.slice(0, 10).map((item) => ({
+        path: item.path,
+        title: item.title,
+        score: Number(item.score || 0),
+        matchedTerms: item.matched_terms || [],
+        retrievalSource: item.retrieval_source || "sparse_bm25",
+      })),
+      graphExpandedHits: graphExpandedHits.slice(0, 18).map((item) => ({
+        path: item.path,
+        title: item.node?.title || item.path,
+        graphHops: item.graph_hops,
+        retrievalSource: item.retrieval_source,
+      })),
+      finalEvidence: evidence.map((item) => ({
+        path: item.path,
+        title: item.title,
+        docKind: item.docKind,
+        graphHops: item.graph_hops,
+        retrievalSource: item.retrieval_source,
+        priorityReason: item.priority_reason,
+      })),
+      coverageWarnings,
+      tokenBudget: {
+        mode,
+        estimatedEvidenceChars: evidence.reduce((sum, page) => sum + (page.estimatedChars || estimateChars(page)), 0),
+      },
+    },
+    validation: {
+      coverageWarnings,
+      conflictHotspots,
+    },
     ops: {
       running: automation.running,
       latestRuns: automation.runs.slice(0, 5).map((run) => ({
@@ -2897,7 +3378,23 @@ async function operationalWikiContext(message, mode = "standard", workspaceId = 
         })),
       } : null,
     },
+    paperclip: {
+      route,
+      autoRuns: autoSkill.autoRuns,
+      recommendedTasks: [...new Map(autoSkill.recommendedTasks.concat((route.suggested_template_ids || [])
+        .filter((id) => ["wiki-ingest-operator", "drive-collector", "manifest-builder", "openclaw-cycle"].includes(id))
+        .map((templateId) => ({
+          templateId,
+          approval: "required",
+          reason: "자동 실행 금지 template",
+        }))).map((item) => [item.templateId, item])).values()],
+      blockedActions: autoSkill.blockedActions,
+    },
   };
+}
+
+async function operationalWikiContext(message, mode = "standard", workspaceId = "rtm", project = null) {
+  return buildGlmChatContext(message, project || defaultChatProject(), workspaceId, mode);
 }
 
 function defaultChatProject() {
@@ -3343,7 +3840,7 @@ async function glmChat(message, projectId = "default", options = {}) {
   const globalSettings = await getGlobalChatSettings();
   const { values: env } = await readEnvFile();
   const mode = glmContextMode(env, options.contextMode);
-  const context = await operationalWikiContext(`${project.name} ${message}`, mode, options.workspace || project.workspace || "rtm");
+  const context = await buildGlmChatContext(message, project, options.workspace || project.workspace || "rtm", mode);
   const apiKey = process.env.GLM_API_KEY || env.GLM_API_KEY;
   const apiUrl = process.env.GLM_API_URL || env.GLM_API_URL;
   const model = process.env.GLM_MODEL || env.GLM_MODEL || "glm-4.5";
@@ -3369,9 +3866,11 @@ async function glmChat(message, projectId = "default", options = {}) {
               "충분히 깊게 내부 추론하되, 최종 답변에는 추론 과정을 장황하게 노출하지 말고 검토 결과와 근거만 정리하라.",
               "프로젝트 메모리는 관리되는 보조 기억이고, 최근 대화내역은 결정/검증된 지식이 아닐 수 있는 보조 맥락이다.",
               "대화 내용은 사용자가 명시적으로 결정했거나 별도 근거 Markdown으로 확인된 경우에만 확정 사실처럼 취급하라.",
+              "Evidence Log, Conflict Register, hub, L1 memory를 우선 근거로 보고, 충돌이 있으면 Conflict Register 계열을 더 우선한다.",
               "금지: '제공된 위키 검색 결과', '스니펫', '메타데이터를 종합하면', '현재 위키에 색인된' 같은 메타 표현으로 시작하지 마라.",
               "위키나 검색 시스템 자체를 설명하지 말고, 프로젝트/업무 대상에 대해 바로 답하라.",
               "Paperclip 컨텍스트가 있으면 이를 별도 실행 결과처럼 과장하지 말고, 사용 가능한 agent/template/task 힌트로만 활용하라.",
+              "자동 실행된 read/validator skill 결과는 보조 증거로만 쓰고, run/write가 필요하면 실행한 척하지 말고 승인 필요 작업으로만 제안하라.",
               "근거는 path로 짧게 붙인다. 확실하지 않으면 '확인 필요'로 표시하고, 무엇을 열어봐야 하는지 제안한다.",
               "기본 형식: 1) 현재 업무상태 2) 진행/완료 3) 리스크/충돌 4) 다음 액션 5) 근거.",
             ].join(" "),
@@ -3425,9 +3924,11 @@ function glmChatMessages(project, globalSettings, message, context, mode = "stan
         "충분히 깊게 내부 추론하되, 최종 답변에는 추론 과정을 장황하게 노출하지 말고 검토 결과와 근거만 정리하라.",
         "프로젝트 메모리는 관리되는 보조 기억이고, 최근 대화내역은 결정/검증된 지식이 아닐 수 있는 보조 맥락이다.",
         "대화 내용은 사용자가 명시적으로 결정했거나 별도 근거 Markdown으로 확인된 경우에만 확정 사실처럼 취급하라.",
+        "Evidence Log, Conflict Register, hub, L1 memory를 우선 근거로 보고, 충돌이 있으면 Conflict Register 계열을 더 우선한다.",
         "금지: '제공된 위키 검색 결과', '스니펫', '메타데이터를 종합하면', '현재 위키에 색인된' 같은 메타 표현으로 시작하지 마라.",
         "위키나 검색 시스템 자체를 설명하지 말고, 프로젝트/업무 대상에 대해 바로 답하라.",
         "Paperclip 컨텍스트가 있으면 이를 별도 실행 결과처럼 과장하지 말고, 사용 가능한 agent/template/task 힌트로만 활용하라.",
+        "자동 실행된 read/validator skill 결과는 보조 증거로만 쓰고, run/write가 필요하면 실행한 척하지 말고 승인 필요 작업으로만 제안하라.",
         "근거는 path로 짧게 붙인다. 확실하지 않으면 '확인 필요'로 표시하고, 무엇을 열어봐야 하는지 제안한다.",
         "기본 형식: 1) 현재 업무상태 2) 진행/완료 3) 리스크/충돌 4) 다음 액션 5) 근거.",
       ].join(" "),
@@ -3467,7 +3968,7 @@ async function streamGlmChat(message, projectId, res, options = {}) {
   const globalSettings = await getGlobalChatSettings();
   const { values: env } = await readEnvFile();
   const mode = glmContextMode(env, options.contextMode);
-  const context = await operationalWikiContext(`${project.name} ${message}`, mode, options.workspace || project.workspace || "rtm");
+  const context = await buildGlmChatContext(message, project, options.workspace || project.workspace || "rtm", mode);
   const apiKey = process.env.GLM_API_KEY || env.GLM_API_KEY;
   const apiUrl = process.env.GLM_API_URL || env.GLM_API_URL;
   const model = process.env.GLM_MODEL || env.GLM_MODEL || "glm-4.5";
@@ -4605,6 +5106,10 @@ const server = createServer(async (req, res) => {
     if (pathname === "/api/wiki/graph" && req.method === "GET") {
       return sendJson(res, 200, await wikiGraph());
     }
+    if (pathname === "/api/wiki/graph/refresh" && req.method === "POST") {
+      const result = await runCommand("refresh-global", false, { source: "wiki_graph_refresh" });
+      return sendJson(res, 200, result);
+    }
     if (pathname === "/api/wiki/search/brief" && req.method === "GET") {
       const query = url.searchParams.get("q") || "";
       const workspace = url.searchParams.get("workspace") || "rtm";
@@ -4664,7 +5169,7 @@ const server = createServer(async (req, res) => {
         if (remembered) sseWrite(res, "memory", { remembered });
         const result = await streamGlmChat(body.message || "", projectId, res, { signal: controller.signal, contextMode: body.contextMode || body.mode, workspace: body.workspace || "rtm" });
         if (controller.signal.aborted) {
-          sseWrite(res, "done", { status: "stopped", message: "GLM 추론이 사용자 요청으로 중지되었습니다.", messages: { user: userMessage } });
+          sseWrite(res, "done", { status: "stopped", message: "GLM 추론이 사용자 요청으로 중지되었습니다.", messages: { user: userMessage }, context: result.context || null });
           return res.end();
         }
         const assistantMessage = await appendChatProjectMessage(result.projectId || projectId, {
@@ -4678,6 +5183,7 @@ const server = createServer(async (req, res) => {
           model: result.model,
           endpoint: result.endpoint,
           remembered,
+          context: result.context || null,
           messages: { user: userMessage, assistant: assistantMessage },
         });
         return res.end();

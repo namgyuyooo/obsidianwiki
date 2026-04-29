@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>위키 운영 콘솔</title>
-    <link rel="stylesheet" href="./styles.css?v=20260429-spotlite-focus" />
+    <link rel="stylesheet" href="./styles.css?v=20260429-rclone-progress" />
   </head>
   <body>
     <main class="app-shell">
@@ -34,6 +34,11 @@
           <button class="nav-item" id="chat-nav-item" data-view="chat">업무 GLM 챗</button>
           <button class="nav-item" data-view="paperclip">Paperclip</button>
         </nav>
+
+        <section class="sidebar-utility-panel">
+          <button id="refresh-graph-map" class="command-button accent" type="button">그래프맵 업데이트</button>
+          <small id="refresh-graph-map-status">sparse index + graph snapshot 재생성</small>
+        </section>
 
         <section class="side-run-panel">
           <div class="side-run-head">
@@ -484,6 +489,10 @@
                 <h3>실행 결과</h3>
                 <span id="run-count">0건</span>
               </div>
+              <div id="rclone-live-progress" class="rclone-live-progress">
+                <strong>rclone 진행 신호 대기</strong>
+                <span>수집 실행 중 전송량, 속도, 현재 파일, 최근 로그가 표시됩니다.</span>
+              </div>
               <div id="run-list" class="event-list"></div>
             </section>
           </div>
@@ -643,6 +652,9 @@
                     <option value="archived">보관</option>
                     <option value="unknown">미지정</option>
                   </select>
+                  <select id="notion-tag-filter" class="notion-view-select">
+                    <option value="all">태그 전체</option>
+                  </select>
                   <select id="notion-view-mode" class="notion-view-select">
                     <option value="grid">카드 보기</option>
                     <option value="list">리스트 보기</option>
@@ -760,9 +772,28 @@
                 </div>
                 <div class="chat-header-controls">
                   <span id="chat-status" class="chat-status idle">대기</span>
+                  <button id="chat-project-settings-open" class="command-button" type="button">프로젝트 설정</button>
                   <button id="chat-settings-open" class="command-button" type="button">모델/토큰 설정</button>
                   <select id="chat-project-select" aria-label="GLM chat project"></select>
                 </div>
+              </div>
+              <div class="llm-system-strip" aria-label="GLM 챗 디자인 시스템 상태">
+                <article>
+                  <span>가능한 일</span>
+                  <strong>업무 상태 · 리스크 · 다음 액션</strong>
+                </article>
+                <article>
+                  <span>근거</span>
+                  <strong>위키/메모리 기반, 출처 확인</strong>
+                </article>
+                <article>
+                  <span>상태</span>
+                  <strong>추론중 잠금 · 실패 시 재시도</strong>
+                </article>
+                <article>
+                  <span>메모리</span>
+                  <strong>결정 전 보조 지식으로 저장</strong>
+                </article>
               </div>
               <div id="chat-log" class="chat-log"></div>
               <div id="chat-status-detail" class="chat-status-detail">GLM 응답 대기 중에는 다음 메시지를 잠급니다.</div>
@@ -830,8 +861,16 @@
               </div>
             </section>
 
-            <aside class="chat-context-panel" data-anchor="지침/메모리">
-              <section class="context-card">
+            <dialog id="chat-project-settings-modal" class="chat-project-settings-modal">
+              <form method="dialog" class="chat-project-settings-card">
+                <div class="promotion-panel-header">
+                  <div>
+                    <strong>프로젝트 설정 / 지침 / 메모리</strong>
+                    <p>정적 설정은 필요할 때만 열어 확인하고 수정합니다.</p>
+                  </div>
+                  <button id="chat-project-settings-close" type="button" class="close-button">✕</button>
+                </div>
+                <section class="context-card">
                 <div class="panel-heading">
                   <h3>전역 지침</h3>
                   <span>모든 챗 공통</span>
@@ -865,7 +904,8 @@
               <button id="chat-memory-add" class="command-button" type="button">메모리 추가/수정</button>
               <div id="chat-memory-list" class="event-list"></div>
               </section>
-            </aside>
+              </form>
+            </dialog>
           </div>
         </section>
 
@@ -938,6 +978,6 @@
         </section>
       </section>
     </main>
-    <script src="./app.js?v=20260429-spotlite-focus"></script>
+    <script src="./app.js?v=20260429-rclone-progress"></script>
   </body>
 </html>

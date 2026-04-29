@@ -129,6 +129,18 @@ Obsidian Wiki
 - GLM 챗은 Paperclip 상태, 템플릿, 최근 task를 운영 힌트로 받되 이를 확정된 실행 결과처럼 과장하지 않는다.
 - 모든 task payload에는 `driveDeleteSource=false`, `remoteDeleteAllowed=false`를 고정한다.
 
+## 2026-04-29 v2 GLM Retrieval Orchestrator
+
+GLM 챗은 이제 단순 검색 소비자가 아니라 `Paperclip 지배하의 retrieval-orchestrator`로 동작해야 한다.
+
+- 1차 컨텍스트 수집은 `sparse search`가 담당한다.
+- 2차 확장은 `wiki graph snapshot`을 사용해 `Evidence_Log`, `Conflict_Register`, `hub`, `L1_memory`, `Common` 허브를 우선 연결한다.
+- 최종 근거 우선순위는 `Evidence/Conflict/hub/L1` 우선, `Overview/Decisions/Risks/Change_Log` 차선, 일반 공통 문서는 후순위다.
+- Paperclip은 read-only 또는 validator 계열 skill만 자동 실행할 수 있다.
+- `wiki-ingest-operator`, `drive-collector`, `manifest-builder`, `openclaw-cycle` 같은 run/write 계열은 GLM 챗이 직접 실행하지 않고 승인 필요 task plan으로만 제안한다.
+- 자동 실행된 skill 결과는 `보조 증거`이며, 답변에는 원문 markdown path와 함께 써야 한다.
+- 충돌 정보가 있으면 `Conflict_Register` 계열을 더 우선하고, 미확정이면 `확인 필요`와 열어볼 path를 함께 제시한다.
+
 다음 구현에서 붙일 것:
 
 - Paperclip company id 설정

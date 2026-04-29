@@ -10,6 +10,21 @@ source: "Global wiki operations log"
 이 파일은 위키 운영의 append-only 로그입니다.
 
 ## 2026-04-29
+- `automation/wiki_api/server.mjs`: GLM 채팅을 sparse search -> graph expansion -> Evidence/L1 우선 rerank -> Paperclip read/validator auto-run 기반 retrieval-orchestrator로 확장, stream/JSON 응답에 retrieval/paperclip/validation context 추가
+- `Wiki/Common/Paperclip_Wiki_Control_Plane_Plan.md`: GLM chat의 Paperclip skill 자동 실행 상한과 retrieval orchestration 규칙 문서화
+- `automation/drive_wikify/src/drive_wikify/`: `wiki_maintenance.py` 추가, 위키 반영 뒤 sparse BM25 검색 인덱스와 전역 그래프/네비게이션 산출물 자동 재생성 기능 구현
+- `automation/drive_wikify/runtime/`: `wiki_sparse_index.json`, `wiki_graph_snapshot.json` 생성
+- [[Wiki/Common/Wiki_Global_Navigation]]: 전역 연결도, 프로젝트별 페이지 커버리지, 고아 페이지를 요약하는 자동 생성 네비게이션 문서 추가
+- `Wiki/index.md`: 전역 네비게이션 문서 링크 추가
+- `Wiki/Sawnics_ManufacturingAI_Project/`: 쏘닉스 신규 프로젝트 허브와 `Sources`, `Evidence_Log`, `Project_Overview`, `KPI`, `Risks`, `Action_Items`, `Next_Meeting_Prep`, `Conflict_Register`, `Change_Log` 생성
+- `obsidian/L1_memory/Sawnics_ManufacturingAI_Project.md`: 신규 프로젝트 L1 메모리 생성
+- `Wiki/index.md`: 쏘닉스 프로젝트 허브 링크 추가
+- 근거 기준:
+  - 2026-04-27 `#sales_team` 쏘닉스 스레드
+  - `/Users/rtm/Documents/GitHub/commonWork/1.POC/쏘닉스/sawnics_poc_report_config.json`
+  - Slack 첨부 메타데이터 기준 `SAWNICS_PoC_Report.pdf`, `sawnics_poc_report.html`, `제조AI특화 스마트공장 구축사업 사업계획서 제출 안내문`, `제출서류 양식.zip`
+
+## 2026-04-29
 - `automation/wiki_api/`, `automation/wiki_frontend/`: 지식 주입 다이제스트를 한국어 기본 출력으로 전환하고 GLM/fallback 모두 한국어 판정·근거·충돌·다음 액션 형식으로 표시, GLM이 형식을 벗어나면 한국어 local digest로 대체
 - `automation/wiki_api/`, `automation/wiki_frontend/`: GLM 챗 상태 표시(`전송/추론/저장/실패`)와 프로젝트별 추론 lock 추가, 추론 중 중복 채팅을 UI/API에서 차단
 - `automation/wiki_api/`, `automation/wiki_frontend/`: GLM 챗 전역 지침 관리 추가, 공통 응답 원칙을 프로젝트 메모리에서 분리, 날짜/테스트/결정/선호 등 기억할 만한 발화 자동 메모리 저장 구현

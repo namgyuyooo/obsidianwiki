@@ -9,6 +9,7 @@ from .cleanup import cleanup_processed_file
 from .extractors import extract_document
 from .models import DocumentRecord, ProcessedDocument
 from .project_decider import decide_project
+from .wiki_maintenance import refresh_global_artifacts
 from .wiki_writer import validate_written_project, write_project_updates
 
 
@@ -70,6 +71,8 @@ class DriveWikifyRunner:
 
     def run(self, manifest_path: Path, output_path: Path | None = None) -> list[ProcessedDocument]:
         results = [self.process_record(record) for record in self.load_manifest(manifest_path)]
+        if any(result.written_files for result in results):
+            refresh_global_artifacts(self.config)
         if output_path:
             serializable = []
             for result in results:

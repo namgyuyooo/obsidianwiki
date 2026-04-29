@@ -46,10 +46,12 @@ const state = {
   activeWikiManagementCommandId: "",
   activeProjectKey: "",
   selectedAccountKeys: new Set(),
+  selectedWikiPaths: new Set(),
   wikiFilters: {
     division: "all",
     nature: "all",
     status: "all",
+    tag: "all",
     projectKey: "all",
     query: "",
     viewMode: "grid",
@@ -357,6 +359,7 @@ function renderSpotlite(scope, payload) {
   target.innerHTML = [
     `<section class="spotlite-summary" data-anchor="주요 분석">`,
     `<article><span>오늘</span><strong>${summary.today || 0}</strong></article>`,
+    `<article><span>오늘 위키화</span><strong>${summary.todayUpdates || 0}</strong></article>`,
     `<article><span>이번주</span><strong>${summary.week || 0}</strong></article>`,
     `<article><span>리스크</span><strong>${summary.risks || 0}</strong></article>`,
     `<article><span>진행 프로젝트</span><strong>${summary.ongoingProjects || summary.projects || 0}</strong></article>`,
@@ -375,7 +378,7 @@ function renderSpotlite(scope, payload) {
     payload.focus ? `<small>범위: ${escapeHtml(payload.focus.mode)} · 제외: ${escapeHtml(payload.focus.excluded)}</small>` : "",
     `</section>`,
     `<div class="spotlite-grid">`,
-    spotliteLane("오늘 할 일", payload.today || [], "오늘로 명시된 항목이 없습니다. 운영 메모에서 오늘 처리할 일을 보강하세요."),
+    spotliteLane("오늘 위키화/업데이트", payload.today || [], "Python KST 오늘 날짜 기준 새로 위키화/수정된 진행 프로젝트 문서가 없습니다."),
     spotliteLane("이번주 해야 할 일", payload.week || [], "이번주로 명시된 항목이 없습니다. 주간 액션을 허브/Action_Items에 추가하세요."),
     spotliteLane("주요 리스크", payload.risks || [], "감지된 리스크가 없습니다."),
     spotliteLane("운영 메모", payload.memos || [], "허브 운영 메모를 보강하면 진행 맥락이 여기에 모입니다."),
@@ -662,8 +665,9 @@ function resolveWikiTarget(target) {
 function updateNotionStats() {
   const total = state.wikiPages.length;
   const divisions = new Set(state.wikiPages.map((page) => page.division || "operations"));
-  const ongoing = state.wikiPages.filter((page) => page.workflowStatus === "ongoing").length;
-  const completed = state.wikiPages.filter((page) => page.workflowStatus === "completed").length;
+  const managedPages = state.wikiPages.filter((page) => page.statusManaged !== false);
+  const ongoing = managedPages.filter((page) => page.workflowStatus === "ongoing").length;
+  const completed = managedPages.filter((page) => page.workflowStatus === "completed").length;
   $("#notion-total-pages").textContent = `${total}`;
   $("#notion-total-categories").textContent = `${divisions.size} · 진행 ${ongoing} · 완료 ${completed}`;
 }
@@ -680,6 +684,18 @@ function updateWikiFilterControls() {
     ...projects.map(([key, label]) => `<option value="${escapeHtml(key)}">${escapeHtml(label)}</option>`),
   ].join("");
   projectSelect.value = state.wikiFilters.projectKey;
+  const tagSelect = $("#notion-tag-filter");
+  if (tagSelect) {
+    const tags = [...new Set(state.wikiPages.flatMap((page) => page.workflowTags || []))]
+      .filter(Boolean)
+      .sort((a, b) => a.localeCompare(b));
+    tagSelect.innerHTML = [
+      `<option value="all">태그 전체</option>`,
+      ...tags.map((tag) => `<option value="${escapeHtml(tag)}">#${escapeHtml(tag)}</option>`),
+    ].join("");
+    tagSelect.value = tags.includes(state.wikiFilters.tag) ? state.wikiFilters.tag : "all";
+    state.wikiFilters.tag = tagSelect.value;
+  }
 }
 
 function pagesByProject() {
@@ -712,7 +728,8 @@ function filteredNotionPages() {
     }
     if (state.wikiFilters.division !== "all" && page.division !== state.wikiFilters.division) return false;
     if (state.wikiFilters.nature !== "all" && page.docKind !== state.wikiFilters.nature) return false;
-    if (state.wikiFilters.status !== "all" && page.workflowStatus !== state.wikiFilters.status) return false;
+    if (state.wikiFilters.status !== "all" && (page.statusManaged === false || page.workflowStatus !== state.wikiFilters.status)) return false;
+    if (state.wikiFilters.tag !== "all" && !(page.workflowTags || []).includes(state.wikiFilters.tag)) return false;
     if (state.wikiFilters.projectKey !== "all" && page.projectKey !== state.wikiFilters.projectKey) return false;
     if (!query) return true;
     return [
@@ -740,7 +757,9 @@ function renderProjectCard(group) {
     .map((kind) => group.pages.find((page) => page.docKind === kind))
     .filter(Boolean);
   const updated = group.pages.map((page) => page.updatedAt).sort().at(-1) || "";
-  const status = group.pages.find((page) => page.workflowStatus && page.workflowStatus !== "unknown") || group.pages[0] || {};
+  const managedPages = group.pages.filter((page) => page.statusManaged !== false);
+  const status = managedPages.find((page) => page.workflowStatus && page.workflowStatus !== "unknown") || managedPages[0] || group.pages[0] || {};
+  const tags = [...new Set(managedPages.flatMap((page) => page.workflowTags || []))].slice(0, 8);
   return [
     `<article class="notion-project-card status-${escapeHtml(status.workflowStatus || "unknown")}" data-project-key="${escapeHtml(group.key)}">`,
     group.division === "account" ? [
@@ -750,10 +769,11 @@ function renderProjectCard(group) {
       `</label>`,
     ].join("") : "",
     `<button class="notion-card-main" data-project-drill="${escapeHtml(group.key)}" type="button">`,
-    `<span class="notion-card-kicker">${escapeHtml(divisionLabels[group.division] || group.division)} · ${escapeHtml(status.workflowStatusLabel || "미지정")}</span>`,
+    `<span class="notion-card-kicker">${escapeHtml(divisionLabels[group.division] || group.division)}${status.statusManaged === false ? " · 상태관리 제외" : ` · ${escapeHtml(status.workflowStatusLabel || "미지정")}`}</span>`,
     `<strong>${escapeHtml(group.label)}</strong>`,
     status.workflowStatusHighlight ? `<em class="wiki-status-highlight">${escapeHtml(status.workflowStatusHighlight)}</em>` : "",
     `<small>${group.pages.length} docs · ${escapeHtml(updated.slice(0, 10) || "updated unknown")}</small>`,
+    tags.length ? `<div class="wiki-status-tags">${tags.map((tag) => `<span>${escapeHtml(tag)}</span>`).join("")}</div>` : "",
     `</button>`,
     `<div class="notion-shortcuts">`,
     shortcutPages.map((page) => `<button type="button" data-notion-path="${escapeHtml(page.path)}">${escapeHtml(natureLabels[page.docKind] || page.docKind)}</button>`).join(""),
@@ -786,11 +806,34 @@ function renderAccountBulkToolbar() {
   ].join("");
 }
 
+function renderWikiBulkToolbar(pages = []) {
+  const visiblePaths = new Set(pages.filter((page) => page.statusManaged !== false).map((page) => page.path));
+  const selectedVisible = [...state.selectedWikiPaths].filter((path) => visiblePaths.has(path));
+  return [
+    `<section class="notion-bulk-toolbar wiki-tag-bulk-toolbar" aria-label="위키 문서 멀티태그 일괄 변경">`,
+    `<div><strong>위키 멀티태그 일괄 관리</strong><small>문서를 체크한 뒤 태그를 추가하거나 교체합니다. 사용자 입력 태그를 쉼표로 여러 개 넣을 수 있습니다.</small></div>`,
+    `<span id="wiki-bulk-count">선택 ${selectedVisible.length}건</span>`,
+    `<select id="wiki-bulk-tag-mode" class="notion-view-select"><option value="append">기존 태그에 추가</option><option value="replace">태그 전체 교체</option></select>`,
+    `<input id="wiki-bulk-tags" placeholder="태그: 고객대응, 이번주, 보고서" />`,
+    `<input id="wiki-bulk-note" placeholder="태그 변경 메모" />`,
+    `<button id="wiki-bulk-apply" class="command-button accent" type="button" ${selectedVisible.length ? "" : "disabled"}>태그 저장</button>`,
+    `<button id="wiki-bulk-clear" class="command-button" type="button">선택 해제</button>`,
+    `<span id="wiki-bulk-status-text"></span>`,
+    `</section>`,
+  ].join("");
+}
+
 function renderPageCard(page) {
   return [
     `<article class="notion-page-card status-${escapeHtml(page.workflowStatus || "unknown")} ${page.path === state.activeWikiPath ? "active" : ""}">`,
+    page.statusManaged === false ? "" : [
+      `<label class="notion-bulk-check">`,
+      `<input type="checkbox" data-wiki-page-select="${escapeHtml(page.path)}" ${state.selectedWikiPaths.has(page.path) ? "checked" : ""} />`,
+      `<span>문서 선택</span>`,
+      `</label>`,
+    ].join(""),
     `<button class="notion-card-main" data-notion-path="${escapeHtml(page.path)}" type="button">`,
-    `<span class="notion-card-kicker">${escapeHtml(divisionLabels[page.division] || page.division)} · ${escapeHtml(natureLabels[page.docKind] || page.docKind)} · ${escapeHtml(page.workflowStatusLabel || "미지정")}</span>`,
+    `<span class="notion-card-kicker">${escapeHtml(divisionLabels[page.division] || page.division)} · ${escapeHtml(natureLabels[page.docKind] || page.docKind)}${page.statusManaged === false ? " · 상태관리 제외" : ` · ${escapeHtml(page.workflowStatusLabel || "미지정")}`}</span>`,
     `<strong>${escapeHtml(page.title)}</strong>`,
     page.workflowStatusHighlight ? `<em class="wiki-status-highlight">${escapeHtml(page.workflowStatusHighlight)}</em>` : "",
     `<small>${escapeHtml(page.projectLabel || page.section)} · ${escapeHtml(page.path)}</small>`,
@@ -815,7 +858,8 @@ function renderNotionWikiContent() {
     : categoryLabel;
 
   if (!pages.length) {
-    content.innerHTML = `${renderAccountBulkToolbar()}<div class="notion-empty-state"><div class="notion-empty-icon">문서 없음</div><h3>조건에 맞는 문서가 없습니다</h3><p>검색어 또는 필터를 줄여보세요.</p></div>`;
+    content.innerHTML = `${renderWikiBulkToolbar(pages)}${renderAccountBulkToolbar()}<div class="notion-empty-state"><div class="notion-empty-icon">문서 없음</div><h3>조건에 맞는 문서가 없습니다</h3><p>검색어 또는 필터를 줄여보세요.</p></div>`;
+    bindWikiBulkControls(pages);
     bindAccountBulkControls();
     return;
   }
@@ -839,9 +883,18 @@ function renderNotionWikiContent() {
   } else {
     body = `<div class="notion-card-grid">${pages.map(renderPageCard).join("")}</div>`;
   }
-  content.innerHTML = `${renderAccountBulkToolbar()}${body}`;
+  content.innerHTML = `${renderWikiBulkToolbar(pages)}${renderAccountBulkToolbar()}${body}`;
+  bindWikiBulkControls(pages);
   bindAccountBulkControls();
 
+  document.querySelectorAll("[data-wiki-page-select]").forEach((input) => {
+    input.addEventListener("click", (event) => event.stopPropagation());
+    input.addEventListener("change", () => {
+      if (input.checked) state.selectedWikiPaths.add(input.dataset.wikiPageSelect);
+      else state.selectedWikiPaths.delete(input.dataset.wikiPageSelect);
+      renderNotionWikiContent();
+    });
+  });
   document.querySelectorAll("[data-account-select]").forEach((input) => {
     input.addEventListener("click", (event) => event.stopPropagation());
     input.addEventListener("change", () => {
@@ -873,6 +926,56 @@ function bindAccountBulkControls() {
     renderNotionWikiContent();
   });
   $("#account-bulk-apply")?.addEventListener("click", applyAccountBulkStatus);
+}
+
+function bindWikiBulkControls(pages = []) {
+  $("#wiki-bulk-clear")?.addEventListener("click", () => {
+    state.selectedWikiPaths.clear();
+    renderNotionWikiContent();
+  });
+  $("#wiki-bulk-apply")?.addEventListener("click", () => applyWikiBulkTags(pages));
+}
+
+function splitTags(value) {
+  return String(value || "")
+    .split(/[,，;；\n]+/)
+    .map((tag) => tag.trim().replace(/^#/, ""))
+    .filter(Boolean);
+}
+
+async function applyWikiBulkTags(pages = []) {
+  const selected = pages.filter((page) => page.statusManaged !== false && state.selectedWikiPaths.has(page.path));
+  if (!selected.length) return;
+  const statusEl = $("#wiki-bulk-status-text");
+  const newTags = splitTags($("#wiki-bulk-tags")?.value || "");
+  if (!newTags.length) {
+    if (statusEl) statusEl.textContent = "태그를 1개 이상 입력하세요.";
+    return;
+  }
+  if (statusEl) statusEl.textContent = "태그 저장 중";
+  const mode = $("#wiki-bulk-tag-mode")?.value || "append";
+  const items = selected.map((page) => {
+    const tags = mode === "replace" ? newTags : [...new Set([...(page.workflowTags || []), ...newTags])];
+    return {
+      scope: "page",
+      path: page.path,
+      status: page.workflowStatus || "unknown",
+      tags: tags.join(", "),
+      highlight: page.workflowStatusHighlight || "",
+      note: $("#wiki-bulk-note")?.value || `사용자 멀티태그 ${mode === "replace" ? "교체" : "추가"}`,
+    };
+  });
+  const result = await api("/api/wiki/status", {
+    method: "POST",
+    body: JSON.stringify({ items }),
+  });
+  if (result.error || result.mock) {
+    if (statusEl) statusEl.textContent = `저장 실패: ${result.error || "API 연결 대기"}`;
+    return;
+  }
+  state.selectedWikiPaths.clear();
+  if (statusEl) statusEl.textContent = `${result.count || selected.length}건 태그 저장 완료`;
+  await loadNotionWikiBrowser();
 }
 
 async function applyAccountBulkStatus() {
@@ -910,9 +1013,30 @@ async function loadNotionWikiBrowser() {
   }
   state.wikiPages = payload.pages;
   state.selectedAccountKeys.clear();
+  state.selectedWikiPaths.clear();
   updateNotionStats();
   updateWikiFilterControls();
   renderNotionWikiContent();
+}
+
+async function refreshGraphMap() {
+  const button = $("#refresh-graph-map");
+  const status = $("#refresh-graph-map-status");
+  if (button) button.disabled = true;
+  if (status) status.textContent = "그래프맵 재생성 중";
+  const result = await api("/api/wiki/graph/refresh", {
+    method: "POST",
+    body: JSON.stringify({}),
+  });
+  if (result.error || result.mock || result.status === "failed") {
+    if (status) status.textContent = `실패: ${result.error || result.stderr || "API 연결 대기"}`;
+    if (button) button.disabled = false;
+    return;
+  }
+  await loadNotionWikiBrowser();
+  await refreshStatus();
+  if (status) status.textContent = "그래프맵 업데이트 완료";
+  if (button) button.disabled = false;
 }
 
 async function openNotionWikiPage(path) {
@@ -930,18 +1054,26 @@ async function openNotionWikiPage(path) {
   }
   $("#notion-details-content").innerHTML = [
     `<div class="notion-doc-title">`,
-    `<span>${escapeHtml(divisionLabels[page.division] || page.division || "Wiki")} / ${escapeHtml(page.projectLabel || page.section || "")} / ${escapeHtml(page.workflowStatusLabel || "미지정")}</span>`,
+    `<span>${escapeHtml(divisionLabels[page.division] || page.division || "Wiki")} / ${escapeHtml(page.projectLabel || page.section || "")}${page.statusManaged === false ? " / 상태관리 제외" : ` / ${escapeHtml(page.workflowStatusLabel || "미지정")}`}</span>`,
     `<h2>${escapeHtml(payload.title)}</h2>`,
     `<code>${escapeHtml(payload.path)}</code>`,
     page.workflowStatusHighlight ? `<p class="wiki-status-highlight">${escapeHtml(page.workflowStatusHighlight)}</p>` : "",
     `</div>`,
-    `<form class="wiki-status-editor" id="wiki-status-editor">`,
-    `<label><span>상태</span><select name="status">${Object.entries(workflowStatusLabels).filter(([key]) => key !== "all").map(([key, label]) => `<option value="${escapeHtml(key)}" ${page.workflowStatus === key ? "selected" : ""}>${escapeHtml(label)}</option>`).join("")}</select></label>`,
-    `<label><span>태그</span><input name="tags" value="${escapeHtml((page.workflowTags || []).join(", "))}" placeholder="완료, 온고잉, 중요" /></label>`,
-    `<label><span>하이라이트</span><input name="highlight" value="${escapeHtml(page.workflowStatusHighlight || "")}" placeholder="전역에 표시할 운영 상태 한 줄" /></label>`,
-    `<label><span>메모</span><input name="note" value="${escapeHtml(page.workflowNote || "")}" placeholder="사용자 상태 변경 이유" /></label>`,
-    `<div class="wiki-editor-actions"><button class="command-button accent" type="submit">상태 저장</button><button class="command-button" id="wiki-edit-toggle" type="button">본문 수정</button><span id="wiki-edit-status">사용자 액션으로 상태를 관리합니다.</span></div>`,
-    `</form>`,
+    page.statusManaged === false ? [
+      `<section class="wiki-status-editor wiki-status-excluded">`,
+      `<strong>상태관리 제외</strong>`,
+      `<p>GLM 대화/지침/보조 메모리 문서는 업무 추진 상태가 아니므로 상태값을 관리하지 않습니다. 내용 수정은 아래 Markdown 편집만 사용하세요.</p>`,
+      `<div class="wiki-editor-actions"><button class="command-button" id="wiki-edit-toggle" type="button">본문 수정</button><span id="wiki-edit-status">상태 저장 대상이 아닙니다.</span></div>`,
+      `</section>`,
+    ].join("") : [
+      `<form class="wiki-status-editor" id="wiki-status-editor">`,
+      `<label><span>상태</span><select name="status">${Object.entries(workflowStatusLabels).filter(([key]) => key !== "all").map(([key, label]) => `<option value="${escapeHtml(key)}" ${page.workflowStatus === key ? "selected" : ""}>${escapeHtml(label)}</option>`).join("")}</select></label>`,
+      `<label><span>사용자 멀티태그</span><input name="tags" value="${escapeHtml((page.workflowTags || []).join(", "))}" placeholder="고객대응, 이번주, 보고서" /></label>`,
+      `<label><span>하이라이트</span><input name="highlight" value="${escapeHtml(page.workflowStatusHighlight || "")}" placeholder="전역에 표시할 운영 상태 한 줄" /></label>`,
+      `<label><span>메모</span><input name="note" value="${escapeHtml(page.workflowNote || "")}" placeholder="사용자 상태 변경 이유" /></label>`,
+      `<div class="wiki-editor-actions"><button class="command-button accent" type="submit">상태 저장</button><button class="command-button" id="wiki-edit-toggle" type="button">본문 수정</button><span id="wiki-edit-status">사용자 액션으로 상태를 관리합니다.</span></div>`,
+      `</form>`,
+    ].join(""),
     `<section class="wiki-page-editor" id="wiki-page-editor" hidden>`,
     `<textarea id="wiki-page-markdown">${escapeHtml(payload.markdown)}</textarea>`,
     `<div class="wiki-editor-actions"><button class="command-button accent" id="wiki-page-save" type="button">Markdown 저장</button><button class="command-button" id="wiki-page-cancel" type="button">닫기</button></div>`,
@@ -1332,6 +1464,7 @@ function latestRun() {
 function renderAutomationState() {
   const latest = latestRun();
   const running = state.running[0];
+  const progress = running?.progress || latest?.progress || {};
   const panel = $(".side-run-panel");
   const status = running ? "running" : latest?.status || "idle";
   panel.classList.remove("running", "failed", "stopped", "stopping");
@@ -1339,13 +1472,42 @@ function renderAutomationState() {
   $("#side-run-status").textContent = running ? "자동화 실행 중" : latest ? `최근 상태: ${latest.status}` : "자동화 대기";
   $("#side-run-command").textContent = running?.command || latest?.command || "실행 중인 작업 없음";
   $("#side-run-detail").textContent = running
-    ? `시작: ${running.startedAt}`
+    ? [
+        progress.percent != null ? `${progress.percent}%` : "",
+        progress.transferred || "",
+        progress.speed || "",
+        progress.currentFile ? `현재: ${progress.currentFile}` : "",
+        `시작: ${running.startedAt}`,
+      ].filter(Boolean).join(" · ")
     : latest
-      ? (latest.stderr || latest.stdout || latest.createdAt || "").slice(-500) || "세부 로그 없음"
+      ? (progress.summary || latest.stderr || latest.stdout || latest.createdAt || "").slice(-500) || "세부 로그 없음"
       : "에러와 진행 로그가 여기에 표시됩니다.";
   $("#side-stop-run").disabled = !running;
   $("#stop-run").disabled = !running;
   $("#automation-live-status").textContent = running ? `${running.command} 실행 중` : "대기 중";
+  renderRcloneLiveProgress(running || latest);
+}
+
+function renderRcloneLiveProgress(run) {
+  const target = $("#rclone-live-progress");
+  if (!target) return;
+  const progress = run?.progress || {};
+  if (!run || !String(run.command || "").includes("rclone-copy")) {
+    target.innerHTML = `<strong>rclone 진행 신호 대기</strong><span>수집 실행 중 전송량, 속도, 현재 파일, 최근 로그가 표시됩니다.</span>`;
+    return;
+  }
+  target.innerHTML = [
+    `<strong>${run.status === "running" ? "rclone 수집 진행 중" : `rclone 최근 상태: ${escapeHtml(run.status || "unknown")}`}</strong>`,
+    `<div class="rclone-progress-grid">`,
+    `<span>진행률 <b>${progress.percent != null ? `${escapeHtml(String(progress.percent))}%` : "-"}</b></span>`,
+    `<span>전송량 <b>${escapeHtml(progress.transferred || "-")}</b></span>`,
+    `<span>속도 <b>${escapeHtml(progress.speed || "-")}</b></span>`,
+    `<span>ETA <b>${escapeHtml(progress.eta || "-")}</b></span>`,
+    `</div>`,
+    progress.currentFile ? `<p><b>현재 파일</b> ${escapeHtml(progress.currentFile)}</p>` : "",
+    progress.summary ? `<p><b>rclone stats</b> ${escapeHtml(progress.summary)}</p>` : "",
+    progress.recentLines?.length ? `<pre>${escapeHtml(progress.recentLines.join("\n"))}</pre>` : "",
+  ].join("");
 }
 
 function renderSchedules() {
@@ -1799,6 +1961,20 @@ function openChatSettingsModal() {
 
 function closeChatSettingsModal() {
   const modal = $("#chat-settings-modal");
+  if (!modal) return;
+  if (typeof modal.close === "function") modal.close();
+  else modal.removeAttribute("open");
+}
+
+function openChatProjectSettingsModal() {
+  const modal = $("#chat-project-settings-modal");
+  if (!modal) return;
+  if (typeof modal.showModal === "function") modal.showModal();
+  else modal.setAttribute("open", "open");
+}
+
+function closeChatProjectSettingsModal() {
+  const modal = $("#chat-project-settings-modal");
   if (!modal) return;
   if (typeof modal.close === "function") modal.close();
   else modal.removeAttribute("open");
@@ -2696,6 +2872,7 @@ $("#chat-project-save").addEventListener("click", saveChatProject);
 $("#chat-project-delete").addEventListener("click", deleteChatProject);
 $("#chat-memory-add").addEventListener("click", addChatMemory);
 $("#wiki-refresh").addEventListener("click", loadNotionWikiBrowser);
+$("#refresh-graph-map")?.addEventListener("click", refreshGraphMap);
 $("#wiki-command-run").addEventListener("click", runWikiManagementCommand);
 $("#wiki-command-apply").addEventListener("click", applyWikiManagementCommand);
 $("#wiki-command-example").addEventListener("click", fillWikiManagementExample);
@@ -2764,6 +2941,10 @@ $("#notion-status-filter")?.addEventListener("change", (event) => {
   state.wikiFilters.status = event.target.value;
   renderNotionWikiContent();
 });
+$("#notion-tag-filter")?.addEventListener("change", (event) => {
+  state.wikiFilters.tag = event.target.value;
+  renderNotionWikiContent();
+});
 $("#notion-project-filter")?.addEventListener("change", (event) => {
   state.wikiFilters.projectKey = event.target.value;
   state.activeProjectKey = event.target.value === "all" ? "" : event.target.value;
@@ -2802,6 +2983,8 @@ $("#chat-settings-open").addEventListener("click", openChatSettingsModal);
 $("#chat-settings-close").addEventListener("click", closeChatSettingsModal);
 $("#chat-settings-cancel").addEventListener("click", closeChatSettingsModal);
 $("#chat-runtime-save").addEventListener("click", saveChatRuntimeSettings);
+$("#chat-project-settings-open")?.addEventListener("click", openChatProjectSettingsModal);
+$("#chat-project-settings-close")?.addEventListener("click", closeChatProjectSettingsModal);
 $("#close-promotion-panel").addEventListener("click", closeKnowledgePromotionPanel);
 $("#execute-promotion").addEventListener("click", executeKnowledgePromotion);
 $("#wiki-query").addEventListener("keydown", (event) => {

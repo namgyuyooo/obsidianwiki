@@ -12,6 +12,7 @@
 - `cleanup`
 - `project_decider`
 - `wiki_writer`
+- `wiki_maintenance`
 - `extractors/hwp_hwpx`
 - `extractors/pdf`
 - `extractors/docx`
@@ -25,6 +26,7 @@
 - `rhwp`, `pdf`, `docx`, `pptx` 모두에서 본문과 구조를 추출할 것
 - 기존 프로젝트와 비교하여 `업데이트` vs `신규 프로젝트 생성` vs `프로젝트 분기`를 판단할 것
 - 신규 프로젝트가 필요하면 위키 기본 문서와 `L1_memory`까지 생성할 것
+- 위키 변경이 발생하면 sparse 검색 인덱스와 전역 그래프/네비게이션 산출물을 재생성할 것
 - 검증이 통과한 파일만 `local mirror`에서 삭제할 것
 
 ## 남은 보강 포인트

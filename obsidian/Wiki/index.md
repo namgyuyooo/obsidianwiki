@@ -60,6 +60,7 @@ source: "Global wiki index initialized from existing project hubs"
 - [[Wiki/PSK_Project/hub]]: PSK 프로젝트 위키 허브
 - [[Wiki/Pixel_AIVoucher_Project/hub]]: Pixel AI Voucher 프로젝트 위키 허브
 - [[Wiki/SanupAI_RnD_Project/hub]]: 산업현장문제해결형 산업AI 에이전트 기술개발 R&D 허브
+- [[Wiki/Sawnics_ManufacturingAI_Project/hub]]: 쏘닉스 IDT 검사 PoC와 제조AI특화 스마트공장 제안 준비 허브
 - [[Wiki/SeoulBiosys_Project/hub]]: 서울바이오시스 프로젝트 위키 허브
 - [[Wiki/SeoulSemicon_Project/hub]]: 서울반도체 프로젝트 위키 허브
 - [[Wiki/ZEUS_AIVoucher_Project/hub]]: ZEUS AI Voucher 프로젝트 위키 허브
@@ -85,6 +86,9 @@ Drive 소스 기반으로 구축된 RTM_YNG 계열 프로젝트 페이지 (L1_me
 - [[Wiki/Common/RTM_YNG_Drive_Discovery_2026-04-21]]: Drive 구조 감사 및 대표본 지도
 
 ## Common Knowledge and Maps
+
+- [[Wiki/Common/Wiki_Global_Navigation]]: 전역 sparse 검색/그래프/고아 페이지 상태를 보여주는 자동 생성 네비게이션 맵
+
 
 - [[Wiki/Common/Slack_Public_Evidence_Index]]: 공개 Slack 증적 인덱스
 - [[Wiki/Common/Project_Candidate_Register]]: 프로젝트 후보 레지스터

@@ -45,6 +45,12 @@ def build_rclone_copy_command(
         "--use-server-modtime",
         "--log-level",
         "INFO",
+        "--progress",
+        "--stats",
+        "10s",
+        "--stats-one-line",
+        "--stats-file-name-length",
+        "80",
     ]
     for pattern in exclude_patterns or []:
         if pattern.strip():
@@ -75,6 +81,6 @@ def run_rclone_copy(
         exclude_patterns=exclude_patterns,
     )
     if dry_run:
-        print(" ".join(shlex.quote(part) for part in cmd))
+        print(" ".join(shlex.quote(part) for part in cmd), flush=True)
         return
     subprocess.run(cmd, check=True)

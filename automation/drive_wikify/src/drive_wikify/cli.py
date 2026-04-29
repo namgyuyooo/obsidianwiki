@@ -7,6 +7,7 @@ from .config import RuntimeConfig
 from .manifest_builder import build_manifest
 from .rclone_sync import run_rclone_copy
 from .runner import DriveWikifyRunner
+from .wiki_maintenance import refresh_global_artifacts, sparse_search
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -27,6 +28,13 @@ def build_parser() -> argparse.ArgumentParser:
     manifest_parser.add_argument("--root", help="Mirror root to scan.")
     manifest_parser.add_argument("--drive-name", help="Logical drive name for manifest entries.")
     manifest_parser.add_argument("--output", help="Output manifest JSON path.")
+
+    refresh_parser = subparsers.add_parser("refresh-global", help="Rebuild sparse search index and global wiki graph/navigation artifacts.")
+    refresh_parser.add_argument("--json", action="store_true", help="Print machine-readable JSON output.")
+
+    search_parser = subparsers.add_parser("sparse-search", help="Run sparse lexical search against the generated wiki index.")
+    search_parser.add_argument("query", help="Search query.")
+    search_parser.add_argument("--limit", type=int, default=10, help="Maximum number of results to print.")
 
     sync_parser = subparsers.add_parser("rclone-copy", help="Run conservative rclone copy into a local mirror.")
     sync_parser.add_argument("--remote", help="Configured rclone remote name.")
@@ -90,6 +98,32 @@ def main() -> int:
             parser.exit(2, f"error: {exc}\n")
         count = build_manifest(root, drive_name, output, config.allowed_file_types)
         print(f"Manifest written with {count} documents.")
+        return 0
+
+    if args.command == "refresh-global":
+        payload = refresh_global_artifacts(config)
+        if args.json:
+            import json
+
+            print(json.dumps(payload, ensure_ascii=False, indent=2))
+        else:
+            print("Global wiki artifacts refreshed.")
+            print(f"- Sparse index docs: {payload['sparse_index']['documents']}")
+            print(f"- Sparse index terms: {payload['sparse_index']['terms']}")
+            print(f"- Graph pages: {payload['graph']['pages']}")
+            print(f"- Graph edges: {payload['graph']['edges']}")
+            print(f"- Orphan pages: {payload['graph']['orphan_pages']}")
+            print(f"- Navigation page: {payload['navigation_page']}")
+        return 0
+
+    if args.command == "sparse-search":
+        results = sparse_search(config, args.query, args.limit)
+        print(f'Sparse search results for "{args.query}" ({len(results)} hits)')
+        for index, item in enumerate(results, start=1):
+            print(f"{index}. {item['title']} [{item['score']}]")
+            print(f"   - path: {item['path']}")
+            print(f"   - project: {item['project_key']}")
+            print(f"   - terms: {', '.join(item['matched_terms'])}")
         return 0
 
     if args.command == "rclone-copy":

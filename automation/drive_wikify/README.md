@@ -56,7 +56,8 @@
 1. `rclone-copy`로 Shared Drive 또는 폴더를 아주 보수적으로 `local mirror`에 누적
 2. `build-manifest`로 mirror에서 `hwp/hwpx/pdf/docx/pptx/html` 목록 생성
 3. `run`으로 배치를 위키 프로젝트 업데이트에 반영
-4. 검증이 통과한 파일만 `local mirror`에서 삭제하고 `deletion_log.jsonl`에 기록
+4. `run` 직후 sparse 검색 인덱스와 전역 그래프/네비게이션 산출물을 자동 재생성
+5. 검증이 통과한 파일만 `local mirror`에서 삭제하고 `deletion_log.jsonl`에 기록
 
 ## 실행 예시
 
@@ -76,6 +77,18 @@ PYTHONPATH=automation/drive_wikify/src \
 PYTHONPATH=automation/drive_wikify/src \
 /Users/rtm/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3 \
 -m drive_wikify.cli run
+```
+
+```bash
+PYTHONPATH=automation/drive_wikify/src \
+/Users/rtm/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3 \
+-m drive_wikify.cli refresh-global
+```
+
+```bash
+PYTHONPATH=automation/drive_wikify/src \
+/Users/rtm/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3 \
+-m drive_wikify.cli sparse-search "제우스 AI 바우처"
 ```
 
 `--env-file`로 다른 `.env`를 지정할 수 있고, `--config`는 legacy YAML/JSON 호환용이다.
@@ -102,6 +115,12 @@ PYTHONPATH=automation/drive_wikify/src \
   - `RUN_OUTPUT_PATH`
 - local mirror deletion log:
   - `DELETION_LOG`
+- sparse 검색 인덱스:
+  - `automation/drive_wikify/runtime/wiki_sparse_index.json`
+- 전역 그래프 스냅샷:
+  - `automation/drive_wikify/runtime/wiki_graph_snapshot.json`
+- 전역 네비게이션 문서:
+  - `obsidian/Wiki/Common/Wiki_Global_Navigation.md`
 
 ## 형식 지원 상태
 
