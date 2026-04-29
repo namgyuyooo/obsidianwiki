@@ -61,13 +61,20 @@ const state = {
   pendingUserMessageId: "",
   lastChatText: "",
   notionCurrentCategory: "all",
+  spotlite: {
+    work: null,
+    personal: null,
+    personalUnlocked: sessionStorage.getItem("spotlite_personal_unlocked") === "true",
+    templates: [],
+  },
 };
 
 const titles = {
+  "spotlite-work": "Spotlite Work",
+  "spotlite-personal": "Spotlite Personal",
   operations: "운영",
   pipeline: "수집 파이프라인",
   wiki: "위키",
-  search: "위키 검색",
   ingest: "지식 주입",
   chat: "GLM 챗",
   paperclip: "Paperclip",
@@ -92,6 +99,7 @@ const settingLabels = {
   CHUNK_SIZE_MAX_CHARS: "청크 최대",
   CLEANUP_LOCAL_MIRROR: "로컬 mirror 정리",
   AUTO_CREATE_PROJECT_SPACE: "프로젝트 자동 생성",
+  ALLOWED_FILE_TYPES: "위키화 대상 파일",
   GLM_API_URL: "GLM API URL",
   GLM_API_KEY: "GLM API Key",
   GLM_MODEL: "GLM 모델",
@@ -106,6 +114,10 @@ const settingLabels = {
   PAPERCLIP_URL: "Paperclip URL",
   PAPERCLIP_API_KEY: "Paperclip API Key",
 };
+
+function personalSpotlitePin() {
+  return localStorage.getItem("spotlite_personal_pin") || "0953";
+}
 
 function $(selector) {
   return document.querySelector(selector);
@@ -285,6 +297,132 @@ function renderStatus() {
   $("#cleanup-status").textContent = state.status.cleanup;
   const pipelineDrive = $("#pipeline-drive-default");
   if (pipelineDrive) pipelineDrive.textContent = `기본 경로: ${state.status.targetDrive || "gdrive: 최상위"}`;
+}
+
+function spotliteItemHtml(item) {
+  return [
+    `<article class="spotlite-item spotlite-${escapeHtml(item.kind || "action")}">`,
+    `<div><strong>${escapeHtml(item.project || "Wiki")}</strong><span>${escapeHtml(item.kind || "action")} · ${escapeHtml(item.docKind || "page")}</span></div>`,
+    `<p>${escapeHtml(item.line || "")}</p>`,
+    `<button type="button" data-notion-path="${escapeHtml(item.path || "")}">${escapeHtml(item.title || item.path || "문서 열기")}</button>`,
+    `</article>`,
+  ].join("");
+}
+
+function spotliteLane(title, items, emptyText) {
+  return [
+    `<section class="spotlite-lane">`,
+    `<div class="spotlite-lane-head"><h3>${escapeHtml(title)}</h3><span>${items?.length || 0}건</span></div>`,
+    items?.length ? items.map(spotliteItemHtml).join("") : `<div class="spotlite-empty">${escapeHtml(emptyText)}</div>`,
+    `</section>`,
+  ].join("");
+}
+
+function renderSpotlite(scope, payload) {
+  const target = $(`#spotlite-${scope}-content`);
+  if (!target) return;
+  if (payload?.error || payload?.mock) {
+    target.innerHTML = `<div class="spotlite-empty">Spotlite API 연결 실패: ${escapeHtml(payload.error || "mock")}</div>`;
+    return;
+  }
+  const summary = payload.summary || {};
+  target.innerHTML = [
+    `<section class="spotlite-summary" data-anchor="주요 분석">`,
+    `<article><span>오늘</span><strong>${summary.today || 0}</strong></article>`,
+    `<article><span>이번주</span><strong>${summary.week || 0}</strong></article>`,
+    `<article><span>리스크</span><strong>${summary.risks || 0}</strong></article>`,
+    `<article><span>프로젝트</span><strong>${summary.projects || 0}</strong></article>`,
+    `</section>`,
+    `<section class="spotlite-analysis">`,
+    `<h3>주요 분석</h3>`,
+    `<ul>${(payload.analysis || []).map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>`,
+    `<small>${escapeHtml(payload.workspace?.label || scope)} · ${escapeHtml(payload.generatedAt || "")}</small>`,
+    `</section>`,
+    `<div class="spotlite-grid">`,
+    spotliteLane("오늘 할 일", payload.today || [], "오늘로 명시된 항목이 없습니다. 운영 메모에서 오늘 처리할 일을 보강하세요."),
+    spotliteLane("이번주 해야 할 일", payload.week || [], "이번주로 명시된 항목이 없습니다. 주간 액션을 허브/Action_Items에 추가하세요."),
+    spotliteLane("주요 리스크", payload.risks || [], "감지된 리스크가 없습니다."),
+    spotliteLane("운영 메모", payload.memos || [], "허브 운영 메모를 보강하면 진행 맥락이 여기에 모입니다."),
+    `</div>`,
+    `<section class="spotlite-projects">`,
+    `<h3>우선 확인 프로젝트</h3>`,
+    (payload.projects || []).map((project) => [
+      `<article>`,
+      `<strong>${escapeHtml(project.project)}</strong>`,
+      `<span>액션 ${project.actions || 0} · 리스크 ${project.risks || 0} · 신호 ${project.count || 0}</span>`,
+      `<button type="button" data-notion-path="${escapeHtml(project.latestPath || "")}">관련 문서 열기</button>`,
+      `</article>`,
+    ].join("")).join("") || `<div class="spotlite-empty">우선순위 프로젝트가 아직 없습니다.</div>`,
+    `</section>`,
+  ].join("");
+  target.querySelectorAll("[data-notion-path]").forEach((button) => {
+    button.addEventListener("click", () => {
+      activateView("wiki");
+      openNotionWikiPage(button.dataset.notionPath);
+    });
+  });
+}
+
+async function loadSpotlite(scope = "work") {
+  const target = $(`#spotlite-${scope}-content`);
+  if (target) target.innerHTML = `<div class="spotlite-empty">Spotlite를 분석하는 중입니다.</div>`;
+  const payload = await api(`/api/spotlite?scope=${encodeURIComponent(scope)}`);
+  state.spotlite[scope] = payload;
+  renderSpotlite(scope, payload);
+}
+
+function renderSpotliteTemplates(scope = "work") {
+  const container = $(`#spotlite-${scope}-templates`);
+  if (!container) return;
+  const wanted = scope === "personal"
+    ? new Set(["hub_memo", "personal_prompt"])
+    : new Set(["hub_memo", "work_prompt"]);
+  const templates = (state.spotlite.templates || []).filter((template) => wanted.has(template.id));
+  container.innerHTML = templates.length
+    ? templates.map((template) => [
+        `<article class="spotlite-template-card">`,
+        `<div><strong>${escapeHtml(template.title)}</strong><small>${escapeHtml(template.description)}</small></div>`,
+        `<pre>${escapeHtml(template.markdown || "")}</pre>`,
+        `<button type="button" data-copy-template="${escapeHtml(template.id)}" class="command-button">복사</button>`,
+        `</article>`,
+      ].join("")).join("")
+    : `<div class="spotlite-empty">템플릿을 불러오는 중입니다.</div>`;
+  container.querySelectorAll("[data-copy-template]").forEach((button) => {
+    button.addEventListener("click", async () => {
+      const template = templates.find((item) => item.id === button.dataset.copyTemplate);
+      await navigator.clipboard?.writeText(template?.markdown || "");
+      button.textContent = "복사됨";
+    });
+  });
+}
+
+async function loadSpotliteTemplates() {
+  const payload = await api("/api/spotlite/templates");
+  if (payload.error || payload.mock) return;
+  state.spotlite.templates = payload.templates || [];
+  renderSpotliteTemplates("work");
+  renderSpotliteTemplates("personal");
+}
+
+function renderPersonalLock() {
+  const locked = !state.spotlite.personalUnlocked;
+  $("#personal-lock-panel")?.classList.toggle("hidden", !locked);
+  $("#personal-spotlite-panel")?.classList.toggle("hidden", locked);
+  if (!locked && !state.spotlite.personal) loadSpotlite("personal");
+}
+
+function unlockPersonalSpotlite() {
+  const input = $("#personal-pin-input");
+  const value = input?.value.trim() || "";
+  if (value === personalSpotlitePin()) {
+    state.spotlite.personalUnlocked = true;
+    sessionStorage.setItem("spotlite_personal_unlocked", "true");
+    $("#personal-lock-status").textContent = "잠금 해제됨";
+    renderPersonalLock();
+    return;
+  }
+  $("#personal-lock-status").textContent = "PIN이 맞지 않습니다.";
+  input?.select?.();
 }
 
 function renderEvents(target, events) {
@@ -1018,7 +1156,13 @@ async function api(path, options = {}) {
       headers: { "Content-Type": "application/json" },
       ...options,
     });
-    const payload = await response.json();
+    const text = await response.text();
+    let payload = {};
+    try {
+      payload = text ? JSON.parse(text) : {};
+    } catch {
+      payload = { error: text || `HTTP ${response.status}` };
+    }
     if (!response.ok) {
       return { ...payload, error: payload.error || `HTTP ${response.status}` };
     }
@@ -1170,6 +1314,40 @@ function renderDriveTargets(payload = {}) {
   });
 }
 
+function renderDriveInstructionPlan(payload = {}) {
+  const plan = payload.plan || {};
+  const container = $("#drive-instruction-plan");
+  if (!container) return;
+  container.innerHTML = [
+    `<article class="drive-plan-card">`,
+    `<strong>${escapeHtml(plan.intent || "target_collect")} · ${escapeHtml(plan.provider || "local")}</strong>`,
+    `<p>키워드: ${(plan.keywords || []).map((item) => `<span>${escapeHtml(item)}</span>`).join("") || "<span>없음</span>"}</p>`,
+    `<p>후보: ${escapeHtml(String(payload.candidates?.length || 0))}개 · 지시 매칭: ${escapeHtml(String(payload.summary?.instructionMatches || 0))}개</p>`,
+    plan.upstreamStatus ? `<small>GLM 상태: ${escapeHtml(plan.upstreamStatus)}</small>` : "",
+    `<small>안전 규칙: rclone copy만 생성합니다. 원본 Google Drive 삭제/수정은 금지됩니다.</small>`,
+    `</article>`,
+  ].join("");
+}
+
+async function analyzeDriveInstructionTargets() {
+  const input = $("#drive-instruction-input");
+  const instruction = input?.value.trim() || "";
+  if (!instruction) return;
+  $("#drive-instruction-status").textContent = "GLM/로컬 규칙으로 표적 계획 생성 중";
+  $("#target-analysis-status").textContent = "지시 기반 표적 분석 중";
+  const payload = await api("/api/drive/instruction-targets", {
+    method: "POST",
+    body: JSON.stringify({ instruction }),
+  });
+  if (payload.error || payload.mock) {
+    $("#drive-instruction-status").textContent = `실패: ${payload.error || "API 연결 대기"}`;
+    return;
+  }
+  $("#drive-instruction-status").textContent = `${payload.plan?.provider || "local"} 계획 완료 · 후보 ${payload.candidates?.length || 0}개`;
+  renderDriveInstructionPlan(payload);
+  renderDriveTargets(payload);
+}
+
 async function analyzeDriveTargets() {
   $("#target-analysis-status").textContent = "분석 중: 위키/manifest/coverage/rclone lsd를 대조합니다.";
   const payload = await api("/api/drive/targets", { method: "POST", body: JSON.stringify({}) });
@@ -1226,6 +1404,9 @@ async function loadSettings() {
   if (payload.secrets?.PAPERCLIP_API_KEY) {
     form.elements.PAPERCLIP_API_KEY.placeholder = "저장된 키 있음";
   }
+  if (form.elements.SPOTLITE_PERSONAL_PIN) {
+    form.elements.SPOTLITE_PERSONAL_PIN.value = personalSpotlitePin();
+  }
   syncChatRuntimeControls(payload.settings);
   $("#settings-status").textContent = "설정 불러옴";
 }
@@ -1264,6 +1445,16 @@ async function saveSettings(event) {
   if (result.error) {
     $("#settings-status").textContent = `저장 실패: ${result.error}`;
     return;
+  }
+  const pinField = form.elements.SPOTLITE_PERSONAL_PIN;
+  if (pinField?.value.trim()) {
+    const pin = pinField.value.trim();
+    if (/^\d{4}$/.test(pin)) {
+      localStorage.setItem("spotlite_personal_pin", pin);
+    } else {
+      $("#settings-status").textContent = "저장 완료 · 개인 PIN은 숫자 4자리만 허용";
+      return;
+    }
   }
   $("#settings-status").textContent = "저장 완료";
   syncChatRuntimeControls(result.settings || settings);
@@ -1351,7 +1542,13 @@ function activateView(viewId) {
   document.querySelectorAll(".nav-item").forEach((item) => item.classList.toggle("active", item.dataset.view === viewId));
   document.querySelectorAll(".view").forEach((view) => view.classList.toggle("active", view.id === viewId));
   $("#view-title").textContent = titles[viewId] || viewId;
+  const spaceSelect = $("#wiki-space-select");
+  if (spaceSelect && ["spotlite-work", "spotlite-personal"].includes(viewId)) spaceSelect.value = viewId;
   renderSectionAnchors(viewId);
+  if (viewId === "spotlite-work" && !state.spotlite.work) loadSpotlite("work");
+  if (viewId === "spotlite-work") renderSpotliteTemplates("work");
+  if (viewId === "spotlite-personal") renderPersonalLock();
+  if (viewId === "spotlite-personal") renderSpotliteTemplates("personal");
   if (viewId === "wiki" && !state.wikiPages.length) loadNotionWikiBrowser();
   history.replaceState(null, "", `#${viewId}`);
   $(".workspace")?.scrollTo?.({ top: 0, behavior: "smooth" });
@@ -1578,10 +1775,17 @@ async function searchWiki() {
   results.innerHTML = "";
   state.searchResults = [];
   state.selectedSearchPaths = new Set();
+  state.wikiFilters.query = query;
+  const notionSearch = $("#notion-wiki-search");
+  if (notionSearch) notionSearch.value = query;
+  renderNotionWikiContent();
   $("#search-result-count").textContent = "0건";
   updateSelectedCount();
   $("#search-brief-provider").textContent = "사용자 선택 후 정리";
   $("#search-brief").textContent = "검색 결과에서 근거 Markdown을 선택한 뒤 GLM 정리를 실행하세요.";
+  $("#search-doc-title").textContent = "선택 문서";
+  $("#search-doc-path").textContent = "근거 문서를 선택";
+  $("#search-doc-body").textContent = "검색 결과를 누르면 이 자리에서 Markdown을 읽기 좋게 보여주고, 아래 위키 브라우저의 문서 보기에도 함께 연결됩니다.";
   if (!query) return;
 
   $("#search-brief-provider").textContent = "검색 완료 대기";
@@ -1605,7 +1809,7 @@ async function searchWiki() {
 
   $("#search-result-count").textContent = `${items.length}건`;
   $("#search-brief-provider").textContent = "근거 선택 대기";
-  $("#search-brief").textContent = `${items.length}개 결과를 찾았습니다. 정리할 근거를 체크하고 선택 근거 GLM 정리를 누르세요.`;
+  $("#search-brief").textContent = `${items.length}개 결과를 찾았습니다. 문서는 오른쪽 위키 보기에서 열리고, 체크한 근거만 GLM 정리에 사용됩니다.`;
 
   items.forEach((item) => {
     const node = document.createElement("article");
@@ -1621,7 +1825,7 @@ async function searchWiki() {
       `<p>${escapeHtml(item.snippet)}</p>`,
       `</button>`,
     ].join("");
-    node.querySelector(".result-open").addEventListener("click", () => loadPage(item));
+    node.querySelector(".result-open").addEventListener("click", () => openSearchResult(item));
     node.querySelector("input").addEventListener("change", (event) => {
       if (event.target.checked) state.selectedSearchPaths.add(item.path);
       else state.selectedSearchPaths.delete(item.path);
@@ -1629,7 +1833,7 @@ async function searchWiki() {
     });
     results.appendChild(node);
   });
-  if (items[0]) await loadPage(items[0]);
+  if (items[0]) await openSearchResult(items[0]);
 }
 
 async function summarizeSelectedResults() {
@@ -1651,7 +1855,31 @@ async function summarizeSelectedResults() {
   renderSearchBrief(payload.brief);
 }
 
+async function openSearchResult(item) {
+  if (!item?.path) return;
+  state.activeWikiPath = item.path;
+  $("#search-doc-title").textContent = item.title || "선택 문서";
+  $("#search-doc-path").textContent = item.path;
+  $("#search-doc-body").textContent = "문서를 불러오는 중입니다.";
+  document.querySelectorAll(".selectable-result").forEach((node) => {
+    node.classList.toggle("active", node.querySelector("[data-search-path]")?.dataset.searchPath === item.path);
+  });
+  const payload = await api(`/api/wiki/page?path=${encodeURIComponent(item.path)}`);
+  if (payload.error || payload.mock) {
+    $("#search-doc-body").textContent = payload.error || item.snippet || "문서 API 연결 대기";
+  } else {
+    $("#search-doc-title").textContent = payload.title || item.title || "선택 문서";
+    $("#search-doc-path").textContent = payload.path || item.path;
+    $("#search-doc-body").innerHTML = renderMarkdownDocument(payload.markdown);
+  }
+  await openNotionWikiPage(item.path);
+}
+
 async function loadPage(item) {
+  if (!$("#reader-title")) {
+    await openSearchResult(item);
+    return;
+  }
   const payload = await api(`/api/wiki/page?path=${encodeURIComponent(item.path)}`);
   $("#reader-title").textContent = item.title;
   $("#reader-path").textContent = item.path;
@@ -2052,6 +2280,13 @@ document.querySelectorAll("[data-command]").forEach((button) => {
 });
 
 $("#refresh-status").addEventListener("click", refreshStatus);
+$("#wiki-space-select")?.addEventListener("change", (event) => activateView(event.target.value));
+$("#spotlite-work-refresh")?.addEventListener("click", () => loadSpotlite("work"));
+$("#spotlite-personal-refresh")?.addEventListener("click", () => loadSpotlite("personal"));
+$("#personal-unlock-button")?.addEventListener("click", unlockPersonalSpotlite);
+$("#personal-pin-input")?.addEventListener("keydown", (event) => {
+  if (event.key === "Enter") unlockPersonalSpotlite();
+});
 $("#operation-settings").addEventListener("submit", saveSettings);
 $("#openclaw-trigger").addEventListener("click", triggerOpenClaw);
 $("#stop-run").addEventListener("click", stopCurrentRun);
@@ -2074,7 +2309,17 @@ $("#wiki-command-apply").addEventListener("click", applyWikiManagementCommand);
 $("#wiki-command-example").addEventListener("click", fillWikiManagementExample);
 $("#notion-wiki-search").addEventListener("input", () => {
   state.wikiFilters.query = $("#notion-wiki-search").value.trim();
+  const wikiQuery = $("#wiki-query");
+  if (wikiQuery) wikiQuery.value = state.wikiFilters.query;
   renderNotionWikiContent();
+});
+$("#notion-wiki-search").addEventListener("keydown", (event) => {
+  if (event.key === "Enter") {
+    event.preventDefault();
+    const wikiQuery = $("#wiki-query");
+    if (wikiQuery) wikiQuery.value = $("#notion-wiki-search").value.trim();
+    searchWiki();
+  }
 });
 
 // Notion Wiki Browser Events
@@ -2185,9 +2430,8 @@ $("#chat-input").addEventListener("keydown", (event) => {
 });
 
 renderStatus();
-const initialView = location.hash?.slice(1) && titles[location.hash.slice(1)] ? location.hash.slice(1) : "chat";
-if (initialView === "chat") renderSectionAnchors("chat");
-else activateView(initialView);
+const initialView = location.hash?.slice(1) && titles[location.hash.slice(1)] ? location.hash.slice(1) : "spotlite-work";
+activateView(initialView);
 renderEvents("#run-list", state.runs);
 renderAutomationState();
 renderSchedules();
@@ -2202,6 +2446,7 @@ renderPaperclip({
 $("#run-count").textContent = `${state.runs.length}건`;
 refreshStatus();
 setInterval(refreshStatus, 5000);
+loadSpotliteTemplates();
 
 // Initialize Notion Wiki Browser
 initializeNotionWikiBrowser();

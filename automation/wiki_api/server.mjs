@@ -8,6 +8,8 @@ const repoRoot = resolve(new URL("../../", import.meta.url).pathname);
 const frontendRoot = join(repoRoot, "automation/wiki_frontend");
 const wikiRoot = join(repoRoot, "obsidian/Wiki");
 const l1Root = join(repoRoot, "obsidian/L1_memory");
+const personalWikiRoot = join(repoRoot, "obsidian/Personal_Wiki");
+const personalL1Root = join(repoRoot, "obsidian/Personal_L1_memory");
 const driveWikifySrc = join(repoRoot, "automation/drive_wikify/src");
 const driveWikifyEnv = join(repoRoot, "automation/drive_wikify/config/.env");
 const driveRuntime = join(repoRoot, "automation/drive_wikify/runtime");
@@ -24,6 +26,7 @@ const wikiContextCachePath = join(apiRuntime, "wiki_context_cache.json");
 const knowledgePromotionPath = join(apiRuntime, "knowledge_promotions.json");
 const knowledgePromotionRoot = join(apiRuntime, "knowledge_promotions");
 const skillOutputsRoot = join(apiRuntime, "skill_outputs");
+const spotliteTemplateRoot = join(apiRuntime, "../templates");
 const chatProjectsPath = join(apiRuntime, "chat_projects.json");
 const chatGlobalSettingsPath = join(apiRuntime, "chat_global_settings.json");
 const activeJobs = new Map();
@@ -52,6 +55,7 @@ const editableSettings = new Set([
   "CHUNK_SIZE_MAX_CHARS",
   "CLEANUP_LOCAL_MIRROR",
   "AUTO_CREATE_PROJECT_SPACE",
+  "ALLOWED_FILE_TYPES",
   "GLM_API_URL",
   "GLM_API_KEY",
   "GLM_MODEL",
@@ -67,6 +71,27 @@ const editableSettings = new Set([
   "PAPERCLIP_API_KEY",
 ]);
 const sensitiveSettings = new Set(["GLM_API_KEY", "OPENCLAW_API_KEY", "PAPERCLIP_API_KEY"]);
+
+const wikiWorkspaces = {
+  rtm: {
+    id: "rtm",
+    label: "업무용(RTM)",
+    description: "RTM 업무 프로젝트와 고객사 위키",
+    wikiRoot,
+    l1Root,
+    wikiPrefix: "obsidian/Wiki",
+    l1Prefix: "obsidian/L1_memory",
+  },
+  personal: {
+    id: "personal",
+    label: "개인용",
+    description: "개인 지식과 비업무 메모를 분리 운영하는 위키",
+    wikiRoot: personalWikiRoot,
+    l1Root: personalL1Root,
+    wikiPrefix: "obsidian/Personal_Wiki",
+    l1Prefix: "obsidian/Personal_L1_memory",
+  },
+};
 
 const contentTypes = {
   ".html": "text/html; charset=utf-8",
@@ -92,6 +117,52 @@ function safeJoin(root, target) {
     throw new Error("Path escapes allowed root");
   }
   return resolved;
+}
+
+function wikiWorkspace(id = "rtm") {
+  return wikiWorkspaces[id] || wikiWorkspaces.rtm;
+}
+
+function wikiWorkspaceList() {
+  return Object.values(wikiWorkspaces).map((workspace) => ({
+    id: workspace.id,
+    label: workspace.label,
+    description: workspace.description,
+    wikiRoot: relative(repoRoot, workspace.wikiRoot),
+    l1Root: relative(repoRoot, workspace.l1Root),
+    default: workspace.id === "rtm",
+  }));
+}
+
+async function ensureWikiWorkspace(workspaceId = "rtm") {
+  const workspace = wikiWorkspace(workspaceId);
+  await mkdir(join(workspace.wikiRoot, "Common"), { recursive: true });
+  await mkdir(workspace.l1Root, { recursive: true });
+  if (workspace.id === "personal") {
+    const indexPath = join(workspace.wikiRoot, "index.md");
+    if (!existsSync(indexPath)) {
+      const today = new Date().toISOString().slice(0, 10);
+      await writeFile(indexPath, [
+        "---",
+        "type: index",
+        `created: ${today}`,
+        `updated: ${today}`,
+        'source: "wiki workspace scaffold"',
+        "---",
+        "",
+        "# 개인용 위키",
+        "",
+        "개인 지식, 메모, 비업무 자료를 업무용 RTM 위키와 분리해서 운영하는 공간입니다.",
+        "",
+        "## 운영 원칙",
+        "- 업무 프로젝트와 고객사 자료는 업무용(RTM)에 둡니다.",
+        "- 개인 메모는 이 공간에서 별도 관리합니다.",
+        "- 민감한 자격증명, 비밀번호, API 키는 저장하지 않습니다.",
+        "",
+      ].join("\n"), "utf-8");
+    }
+  }
+  return workspace;
 }
 
 async function readJsonFile(path, fallback) {
@@ -373,6 +444,175 @@ function extractPatternLines(markdown, regex, limit = 6) {
 
 function estimateChars(value) {
   return JSON.stringify(value || {}).length;
+}
+
+function dateWithinDays(dateText, days) {
+  const date = new Date(dateText);
+  if (Number.isNaN(date.getTime())) return false;
+  const now = new Date();
+  const limit = new Date(now.getTime() + days * 24 * 60 * 60 * 1000);
+  return date <= limit;
+}
+
+function spotliteProjectFromPath(path) {
+  const parts = String(path || "").split("/");
+  const section = path.startsWith("obsidian/L1_memory/") || path.startsWith("obsidian/Personal_L1_memory/")
+    ? "L1_memory"
+    : parts[2] || "Wiki";
+  return section
+    .replace(/_/g, " ")
+    .replace(/\bProject\b/g, "Project")
+    .replace(/\bAccount\b/g, "Account")
+    .trim();
+}
+
+function spotliteLineKind(line, path) {
+  const text = `${line} ${path}`.toLowerCase();
+  if (/risk|리스크|위험|불확실|막힘|blocked|이슈|문제/.test(text)) return "risk";
+  if (/decision|결정|확정|승인|채택/.test(text)) return "decision";
+  if (/운영 메모|한줄 요약|진행 맥락|실무 판단|다음 확인/.test(line)) return "memo";
+  return "action";
+}
+
+function spotliteBucket(line) {
+  const text = String(line || "");
+  const dates = [...text.matchAll(/\b(20\d{2}-\d{1,2}-\d{1,2})\b/g)].map((match) => match[1]);
+  if (/오늘|금일|today|당일|즉시|긴급|asap/i.test(text)) return "today";
+  if (dates.some((date) => dateWithinDays(date, 0))) return "today";
+  if (/이번\s*주|주간|week|이번주|금주/i.test(text)) return "week";
+  if (dates.some((date) => dateWithinDays(date, 7))) return "week";
+  return "watch";
+}
+
+function spotliteScore(line, path) {
+  const text = `${line} ${path}`;
+  let score = 0;
+  if (/Action_Items|action|todo|해야|필요|다음|확인|제출|미팅|회의|고객|담당/.test(text)) score += 5;
+  if (/오늘|금일|긴급|즉시|asap/i.test(text)) score += 5;
+  if (/이번\s*주|이번주|금주|week/i.test(text)) score += 3;
+  if (/Risk|Risks|리스크|위험|이슈|불확실/.test(text)) score += 4;
+  if (/운영 메모|운영 현황판|일시별 추진내용/.test(text)) score += 3;
+  return score;
+}
+
+function compactSpotliteLine(line) {
+  return String(line || "")
+    .replace(/^[-*]\s+/, "")
+    .replace(/^\|\s*/, "")
+    .replace(/\s*\|$/, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 260);
+}
+
+async function spotliteSummary(scope = "work") {
+  const workspace = scope === "personal" ? await ensureWikiWorkspace("personal") : wikiWorkspaces.rtm;
+  const roots = [workspace.wikiRoot, workspace.l1Root];
+  const files = (await Promise.all(roots.map(walkMarkdown))).flat();
+  const candidates = [];
+  const projectMap = new Map();
+  for (const file of files) {
+    const markdown = await readFile(file, "utf-8").catch(() => "");
+    const path = relative(repoRoot, file);
+    const frontmatter = parseFrontmatter(markdown);
+    const title = titleFromMarkdown(path, markdown);
+    const project = spotliteProjectFromPath(path);
+    const classification = classifyWikiPage(path, frontmatter);
+    const lines = markdown.split("\n")
+      .map(compactSpotliteLine)
+      .filter((line) => line.length >= 8)
+      .filter((line) => /(오늘|금일|이번\s*주|이번주|금주|해야|필요|다음|액션|확인|제출|미팅|회의|고객|담당|리스크|위험|이슈|결정|운영 메모|진행 맥락|실무 판단|다음 확인|Action|Risk|Decision|todo|week|today|asap)/i.test(line))
+      .slice(0, 16);
+    if (!lines.length && !["actions", "risks", "decisions", "hub"].includes(classification.docKind)) continue;
+    if (!projectMap.has(project)) {
+      projectMap.set(project, {
+        project,
+        count: 0,
+        risks: 0,
+        actions: 0,
+        latestPath: path,
+      });
+    }
+    for (const line of lines.slice(0, 10)) {
+      const kind = spotliteLineKind(line, path);
+      const bucket = spotliteBucket(line);
+      const score = spotliteScore(line, path);
+      const item = {
+        title,
+        path,
+        project,
+        line,
+        kind,
+        bucket,
+        score,
+        docKind: classification.docKind,
+      };
+      candidates.push(item);
+      const group = projectMap.get(project);
+      group.count += 1;
+      if (kind === "risk") group.risks += 1;
+      if (kind === "action") group.actions += 1;
+      group.latestPath = path;
+    }
+  }
+  const ranked = candidates.sort((a, b) => b.score - a.score || a.project.localeCompare(b.project));
+  const today = ranked.filter((item) => item.bucket === "today").slice(0, 12);
+  const week = ranked.filter((item) => item.bucket === "week").slice(0, 18);
+  const risks = ranked.filter((item) => item.kind === "risk").slice(0, 12);
+  const memos = ranked.filter((item) => item.kind === "memo" || /운영 메모|진행 맥락|실무 판단|다음 확인/.test(item.line)).slice(0, 12);
+  const watch = ranked.filter((item) => item.bucket === "watch" && item.kind !== "risk").slice(0, 18);
+  const projects = [...projectMap.values()]
+    .sort((a, b) => (b.actions + b.risks * 2 + b.count) - (a.actions + a.risks * 2 + a.count))
+    .slice(0, 10);
+  return {
+    scope,
+    workspace: {
+      id: workspace.id,
+      label: workspace.label,
+      wikiRoot: relative(repoRoot, workspace.wikiRoot),
+      l1Root: relative(repoRoot, workspace.l1Root),
+    },
+    generatedAt: new Date().toISOString(),
+    summary: {
+      totalSignals: candidates.length,
+      today: today.length,
+      week: week.length,
+      risks: risks.length,
+      projects: projects.length,
+    },
+    analysis: [
+      today.length ? `오늘 바로 볼 항목 ${today.length}개가 있습니다.` : "오늘로 명시된 항목은 아직 적습니다.",
+      week.length ? `이번주 처리 후보 ${week.length}개가 감지됐습니다.` : "이번주로 명시된 항목은 아직 적습니다.",
+      risks.length ? `리스크/이슈 후보 ${risks.length}개를 먼저 확인하는 편이 안전합니다.` : "리스크 후보는 많지 않습니다.",
+      memos.length ? "운영 메모가 있는 허브를 우선 읽으면 진행 맥락을 빠르게 잡을 수 있습니다." : "허브 운영 메모 보강이 필요합니다.",
+    ],
+    today,
+    week,
+    risks,
+    memos,
+    watch,
+    projects,
+  };
+}
+
+async function spotliteTemplates() {
+  const entries = [
+    ["hub_memo", "허브 운영 메모 템플릿", "허브가 실제 진행상황을 담도록 쓰는 Markdown 템플릿", "spotlite_hub_memo_template.md"],
+    ["work_prompt", "업무 Spotlite 프롬프트", "RTM 업무용 오늘/이번주 분석 프롬프트", "spotlite_work_prompt.md"],
+    ["personal_prompt", "개인 Spotlite 프롬프트", "개인용 오늘/이번주 정리 프롬프트", "spotlite_personal_prompt.md"],
+  ];
+  const templates = [];
+  for (const [id, title, description, fileName] of entries) {
+    const path = join(spotliteTemplateRoot, fileName);
+    templates.push({
+      id,
+      title,
+      description,
+      path: relative(repoRoot, path),
+      markdown: await readFile(path, "utf-8").catch(() => ""),
+    });
+  }
+  return { templates };
 }
 
 async function wikiContextCardForResult(item, query = "", mode = "standard") {
@@ -862,6 +1102,106 @@ function isRecentlyChanged(modifiedAt) {
   return new Date(modifiedAt).getTime() >= new Date("2026-04-01T00:00:00").getTime();
 }
 
+function localDriveInstructionPlan(instruction = "") {
+  const text = String(instruction || "").trim();
+  const stopwords = new Set(["찾아", "자료", "수집", "해서", "위키화", "해", "해줘", "하고", "구글", "드라이브", "drive", "wiki"]);
+  const aliasMap = {
+    "쏘닉스": ["쏘닉스", "sawnics", "sonics"],
+    "아사히카세이": ["아사히카세이", "아사히카세히", "asahi", "kasei"],
+    "아사히카세히": ["아사히카세히", "아사히카세이", "asahi", "kasei"],
+    "금호": ["금호", "kumho"],
+    "픽셀": ["픽셀", "pixel"],
+    "제우스": ["제우스", "zeus"],
+  };
+  const quoted = [...text.matchAll(/[\"“']([^\"“”']{2,})[\"”']/g)].map((match) => match[1].trim());
+  const tokens = text
+    .replace(/[^\p{L}\p{N}_ -]+/gu, " ")
+    .split(/\s+/)
+    .map((token) => token.trim())
+    .filter((token) => token.length >= 2 && !stopwords.has(token.toLowerCase()));
+  const keywords = [...quoted, ...tokens];
+  for (const token of [...keywords]) {
+    const aliases = aliasMap[token.toLowerCase()] || aliasMap[token];
+    if (aliases) keywords.push(...aliases);
+  }
+  return {
+    intent: /위키화|wiki/i.test(text) ? "collect_and_wikify" : "target_collect",
+    keywords: [...new Set(keywords)].slice(0, 12),
+    requestedAction: text,
+    confidence: keywords.length ? 0.62 : 0.25,
+    notes: ["로컬 규칙 기반 지시 분석", "원본 Google Drive 삭제는 금지"],
+  };
+}
+
+async function driveInstructionPlan(instruction = "") {
+  const local = localDriveInstructionPlan(instruction);
+  const { values: env } = await readEnvFile();
+  const apiKey = process.env.GLM_API_KEY || env.GLM_API_KEY;
+  const apiUrl = process.env.GLM_API_URL || env.GLM_API_URL;
+  const model = process.env.GLM_MODEL || env.GLM_MODEL || "glm-5.1";
+  if (!instruction || !apiKey || !apiUrl) return { ...local, provider: "local-rule" };
+  try {
+    const { payload, endpoint } = await requestGlmChatCompletion(apiUrl, apiKey, {
+      model,
+      messages: [
+        {
+          role: "system",
+          content: [
+            "너는 Google Drive 수집 지시를 안전하게 표적화하는 한국어 분석기다.",
+            "원본 Drive 삭제/수정은 절대 제안하지 않는다. rclone copy 대상 후보만 만든다.",
+            "출력은 JSON 객체만 반환한다: intent, keywords, aliases, requestedAction, confidence, notes.",
+            "예: '쏘닉스 찾아 자료를 수집해서 위키화해' -> keywords에는 쏘닉스, Sawnics를 포함한다.",
+          ].join(" "),
+        },
+        {
+          role: "user",
+          content: JSON.stringify({ instruction, localFallback: local }),
+        },
+      ],
+      temperature: 0.1,
+      max_tokens: 700,
+      thinking: glmThinkingOptions(env),
+      response_format: { type: "json_object" },
+    });
+    const parsed = JSON.parse(glmMessageContent(payload));
+    const keywords = [...new Set([...(local.keywords || []), ...(parsed.keywords || []), ...(parsed.aliases || [])].map((item) => String(item || "").trim()).filter(Boolean))].slice(0, 16);
+    return {
+      ...local,
+      ...parsed,
+      keywords,
+      provider: "glm",
+      model,
+      endpoint,
+    };
+  } catch (error) {
+    return { ...local, provider: "local-rule", upstreamStatus: error.message };
+  }
+}
+
+function rankInstructionCandidates(candidates = [], plan = {}) {
+  const keywords = (plan.keywords || []).map((keyword) => keyword.toLowerCase()).filter(Boolean);
+  return candidates.map((candidate) => {
+    const haystack = [
+      candidate.folder,
+      candidate.remotePath,
+      candidate.matchedProjectLabel,
+      candidate.matchedProject,
+      ...(candidate.reasons || []),
+    ].join(" ").toLowerCase();
+    const matches = keywords.filter((keyword) => haystack.includes(keyword));
+    const instructionBoost = matches.length ? 80 + matches.length * 25 : 0;
+    return {
+      ...candidate,
+      score: candidate.score + instructionBoost,
+      priority: instructionBoost ? "high" : candidate.priority,
+      instructionMatches: matches,
+      reasons: instructionBoost
+        ? [`지시문 키워드 매칭: ${matches.join(", ")}`, ...(candidate.reasons || [])]
+        : candidate.reasons,
+    };
+  }).sort((a, b) => b.score - a.score || (b.instructionMatches?.length || 0) - (a.instructionMatches?.length || 0));
+}
+
 async function driveTargetAnalysis(options = {}) {
   const { values: env } = await readEnvFile();
   const remote = env.RCLONE_REMOTE || "gdrive";
@@ -1008,6 +1348,31 @@ async function driveTargetAnalysis(options = {}) {
     },
     rcloneError: rclone.code === 0 ? "" : rclone.stderr.slice(-2000),
     candidates: candidates.sort((a, b) => b.score - a.score || String(b.modifiedAt).localeCompare(String(a.modifiedAt)) || a.folder.localeCompare(b.folder)).slice(0, 30),
+  };
+  await prependJsonHistory(targetAnalysisPath, analysis, 50);
+  return analysis;
+}
+
+async function driveInstructionTargetAnalysis(instruction = "") {
+  const plan = await driveInstructionPlan(instruction);
+  const base = await driveTargetAnalysis({ timeoutMs: 35000 });
+  const ranked = rankInstructionCandidates(base.candidates || [], plan);
+  const strong = ranked.filter((candidate) => candidate.instructionMatches?.length).slice(0, 12);
+  const candidates = (strong.length ? strong : ranked.slice(0, 12)).map((candidate) => ({
+    ...candidate,
+    instructionTargeted: Boolean(candidate.instructionMatches?.length),
+  }));
+  const analysis = {
+    ...base,
+    createdAt: new Date().toISOString(),
+    instruction,
+    plan,
+    candidates,
+    summary: {
+      ...base.summary,
+      instructionMatches: strong.length,
+      targetedCandidates: candidates.length,
+    },
   };
   await prependJsonHistory(targetAnalysisPath, analysis, 50);
   return analysis;
@@ -1285,8 +1650,43 @@ function appendManagedBlock(before, marker, title, lines) {
   return `${block}\n`;
 }
 
+function hubOperationalScaffold(title, description) {
+  return [
+    `# ${title}`,
+    "",
+    description,
+    "",
+    "## 운영 메모",
+    "- 한줄 요약: 진행상황 확인 필요",
+    "- 진행 맥락: 이 허브는 관리 이력이 아니라 실제 프로젝트/고객사 업무 추진상황을 빠르게 파악하기 위한 메모입니다.",
+    "- 실무 판단: Sources, Evidence_Log, Action_Items, Risks, Decisions를 확인해 현재 업무 상태로 갱신해야 합니다.",
+    "- 다음 확인: 담당자, 고객사, 산출물, 미해결 리스크, 다음 액션을 확인합니다.",
+    "",
+    "## 운영 현황판",
+    "- 현재 상태: 진행상황 확인 필요",
+    "- 최근 추진: 최신 실무 메모 입력 전",
+    "- 다음 액션: 운영 메모를 기준으로 Action_Items, Risks, Decisions를 갱신",
+    "",
+    "## 일시별 추진내용",
+    "| 일시 | 추진내용 | 실무 의미 | 연결 증적 | 다음 액션 |",
+    "| --- | --- | --- | --- | --- |",
+    "",
+    "## 증적/근거 링크",
+    "- 아직 연결된 증적 없음",
+    "",
+  ];
+}
+
 function baseHubMarkdown(type, title, description) {
   const now = new Date().toISOString().slice(0, 10);
+  const body = type === "hub"
+    ? hubOperationalScaffold(title, description)
+    : [
+        `# ${title}`,
+        "",
+        description,
+        "",
+      ];
   return [
     "---",
     `type: ${type}`,
@@ -1295,10 +1695,7 @@ function baseHubMarkdown(type, title, description) {
     'source: "wiki management command"',
     "---",
     "",
-    `# ${title}`,
-    "",
-    description,
-    "",
+    ...body,
   ].join("\n");
 }
 
@@ -1311,6 +1708,9 @@ async function applyProjectCustomerPromotion(entry, operation, targetPages, dryR
     .filter((page) => page.path)
     .map((page) => `- ${wikiLinkFromPath(page.path)}: ${page.title || page.path}`)
     .slice(0, 30);
+  const evidenceSummary = evidenceLinks.length
+    ? evidenceLinks.slice(0, 6).map((line) => line.replace(/^- /, "")).join("<br>")
+    : "연결 증적 없음";
   const projectRoot = `obsidian/Wiki/${names.projectKey}`;
   const accountRoot = `obsidian/Wiki/${names.accountKey}`;
   const projectDocs = [
@@ -1330,6 +1730,23 @@ async function applyProjectCustomerPromotion(entry, operation, targetPages, dryR
       const lines = fileName === "hub.md"
         ? [
             "",
+            "### 운영 메모",
+            `- 한줄 요약: ${names.projectName} 관련 문서를 프로젝트 운영 단위로 묶었고, 이제 실무 추진상태를 이 허브에서 추적합니다.`,
+            "- 진행 맥락: 산재한 근거 문서를 고객사/프로젝트 기준으로 모아 액션, 리스크, 결정사항을 분리 관리할 수 있게 했습니다.",
+            "- 실무 판단: 이 내용은 관리 이력이 아니라 실제 고객 프로젝트 운영을 위한 현재상태 메모입니다.",
+            "- 다음 확인: 담당자, 고객 대응 상태, 산출물, 리스크, 다음 미팅/제출 액션을 보강합니다.",
+            "",
+            "### 현재 추진 상태",
+            "- 상태: 프로젝트/고객사 승격 완료, 실무 검토 및 후속 액션 분리 필요",
+            `- 최근 추진: ${now} 위키 관리 명령으로 관련 문서를 프로젝트 운영 단위로 묶음`,
+            "- 운영 관점: 단순 기록이 아니라 고객 프로젝트의 다음 액션, 리스크, 결정사항을 바로 추적하기 위한 허브",
+            "",
+            "### 일시별 추진내용",
+            "| 일시 | 추진내용 | 실무 의미 | 연결 증적 | 다음 액션 |",
+            "| --- | --- | --- | --- | --- |",
+            `| ${now} | 위키 관리 명령 실행: ${entry.command || "프로젝트/고객사 승격"} | 산재 문서를 프로젝트 운영 단위로 묶고, 고객사/근거/액션/리스크 문서를 분리 관리하도록 전환 | ${evidenceSummary} | Action_Items, Risks, Decisions를 검토해 실제 업무 추진 항목으로 갱신 |`,
+            "",
+            "### 운영 링크",
             `- 고객사 허브: ${wikiLinkFromPath(`${accountRoot}/hub.md`)}`,
             `- 프로젝트 개요: ${wikiLinkFromPath(`${projectRoot}/Project_Overview.md`)}`,
             `- Sources: ${wikiLinkFromPath(`${projectRoot}/Sources.md`)}`,
@@ -1347,6 +1764,7 @@ async function applyProjectCustomerPromotion(entry, operation, targetPages, dryR
             `- 명령: ${entry.command}`,
             `- 실행시각: ${now}`,
             `- 성격: ${type}`,
+            `- 실무 의미: ${names.projectName} 허브의 추진내용, 근거, 액션, 리스크, 결정사항을 분리 관리하기 위한 보조 문서`,
             "",
             "### 연결 근거",
             ...evidenceLinks,
@@ -1362,14 +1780,41 @@ async function applyProjectCustomerPromotion(entry, operation, targetPages, dryR
   for (const [fileName, type, title, description] of accountDocs) {
     const result = await upsertManagedMarkdown(`${accountRoot}/${fileName}`, (before) => {
       const base = before || baseHubMarkdown(type, title, description);
-      const lines = [
-        `- 명령: ${entry.command}`,
-        `- 실행시각: ${now}`,
-        `- 승격 프로젝트: ${wikiLinkFromPath(`${projectRoot}/hub.md`)}`,
-        "",
-        "### 연결 근거",
-        ...evidenceLinks,
-      ];
+      const lines = fileName === "hub.md"
+        ? [
+            "",
+            "### 운영 메모",
+            `- 한줄 요약: ${names.accountName} 고객사 관련 프로젝트와 증적을 고객사 운영 단위로 모아 추적합니다.`,
+            "- 진행 맥락: 하위 프로젝트 관계, 고객사 대응 상태, 다음 액션을 한 곳에서 확인하기 위한 허브입니다.",
+            "- 실무 판단: 이 내용은 관리 이력이 아니라 고객사 업무 진행상황 파악용 메모입니다.",
+            "- 다음 확인: 진행 중인 프로젝트, 고객사별 우선순위, 미해결 이슈와 후속 액션을 보강합니다.",
+            "",
+            "### 현재 추진 상태",
+            "- 상태: 고객사/계정 허브 생성 완료, 하위 프로젝트 관계 검토 필요",
+            `- 최근 추진: ${now} 위키 관리 명령으로 고객사 단위 운영 허브를 생성`,
+            "- 운영 관점: 고객사 기준으로 프로젝트, 증적, 다음 액션을 묶어 업무 진행상황을 추적",
+            "",
+            "### 일시별 추진내용",
+            "| 일시 | 추진내용 | 실무 의미 | 연결 증적 | 다음 액션 |",
+            "| --- | --- | --- | --- | --- |",
+            `| ${now} | 고객사 허브 승격: ${entry.command || "고객사 승격"} | 고객사 아래 프로젝트 관계와 증적을 모아 실무 관리 단위로 전환 | ${evidenceSummary} | Project_Relationships와 프로젝트 허브를 검토해 담당/상태/다음 액션 보강 |`,
+            "",
+            "### 운영 링크",
+            `- 승격 프로젝트: ${wikiLinkFromPath(`${projectRoot}/hub.md`)}`,
+            `- 프로젝트 관계: ${wikiLinkFromPath(`${accountRoot}/Project_Relationships.md`)}`,
+            "",
+            "### 연결 근거",
+            ...evidenceLinks,
+          ]
+        : [
+            `- 명령: ${entry.command}`,
+            `- 실행시각: ${now}`,
+            `- 승격 프로젝트: ${wikiLinkFromPath(`${projectRoot}/hub.md`)}`,
+            `- 실무 의미: 고객사 관점에서 관련 프로젝트와 증적의 관계를 관리`,
+            "",
+            "### 연결 근거",
+            ...evidenceLinks,
+          ];
       return appendManagedBlock(base, marker, `Wiki Management Promotion ${now}`, lines);
     }, dryRun);
     if (result) changed.push({ ...result, operation: "project_customer_promotion" });
@@ -3262,11 +3707,23 @@ const server = createServer(async (req, res) => {
     if (pathname === "/api/coverage" && req.method === "GET") {
       return sendJson(res, 200, await coverageSummary());
     }
+    if (pathname === "/api/spotlite" && req.method === "GET") {
+      const scope = url.searchParams.get("scope") || "work";
+      return sendJson(res, 200, await spotliteSummary(scope));
+    }
+    if (pathname === "/api/spotlite/templates" && req.method === "GET") {
+      return sendJson(res, 200, await spotliteTemplates());
+    }
     if (pathname === "/api/drive/targets" && req.method === "GET") {
       return sendJson(res, 200, { analyses: await readJsonFile(targetAnalysisPath, []) });
     }
     if (pathname === "/api/drive/targets" && req.method === "POST") {
       return sendJson(res, 200, await driveTargetAnalysis());
+    }
+    if (pathname === "/api/drive/instruction-targets" && req.method === "POST") {
+      const body = await readBody(req);
+      if (!body.instruction) return sendJson(res, 400, { error: "instruction is required" });
+      return sendJson(res, 200, await driveInstructionTargetAnalysis(body.instruction));
     }
     if (pathname === "/api/automation/runs" && req.method === "GET") {
       return sendJson(res, 200, { runs: await readJsonFile(runHistoryPath, []) });

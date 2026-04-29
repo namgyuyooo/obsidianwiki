@@ -14,16 +14,21 @@
           <div>
             <h1>Wiki Ops</h1>
             <p>수집, 검색, 다이제스트, 챗</p>
+            <select id="wiki-space-select" class="brand-space-select" aria-label="Wiki Ops 공간 선택">
+              <option value="spotlite-work">업무용(RTM)</option>
+              <option value="spotlite-personal">개인용</option>
+            </select>
           </div>
         </div>
 
         <nav class="nav-list" aria-label="Primary">
+          <button class="nav-item active" data-view="spotlite-work">업무 Spotlite</button>
+          <button class="nav-item" data-view="spotlite-personal">개인 Spotlite</button>
           <button class="nav-item" data-view="operations">운영</button>
           <button class="nav-item" data-view="pipeline">수집 파이프라인</button>
           <button class="nav-item" data-view="wiki">위키</button>
-          <button class="nav-item" data-view="search">위키 검색</button>
           <button class="nav-item" data-view="ingest">지식 주입</button>
-          <button class="nav-item active" data-view="chat">GLM 챗</button>
+          <button class="nav-item" data-view="chat">GLM 챗</button>
           <button class="nav-item" data-view="paperclip">Paperclip</button>
         </nav>
 
@@ -49,11 +54,67 @@
         <header class="topbar">
           <div>
             <p class="eyebrow">로컬 컨트롤 플레인</p>
-            <h2 id="view-title">GLM 챗</h2>
+            <h2 id="view-title">Spotlite Work</h2>
           </div>
           <button id="refresh-status" class="command-button">새로고침</button>
         </header>
         <nav id="section-anchors" class="section-anchors" aria-label="현재 탭 섹션"></nav>
+
+        <section id="spotlite-work" class="view">
+          <div class="spotlite-hero" data-anchor="오늘">
+            <div>
+              <span class="eyebrow">Spotlite Work</span>
+              <h3>오늘과 이번주 업무 추진상황</h3>
+              <p>업무용 RTM 위키의 허브, 액션, 리스크, 결정 문서를 모아 오늘 볼 것과 이번주 처리할 일을 한 화면에 정리합니다.</p>
+            </div>
+            <button id="spotlite-work-refresh" class="command-button accent" type="button">업무 Spotlite 갱신</button>
+          </div>
+          <div id="spotlite-work-content" class="spotlite-board">
+            <div class="spotlite-empty">업무 Spotlite를 불러오는 중입니다.</div>
+          </div>
+          <section class="spotlite-template-panel panel" data-anchor="템플릿">
+            <div class="panel-heading">
+              <h3>업무 Spotlite 템플릿/프롬프트</h3>
+              <span>허브 메모와 GLM 분석 지침</span>
+            </div>
+            <div id="spotlite-work-templates" class="spotlite-template-list"></div>
+          </section>
+        </section>
+
+        <section id="spotlite-personal" class="view">
+          <div id="personal-lock-panel" class="spotlite-lock" data-anchor="잠금">
+            <div>
+              <span class="eyebrow">Spotlite Personal</span>
+              <h3>개인용 Spotlite 잠금</h3>
+              <p>로컬 브라우저 검증 수준의 4자리 PIN입니다. 기본값은 설정된 값으로 관리됩니다.</p>
+            </div>
+            <div class="spotlite-pin-box">
+              <input id="personal-pin-input" type="password" inputmode="numeric" maxlength="4" placeholder="4자리 PIN" />
+              <button id="personal-unlock-button" class="command-button accent" type="button">개인용 열기</button>
+              <small id="personal-lock-status">PIN을 입력하세요.</small>
+            </div>
+          </div>
+          <div id="personal-spotlite-panel" class="spotlite-personal-panel hidden">
+            <div class="spotlite-hero" data-anchor="개인 오늘">
+              <div>
+                <span class="eyebrow">Spotlite Personal</span>
+                <h3>개인 오늘/이번주 정리</h3>
+                <p>개인용 위키와 개인 L1 메모에서 오늘 할 일, 이번주 할 일, 신경쓸 리스크를 분리해 보여줍니다.</p>
+              </div>
+              <button id="spotlite-personal-refresh" class="command-button accent" type="button">개인 Spotlite 갱신</button>
+            </div>
+            <div id="spotlite-personal-content" class="spotlite-board">
+              <div class="spotlite-empty">개인 Spotlite를 불러오는 중입니다.</div>
+            </div>
+            <section class="spotlite-template-panel panel" data-anchor="개인 템플릿">
+              <div class="panel-heading">
+                <h3>개인 Spotlite 템플릿/프롬프트</h3>
+                <span>개인 할 일과 운영 메모 지침</span>
+              </div>
+              <div id="spotlite-personal-templates" class="spotlite-template-list"></div>
+            </section>
+          </div>
+        </section>
 
         <section id="operations" class="view">
           <div class="metric-grid" data-anchor="현황">
@@ -243,6 +304,10 @@
                 </select>
               </label>
               <label>
+                <span>위키화 대상 파일</span>
+                <input name="ALLOWED_FILE_TYPES" placeholder="hwp,hwpx,pdf,docx,pptx,gdoc,gslides" />
+              </label>
+              <label>
                 <span>GLM API URL</span>
                 <input name="GLM_API_URL" />
               </label>
@@ -306,6 +371,10 @@
                 <input name="PAPERCLIP_API_KEY" type="password" autocomplete="off" />
               </label>
               <label>
+                <span>개인용 Spotlite PIN</span>
+                <input name="SPOTLITE_PERSONAL_PIN" type="password" inputmode="numeric" maxlength="4" placeholder="기본 0953" />
+              </label>
+              <label>
                 <span>원본 Drive 삭제</span>
                 <input name="DRIVE_DELETE_SOURCE" value="false" disabled />
               </label>
@@ -319,7 +388,7 @@
             <div>
               <span class="eyebrow">Drive Wikify</span>
               <h3>수집 후 위키화 단순 실행</h3>
-              <p>사용자는 아래 순서만 보면 됩니다. 원본 Google Drive는 절대 삭제하지 않고, 정리는 로컬 mirror에만 적용됩니다.</p>
+              <p>사용자는 아래 순서만 보면 됩니다. 원본 Google Drive는 절대 삭제하지 않고, hwp/hwpx/pdf/docx/pptx 등은 로컬 mirror에 복사한 뒤 위키화합니다.</p>
             </div>
             <strong id="pipeline-drive-default">기본 경로: gdrive: 최상위</strong>
           </div>
@@ -376,6 +445,18 @@
                 <span id="automation-live-status">대기 중</span>
               </div>
               <p class="pipeline-note">권장 순서: 표적 분석 -> 필요한 경로만 rclone copy -> manifest 생성 -> 위키화 실행. 하루 종일 돌릴 때도 이 로그 기준으로 재개합니다.</p>
+              <div class="drive-instruction-box">
+                <label>
+                  <span>GLM 표적 수집 지시</span>
+                  <textarea id="drive-instruction-input" placeholder="예: 쏘닉스 찾아 자료를 수집해서 위키화해."></textarea>
+                </label>
+                <div class="drive-instruction-actions">
+                  <button class="command-button accent" id="drive-instruction-analyze" type="button">GLM 표적 계획 생성</button>
+                  <button class="command-button" id="drive-instruction-example" type="button">예시 입력</button>
+                  <span id="drive-instruction-status">지시 대기</span>
+                </div>
+                <div id="drive-instruction-plan" class="drive-instruction-plan">지시문을 넣으면 키워드, 후보 경로, 안전 실행 계획이 표시됩니다.</div>
+              </div>
               <div class="target-actions">
                 <button class="command-button accent" id="target-analysis-button" type="button">위키 기반 표적 분석</button>
                 <span id="target-analysis-status">미실행</span>
@@ -394,6 +475,52 @@
         </section>
 
         <section id="wiki" class="view">
+          <section class="wiki-search-console panel" data-anchor="검색과 GLM 정리">
+            <div class="panel-heading">
+              <div>
+                <h3>위키 검색 + GLM 정리</h3>
+                <p>검색 결과를 선택한 뒤 필요한 순간에만 GLM으로 정리합니다. 문서 클릭 시 오른쪽 문서 보기에서 근거 Markdown을 바로 조회합니다.</p>
+              </div>
+              <span id="search-result-count">0건</span>
+            </div>
+            <div class="search-row unified-search-row">
+              <input id="wiki-query" type="search" placeholder="프로젝트, 문서명, 수치, 충돌 키워드 검색" />
+              <select id="wiki-search-mode" title="GLM에 전달할 근거 압축 강도">
+                <option value="economy">절약</option>
+                <option value="standard" selected>표준</option>
+                <option value="deep">정밀</option>
+              </select>
+              <button id="wiki-search-button" class="command-button">검색</button>
+            </div>
+            <div class="search-workspace unified-search-workspace">
+              <section class="search-brief-panel" data-anchor="GLM 정리">
+                <div class="panel-heading compact-heading">
+                  <h3>검색 정리</h3>
+                  <span id="search-brief-provider">사용자 선택 후 정리</span>
+                </div>
+                <div id="search-brief" class="brief-body">
+                  먼저 검색 결과에서 근거 Markdown을 선택한 뒤 GLM 정리를 실행하세요.
+                </div>
+              </section>
+              <section class="evidence-panel" data-anchor="근거 목록">
+                <div class="selection-toolbar">
+                  <span id="selected-result-count">선택 0건</span>
+                  <button id="summarize-selected" class="command-button accent" type="button">선택 근거 GLM 정리</button>
+                </div>
+                <div id="search-results" class="result-list"></div>
+              </section>
+              <article class="search-doc-preview" data-anchor="선택 문서">
+                <div class="panel-heading compact-heading">
+                  <h3 id="search-doc-title">선택 문서</h3>
+                  <span id="search-doc-path">근거 문서를 선택</span>
+                </div>
+                <div id="search-doc-body" class="search-doc-body">
+                  검색 결과를 누르면 이 자리에서 Markdown을 읽기 좋게 보여주고, 아래 위키 브라우저의 문서 보기에도 함께 연결됩니다.
+                </div>
+              </article>
+            </div>
+          </section>
+
           <div class="notion-wiki-browser" data-anchor="위키 브라우저">
             <aside class="notion-sidebar">
               <div class="notion-sidebar-header">
@@ -556,47 +683,6 @@
             </div>
             <div id="wiki-command-result" class="wiki-command-result">아직 실행된 관리 명령이 없습니다.</div>
           </details>
-        </section>
-
-        <section id="search" class="view">
-          <div class="search-row" data-anchor="검색">
-            <input id="wiki-query" type="search" placeholder="프로젝트, 문서명, 수치, 충돌 키워드 검색" />
-            <select id="wiki-search-mode" title="GLM에 전달할 근거 압축 강도">
-              <option value="economy">절약</option>
-              <option value="standard" selected>표준</option>
-              <option value="deep">정밀</option>
-            </select>
-            <button id="wiki-search-button" class="command-button">검색</button>
-          </div>
-          <div class="search-workspace">
-            <section class="panel search-brief-panel" data-anchor="GLM 정리">
-              <div class="panel-heading">
-                <h3>검색 정리</h3>
-                <span id="search-brief-provider">사용자 선택 후 정리</span>
-              </div>
-              <div id="search-brief" class="brief-body">
-                먼저 검색 결과에서 근거 Markdown을 선택한 뒤 GLM 정리를 실행하세요.
-              </div>
-            </section>
-            <section class="panel evidence-panel" data-anchor="근거 목록">
-              <div class="panel-heading">
-                <h3>근거 Markdown</h3>
-                <span id="search-result-count">0건</span>
-              </div>
-              <div class="selection-toolbar">
-                <span id="selected-result-count">선택 0건</span>
-                <button id="summarize-selected" class="command-button accent" type="button">선택 근거 GLM 정리</button>
-              </div>
-              <div id="search-results" class="result-list"></div>
-            </section>
-            <article class="reader" data-anchor="문서 보기">
-              <div class="panel-heading">
-                <h3 id="reader-title">문서 보기</h3>
-                <span id="reader-path">검색 결과를 선택</span>
-              </div>
-              <pre id="reader-body"></pre>
-            </article>
-          </div>
         </section>
 
         <section id="ingest" class="view">

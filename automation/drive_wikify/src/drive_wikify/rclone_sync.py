@@ -35,6 +35,8 @@ def build_rclone_copy_command(
         "100",
         "--drive-pacer-min-sleep",
         "1s",
+        # Native hwp/hwpx files are copied as-is by rclone copy.
+        # This option only controls Google Docs/Sheets/Slides export formats.
         "--drive-export-formats",
         "docx,xlsx,pptx,pdf,svg",
         "--metadata",
