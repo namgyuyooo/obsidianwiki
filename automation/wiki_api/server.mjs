@@ -13,6 +13,7 @@ const driveWikifyEnv = join(repoRoot, "automation/drive_wikify/config/.env");
 const driveRuntime = join(repoRoot, "automation/drive_wikify/runtime");
 const apiRuntime = join(repoRoot, "automation/wiki_api/runtime");
 const runHistoryPath = join(apiRuntime, "runs.json");
+const driveCollectionStatePath = join(apiRuntime, "drive_collection_state.json");
 const paperclipTasksPath = join(apiRuntime, "paperclip_tasks.json");
 const paperclipEventsPath = join(apiRuntime, "paperclip_events.json");
 const schedulesPath = join(apiRuntime, "schedules.json");
@@ -40,6 +41,7 @@ const editableSettings = new Set([
   "RCLONE_TPSLIMIT",
   "RCLONE_CHECKERS",
   "RCLONE_TRANSFERS",
+  "RCLONE_COPY_MAX_MINUTES",
   "DRIVE_NAME",
   "MANIFEST_PATH",
   "RUN_OUTPUT_PATH",
@@ -53,6 +55,7 @@ const editableSettings = new Set([
   "GLM_API_URL",
   "GLM_API_KEY",
   "GLM_MODEL",
+  "GLM_AVAILABLE_MODELS",
   "GLM_THINKING_TYPE",
   "GLM_THINKING_BUDGET_TOKENS",
   "GLM_CHAT_MAX_TOKENS",
@@ -214,6 +217,86 @@ async function walkMarkdown(root) {
   }
   await walk(root);
   return files;
+}
+
+async function walkFiles(root) {
+  const files = [];
+  async function walk(dir) {
+    let entries = [];
+    try {
+      entries = await readdir(dir, { withFileTypes: true });
+    } catch {
+      return;
+    }
+    for (const entry of entries) {
+      const fullPath = join(dir, entry.name);
+      if (entry.isDirectory()) await walk(fullPath);
+      else if (entry.isFile()) files.push(fullPath);
+    }
+  }
+  await walk(root);
+  return files;
+}
+
+function resolveRepoPath(path) {
+  return resolve(repoRoot, path || "");
+}
+
+function allowedManifestSuffixes(env = {}) {
+  const configured = String(env.ALLOWED_FILE_TYPES || "")
+    .split(",")
+    .map((item) => item.trim().toLowerCase().replace(/^\./, ""))
+    .filter(Boolean);
+  const values = configured.length ? configured : ["hwp", "hwpx", "pdf", "docx", "pptx"];
+  return new Set(values.map((item) => `.${item}`));
+}
+
+async function manifestSnapshot(env = {}) {
+  const manifestPath = resolveRepoPath(env.MANIFEST_PATH || "automation/drive_wikify/runtime/manifest.json");
+  const manifest = await readJsonFile(manifestPath, { documents: [] });
+  const docs = manifest.documents || [];
+  return {
+    manifestPath: relative(repoRoot, manifestPath),
+    documents: docs.length,
+    filePaths: docs.map((doc) => doc.file_path).filter(Boolean),
+    updatedAt: manifest.generated_at || manifest.updated_at || "",
+  };
+}
+
+async function refreshManifestFromMirror(env = {}) {
+  const mirrorRoot = resolveRepoPath(env.RCLONE_MIRROR_ROOT || "automation/drive_wikify/runtime/mirror");
+  const manifestPath = resolveRepoPath(env.MANIFEST_PATH || "automation/drive_wikify/runtime/manifest.json");
+  const driveName = env.DRIVE_NAME || "gdrive-root";
+  const allowed = allowedManifestSuffixes(env);
+  const files = await walkFiles(mirrorRoot);
+  const documents = [];
+  for (const filePath of files.sort()) {
+    if (!allowed.has(extname(filePath).toLowerCase())) continue;
+    const fileStat = await stat(filePath).catch(() => null);
+    if (!fileStat?.isFile?.()) continue;
+    const relativeParent = relative(mirrorRoot, resolve(filePath, ".."));
+    const folderPath = !relativeParent || relativeParent === "." ? "/" : `/${relativeParent}`.replace(/\/+/g, "/");
+    documents.push({
+      drive_name: driveName,
+      folder_path: folderPath,
+      file_path: filePath,
+      title: filePath.split("/").at(-1) || filePath,
+      modified_time: String(Math.floor(fileStat.mtimeMs / 1000)),
+    });
+  }
+  await mkdir(resolve(manifestPath, ".."), { recursive: true });
+  const payload = {
+    generated_at: new Date().toISOString(),
+    source: "wiki_api post-rclone manifest refresh",
+    mirror_root: relative(repoRoot, mirrorRoot),
+    documents,
+  };
+  await writeFile(manifestPath, JSON.stringify(payload, null, 2), "utf-8");
+  return {
+    manifestPath: relative(repoRoot, manifestPath),
+    mirrorRoot: relative(repoRoot, mirrorRoot),
+    documents: documents.length,
+  };
 }
 
 function parseFrontmatter(markdown) {
@@ -935,6 +1018,7 @@ async function targetRcloneCopy(remotePath, dryRun = true) {
   const mirrorRoot = join(repoRoot, env.RCLONE_MIRROR_ROOT || "automation/drive_wikify/runtime/mirror", safePathSegment(remotePath));
   return runCommand("rclone-copy", Boolean(dryRun), {
     extraArgs: ["--remote-path", remotePath, "--mirror-root", mirrorRoot],
+    targeted: true,
     targetRemotePath: remotePath,
     targetMirrorRoot: relative(repoRoot, mirrorRoot),
     safety: "local mirror only; source Google Drive delete is not implemented",
@@ -1127,6 +1211,172 @@ function collectWikiManagementPairs(entry) {
   return [...new Map(pairs.map((pair) => [`${pair.from}\u0000${pair.to}`, pair])).values()];
 }
 
+function wikiLinkFromPath(path) {
+  return `[[${String(path || "").replace(/^obsidian\//, "").replace(/\.md$/i, "")}]]`;
+}
+
+function titleCaseSlug(value) {
+  return slugifyName(value)
+    .replace(/_+/g, "_")
+    .replace(/^_+|_+$/g, "") || "Promoted";
+}
+
+function firstNonEmpty(...values) {
+  return values.map((value) => String(value || "").trim()).find(Boolean) || "";
+}
+
+function operationValue(operation, keys = []) {
+  const sources = [operation, operation?.proposedChanges || {}, operation?.parameters || {}];
+  for (const source of sources) {
+    for (const key of keys) {
+      if (source?.[key]) return source[key];
+    }
+  }
+  return "";
+}
+
+function promotionNames(entry, operation = {}) {
+  const pairs = collectWikiManagementPairs(entry);
+  const replacementTo = pairs[0]?.to || "";
+  const keyword = (entry.hints?.keywords || []).find((item) => item !== pairs[0]?.from) || "";
+  const commandSubject = String(entry.command || "").match(/([가-힣A-Za-z0-9_ ()-]{2,})(?:의|에 대한)?\s*위키/)?.[1] || "";
+  const baseName = firstNonEmpty(
+    operationValue(operation, ["projectName", "project_name", "customerName", "customer_name", "accountName", "account_name"]),
+    replacementTo,
+    commandSubject,
+    keyword,
+  ).replace(/(?:의)$/g, "").trim();
+  const projectName = firstNonEmpty(operationValue(operation, ["projectName", "project_name"]), baseName);
+  const accountName = firstNonEmpty(operationValue(operation, ["customerName", "customer_name", "accountName", "account_name"]), baseName);
+  return {
+    baseName: baseName || "Promoted Wiki",
+    projectName: projectName || baseName || "Promoted Project",
+    accountName: accountName || baseName || "Promoted Account",
+    projectKey: `${titleCaseSlug(projectName || baseName)}_Project`,
+    accountKey: `${titleCaseSlug(accountName || baseName)}_Account`,
+  };
+}
+
+async function upsertManagedMarkdown(relativePath, contentBuilder, dryRun = false) {
+  const fullPath = managedWikiFullPath(relativePath);
+  await mkdir(resolve(fullPath, ".."), { recursive: true });
+  const before = await readFile(fullPath, "utf-8").catch(() => "");
+  const next = contentBuilder(before);
+  if (before === next) return null;
+  if (!dryRun) await writeFile(fullPath, next, "utf-8");
+  return {
+    path: relativePath,
+    title: relativePath.split("/").at(-1)?.replace(/\.md$/i, "") || relativePath,
+    action: before ? "updated" : "created",
+    dryRun,
+  };
+}
+
+function appendManagedBlock(before, marker, title, lines) {
+  if (before.includes(marker)) return before;
+  const block = [
+    before.trimEnd(),
+    before.trim() ? "" : null,
+    `## ${title}`,
+    marker,
+    ...lines,
+    "",
+  ].filter((line) => line !== null).join("\n");
+  return `${block}\n`;
+}
+
+function baseHubMarkdown(type, title, description) {
+  const now = new Date().toISOString().slice(0, 10);
+  return [
+    "---",
+    `type: ${type}`,
+    `created: ${now}`,
+    `updated: ${now}`,
+    'source: "wiki management command"',
+    "---",
+    "",
+    `# ${title}`,
+    "",
+    description,
+    "",
+  ].join("\n");
+}
+
+async function applyProjectCustomerPromotion(entry, operation, targetPages, dryRun) {
+  const names = promotionNames(entry, operation);
+  const now = new Date().toISOString();
+  const marker = `<!-- wiki-management:${entry.id}:project_customer_promotion -->`;
+  const changed = [];
+  const evidenceLinks = targetPages
+    .filter((page) => page.path)
+    .map((page) => `- ${wikiLinkFromPath(page.path)}: ${page.title || page.path}`)
+    .slice(0, 30);
+  const projectRoot = `obsidian/Wiki/${names.projectKey}`;
+  const accountRoot = `obsidian/Wiki/${names.accountKey}`;
+  const projectDocs = [
+    ["hub.md", "hub", `${names.projectName} Project Hub`, `${names.projectName} 관련 위키를 프로젝트 단위로 승격해 관리하는 허브입니다.`],
+    ["Project_Overview.md", "overview", `${names.projectName} Project Overview`, "프로젝트 상태, 범위, 핵심 근거를 관리합니다."],
+    ["Sources.md", "sources", `${names.projectName} Sources`, "원천 자료와 연결 근거를 관리합니다."],
+    ["Evidence_Log.md", "evidence", `${names.projectName} Evidence Log`, "근거와 관찰 사항을 append-only로 누적합니다."],
+    ["Action_Items.md", "actions", `${names.projectName} Action Items`, "다음 액션과 확인 필요 사항을 관리합니다."],
+    ["Risks.md", "risks", `${names.projectName} Risks`, "리스크와 불확실성을 관리합니다."],
+    ["Decisions.md", "decisions", `${names.projectName} Decisions`, "확정된 결정만 별도 관리합니다."],
+    ["Conflict_Register.md", "conflict", `${names.projectName} Conflict Register`, "충돌/불일치 후보를 관리합니다."],
+    ["Change_Log.md", "changelog", `${names.projectName} Change Log`, "위키 구조와 주요 내용 변경 이력을 기록합니다."],
+  ];
+  for (const [fileName, type, title, description] of projectDocs) {
+    const result = await upsertManagedMarkdown(`${projectRoot}/${fileName}`, (before) => {
+      const base = before || baseHubMarkdown(type, title, description);
+      const lines = fileName === "hub.md"
+        ? [
+            "",
+            `- 고객사 허브: ${wikiLinkFromPath(`${accountRoot}/hub.md`)}`,
+            `- 프로젝트 개요: ${wikiLinkFromPath(`${projectRoot}/Project_Overview.md`)}`,
+            `- Sources: ${wikiLinkFromPath(`${projectRoot}/Sources.md`)}`,
+            `- Evidence Log: ${wikiLinkFromPath(`${projectRoot}/Evidence_Log.md`)}`,
+            `- Action Items: ${wikiLinkFromPath(`${projectRoot}/Action_Items.md`)}`,
+            `- Risks: ${wikiLinkFromPath(`${projectRoot}/Risks.md`)}`,
+            `- Decisions: ${wikiLinkFromPath(`${projectRoot}/Decisions.md`)}`,
+            `- Conflict Register: ${wikiLinkFromPath(`${projectRoot}/Conflict_Register.md`)}`,
+            `- Change Log: ${wikiLinkFromPath(`${projectRoot}/Change_Log.md`)}`,
+            "",
+            "### 승격 대상 근거 문서",
+            ...evidenceLinks,
+          ]
+        : [
+            `- 명령: ${entry.command}`,
+            `- 실행시각: ${now}`,
+            `- 성격: ${type}`,
+            "",
+            "### 연결 근거",
+            ...evidenceLinks,
+          ];
+      return appendManagedBlock(base, marker, `Wiki Management Promotion ${now}`, lines);
+    }, dryRun);
+    if (result) changed.push({ ...result, operation: "project_customer_promotion" });
+  }
+  const accountDocs = [
+    ["hub.md", "hub", `${names.accountName} Account Hub`, `${names.accountName} 고객사/계정 단위 허브입니다.`],
+    ["Project_Relationships.md", "overview", `${names.accountName} Project Relationships`, "고객사 하위 프로젝트와 근거 관계를 관리합니다."],
+  ];
+  for (const [fileName, type, title, description] of accountDocs) {
+    const result = await upsertManagedMarkdown(`${accountRoot}/${fileName}`, (before) => {
+      const base = before || baseHubMarkdown(type, title, description);
+      const lines = [
+        `- 명령: ${entry.command}`,
+        `- 실행시각: ${now}`,
+        `- 승격 프로젝트: ${wikiLinkFromPath(`${projectRoot}/hub.md`)}`,
+        "",
+        "### 연결 근거",
+        ...evidenceLinks,
+      ];
+      return appendManagedBlock(base, marker, `Wiki Management Promotion ${now}`, lines);
+    }, dryRun);
+    if (result) changed.push({ ...result, operation: "project_customer_promotion" });
+  }
+  return changed;
+}
+
 async function applyWikiManagementCommand(commandId, options = {}) {
   const history = await readJsonFile(wikiManagementPath, []);
   const entry = history.find((item) => item.id === commandId);
@@ -1164,15 +1414,25 @@ async function applyWikiManagementCommand(commandId, options = {}) {
     changedFiles.push({
       path: page.path,
       title: page.title || page.path,
+      operation: "term_replace",
       replacements,
       dryRun,
     });
   }
 
   const structuralOps = (entry.plan?.operations || [])
-    .filter((operation) => operation.type && !["term_replace", "rename"].includes(operation.type))
-    .map((operation) => ({ type: operation.type, reason: "구조 승격/분기 작업은 diff 생성 단계에서만 자동화 예정" }));
-  skippedOperations.push(...structuralOps);
+    .filter((operation) => operation.type && !["term_replace", "rename"].includes(operation.type));
+  const shouldPromote = structuralOps.some((operation) => /project|customer|account|promotion|promote|승격/i.test(operation.type || ""))
+    || /프로젝트|고객사|계정|승격|분기/.test(entry.command || "");
+  if (shouldPromote) {
+    const promoteOperation = structuralOps.find((operation) => /project|customer|account|promotion|promote|승격/i.test(operation.type || "")) || { type: "project_customer_promotion" };
+    const promotionChanges = await applyProjectCustomerPromotion(entry, promoteOperation, targetPages, dryRun);
+    changedFiles.push(...promotionChanges);
+  }
+  const unsupportedStructuralOps = structuralOps
+    .filter((operation) => !/project|customer|account|promotion|promote|승격/i.test(operation.type || ""))
+    .map((operation) => ({ type: operation.type, reason: "지원하지 않는 구조 작업 유형이라 자동 실행하지 않음" }));
+  skippedOperations.push(...unsupportedStructuralOps);
 
   const status = dryRun
     ? "previewed"
@@ -1359,11 +1619,22 @@ function safePathSegment(value) {
     .join("/");
 }
 
-function runCommand(command, dryRun, meta = {}) {
+function rcloneCopyTimeoutMinutes(env = {}, meta = {}) {
+  if (meta.timeoutMinutes) return Number(meta.timeoutMinutes);
+  if (meta.scheduled && meta.intervalMinutes) {
+    return Math.max(5, Math.min(Number(meta.intervalMinutes) - 2, Number(env.RCLONE_SCHEDULED_COPY_MAX_MINUTES || 240)));
+  }
+  if (meta.fullCycle) return Number(env.RCLONE_FULL_CYCLE_COPY_MAX_MINUTES || env.RCLONE_COPY_MAX_MINUTES || 30);
+  if (meta.targeted) return Number(env.RCLONE_TARGET_COPY_MAX_MINUTES || env.RCLONE_COPY_MAX_MINUTES || 30);
+  return Number(env.RCLONE_COPY_MAX_MINUTES || 30);
+}
+
+async function runCommand(command, dryRun, meta = {}) {
   const allowed = new Set(["rclone-copy", "build-manifest", "run"]);
   if (!allowed.has(command)) {
     throw new Error(`Unsupported automation command: ${command}`);
   }
+  const { values: configEnv } = await readEnvFile();
   const { extraArgs = [], ...entryMeta } = meta;
   const args = ["-m", "drive_wikify.cli", command];
   if (command === "rclone-copy" && dryRun) args.push("--dry-run");
@@ -1373,6 +1644,11 @@ function runCommand(command, dryRun, meta = {}) {
     ...process.env,
     PYTHONPATH: driveWikifySrc,
   };
+  const copyTimeoutMinutes = command === "rclone-copy" && !dryRun ? rcloneCopyTimeoutMinutes(configEnv, meta) : null;
+  const timeoutMs = command === "rclone-copy" && !dryRun
+    ? Math.max(1, Number(copyTimeoutMinutes || 30)) * 60 * 1000
+    : 1000 * 60 * 5;
+  const manifestBeforePromise = command === "rclone-copy" && !dryRun ? manifestSnapshot(configEnv).catch(() => null) : Promise.resolve(null);
   const python = resolvePythonBin();
   const runId = `${Date.now()}-${command}`;
   const startedAt = new Date().toISOString();
@@ -1386,20 +1662,30 @@ function runCommand(command, dryRun, meta = {}) {
     stderr: "",
     createdAt: startedAt,
     startedAt,
+    executionPolicy: command === "rclone-copy" && !dryRun ? {
+      defaultWindowMinutes: 30,
+      timeoutMinutes: copyTimeoutMinutes,
+      source: entryMeta.scheduled ? "scheduled" : entryMeta.fullCycle ? "full-cycle" : entryMeta.targeted ? "targeted" : "manual",
+      resumeStrategy: "rclone copy compares local mirror and skips unchanged files; manifest is refreshed after each copy attempt",
+    } : undefined,
     ...entryMeta,
   };
 
   return new Promise(async (resolvePromise) => {
+    const manifestBefore = await manifestBeforePromise;
+    if (manifestBefore) entry.manifestBefore = { manifestPath: manifestBefore.manifestPath, documents: manifestBefore.documents, updatedAt: manifestBefore.updatedAt };
     await appendRunHistory(entry);
     let stdout = "";
     let stderr = "";
     let stopped = false;
+    let timedOut = false;
     const child = spawn(python, args, { cwd: repoRoot, env });
     const timeout = setTimeout(() => {
       stopped = true;
+      timedOut = true;
       child.kill("SIGTERM");
-      stderr += "\nCommand timed out.";
-    }, command === "rclone-copy" && !dryRun ? 1000 * 60 * 60 : 1000 * 60 * 5);
+      stderr += `\nReached configured collection window (${Math.round(timeoutMs / 60000)} minutes). Stopped safely; rerun will resume from local mirror.`;
+    }, timeoutMs);
     activeJobs.set(runId, {
       runId,
       command: commandLabel,
@@ -1435,13 +1721,40 @@ function runCommand(command, dryRun, meta = {}) {
     child.on("close", async (code) => {
       clearTimeout(timeout);
       activeJobs.delete(runId);
+      let manifestAfter = null;
+      if (command === "rclone-copy" && !dryRun) {
+        manifestAfter = await refreshManifestFromMirror(configEnv).catch((error) => ({ error: error.message }));
+      }
+      const newManifestDocs = manifestBefore && manifestAfter && !manifestAfter.error
+        ? Math.max(0, manifestAfter.documents - manifestBefore.documents)
+        : 0;
       const finalEntry = await updateRunHistory(runId, {
-        status: stopped ? "stopped" : code === 0 ? "completed" : "failed",
+        status: timedOut ? "time_limited" : stopped ? "stopped" : code === 0 ? "completed" : "failed",
         code,
         stdout: stdout.slice(-8000),
         stderr: stderr.slice(-8000),
+        manifestAfter,
+        collectionSummary: manifestAfter ? {
+          manifestBeforeDocuments: manifestBefore?.documents ?? null,
+          manifestAfterDocuments: manifestAfter.documents ?? null,
+          newManifestDocuments: newManifestDocs,
+          resumeNote: "다음 rclone copy 실행은 같은 local mirror와 manifest를 기준으로 이어서 수행합니다.",
+        } : undefined,
         finishedAt: new Date().toISOString(),
       });
+      if (command === "rclone-copy" && !dryRun) {
+        await prependJsonHistory(driveCollectionStatePath, {
+          runId,
+          status: finalEntry.status,
+          command: commandLabel,
+          startedAt,
+          finishedAt: finalEntry.finishedAt,
+          executionPolicy: entry.executionPolicy,
+          manifestBefore: entry.manifestBefore,
+          manifestAfter,
+          collectionSummary: finalEntry.collectionSummary,
+        }, 200).catch(() => {});
+      }
       resolvePromise(finalEntry);
     });
   });
@@ -1449,14 +1762,14 @@ function runCommand(command, dryRun, meta = {}) {
 
 async function fullCycle(dryRun) {
   const steps = [];
-  steps.push(await runCommand("rclone-copy", Boolean(dryRun)));
+  steps.push(await runCommand("rclone-copy", Boolean(dryRun), { fullCycle: true }));
   if (!dryRun) {
     steps.push(await runCommand("build-manifest", false));
     steps.push(await runCommand("run", false));
   }
   return {
     runId: `${Date.now()}-full-cycle`,
-    status: steps.every((step) => step.status === "completed") ? "completed" : "failed",
+    status: steps.every((step) => ["completed", "time_limited"].includes(step.status)) ? "completed" : "failed",
     steps,
     createdAt: new Date().toISOString(),
   };
@@ -1550,7 +1863,7 @@ async function deleteSchedule(id) {
 }
 
 async function runScheduledCommand(schedule) {
-  const meta = { scheduleId: schedule.id, scheduled: true };
+  const meta = { scheduleId: schedule.id, scheduled: true, intervalMinutes: schedule.intervalMinutes };
   if (schedule.command === "full-cycle") return fullCycle(Boolean(schedule.dryRun));
   return runCommand(schedule.command, Boolean(schedule.dryRun), meta);
 }

@@ -81,6 +81,7 @@ const settingLabels = {
   RCLONE_TPSLIMIT: "TPS 제한",
   RCLONE_CHECKERS: "checkers",
   RCLONE_TRANSFERS: "transfers",
+  RCLONE_COPY_MAX_MINUTES: "수집 실행 시간 제한",
   DRIVE_NAME: "Drive 표시명",
   MANIFEST_PATH: "manifest 경로",
   RUN_OUTPUT_PATH: "run output 경로",
@@ -94,6 +95,7 @@ const settingLabels = {
   GLM_API_URL: "GLM API URL",
   GLM_API_KEY: "GLM API Key",
   GLM_MODEL: "GLM 모델",
+  GLM_AVAILABLE_MODELS: "GLM 선택 가능 모델",
   GLM_THINKING_TYPE: "GLM thinking",
   GLM_THINKING_BUDGET_TOKENS: "GLM thinking budget",
   GLM_CHAT_MAX_TOKENS: "GLM 챗 출력 토큰",
@@ -682,7 +684,7 @@ function renderWikiManagementCommand(entry) {
     targetPages.length ? `<h4>대상 문서</h4><div class="wiki-command-targets">${targetPages.slice(0, 12).map((page) => `<button type="button" data-notion-path="${escapeHtml(page.path)}">${escapeHtml(page.title || page.path)}<small>${escapeHtml(page.path)}</small></button>`).join("")}</div>` : "",
     plan.risks?.length ? `<h4>위험/검증</h4><ul>${plan.risks.map((risk) => `<li>${escapeHtml(risk)}</li>`).join("")}</ul>` : "",
     plan.nextActions?.length ? `<h4>다음 액션</h4><ul>${plan.nextActions.map((action) => `<li>${escapeHtml(action)}</li>`).join("")}</ul>` : "",
-    `<div class="wiki-command-apply-inline"><button class="command-button danger" data-wiki-command-apply="${escapeHtml(entry.id)}" type="button">이 계획 실행</button><span>현재 자동 실행 범위: 로컬 Markdown 명칭 치환. 구조 승격은 로그에 skipped로 남깁니다.</span></div>`,
+    `<div class="wiki-command-apply-inline"><button class="command-button danger" data-wiki-command-apply="${escapeHtml(entry.id)}" type="button">이 계획 실행</button><span>자동 실행 범위: 로컬 Markdown 명칭 치환 + 프로젝트/고객사 허브 승격. 원본 Drive는 변경하지 않습니다.</span></div>`,
     entry.upstreamStatus ? `<p class="pipeline-note">GLM 상태: ${escapeHtml(entry.upstreamStatus)}</p>` : "",
     `</article>`,
   ].join("");
@@ -696,7 +698,11 @@ async function loadWikiManagementCommands() {
   const payload = await api("/api/wiki/manage");
   if (payload.mock || !payload.commands) return;
   state.wikiManagementCommands = payload.commands;
-  renderWikiManagementCommand(payload.commands[0]);
+  const latest = payload.commands[0];
+  if (latest) {
+    $("#wiki-command-status").textContent = `${latest.status || "planned"} · ${latest.createdAt?.slice(0, 10) || ""}`;
+    $("#wiki-command-result").textContent = "이전 위키 관리 명령은 접힌 히스토리에 보관됩니다. 새 명령을 입력하면 계획이 여기에 표시됩니다.";
+  }
 }
 
 async function runWikiManagementCommand() {
@@ -730,7 +736,12 @@ function renderWikiApplyResult(result) {
     `<strong>실행 결과: ${escapeHtml(result.status || "unknown")}</strong>`,
     `<small>${escapeHtml(result.createdAt || "")} · local wiki only · Google Drive 원본 변경 없음</small>`,
     `</div>`,
-    changedFiles.length ? `<h4>변경된 로컬 위키 파일</h4><div class="wiki-command-targets">${changedFiles.map((file) => `<button type="button" data-notion-path="${escapeHtml(file.path)}">${escapeHtml(file.title || file.path)}<small>${escapeHtml(file.replacements.map((pair) => `${pair.from}->${pair.to} ${pair.count}회`).join(", "))}</small></button>`).join("")}</div>` : `<p class="pipeline-note">변경된 파일이 없습니다.</p>`,
+    changedFiles.length ? `<h4>변경된 로컬 위키 파일</h4><div class="wiki-command-targets">${changedFiles.map((file) => {
+      const detail = file.replacements?.length
+        ? file.replacements.map((pair) => `${pair.from}->${pair.to} ${pair.count}회`).join(", ")
+        : `${file.operation || "wiki_update"} · ${file.action || "updated"}`;
+      return `<button type="button" data-notion-path="${escapeHtml(file.path)}">${escapeHtml(file.title || file.path)}<small>${escapeHtml(detail)}</small></button>`;
+    }).join("")}</div>` : `<p class="pipeline-note">변경된 파일이 없습니다.</p>`,
     skippedOperations.length ? `<h4>자동 실행 제외</h4><ul>${skippedOperations.map((item) => `<li><strong>${escapeHtml(item.type || item.path || "skipped")}</strong>: ${escapeHtml(item.reason || "")}</li>`).join("")}</ul>` : "",
     `</article>`,
   ].join("");
@@ -760,7 +771,15 @@ async function applyWikiManagementCommand() {
   const changedCount = result.changedFiles?.length || 0;
   const skippedCount = result.skippedOperations?.length || 0;
   $("#wiki-command-status").textContent = `실행 완료 · 변경 ${changedCount}개 · 제외 ${skippedCount}개`;
-  renderWikiApplyResult(result);
+  $("#wiki-command-result").innerHTML = [
+    `<div class="wiki-command-complete">`,
+    `<strong>실행 완료</strong>`,
+    `<span>변경 ${changedCount}개 · 제외 ${skippedCount}개 · 로컬 위키만 변경됨</span>`,
+    `</div>`,
+  ].join("");
+  $("#wiki-command-input").value = "";
+  $("#wiki-command-apply").disabled = true;
+  state.activeWikiManagementCommandId = "";
   await loadNotionWikiBrowser();
 }
 
@@ -1207,7 +1226,26 @@ async function loadSettings() {
   if (payload.secrets?.PAPERCLIP_API_KEY) {
     form.elements.PAPERCLIP_API_KEY.placeholder = "저장된 키 있음";
   }
+  syncChatRuntimeControls(payload.settings);
   $("#settings-status").textContent = "설정 불러옴";
+}
+
+function syncChatRuntimeControls(settings = {}) {
+  const maxTokens = $("#chat-max-tokens");
+  const contextMode = $("#chat-context-mode");
+  const modelSelect = $("#chat-model-select");
+  const activeModel = settings.GLM_MODEL || "glm-5.1";
+  const modelList = (settings.GLM_AVAILABLE_MODELS || "glm-5.1,glm-4.5,glm-4.5-air,glm-4-flash")
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
+  const models = [...new Set([activeModel, ...modelList])];
+  if (modelSelect) {
+    modelSelect.innerHTML = models.map((model) => `<option value="${escapeHtml(model)}">${escapeHtml(model)}</option>`).join("");
+    modelSelect.value = activeModel;
+  }
+  if (maxTokens) maxTokens.value = settings.GLM_CHAT_MAX_TOKENS || "10000";
+  if (contextMode) contextMode.value = settings.GLM_CONTEXT_MODE || "standard";
 }
 
 async function saveSettings(event) {
@@ -1228,7 +1266,95 @@ async function saveSettings(event) {
     return;
   }
   $("#settings-status").textContent = "저장 완료";
+  syncChatRuntimeControls(result.settings || settings);
   await refreshStatus();
+}
+
+async function saveChatRuntimeSettings() {
+  const maxTokens = $("#chat-max-tokens")?.value.trim() || "10000";
+  const contextMode = $("#chat-context-mode")?.value || "standard";
+  const model = $("#chat-model-select")?.value || "glm-5.1";
+  const parsed = Number(maxTokens);
+  if (!Number.isFinite(parsed) || parsed < 256) {
+    setChatPhase("failed", "출력 토큰은 256 이상 숫자로 설정하세요.");
+    return;
+  }
+  setChatPhase("saving", "챗 런타임 설정 저장 중");
+  const result = await api("/api/settings", {
+    method: "POST",
+    body: JSON.stringify({
+      settings: {
+        GLM_MODEL: model,
+        GLM_CHAT_MAX_TOKENS: String(Math.floor(parsed)),
+        GLM_CONTEXT_MODE: contextMode,
+      },
+    }),
+  });
+  if (result.error) {
+    setChatPhase("failed", `챗 설정 저장 실패: ${result.error}`);
+    return;
+  }
+  syncChatRuntimeControls(result.settings || {});
+  $("#chat-settings-modal")?.close?.();
+  setChatPhase("idle", `챗 설정 저장 완료: ${model} · 출력 ${Math.floor(parsed)} tokens · ${contextMode}`);
+}
+
+function openChatSettingsModal() {
+  const modal = $("#chat-settings-modal");
+  if (!modal) return;
+  if (typeof modal.showModal === "function") modal.showModal();
+  else modal.setAttribute("open", "open");
+}
+
+function closeChatSettingsModal() {
+  const modal = $("#chat-settings-modal");
+  if (!modal) return;
+  if (typeof modal.close === "function") modal.close();
+  else modal.removeAttribute("open");
+}
+
+function slugForDom(value) {
+  return String(value || "section")
+    .trim()
+    .replace(/[^\p{L}\p{N}]+/gu, "-")
+    .replace(/^-+|-+$/g, "")
+    .toLowerCase() || "section";
+}
+
+function renderSectionAnchors(viewId = "operations") {
+  const container = $("#section-anchors");
+  const view = document.getElementById(viewId);
+  if (!container || !view) return;
+  const sections = [...view.querySelectorAll("[data-anchor]")];
+  if (!sections.length) {
+    container.innerHTML = "";
+    container.hidden = true;
+    return;
+  }
+  container.hidden = false;
+  container.innerHTML = sections.map((section, index) => {
+    const label = section.dataset.anchor;
+    const id = section.id || `${viewId}-${slugForDom(label)}-${index}`;
+    section.id = id;
+    return `<button type="button" data-anchor-target="${escapeHtml(id)}" class="${index === 0 ? "active" : ""}">${escapeHtml(label)}</button>`;
+  }).join("");
+  container.querySelectorAll("[data-anchor-target]").forEach((button) => {
+    button.addEventListener("click", () => {
+      container.querySelectorAll("button").forEach((item) => item.classList.remove("active"));
+      button.classList.add("active");
+      document.getElementById(button.dataset.anchorTarget)?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  });
+}
+
+function activateView(viewId) {
+  document.querySelectorAll(".nav-item").forEach((item) => item.classList.toggle("active", item.dataset.view === viewId));
+  document.querySelectorAll(".view").forEach((view) => view.classList.toggle("active", view.id === viewId));
+  $("#view-title").textContent = titles[viewId] || viewId;
+  renderSectionAnchors(viewId);
+  if (viewId === "wiki" && !state.wikiPages.length) loadNotionWikiBrowser();
+  history.replaceState(null, "", `#${viewId}`);
+  $(".workspace")?.scrollTo?.({ top: 0, behavior: "smooth" });
 }
 
 async function triggerCommand(button) {
@@ -1918,14 +2044,7 @@ async function executeKnowledgePromotion() {
 }
 
 document.querySelectorAll(".nav-item").forEach((button) => {
-  button.addEventListener("click", () => {
-    document.querySelectorAll(".nav-item").forEach((item) => item.classList.remove("active"));
-    document.querySelectorAll(".view").forEach((view) => view.classList.remove("active"));
-    button.classList.add("active");
-    $(`#${button.dataset.view}`).classList.add("active");
-    $("#view-title").textContent = titles[button.dataset.view];
-    if (button.dataset.view === "wiki" && !state.wikiPages.length) loadNotionWikiBrowser();
-  });
+  button.addEventListener("click", () => activateView(button.dataset.view));
 });
 
 document.querySelectorAll("[data-command]").forEach((button) => {
@@ -2031,6 +2150,10 @@ $("#digest-button").addEventListener("click", generateDigest);
 $("#knowledge-promote-button").addEventListener("click", promoteKnowledgeFromIngest);
 $("#chat-send").addEventListener("click", sendChat);
 $("#chat-stop").addEventListener("click", stopChatReasoning);
+$("#chat-settings-open").addEventListener("click", openChatSettingsModal);
+$("#chat-settings-close").addEventListener("click", closeChatSettingsModal);
+$("#chat-settings-cancel").addEventListener("click", closeChatSettingsModal);
+$("#chat-runtime-save").addEventListener("click", saveChatRuntimeSettings);
 $("#close-promotion-panel").addEventListener("click", closeKnowledgePromotionPanel);
 $("#execute-promotion").addEventListener("click", executeKnowledgePromotion);
 $("#wiki-query").addEventListener("keydown", (event) => {
@@ -2062,6 +2185,9 @@ $("#chat-input").addEventListener("keydown", (event) => {
 });
 
 renderStatus();
+const initialView = location.hash?.slice(1) && titles[location.hash.slice(1)] ? location.hash.slice(1) : "chat";
+if (initialView === "chat") renderSectionAnchors("chat");
+else activateView(initialView);
 renderEvents("#run-list", state.runs);
 renderAutomationState();
 renderSchedules();

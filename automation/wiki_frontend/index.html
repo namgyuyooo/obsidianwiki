@@ -18,12 +18,12 @@
         </div>
 
         <nav class="nav-list" aria-label="Primary">
-          <button class="nav-item active" data-view="operations">운영</button>
+          <button class="nav-item" data-view="operations">운영</button>
           <button class="nav-item" data-view="pipeline">수집 파이프라인</button>
           <button class="nav-item" data-view="wiki">위키</button>
           <button class="nav-item" data-view="search">위키 검색</button>
           <button class="nav-item" data-view="ingest">지식 주입</button>
-          <button class="nav-item" data-view="chat">GLM 챗</button>
+          <button class="nav-item active" data-view="chat">GLM 챗</button>
           <button class="nav-item" data-view="paperclip">Paperclip</button>
         </nav>
 
@@ -49,13 +49,14 @@
         <header class="topbar">
           <div>
             <p class="eyebrow">로컬 컨트롤 플레인</p>
-            <h2 id="view-title">운영</h2>
+            <h2 id="view-title">GLM 챗</h2>
           </div>
           <button id="refresh-status" class="command-button">새로고침</button>
         </header>
+        <nav id="section-anchors" class="section-anchors" aria-label="현재 탭 섹션"></nav>
 
-        <section id="operations" class="view active">
-          <div class="metric-grid">
+        <section id="operations" class="view">
+          <div class="metric-grid" data-anchor="현황">
             <article class="metric">
               <span>대상 Drive</span>
               <strong id="target-drive">불러오는 중</strong>
@@ -74,7 +75,7 @@
             </article>
           </div>
 
-          <section class="coverage-strip">
+          <section class="coverage-strip" data-anchor="수집 상태">
             <div class="coverage-copy">
               <span id="coverage-label">전체 Google Drive 수집 상태</span>
               <strong id="coverage-percent">0%</strong>
@@ -85,7 +86,7 @@
             <div id="coverage-details" class="coverage-details">커버리지 불러오는 중</div>
           </section>
 
-          <section class="panel schedule-panel">
+          <section class="panel schedule-panel" data-anchor="예약 실행">
             <div class="panel-heading">
               <h3>예약 실행</h3>
               <span id="schedule-count">0건</span>
@@ -133,7 +134,7 @@
             <div id="schedule-list" class="event-list"></div>
           </section>
 
-          <section class="panel skills-panel">
+          <section class="panel skills-panel" data-anchor="스킬">
             <div class="panel-heading">
               <h3>운영 스킬 카탈로그</h3>
               <span id="skill-count">0개</span>
@@ -157,7 +158,7 @@
             <div id="skill-list" class="skill-list"></div>
           </section>
 
-          <section class="panel settings-panel">
+          <section class="panel settings-panel" data-anchor="운영 설정">
             <div class="panel-heading">
               <h3>운영 설정</h3>
               <span id="settings-status">.env에서 불러오기</span>
@@ -190,6 +191,10 @@
               <label>
                 <span>transfers</span>
                 <input name="RCLONE_TRANSFERS" />
+              </label>
+              <label>
+                <span>수집 실행 시간 제한</span>
+                <input name="RCLONE_COPY_MAX_MINUTES" type="number" min="1" placeholder="기본 30분" />
               </label>
               <label>
                 <span>Drive 표시명</span>
@@ -250,6 +255,10 @@
                 <input name="GLM_MODEL" />
               </label>
               <label>
+                <span>GLM 선택 가능 모델</span>
+                <input name="GLM_AVAILABLE_MODELS" placeholder="glm-5.1,glm-4.5,glm-4-flash" />
+              </label>
+              <label>
                 <span>GLM thinking</span>
                 <select name="GLM_THINKING_TYPE">
                   <option value="enabled">enabled</option>
@@ -260,6 +269,25 @@
               <label>
                 <span>GLM thinking budget</span>
                 <input name="GLM_THINKING_BUDGET_TOKENS" placeholder="예: 8192" />
+              </label>
+              <label>
+                <span>GLM 챗 출력 토큰</span>
+                <input name="GLM_CHAT_MAX_TOKENS" type="number" min="256" step="256" placeholder="예: 10000" />
+              </label>
+              <label>
+                <span>GLM 챗 스트리밍</span>
+                <select name="GLM_CHAT_STREAM">
+                  <option value="true">true</option>
+                  <option value="false">false</option>
+                </select>
+              </label>
+              <label>
+                <span>GLM 컨텍스트 절약 모드</span>
+                <select name="GLM_CONTEXT_MODE">
+                  <option value="economy">economy</option>
+                  <option value="standard">standard</option>
+                  <option value="deep">deep</option>
+                </select>
               </label>
               <label>
                 <span>OpenClaw GLM Webhook override</span>
@@ -287,7 +315,7 @@
         </section>
 
         <section id="pipeline" class="view">
-          <div class="pipeline-hero">
+          <div class="pipeline-hero" data-anchor="개요">
             <div>
               <span class="eyebrow">Drive Wikify</span>
               <h3>수집 후 위키화 단순 실행</h3>
@@ -296,7 +324,7 @@
             <strong id="pipeline-drive-default">기본 경로: gdrive: 최상위</strong>
           </div>
 
-          <section class="pipeline-steps" aria-label="수집 파이프라인 단계">
+          <section class="pipeline-steps" aria-label="수집 파이프라인 단계" data-anchor="실행 단계">
             <article class="pipeline-step">
               <span>1</span>
               <strong>Drive 수집 미리보기</strong>
@@ -342,7 +370,7 @@
           </section>
 
           <div class="panel-grid pipeline-run-grid">
-            <section class="panel">
+            <section class="panel" data-anchor="표적 분석">
               <div class="panel-heading">
                 <h3>현재 실행 상태</h3>
                 <span id="automation-live-status">대기 중</span>
@@ -355,7 +383,7 @@
               <div id="target-candidate-list" class="target-candidate-list"></div>
             </section>
 
-            <section class="panel">
+            <section class="panel" data-anchor="실행 결과">
               <div class="panel-heading">
                 <h3>실행 결과</h3>
                 <span id="run-count">0건</span>
@@ -366,25 +394,7 @@
         </section>
 
         <section id="wiki" class="view">
-          <section class="wiki-command-panel wiki-command-panel-primary">
-            <div class="panel-heading">
-              <div>
-                <h3>위키 관리 GLM 명령 콘솔</h3>
-                <p>자연어로 프로젝트 승격, 고객사 정리, 명칭 일괄수정, 링크 정합성 검토를 지시합니다. 결과는 적용 전 계획으로 저장되고 로그화됩니다.</p>
-              </div>
-              <span id="wiki-command-status">대기</span>
-            </div>
-            <textarea id="wiki-command-input" placeholder="예: 아사히카세히의 위키를 모두 모아 프로젝트, 고객사로 승격해. 참고로 아사히카세이->아사히카세히 영칭도 일괄수정"></textarea>
-            <div class="wiki-command-actions">
-              <button class="command-button accent" id="wiki-command-run" type="button">GLM 관리 계획 생성</button>
-              <button class="command-button danger" id="wiki-command-apply" type="button" disabled>검토한 계획 실행</button>
-              <button class="command-button" id="wiki-command-example" type="button">예시 입력</button>
-              <span>실행은 로컬 위키 Markdown만 변경합니다. 원본 Google Drive는 절대 삭제/수정하지 않습니다.</span>
-            </div>
-            <div id="wiki-command-result" class="wiki-command-result">아직 실행된 관리 명령이 없습니다.</div>
-          </section>
-
-          <div class="notion-wiki-browser">
+          <div class="notion-wiki-browser" data-anchor="위키 브라우저">
             <aside class="notion-sidebar">
               <div class="notion-sidebar-header">
                 <div class="notion-logo">
@@ -525,10 +535,31 @@
               </div>
             </aside>
           </div>
+
+          <details class="wiki-command-panel wiki-command-panel-primary wiki-command-collapsible" data-anchor="GLM 명령">
+            <summary>
+              <span>위키 관리 GLM 명령</span>
+              <small id="wiki-command-status">대기</small>
+            </summary>
+            <div class="panel-heading">
+              <div>
+                <h3>위키 관리 GLM 명령 콘솔</h3>
+                <p>자연어로 프로젝트 승격, 고객사 정리, 명칭 일괄수정, 링크 정합성 검토를 지시합니다. 결과는 적용 전 계획으로 저장되고 로그화됩니다.</p>
+              </div>
+            </div>
+            <textarea id="wiki-command-input" placeholder="예: 아사히카세히의 위키를 모두 모아 프로젝트, 고객사로 승격해. 참고로 아사히카세이->아사히카세히 영칭도 일괄수정"></textarea>
+            <div class="wiki-command-actions">
+              <button class="command-button accent" id="wiki-command-run" type="button">GLM 관리 계획 생성</button>
+              <button class="command-button danger" id="wiki-command-apply" type="button" disabled>검토한 계획 실행</button>
+              <button class="command-button" id="wiki-command-example" type="button">예시 입력</button>
+              <span>실행은 로컬 위키 Markdown만 변경합니다. 원본 Google Drive는 절대 삭제/수정하지 않습니다.</span>
+            </div>
+            <div id="wiki-command-result" class="wiki-command-result">아직 실행된 관리 명령이 없습니다.</div>
+          </details>
         </section>
 
         <section id="search" class="view">
-          <div class="search-row">
+          <div class="search-row" data-anchor="검색">
             <input id="wiki-query" type="search" placeholder="프로젝트, 문서명, 수치, 충돌 키워드 검색" />
             <select id="wiki-search-mode" title="GLM에 전달할 근거 압축 강도">
               <option value="economy">절약</option>
@@ -538,7 +569,7 @@
             <button id="wiki-search-button" class="command-button">검색</button>
           </div>
           <div class="search-workspace">
-            <section class="panel search-brief-panel">
+            <section class="panel search-brief-panel" data-anchor="GLM 정리">
               <div class="panel-heading">
                 <h3>검색 정리</h3>
                 <span id="search-brief-provider">사용자 선택 후 정리</span>
@@ -547,7 +578,7 @@
                 먼저 검색 결과에서 근거 Markdown을 선택한 뒤 GLM 정리를 실행하세요.
               </div>
             </section>
-            <section class="panel evidence-panel">
+            <section class="panel evidence-panel" data-anchor="근거 목록">
               <div class="panel-heading">
                 <h3>근거 Markdown</h3>
                 <span id="search-result-count">0건</span>
@@ -558,7 +589,7 @@
               </div>
               <div id="search-results" class="result-list"></div>
             </section>
-            <article class="reader">
+            <article class="reader" data-anchor="문서 보기">
               <div class="panel-heading">
                 <h3 id="reader-title">문서 보기</h3>
                 <span id="reader-path">검색 결과를 선택</span>
@@ -570,7 +601,7 @@
 
         <section id="ingest" class="view">
           <div class="ingest-layout">
-            <section class="panel">
+            <section class="panel" data-anchor="새 지식">
               <div class="panel-heading">
                 <h3>새 지식</h3>
                 <span>한국어 위키 반영 전 검토</span>
@@ -583,7 +614,7 @@
               </div>
               <div id="knowledge-promote-status" class="promotion-result">승격 후보를 저장하면 확인 가능한 Markdown과 로그가 생성됩니다.</div>
             </section>
-            <section class="panel">
+            <section class="panel" data-anchor="다이제스트">
               <div class="panel-heading">
                 <h3>한국어 다이제스트 결과</h3>
                 <span>위키 반영 전 초안</span>
@@ -593,9 +624,9 @@
           </div>
         </section>
 
-        <section id="chat" class="view">
+        <section id="chat" class="view active">
           <div class="chat-workbench">
-            <aside class="chat-project-rail">
+            <aside class="chat-project-rail" data-anchor="프로젝트">
               <div class="rail-heading">
                 <div>
                   <span class="eyebrow">Projects</span>
@@ -607,7 +638,7 @@
               <div id="chat-project-list" class="chat-project-list"></div>
             </aside>
 
-            <section class="chat-main-panel">
+            <section class="chat-main-panel" data-anchor="GLM 챗">
               <div class="chat-main-header">
                 <div>
                   <span class="eyebrow">Workspace Chat</span>
@@ -615,11 +646,45 @@
                 </div>
                 <div class="chat-header-controls">
                   <span id="chat-status" class="chat-status idle">대기</span>
+                  <button id="chat-settings-open" class="command-button" type="button">모델/토큰 설정</button>
                   <select id="chat-project-select" aria-label="GLM chat project"></select>
                 </div>
               </div>
               <div id="chat-log" class="chat-log"></div>
               <div id="chat-status-detail" class="chat-status-detail">GLM 응답 대기 중에는 다음 메시지를 잠급니다.</div>
+              <dialog id="chat-settings-modal" class="chat-settings-modal">
+                <form method="dialog" class="chat-settings-card">
+                  <div class="promotion-panel-header">
+                    <div>
+                      <strong>GLM 챗 모델/토큰 설정</strong>
+                      <p>다음 메시지부터 적용됩니다.</p>
+                    </div>
+                    <button id="chat-settings-close" type="button" class="close-button">✕</button>
+                  </div>
+                  <div class="chat-runtime-controls">
+                    <label>
+                      <span>모델</span>
+                      <select id="chat-model-select"></select>
+                    </label>
+                    <label>
+                      <span>출력 토큰</span>
+                      <input id="chat-max-tokens" type="number" min="256" step="256" placeholder="10000" />
+                    </label>
+                    <label>
+                      <span>컨텍스트</span>
+                      <select id="chat-context-mode">
+                        <option value="economy">절약</option>
+                        <option value="standard">표준</option>
+                        <option value="deep">정밀</option>
+                      </select>
+                    </label>
+                  </div>
+                  <div class="chat-settings-actions">
+                    <button id="chat-runtime-save" class="command-button accent" type="button">저장</button>
+                    <button id="chat-settings-cancel" class="command-button" type="button">닫기</button>
+                  </div>
+                </form>
+              </dialog>
               <div id="knowledge-promotion-panel" class="knowledge-promotion-panel" style="display: none;">
                 <div class="promotion-panel-header">
                   <strong>지식 승격</strong>
@@ -648,7 +713,7 @@
               </div>
             </section>
 
-            <aside class="chat-context-panel">
+            <aside class="chat-context-panel" data-anchor="지침/메모리">
               <section class="context-card">
                 <div class="panel-heading">
                   <h3>전역 지침</h3>
@@ -688,7 +753,7 @@
         </section>
 
         <section id="paperclip" class="view">
-          <div class="paperclip-hero">
+          <div class="paperclip-hero" data-anchor="개요">
             <div>
               <span class="eyebrow">Context Bridge</span>
               <h3>Paperclip 위키/GLM 브리지</h3>
@@ -697,7 +762,7 @@
             <button id="paperclip-refresh" class="command-button">Paperclip 새로고침</button>
           </div>
           <div class="paperclip-layout">
-            <section class="panel paperclip-status-card">
+            <section class="panel paperclip-status-card" data-anchor="브리지 상태">
               <div class="panel-heading">
                 <h3>브리지 상태</h3>
                 <span id="paperclip-status">mock</span>
@@ -709,7 +774,7 @@
               </div>
               <p class="paperclip-note">GLM 챗은 Paperclip 템플릿, 최근 task, 브리지 상태를 컨텍스트로 함께 봅니다. 원본 Google Drive 삭제는 모든 task에서 금지됩니다.</p>
             </section>
-            <section class="panel paperclip-composer">
+            <section class="panel paperclip-composer" data-anchor="Task 생성">
               <div class="panel-heading">
                 <h3>컨텍스트 Task 생성</h3>
                 <span>GLM 보조 큐</span>
@@ -731,21 +796,21 @@
                 <button id="paperclip-trigger-task" class="command-button accent">추가 후 실행</button>
               </div>
             </section>
-            <section class="panel paperclip-template-panel">
+            <section class="panel paperclip-template-panel" data-anchor="템플릿">
               <div class="panel-heading">
                 <h3>Agent Templates</h3>
                 <span id="paperclip-template-count">0개</span>
               </div>
               <div id="paperclip-templates" class="template-list"></div>
             </section>
-            <section class="panel paperclip-queue-panel">
+            <section class="panel paperclip-queue-panel" data-anchor="큐">
               <div class="panel-heading">
                 <h3>Task Queue</h3>
                 <span>최근 작업</span>
               </div>
               <div id="paperclip-tasks" class="event-list"></div>
             </section>
-            <section class="panel paperclip-event-panel">
+            <section class="panel paperclip-event-panel" data-anchor="이벤트">
               <div class="panel-heading">
                 <h3>Event Log</h3>
                 <span>append-only</span>
