@@ -2282,7 +2282,7 @@ function decisionTargetPathFromContext(item = {}, workspaceId = "rtm") {
 function isDataConflictPage(page = {}) {
   if (!page || !page.statusManaged) return false;
   if (!["project", "account"].includes(page.division)) return false;
-  if (!["conflict", "decisions", "evidence", "sources"].includes(page.docKind)) return false;
+  if (page.docKind !== "conflict" && !/\/Conflict_Register\.md$/i.test(page.path || "")) return false;
   if (["completed", "archived", "not_applicable"].includes(page.workflowStatus)) return false;
   return true;
 }
@@ -2317,6 +2317,16 @@ function isOperationalWikiLine(line = "") {
   ].some((pattern) => pattern.test(text));
 }
 
+function hasStrongDataConflictSignal(line = "") {
+  const text = String(line || "");
+  return /충돌|불일치|상이|상충|서로\s*다름|다르게\s*기재|값\s*차이|버전\s*차이|서술\s*차이|정합성|근거\s*불일치|수치\s*불일치|단위\s*불일치|일정\s*불일치|출처\s*(상충|불일치)|최신값\s*(불명|미확정|확인)|미확정\s*(값|수치|일정|버전|출처|기준)/i.test(text);
+}
+
+function isPracticalWorkLine(line = "") {
+  const text = String(line || "");
+  return /마감일|중간\s*리뷰|제출|서류|신청\s*주체|역할\s*분담|담당|기한|미팅|회의|방문|고객|후속|준비\s*가능|추가\s*확보|무엇인지|언제인지|어떻게|가능한지|해야\s*할|필요한\s*것|요청사항|질문|액션|리스크|위험|일정\s*(확인|정리|공유)/i.test(text);
+}
+
 function isDataConflictLine(line = "") {
   const text = compactLine(String(line || "").trim(), 220);
   if (!text) return false;
@@ -2325,11 +2335,9 @@ function isDataConflictLine(line = "") {
   if (/^[#>\-\*\d.\s]*(충돌 내용|확인 사항|질문|메모|비고|관리합니다|정리합니다|추가합니다)\s*:?\s*$/i.test(text)) return false;
   if (/관리합니다|등록합니다|정리용|후보를 관리|현재 등록된 .*없음|없습니다\.?$/.test(text)) return false;
   if (/^[#>\-\*\d.\s]*[가-힣A-Za-z0-9 _-]+\s*:\s*$/.test(text)) return false;
-  const conflictSignals = /충돌|불일치|상이|다르게 기재|서로 다름|값 차이|버전 차이|미확정|출처 상충|최신값 확인|확인 필요|정합성|근거 불일치|수치 불일치|일정 불일치/;
-  const weakSignals = /다름|상이|불일치|확인|최신|정정|수정|검증|출처|근거|버전|수치|일정/;
-  if (conflictSignals.test(text)) return true;
-  if (!weakSignals.test(text)) return false;
-  return /(어느 값|어떤 값|최신값|확인 필요|정정 필요|근거 비교|출처 비교|버전 확인)/.test(text);
+  if (!hasStrongDataConflictSignal(text)) return false;
+  if (isPracticalWorkLine(text) && !/불일치|상이|상충|값\s*차이|버전\s*차이|서술\s*차이|정합성|다르게\s*기재|서로\s*다름|출처\s*(상충|불일치)/.test(text)) return false;
+  return true;
 }
 
 function isBusinessPromotionCandidate(promotion = {}, pages = []) {
@@ -2349,9 +2357,8 @@ async function decisionQueue(workspaceId = "rtm") {
   for (const promotion of promotions.slice(0, 80)) {
     if (!isBusinessPromotionCandidate(promotion, businessPages)) continue;
     const candidateLines = [
-      ...(promotion.candidates?.decisions || []),
       ...(promotion.candidates?.conflicts || []),
-      ...(promotion.candidates?.actions || []),
+      ...(promotion.candidates?.decisions || []),
     ].filter(isDataConflictLine);
     if (!candidateLines.length) continue;
     const id = promotion.id || `promotion-${promotion.createdAt}`;
@@ -2375,7 +2382,7 @@ async function decisionQueue(workspaceId = "rtm") {
   }
   for (const page of businessPages.slice(0, 160)) {
     const markdown = await readFile(resolve(repoRoot, page.path), "utf-8").catch(() => "");
-    const lines = extractPatternLines(markdown, /확인 필요|미확정|충돌|불일치|상이|값 차이|버전 차이|출처 상충|정합성|수치 불일치|일정 불일치|근거 비교|최신값/i, 8)
+    const lines = extractPatternLines(markdown, /미확정\s*(값|수치|일정|버전|출처|기준)|충돌|불일치|상이|상충|값 차이|버전 차이|출처 상충|정합성|근거 불일치|수치 불일치|단위 불일치|일정 불일치|최신값/i, 8)
       .filter(isDataConflictLine)
       .slice(0, 5);
     if (!lines.length) continue;
@@ -4260,7 +4267,7 @@ async function suggestConflictMerge(body = {}) {
   }
 }
 
-function routeChatSkills(message, evidence = [], paperclip = null) {
+function routeChatSkills(message, evidence = [], paperclip = null, options = {}) {
   const text = String(message || "");
   const lower = text.toLowerCase();
   const localPaths = extractLocalPaths(text, ["hwp", "hwpx", "xlsx", "xls", "csv", "html", "htm"]);
@@ -4281,17 +4288,22 @@ function routeChatSkills(message, evidence = [], paperclip = null) {
   if (needsSpreadsheet) suggestedTemplateIds.push("spreadsheet-stat-analyzer");
   if (needsValidation) suggestedTemplateIds.push("validator");
   const availableTemplates = new Set((paperclip?.templates || []).map((item) => item.id));
+  const forcedTemplateIds = [...new Set([].concat(options.forcedTemplateIds || []).map((item) => String(item || "").trim()).filter(Boolean))]
+    .filter((id) => availableTemplates.size ? availableTemplates.has(id) : true);
+  suggestedTemplateIds.push(...forcedTemplateIds);
   return {
-    needs_reading_skill: needsHwp || needsSpreadsheet,
-    needs_validation_skill: needsValidation,
+    needs_reading_skill: needsHwp || needsSpreadsheet || forcedTemplateIds.some((id) => ["rhwp-hwp-reader", "spreadsheet-stat-analyzer"].includes(id)),
+    needs_validation_skill: needsValidation || forcedTemplateIds.includes("validator"),
     suggested_template_ids: [...new Set(suggestedTemplateIds)].filter((id) => availableTemplates.size ? availableTemplates.has(id) : true),
     blocked_write_actions: [...new Set(blockedWriteActions)],
     reason: [
+      forcedTemplateIds.length ? `사용자 태그 요청: ${forcedTemplateIds.join(", ")}` : "",
       needsHwp ? "hwp/hwpx 문서 해석 필요" : "",
       needsSpreadsheet ? "xlsx/csv 통계 해석 필요" : "",
       needsValidation ? "coverage/충돌 검수 필요" : "",
       blockedWriteActions.length ? "write/run 계열은 추천만 허용" : "",
     ].filter(Boolean).join(" / "),
+    user_selected_template_ids: forcedTemplateIds,
     local_paths: localPaths.map((path) => ({
       path,
       allowed: localPathAllowedForAutoSkill(path),
@@ -4412,7 +4424,7 @@ async function createPaperclipAgentDrafts(route, message, project = {}) {
   return drafts;
 }
 
-async function buildGlmChatContext(message, project, workspaceId = "rtm", mode = "standard") {
+async function buildGlmChatContext(message, project, workspaceId = "rtm", mode = "standard", options = {}) {
   const budget = contextBudget(mode);
   const sparseHits = await sparseWikiSearch(`${project?.name || ""} ${message}`, workspaceId, Math.max(budget.maxCards + 2, 8));
   const seedPaths = sparseHits.slice(0, Math.min(6, sparseHits.length)).map((item) => item.path);
@@ -4475,7 +4487,7 @@ async function buildGlmChatContext(message, project, workspaceId = "rtm", mode =
   const automation = await automationSnapshot().catch(() => ({ running: [], runs: [], schedules: [] }));
   const coverage = await coverageSummary().catch(() => null);
   const paperclip = await paperclipStatus().catch(() => null);
-  const route = routeChatSkills(message, evidence, paperclip);
+  const route = routeChatSkills(message, evidence, paperclip, { forcedTemplateIds: options.skillTags || [] });
   const autoSkill = await autoRunAllowedSkills(route, { workspaceId });
   const agentDrafts = await createPaperclipAgentDrafts(route, message, project).catch(() => []);
   const coverageWarnings = [];
@@ -4568,6 +4580,7 @@ async function buildGlmChatContext(message, project, workspaceId = "rtm", mode =
     },
     paperclip: {
       route,
+      userRequestedSkillTags: route.user_selected_template_ids || [],
       autoRuns: autoSkill.autoRuns,
       agentMode: "background_skill_router",
       agentDrafts: agentDrafts.map((task) => ({
@@ -5037,7 +5050,7 @@ async function glmChat(message, projectId = "default", options = {}) {
   const globalSettings = await getGlobalChatSettings();
   const { values: env } = await readEnvFile();
   const mode = glmContextMode(env, options.contextMode);
-  const context = await buildGlmChatContext(message, project, options.workspace || project.workspace || "rtm", mode);
+  const context = await buildGlmChatContext(message, project, options.workspace || project.workspace || "rtm", mode, { skillTags: options.skillTags || [] });
   sseWrite(res, "paperclip", { paperclip: context.paperclip });
   const apiKey = process.env.GLM_API_KEY || env.GLM_API_KEY;
   const apiUrl = process.env.GLM_API_URL || env.GLM_API_URL;
@@ -5166,7 +5179,7 @@ async function streamGlmChat(message, projectId, res, options = {}) {
   const globalSettings = await getGlobalChatSettings();
   const { values: env } = await readEnvFile();
   const mode = glmContextMode(env, options.contextMode);
-  const context = await buildGlmChatContext(message, project, options.workspace || project.workspace || "rtm", mode);
+  const context = await buildGlmChatContext(message, project, options.workspace || project.workspace || "rtm", mode, { skillTags: options.skillTags || [] });
   const apiKey = process.env.GLM_API_KEY || env.GLM_API_KEY;
   const apiUrl = process.env.GLM_API_URL || env.GLM_API_URL;
   const model = process.env.GLM_MODEL || env.GLM_MODEL || "glm-4.5";
@@ -6569,7 +6582,12 @@ const server = createServer(async (req, res) => {
         sseWrite(res, "user_saved", { message: userMessage });
         const remembered = await autoRememberFromMessage(projectId, body.message || "");
         if (remembered) sseWrite(res, "memory", { remembered });
-        const result = await streamGlmChat(body.message || "", projectId, res, { signal: controller.signal, contextMode: body.contextMode || body.mode, workspace: body.workspace || "rtm" });
+        const result = await streamGlmChat(body.message || "", projectId, res, {
+          signal: controller.signal,
+          contextMode: body.contextMode || body.mode,
+          workspace: body.workspace || "rtm",
+          skillTags: Array.isArray(body.skillTags) ? body.skillTags : [],
+        });
         if (controller.signal.aborted) {
           sseWrite(res, "done", { status: "stopped", message: "GLM 추론이 사용자 요청으로 중지되었습니다.", messages: { user: userMessage }, context: result.context || null });
           return res.end();
@@ -6614,7 +6632,12 @@ const server = createServer(async (req, res) => {
       try {
         const userMessage = await appendChatProjectMessage(projectId, { role: "user", content: body.message || "" });
         const remembered = await autoRememberFromMessage(projectId, body.message || "");
-        const result = await glmChat(body.message || "", projectId, { signal: controller.signal, contextMode: body.contextMode || body.mode, workspace: body.workspace || "rtm" });
+        const result = await glmChat(body.message || "", projectId, {
+          signal: controller.signal,
+          contextMode: body.contextMode || body.mode,
+          workspace: body.workspace || "rtm",
+          skillTags: Array.isArray(body.skillTags) ? body.skillTags : [],
+        });
         if (controller.signal.aborted) {
           result.status = "stopped";
           result.message = "GLM 추론이 사용자 요청으로 중지되었습니다.";

@@ -5,7 +5,7 @@ project_name: "기본 업무 챗"
 status: "active"
 knowledge_role: auxiliary_not_decision
 created: 2026-04-30T03:34:54.975Z
-updated: 2026-04-30T04:37:14.156Z
+updated: 2026-04-30T04:52:23.981Z
 source: wiki_api chat_projects.json
 ---
 

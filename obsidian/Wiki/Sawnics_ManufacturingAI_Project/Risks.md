@@ -21,3 +21,17 @@ source: "Slack thread + local report config"
 - 처리: approve
 - 내용: - `D_3310`, `D_2324` 미탐 사례를 미팅 설명용 리스크 카드로 정리
 - 근거 경로: obsidian/Wiki/Sawnics_ManufacturingAI_Project/Action_Items.md
+
+## Decision Queue Approval - 2026-04-30T04:39:33.208Z
+- 원천: wiki_signal
+- 제목: Risks
+- 처리: approve
+- 내용: - 내용: - `D_3310`, `D_2324` 미탐 사례를 미팅 설명용 리스크 카드로 정리
+- 근거 경로: obsidian/Wiki/Sawnics_ManufacturingAI_Project/Risks.md
+
+## Decision Queue Approval - 2026-04-30T04:45:43.798Z
+- 원천: wiki_signal
+- 제목: Risks
+- 처리: approve
+- 내용: - 내용: - 내용: - `D_3310`, `D_2324` 미탐 사례를 미팅 설명용 리스크 카드로 정리
+- 근거 경로: obsidian/Wiki/Sawnics_ManufacturingAI_Project/Risks.md

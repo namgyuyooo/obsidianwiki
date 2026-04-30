@@ -29,12 +29,12 @@
           <section class="nav-group" aria-label="업무 운영 탭">
             <div class="nav-group-label">업무 운영</div>
             <button class="nav-item active" id="mission-nav-item" data-view="mission">Mission Control</button>
-            <button class="nav-item" id="decisions-nav-item" data-view="decisions">결정 대기</button>
             <button class="nav-item" id="chat-nav-item" data-view="chat">업무 GLM 챗</button>
             <button class="nav-item" id="spotlite-nav-item" data-view="spotlite">업무 Spotlite</button>
           </section>
           <section class="nav-group" aria-label="위키 관리 탭">
             <div class="nav-group-label">위키 관리</div>
+            <button class="nav-item" id="decisions-nav-item" data-view="decisions">정합성 대기</button>
             <button class="nav-item" data-view="pipeline">수집 파이프라인</button>
             <button class="nav-item" data-view="paperclip">Paperclip Studio</button>
             <button class="nav-item" id="wiki-nav-item" data-view="wiki">업무 위키</button>
@@ -70,7 +70,7 @@
         <header class="topbar">
           <div class="topbar-title">
             <p class="eyebrow">로컬 컨트롤 플레인</p>
-            <h2 id="view-title">Spotlite Work</h2>
+            <h2 id="view-title">업무용(RTM) · Mission Control</h2>
           </div>
           <button id="refresh-status" class="command-button">새로고침</button>
         </header>
@@ -148,6 +148,22 @@
             </article>
           </section>
 
+          <section class="panel" data-anchor="오늘과 이번주">
+            <div class="panel-heading">
+              <div>
+                <h3>오늘/이번주 업무 요약</h3>
+                <p>기존 업무 Spotlite를 Mission Control 안으로 합쳐, 오늘 볼 것과 이번주 처리할 일을 같은 맥락에서 봅니다.</p>
+              </div>
+              <div class="mission-spotlite-actions">
+                <button id="spotlite-work-refresh" class="command-button" type="button">업무 요약 갱신</button>
+                <button id="spotlite-work-glm-refresh" class="command-button accent" type="button">GLM 요약 갱신</button>
+              </div>
+            </div>
+            <div id="mission-spotlite-content" class="spotlite-board">
+              <div class="spotlite-empty">업무 요약을 불러오는 중입니다.</div>
+            </div>
+          </section>
+
           <div class="mission-layout" data-anchor="프로젝트 운영">
             <section class="panel mission-project-panel">
               <div class="panel-heading">
@@ -176,7 +192,7 @@
                 <button class="command-button" data-brief-mode="Risk Review" type="button">Risk Review</button>
               </div>
               <div id="mission-detail" class="mission-detail">
-                <p>오늘 뭘 해야 하는지, 어떤 자료가 새로 들어왔는지, 무엇이 결정 대기인지 여기서 봅니다.</p>
+                <p>오늘 뭘 해야 하는지, 어떤 자료가 새로 들어왔는지, 어떤 위키 정합성 이슈가 업무 판단을 흐릴 수 있는지 여기서 봅니다.</p>
               </div>
             </aside>
           </div>
@@ -213,30 +229,6 @@
           </div>
         </section>
 
-        <section id="spotlite-work" class="view">
-          <div class="spotlite-hero" data-anchor="오늘">
-            <div>
-              <span class="eyebrow">Spotlite Work</span>
-              <h3>오늘과 이번주 업무 추진상황</h3>
-              <p>진행 중 상태의 프로젝트만 모아 오늘 볼 것과 이번주 처리할 일을 한 화면에 정리합니다. Common/위키 관리 문서는 제외합니다.</p>
-            </div>
-            <div class="spotlite-actions">
-              <button id="spotlite-work-refresh" class="command-button" type="button">Spotlite 갱신</button>
-              <button id="spotlite-work-glm-refresh" class="command-button accent" type="button">GLM 정리 갱신</button>
-            </div>
-          </div>
-          <div id="spotlite-work-content" class="spotlite-board">
-            <div class="spotlite-empty">업무 Spotlite를 불러오는 중입니다.</div>
-          </div>
-          <section class="spotlite-template-panel panel" data-anchor="템플릿">
-            <div class="panel-heading">
-              <h3>업무 Spotlite 템플릿/프롬프트</h3>
-              <span>허브 메모와 GLM 분석 지침</span>
-            </div>
-            <div id="spotlite-work-templates" class="spotlite-template-list"></div>
-          </section>
-        </section>
-
         <section id="decisions" class="view">
           <div class="decision-hero" data-anchor="빠른 판정">
             <div>
@@ -245,7 +237,7 @@
               <p>카드 한 장씩 보며 출처 상충, 값 차이, 버전 차이, 미확정 사실을 정리합니다. 실무 리스크나 실행 액션은 Mission Control에서 관리하고, 여기서는 위키 데이터 정합성만 다룹니다.</p>
             </div>
             <div class="decision-hero-actions">
-              <button id="decision-refresh" class="command-button" type="button">결정 큐 새로고침</button>
+              <button id="decision-refresh" class="command-button" type="button">정합성 큐 새로고침</button>
               <button id="decision-open-mission" class="command-button" type="button">Mission Control 보기</button>
             </div>
           </div>
@@ -279,7 +271,7 @@
               <div class="panel-heading">
                 <div>
                   <h3>Decision Deck</h3>
-                  <p>좌우 버튼 또는 방향키로 데이터 충돌 카드를 넘길 수 있습니다. `←` 보류, `→` 승인 반영, `↑↓` 카드 이동.</p>
+                  <p>좌우 버튼 또는 방향키로 위키 데이터 충돌 카드를 넘깁니다. `←` 보류, `→` Conflict Register 반영, `↑↓` 카드 이동.</p>
                 </div>
                 <span id="decision-stage-status">로딩 중</span>
               </div>
@@ -290,6 +282,22 @@
                 <button id="decision-approve" class="command-button accent" type="button">승인 반영</button>
                 <button id="decision-next" class="command-button" type="button">다음 카드</button>
               </div>
+              <section class="decision-chat-dock">
+                <div class="decision-chat-dock-head">
+                  <div>
+                    <strong>LLM 처리 지시</strong>
+                    <p>현재 충돌 카드에 대해 GLM 챗으로 근거 비교, 병합안, 보류 조건을 직접 지시합니다.</p>
+                  </div>
+                  <button id="decision-chat-open" class="command-button accent" type="button">지시 들고 GLM 챗 열기</button>
+                </div>
+                <textarea id="decision-chat-directive" rows="3" placeholder="예: 승인 전 근거 충돌을 먼저 따지고, 보류 조건과 확인 담당자까지 정리해줘."></textarea>
+                <div class="decision-chat-presets">
+                  <button class="command-button" id="decision-chat-preset-approve" type="button">승인 검토</button>
+                  <button class="command-button" id="decision-chat-preset-hold" type="button">보류 판단</button>
+                  <button class="command-button" id="decision-chat-preset-investigate" type="button">추가 조사</button>
+                  <button class="command-button" id="decision-chat-preset-plan" type="button">병합안</button>
+                </div>
+              </section>
             </section>
 
             <aside class="panel decision-sidebar">
@@ -307,11 +315,11 @@
           <div class="decision-bottom-grid" data-anchor="후속 연결">
             <section class="panel">
               <div class="panel-heading">
-                <h3>프로젝트 맥락</h3>
+                <h3>위키 정합성 맥락</h3>
                 <span id="decision-context-project">미선택</span>
               </div>
               <div id="decision-context" class="decision-context">
-                <p>카드를 선택하면 연결 프로젝트의 요약, 다음 액션, 리스크를 표시합니다.</p>
+                <p>카드를 선택하면 연결 프로젝트의 충돌 근거, Conflict Register, 관련 핵심문서를 표시합니다.</p>
               </div>
             </section>
             <section class="panel">
@@ -1178,6 +1186,16 @@
               </div>
               <div id="chat-log" class="chat-log"></div>
               <div id="chat-status-detail" class="chat-status-detail">GLM 응답 대기 중에는 다음 메시지를 잠급니다.</div>
+              <section class="chat-skill-strip" aria-label="GLM 스킬 태그">
+                <div class="chat-skill-strip-head">
+                  <div>
+                    <strong>추천 스킬 태그</strong>
+                    <p>`+` 메뉴 또는 `@스킬` 입력과 함께 이번 메시지에 사용할 태그를 선택합니다.</p>
+                  </div>
+                  <span id="chat-skill-selected-count">0개 선택</span>
+                </div>
+                <div id="chat-skill-tag-list" class="chat-skill-tag-list"></div>
+              </section>
               <div id="chat-attachment-list" class="chat-attachment-list" hidden></div>
               <dialog id="chat-settings-modal" class="chat-settings-modal">
                 <form method="dialog" class="chat-settings-card">
@@ -1231,15 +1249,39 @@
                 </div>
                 <div id="promotion-result" class="promotion-result"></div>
               </div>
-              <div class="chat-input-row">
-                <textarea id="chat-input" rows="2" placeholder="프로젝트 상태, 리스크, 다음 액션을 물어보세요. Shift+Enter 또는 Shift+Tab은 줄바꿈"></textarea>
-                <div class="chat-send-stack">
-                  <input id="chat-file-input" type="file" multiple accept=".hwp,.hwpx,.pdf,.docx,.pptx,.html,.htm,.xlsx,.xls,.csv,.txt,.md,.json,image/*" hidden />
-                  <button id="chat-file-button" class="command-button" type="button">파일</button>
-                  <button id="chat-send" class="command-button">전송</button>
-                  <button id="chat-stop" class="command-button danger" type="button" disabled>추론 중지</button>
+              <input id="chat-file-input" type="file" multiple accept=".hwp,.hwpx,.pdf,.docx,.pptx,.html,.htm,.xlsx,.xls,.csv,.txt,.md,.json,image/*" hidden />
+              <section class="chat-composer-shell" aria-label="GLM chat composer">
+                <div id="chat-selected-skill-pills" class="chat-selected-skill-pills" hidden></div>
+                <div class="chat-input-row modern">
+                  <div class="chat-composer-tools">
+                    <button id="chat-plus-button" class="chat-plus-button" type="button" aria-haspopup="true" aria-expanded="false">+</button>
+                    <div id="chat-plus-menu" class="chat-plus-menu" hidden>
+                      <button id="chat-plus-attach" class="chat-plus-menu-item" type="button">
+                        <strong>사진 및 파일 추가</strong>
+                        <small>문서/이미지 업로드 후 같은 대화 맥락으로 분석</small>
+                      </button>
+                      <button id="chat-plus-skill-picker" class="chat-plus-menu-item" type="button">
+                        <strong>스킬 태그 고르기</strong>
+                        <small>Paperclip/스킬 태그를 선택해 이번 메시지에 적용</small>
+                      </button>
+                      <div id="chat-plus-skill-quick-list" class="chat-plus-skill-quick-list"></div>
+                    </div>
+                  </div>
+                  <div class="chat-composer-main">
+                    <textarea id="chat-input" rows="2" placeholder="무엇이든 물어보세요. @로 스킬 태그를 추가할 수 있습니다. Shift+Enter 또는 Shift+Tab은 줄바꿈"></textarea>
+                    <div id="chat-mention-suggestions" class="chat-mention-suggestions" hidden></div>
+                    <div class="chat-composer-footer">
+                      <span id="chat-composer-hint">Enter 전송 · Shift+Enter 줄바꿈 · `@` 스킬 태그</span>
+                      <span id="chat-pending-summary">첨부/태그 없음</span>
+                    </div>
+                  </div>
+                  <div class="chat-send-stack modern">
+                    <button id="chat-skill-picker-button" class="command-button" type="button">@스킬</button>
+                    <button id="chat-send" class="chat-send-button" type="button" aria-label="메시지 전송">↑</button>
+                    <button id="chat-stop" class="command-button danger" type="button" disabled>중지</button>
+                  </div>
                 </div>
-              </div>
+              </section>
             </section>
 
             <dialog id="chat-project-settings-modal" class="chat-project-settings-modal">

@@ -43,6 +43,7 @@ const state = {
   activeDecisionEvidencePath: "",
   decisionLastResolution: null,
   decisionPending: { busy: false, itemId: "", action: "" },
+  decisionChatDirective: localStorage.getItem("wiki_ops_decision_chat_directive") || "",
   decisionCompare: {
     itemId: "",
     sourcePath: "",
@@ -88,6 +89,9 @@ const state = {
   chatProjects: [],
   chatGlobal: { instructions: "", autoMemory: true },
   chatAttachments: [],
+  chatPendingFiles: [],
+  chatSelectedSkillTags: [],
+  chatMentionActiveIndex: 0,
   activeChatProjectId: "default",
   chatComposing: false,
   chatSending: false,
@@ -105,7 +109,7 @@ const state = {
 
 const titles = {
   mission: "Mission Control",
-  decisions: "결정 대기",
+  decisions: "위키 정합성 대기",
   spotlite: "Spotlite",
   "spotlite-work": "Spotlite Work",
   "spotlite-personal": "Spotlite Personal",
@@ -550,7 +554,9 @@ function spotliteLane(title, items, emptyText) {
 }
 
 function renderSpotlite(scope, payload) {
-  const target = $(`#spotlite-${scope}-content`);
+  const target = scope === "work"
+    ? ($("#mission-spotlite-content") || $("#spotlite-work-content"))
+    : $(`#spotlite-${scope}-content`);
   if (!target) return;
   if (payload?.error || payload?.mock) {
     target.innerHTML = `<div class="spotlite-empty">Spotlite API 연결 실패: ${escapeHtml(payload.error || "mock")}</div>`;
@@ -604,7 +610,9 @@ function renderSpotlite(scope, payload) {
 }
 
 async function loadSpotlite(scope = "work") {
-  const target = $(`#spotlite-${scope}-content`);
+  const target = scope === "work"
+    ? ($("#mission-spotlite-content") || $("#spotlite-work-content"))
+    : $(`#spotlite-${scope}-content`);
   if (target) target.innerHTML = `<div class="spotlite-empty">Spotlite를 분석하는 중입니다.</div>`;
   const payload = await api(`/api/spotlite?scope=${encodeURIComponent(scope)}`);
   state.spotlite[scope] = payload;
@@ -612,7 +620,9 @@ async function loadSpotlite(scope = "work") {
 }
 
 async function refreshSpotliteGlm(scope = "work") {
-  const target = $(`#spotlite-${scope}-content`);
+  const target = scope === "work"
+    ? ($("#mission-spotlite-content") || $("#spotlite-work-content"))
+    : $(`#spotlite-${scope}-content`);
   if (target) target.insertAdjacentHTML("afterbegin", `<div class="spotlite-empty">GLM이 진행 프로젝트 중심으로 Spotlite를 다시 정리하는 중입니다.</div>`);
   const payload = await api("/api/spotlite/glm-refresh", {
     method: "POST",
@@ -651,7 +661,6 @@ async function loadSpotliteTemplates() {
   const payload = await api("/api/spotlite/templates");
   if (payload.error || payload.mock) return;
   state.spotlite.templates = payload.templates || [];
-  renderSpotliteTemplates("work");
   renderSpotliteTemplates("personal");
 }
 
@@ -860,6 +869,17 @@ function decisionProject(projectKey) {
   return (state.mission?.projects || []).find((project) => project.projectKey === projectKey) || null;
 }
 
+function normalizedText(value = "") {
+  return String(value).toLowerCase().replace(/[\s_-]+/g, "");
+}
+
+function setDecisionChatDirective(value, persist = true) {
+  state.decisionChatDirective = value;
+  if (persist) localStorage.setItem("wiki_ops_decision_chat_directive", value);
+  const input = $("#decision-chat-directive");
+  if (input && input.value !== value) input.value = value;
+}
+
 function ensureActiveDecision() {
   const queue = pendingDecisionItems();
   if (!queue.length) {
@@ -874,7 +894,7 @@ function ensureActiveDecision() {
 function decisionStatusLabel(item) {
   if (!item) return "미선택";
   const source = item.sourceType === "knowledge_promotion" ? "지식승격" : item.sourceType === "wiki_signal" ? "위키 신호" : item.sourceType || "manual";
-  const kind = isConflictDecision(item) ? "data_conflict" : (item.kind || "decision");
+  const kind = isConflictDecision(item) ? "data_conflict" : "wiki_consistency";
   return `${kind} · ${source}`;
 }
 
@@ -882,10 +902,68 @@ function decisionPrimaryPath(project, item) {
   return item?.path || project?.hubPath || "";
 }
 
+function findChatProjectForDecision(item = {}, project = null) {
+  const projects = chatProjectsForSpace();
+  if (!projects.length) return null;
+  const candidates = [
+    item.projectLabel,
+    project?.projectLabel,
+    item.projectKey,
+    project?.projectKey,
+  ].filter(Boolean);
+  const normalizedCandidates = candidates.map((value) => normalizedText(value)).filter(Boolean);
+  return projects.find((chatProject) => normalizedCandidates.some((candidate) => {
+    const projectName = normalizedText(chatProject.name || "");
+    return projectName === candidate || projectName.includes(candidate) || candidate.includes(projectName);
+  })) || projects[0] || null;
+}
+
+function buildDecisionChatPrompt(item = {}, project = null, directive = "") {
+  const contentItems = decisionContentItems(item.content);
+  const conflicts = (project?.conflicts || []).slice(0, 5);
+  const coreDocs = (project?.coreDocuments || []).slice(0, 5);
+  const targetFile = decisionApplyTargetFile(item);
+  const instruction = directive.trim() || "이 위키 정합성 카드의 근거 충돌을 비교하고, Conflict_Register.md에 남길 병합안과 보류 조건을 정리해줘.";
+  return [
+    `[Wiki Consistency Deck 카드 지시]`,
+    `프로젝트: ${item.projectLabel || project?.projectLabel || item.projectKey || "미분류"}`,
+    `카드 제목: ${item.title || item.id || "제목 없음"}`,
+    `카드 성격: ${decisionStatusLabel(item)}`,
+    `승인 반영 파일: ${targetFile}`,
+    "",
+    `판단 내용`,
+    ...(contentItems.length ? contentItems.map((line) => `- ${line}`) : [`- ${item.content || "내용 없음"}`]),
+    "",
+    `위키 정합성 맥락`,
+    `- 한 줄 상태: ${project?.oneLine || "요약 없음"}`,
+    ...(conflicts.length ? conflicts.map((line) => `- 기존 충돌 기록: ${line}`) : ["- 기존 충돌 기록: 명시 없음"]),
+    ...(coreDocs.length ? coreDocs.map((doc) => `- 관련 문서: ${doc.title || doc.key || "문서"} (${doc.path || doc.key || ""})`) : ["- 관련 문서: 명시 없음"]),
+    "",
+    `요청`,
+    instruction,
+  ].join("\n");
+}
+
+async function openDecisionChatForItem(item = null, directive = "") {
+  const activeItem = item || ensureActiveDecision();
+  if (!activeItem) return;
+  await ensureActiveChatProject();
+  const project = decisionProject(activeItem.projectKey);
+  const matchedProject = findChatProjectForDecision(activeItem, project);
+  if (matchedProject?.id) {
+    state.activeChatProjectId = matchedProject.id;
+    renderChatProjects();
+  }
+  document.querySelector("[data-view='chat']")?.click();
+  $("#chat-input").value = buildDecisionChatPrompt(activeItem, project, directive);
+  $("#chat-input").focus();
+  setChatPhase("idle", "위키 정합성 카드 문맥과 처리 지시를 GLM 챗 입력창에 채웠습니다.");
+}
+
 function decisionApplyTargetFile(item = {}) {
   const text = `${item.kind || ""} ${item.title || ""} ${item.content || ""}`.toLowerCase();
   if (/conflict|충돌|불일치|상이|미확정|버전 차이|값 차이/.test(text)) return "Conflict_Register.md";
-  return "Decisions.md";
+  return "Conflict_Register.md";
 }
 
 function decisionSourceLabel(item = {}) {
@@ -970,6 +1048,11 @@ function setDecisionDeckControlsDisabled(disabled) {
     "#decision-next",
     "#decision-hold",
     "#decision-approve",
+    "#decision-chat-open",
+    "#decision-chat-preset-approve",
+    "#decision-chat-preset-hold",
+    "#decision-chat-preset-investigate",
+    "#decision-chat-preset-plan",
     "#decision-compare-open-source",
     "#decision-compare-open-target",
     "#decision-compare-glm-merge",
@@ -983,6 +1066,8 @@ function setDecisionDeckControlsDisabled(disabled) {
   });
   const editor = $("#decision-compare-target-editor");
   if (editor) editor.disabled = disabled;
+  const directiveInput = $("#decision-chat-directive");
+  if (directiveInput) directiveInput.disabled = disabled;
 }
 
 function renderDecisionActivityStrip() {
@@ -1180,13 +1265,20 @@ function renderDecisionWorkbench() {
     : active ? `${activeIndex + 1}번째 카드` : "대기 없음";
   setDecisionDeckControlsDisabled(busy || !queue.length);
   renderDecisionActivityStrip();
+  setDecisionChatDirective(state.decisionChatDirective, false);
+  const decisionChatOpen = $("#decision-chat-open");
+  if (decisionChatOpen) {
+    decisionChatOpen.textContent = active
+      ? `${active.projectLabel || active.projectKey || "현재 카드"} 지시 들고 GLM 챗 열기`
+      : "지시 들고 GLM 챗 열기";
+  }
 
   const stack = $("#decision-card-stack");
   if (!stack) return;
   if (!active) {
-    stack.innerHTML = `<div class="decision-empty"><strong>결정 대기 없음</strong><p>새 위키 신호나 지식승격 후보가 생기면 여기서 한 장씩 판정할 수 있습니다.</p></div>`;
+    stack.innerHTML = `<div class="decision-empty"><strong>정합성 대기 없음</strong><p>데이터 충돌이나 출처 불일치가 생기면 여기서 한 장씩 검수합니다.</p></div>`;
     $("#decision-context-project").textContent = "미선택";
-    $("#decision-context").innerHTML = `<p>카드를 선택하면 연결 프로젝트의 요약, 다음 액션, 리스크를 표시합니다.</p>`;
+    $("#decision-context").innerHTML = `<p>카드를 선택하면 연결 프로젝트의 충돌 기록과 관련 핵심문서를 표시합니다.</p>`;
   } else {
     const project = decisionProject(active.projectKey);
     const sourcePath = decisionPrimaryPath(project, active);
@@ -1219,8 +1311,8 @@ function renderDecisionWorkbench() {
       sourcePath ? `<button class="command-button" type="button" data-decision-open-path="${escapeHtml(sourcePath)}" ${busy ? "disabled" : ""}>근거 열기</button>` : "",
       `</div>`,
       `<div class="decision-signal-grid">`,
-      `<section class="decision-card-panel"><span>바로 봐야 할 액션</span>${missionLineList(project?.nextActions, "다음 액션 없음")}</section>`,
-      `<section class="decision-card-panel"><span>리스크/충돌</span>${missionLineList([...(project?.risks || []), ...(project?.conflicts || [])], "명시 리스크/충돌 없음")}</section>`,
+      `<section class="decision-card-panel"><span>기존 충돌 기록</span>${missionLineList(project?.conflicts, "기존 충돌 기록 없음")}</section>`,
+      `<section class="decision-card-panel"><span>관련 핵심문서</span>${coreDocs.length ? `<ul>${coreDocs.map((doc) => `<li>${escapeHtml(doc.title || doc.key || "문서")} ${doc.path ? `· ${escapeHtml(doc.path)}` : ""}</li>`).join("")}</ul>` : `<p class="mission-muted">연결 핵심문서 없음</p>`}</section>`,
       `</div>`,
       conflictGuide.length ? `<div class="decision-card-panel guide"><span>Conflict 대처 가이드</span><ul>${conflictGuide.map((line) => `<li>${escapeHtml(line)}</li>`).join("")}</ul></div>` : "",
       `<div class="decision-signal-grid">`,
@@ -1239,10 +1331,10 @@ function renderDecisionWorkbench() {
 
     $("#decision-context-project").textContent = project?.projectLabel || active.projectLabel || active.projectKey || "미분류";
     $("#decision-context").innerHTML = project ? [
-      `<section><h4>한 줄 상태</h4><p>${escapeHtml(project.oneLine || "운영 메모 보강 필요")}</p></section>`,
-      `<section><h4>다음 액션</h4>${missionLineList(project.nextActions, "다음 액션 없음")}</section>`,
-      `<section><h4>리스크/충돌</h4>${missionLineList([...(project.risks || []), ...(project.conflicts || [])], "명시 리스크/충돌 없음")}</section>`,
-      `<section><h4>결정/문서</h4><p>결정 대기 ${escapeHtml(project.decisionQueueCount || 0)}건 · 핵심문서 ${escapeHtml((project.coreDocuments || []).length)}건</p></section>`,
+      `<section><h4>한 줄 상태</h4><p>${escapeHtml(project.oneLine || "위키 요약 보강 필요")}</p></section>`,
+      `<section><h4>Conflict Register</h4>${missionLineList(project.conflicts, "명시 충돌 없음")}</section>`,
+      `<section><h4>관련 핵심문서</h4>${coreDocs.length ? `<ul>${coreDocs.map((doc) => `<li>${escapeHtml(doc.title || doc.key || "문서")}</li>`).join("")}</ul>` : `<p class="mission-muted">연결 핵심문서 없음</p>`}</section>`,
+      `<section><h4>정합성/문서</h4><p>정합성 대기 ${escapeHtml(project.decisionQueueCount || 0)}건 · 핵심문서 ${escapeHtml((project.coreDocuments || []).length)}건</p></section>`,
     ].join("") : `<p>연결된 프로젝트 요약이 아직 없습니다. 필요하면 위키 허브나 GLM 논의로 분기하세요.</p>`;
   }
 
@@ -1292,9 +1384,7 @@ function renderDecisionWorkbench() {
   });
   document.querySelectorAll("[data-decision-chat]").forEach((button) => {
     button.addEventListener("click", () => {
-      document.querySelector("[data-view='chat']")?.click();
-      $("#chat-input").value = `${button.dataset.decisionChat} 관련 결정 대기 항목을 검토해서 승인 여부, 보류 사유, 추가 확인 포인트, 실무 후속 액션을 정리해줘.`;
-      $("#chat-input").focus();
+      openDecisionChatForItem(active, state.decisionChatDirective || `${button.dataset.decisionChat} 관련 위키 정합성 항목을 검토해서 충돌 근거, 병합안, 보류 조건, Conflict_Register.md 반영 문구를 정리해줘.`);
     });
   });
   document.querySelectorAll("[data-decision-investigate]").forEach((button) => {
@@ -1312,7 +1402,7 @@ function renderMissionPipelineFlow(coverage = {}, latestRun = null) {
     { id: "copy", label: "Drive 수집", detail: runningCommand.includes("rclone-copy") ? "rclone copy 진행 중" : manifest ? "수집 이력 있음" : "P0 병목: 실제 수집 필요", done: manifest > 0, active: runningCommand.includes("rclone-copy") },
     { id: "manifest", label: "Manifest", detail: `${manifest} docs`, done: manifest > 0, active: runningCommand.includes("build-manifest") },
     { id: "extract", label: "추출/위키화", detail: `${processed} processed`, done: processed > 0, active: runningCommand === "run" || runningCommand === "full-cycle" },
-    { id: "review", label: "결정 대기", detail: `${pendingDecisions} pending`, done: pendingDecisions === 0 && processed > 0, active: pendingDecisions > 0 },
+    { id: "review", label: "정합성 대기", detail: `${pendingDecisions} pending`, done: pendingDecisions === 0 && processed > 0, active: pendingDecisions > 0 },
     { id: "action", label: "오늘 액션", detail: "Mission Control 반영", done: Boolean(state.mission?.summary?.ongoing), active: false },
   ];
   const target = $("#mission-flow-steps");
@@ -1354,7 +1444,7 @@ function missionCommandText() {
 function missionCommandToChat() {
   const text = missionCommandText();
   document.querySelector("[data-view='chat']")?.click();
-  $("#chat-input").value = text || "현재 Mission Control 기준으로 오늘 해야 할 일, 위험 프로젝트, 결정 대기, 다음 액션을 PM/CEO 관점으로 정리해줘.";
+  $("#chat-input").value = text || "현재 Mission Control 기준으로 오늘 해야 할 일, 위험 프로젝트, 위키 정합성 이슈, 다음 액션을 PM/CEO 관점으로 정리해줘.";
   $("#chat-input").focus();
 }
 
@@ -2308,11 +2398,209 @@ function setChatPhase(phase, detail = "") {
   $("#chat-project-select").disabled = state.chatSending;
 }
 
+function formatChatFileSize(bytes = 0) {
+  if (bytes >= 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)}MB`;
+  if (bytes >= 1024) return `${Math.round(bytes / 1024)}KB`;
+  return `${bytes}B`;
+}
+
+function availableChatSkillTags() {
+  const skillMap = new Map((state.skills || []).map((skill) => [skill.id, skill]));
+  return (state.paperclipTemplates || []).map((template) => {
+    const skill = skillMap.get(template.id);
+    return {
+      id: template.id,
+      name: skill?.name || template.title,
+      type: "paperclip",
+    };
+  });
+}
+
+function toggleChatSkillTag(id) {
+  if (!id) return;
+  if (state.chatSelectedSkillTags.includes(id)) {
+    state.chatSelectedSkillTags = state.chatSelectedSkillTags.filter((item) => item !== id);
+  } else {
+    state.chatSelectedSkillTags = [...state.chatSelectedSkillTags, id];
+  }
+  renderChatSkillTags();
+}
+
+function renderChatSelectedSkillPills() {
+  const container = $("#chat-selected-skill-pills");
+  if (!container) return;
+  const tags = availableChatSkillTags().filter((skill) => state.chatSelectedSkillTags.includes(skill.id));
+  container.hidden = !tags.length;
+  if (!tags.length) {
+    container.innerHTML = "";
+    return;
+  }
+  container.innerHTML = tags.map((skill) => [
+    `<span class="chat-selected-skill-pill">`,
+    `<strong>@${escapeHtml(skill.id)}</strong>`,
+    `<button type="button" data-remove-chat-skill="${escapeHtml(skill.id)}" aria-label="${escapeHtml(skill.id)} 제거">×</button>`,
+    `</span>`,
+  ].join("")).join("");
+  container.querySelectorAll("[data-remove-chat-skill]").forEach((button) => {
+    button.addEventListener("click", () => toggleChatSkillTag(button.dataset.removeChatSkill));
+  });
+}
+
+function renderChatPlusMenu() {
+  const list = $("#chat-plus-skill-quick-list");
+  if (!list) return;
+  const tags = availableChatSkillTags().slice(0, 6);
+  list.innerHTML = tags.map((skill) => (
+    `<button type="button" data-chat-skill-quick="${escapeHtml(skill.id)}">@${escapeHtml(skill.id)}</button>`
+  )).join("");
+  list.querySelectorAll("[data-chat-skill-quick]").forEach((button) => {
+    button.addEventListener("click", () => {
+      toggleChatSkillTag(button.dataset.chatSkillQuick);
+      closeChatPlusMenu();
+    });
+  });
+}
+
+function chatPendingSummaryText() {
+  const pendingFiles = state.chatPendingFiles.length;
+  const uploadedFiles = state.chatAttachments.length;
+  const tags = state.chatSelectedSkillTags.length;
+  const parts = [];
+  if (pendingFiles) parts.push(`업로드 대기 ${pendingFiles}개`);
+  if (uploadedFiles) parts.push(`첨부 분석 ${uploadedFiles}개`);
+  if (tags) parts.push(`스킬 태그 ${tags}개`);
+  return parts.join(" · ") || "첨부/태그 없음";
+}
+
+function renderChatComposerMeta() {
+  const node = $("#chat-pending-summary");
+  if (node) node.textContent = chatPendingSummaryText();
+}
+
+function openChatPlusMenu() {
+  const menu = $("#chat-plus-menu");
+  const button = $("#chat-plus-button");
+  if (!menu || !button) return;
+  renderChatPlusMenu();
+  menu.hidden = false;
+  button.setAttribute("aria-expanded", "true");
+}
+
+function closeChatPlusMenu() {
+  const menu = $("#chat-plus-menu");
+  const button = $("#chat-plus-button");
+  if (menu) menu.hidden = true;
+  if (button) button.setAttribute("aria-expanded", "false");
+}
+
+function toggleChatPlusMenu() {
+  const menu = $("#chat-plus-menu");
+  if (!menu) return;
+  if (menu.hidden) openChatPlusMenu();
+  else closeChatPlusMenu();
+}
+
+function chatMentionMatch() {
+  const input = $("#chat-input");
+  if (!input) return null;
+  const value = input.value || "";
+  const cursor = input.selectionStart ?? value.length;
+  const beforeCursor = value.slice(0, cursor);
+  const match = beforeCursor.match(/(?:^|\s)@([^\s@]*)$/);
+  if (!match) return null;
+  const query = match[1] || "";
+  const start = cursor - query.length - 1;
+  const tags = availableChatSkillTags().filter((skill) => {
+    const haystack = `${skill.id} ${skill.name} ${skill.type}`.toLowerCase();
+    return haystack.includes(query.toLowerCase());
+  });
+  return {
+    query,
+    start,
+    end: cursor,
+    tags,
+  };
+}
+
+function closeChatMentionSuggestions() {
+  const node = $("#chat-mention-suggestions");
+  if (node) {
+    node.hidden = true;
+    node.innerHTML = "";
+  }
+  state.chatMentionActiveIndex = 0;
+}
+
+function applyChatMentionSkill(id) {
+  const match = chatMentionMatch();
+  const input = $("#chat-input");
+  if (!match || !input) return;
+  input.value = `${input.value.slice(0, match.start)}${input.value.slice(match.end)}`.replace(/\s{2,}/g, " ");
+  input.selectionStart = input.selectionEnd = match.start;
+  toggleChatSkillTag(id);
+  closeChatMentionSuggestions();
+  input.focus();
+}
+
+function renderChatMentionSuggestions() {
+  const node = $("#chat-mention-suggestions");
+  if (!node) return;
+  const match = chatMentionMatch();
+  if (!match || !match.tags.length) {
+    closeChatMentionSuggestions();
+    return;
+  }
+  state.chatMentionActiveIndex = Math.max(0, Math.min(state.chatMentionActiveIndex, match.tags.length - 1));
+  node.hidden = false;
+  node.innerHTML = match.tags.slice(0, 6).map((skill, index) => [
+    `<button class="chat-mention-item ${index === state.chatMentionActiveIndex ? "active" : ""}" type="button" data-chat-mention-skill="${escapeHtml(skill.id)}">`,
+    `<strong>@${escapeHtml(skill.id)}</strong>`,
+    `<small>${escapeHtml(skill.name)} · ${escapeHtml(skill.type)}</small>`,
+    `</button>`,
+  ].join("")).join("");
+  node.querySelectorAll("[data-chat-mention-skill]").forEach((button) => {
+    button.addEventListener("click", () => applyChatMentionSkill(button.dataset.chatMentionSkill));
+  });
+}
+
+function renderChatSkillTags() {
+  const container = $("#chat-skill-tag-list");
+  if (!container) return;
+  const tags = availableChatSkillTags();
+  $("#chat-skill-selected-count").textContent = `${state.chatSelectedSkillTags.length}개 선택`;
+  if (!tags.length) {
+    container.innerHTML = `<p class="spotlite-empty">사용 가능한 스킬 태그를 불러오는 중입니다.</p>`;
+    return;
+  }
+  container.innerHTML = tags.map((skill) => [
+    `<button class="chat-skill-tag ${state.chatSelectedSkillTags.includes(skill.id) ? "active" : ""}" data-chat-skill-tag="${escapeHtml(skill.id)}" type="button">`,
+    `<strong>#${escapeHtml(skill.id)}</strong>`,
+    `<small>${escapeHtml(skill.name)} · ${escapeHtml(skill.type)}</small>`,
+    `</button>`,
+  ].join("")).join("");
+  container.querySelectorAll("[data-chat-skill-tag]").forEach((button) => {
+    button.addEventListener("click", () => {
+      toggleChatSkillTag(button.dataset.chatSkillTag);
+    });
+  });
+  renderChatSelectedSkillPills();
+  renderChatPlusMenu();
+  renderChatComposerMeta();
+  renderChatMentionSuggestions();
+}
+
 function renderChatAttachments() {
   const container = $("#chat-attachment-list");
   if (!container) return;
-  container.hidden = !state.chatAttachments.length;
-  container.innerHTML = state.chatAttachments.map((item) => [
+  const pendingCards = state.chatPendingFiles.map((item) => [
+    `<article class="chat-attachment-card pending">`,
+    `<div><strong>${escapeHtml(item.name)}</strong><small>업로드 대기 · ${escapeHtml(formatChatFileSize(item.size || 0))}</small></div>`,
+    `<p>메시지를 전송하면 업로드와 파일 분석을 먼저 수행한 뒤, 같은 요청 맥락으로 GLM에 전달합니다.</p>`,
+    "",
+    `<button class="inline-delete" data-attachment-pending-remove="${escapeHtml(item.id)}" type="button">제거</button>`,
+    `</article>`,
+  ].join(""));
+  const uploadedCards = state.chatAttachments.map((item) => [
     `<article class="chat-attachment-card">`,
     `<div><strong>${escapeHtml(item.fileName)}</strong><small>${escapeHtml(item.route)} · ${Math.round((item.size || 0) / 1024)}KB</small></div>`,
     `<p>${escapeHtml((item.analysis || "").replace(new RegExp("[#*_`>-]", "g"), "").slice(0, 220))}</p>`,
@@ -2320,6 +2608,14 @@ function renderChatAttachments() {
     `<button class="inline-delete" data-attachment-remove="${escapeHtml(item.id)}" type="button">제거</button>`,
     `</article>`,
   ].join("")).join("");
+  container.hidden = !(pendingCards || uploadedCards);
+  container.innerHTML = `${pendingCards}${uploadedCards}`;
+  container.querySelectorAll("[data-attachment-pending-remove]").forEach((button) => {
+    button.addEventListener("click", () => {
+      state.chatPendingFiles = state.chatPendingFiles.filter((item) => item.id !== button.dataset.attachmentPendingRemove);
+      renderChatAttachments();
+    });
+  });
   container.querySelectorAll("[data-attachment-remove]").forEach((button) => {
     button.addEventListener("click", () => {
       state.chatAttachments = state.chatAttachments.filter((item) => item.id !== button.dataset.attachmentRemove);
@@ -2332,6 +2628,7 @@ function renderChatAttachments() {
       openNotionWikiPage(button.dataset.attachmentOpen);
     });
   });
+  renderChatComposerMeta();
 }
 
 function chatAttachmentContext() {
@@ -2353,15 +2650,45 @@ function chatAttachmentContext() {
   ].join("\n");
 }
 
-async function uploadChatFiles(event) {
+function selectedSkillTagContext() {
+  if (!state.chatSelectedSkillTags.length) return "";
+  return [
+    "## 사용자 선택 스킬 태그",
+    `- ${state.chatSelectedSkillTags.map((tag) => `#${tag}`).join(", ")}`,
+    "- 위 태그는 사용자가 이번 메시지에서 우선 사용하기 원하는 Paperclip/스킬 힌트다.",
+  ].join("\n");
+}
+
+function queueChatFiles(event) {
   const files = [...(event.target.files || [])];
   if (!files.length) return;
-  setChatPhase("sending", `파일 ${files.length}개를 분석 중입니다.`);
+  const seen = new Set(state.chatPendingFiles.map((item) => `${item.name}:${item.size}:${item.lastModified}`));
+  for (const file of files) {
+    const key = `${file.name}:${file.size}:${file.lastModified}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    state.chatPendingFiles.push({
+      id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      file,
+      name: file.name,
+      size: file.size,
+      lastModified: file.lastModified,
+    });
+  }
+  renderChatAttachments();
+  setChatPhase("idle", `파일 ${state.chatPendingFiles.length}개가 전송 대기 중입니다. 메시지를 보내면 함께 처리됩니다.`);
+  event.target.value = "";
+}
+
+async function uploadQueuedChatFiles(note = "") {
+  if (!state.chatPendingFiles.length) return;
+  const pending = [...state.chatPendingFiles];
+  setChatPhase("sending", `파일 ${pending.length}개를 업로드/분석 중입니다.`);
   try {
-    for (const file of files) {
+    for (const item of pending) {
       const form = new FormData();
-      form.append("file", file);
-      form.append("note", $("#chat-input")?.value || "");
+      form.append("file", item.file);
+      form.append("note", note || $("#chat-input")?.value || "");
       const response = await fetch("/api/chat/files", { method: "POST", body: form });
       const responseText = await response.text();
       let payload = {};
@@ -2372,14 +2699,14 @@ async function uploadChatFiles(event) {
       }
       if (!response.ok || payload.error) throw new Error(payload.error || `HTTP ${response.status}`);
       state.chatAttachments.push(...(payload.attachments || []));
-      renderChatAttachments();
     }
-    setChatPhase("idle", "파일 분석 완료. 메시지를 보내면 분석 컨텍스트가 함께 전달됩니다.");
+    state.chatPendingFiles = [];
+    renderChatAttachments();
+    setChatPhase("idle", "파일 분석 완료. 메시지 전송을 계속 진행합니다.");
   } catch (error) {
     const detail = String(error?.message || "알 수 없는 오류");
     setChatPhase("failed", `파일 업로드/분석 실패: ${detail}`);
-  } finally {
-    event.target.value = "";
+    throw error;
   }
 }
 
@@ -2522,6 +2849,7 @@ function renderPaperclip(status) {
   state.paperclipTemplates = templates;
   state.paperclipTasks = tasks;
   state.paperclipEvents = events;
+  renderChatSkillTags();
 
   $("#paperclip-status").textContent = status.status || "대기";
   $("#paperclip-url").textContent = status.url || "-";
@@ -2686,6 +3014,7 @@ async function refreshStatus() {
   if (!skills.mock && skills.skills) {
     state.skills = skills.skills;
     renderSkills();
+    renderChatSkillTags();
   }
   renderStatus();
   await loadSettings();
@@ -2998,12 +3327,12 @@ function workspaceLabel() {
 }
 
 function resolveViewId(viewId) {
-  if (viewId === "spotlite") return state.activeSpace === "personal" ? "spotlite-personal" : "spotlite-work";
+  if (viewId === "spotlite") return state.activeSpace === "personal" ? "spotlite-personal" : "mission";
   return viewId;
 }
 
 function logicalViewId(viewId) {
-  if (["spotlite-work", "spotlite-personal"].includes(viewId)) return "spotlite";
+  if (viewId === "spotlite-personal") return "spotlite";
   return viewId;
 }
 
@@ -3012,10 +3341,12 @@ function updateWorkspaceChrome() {
   document.body.dataset.workspace = state.activeSpace;
   const selector = $("#wiki-space-select");
   if (selector) selector.value = state.activeSpace;
-  $("#spotlite-nav-item").textContent = isPersonal ? "개인 Spotlite" : "업무 Spotlite";
+  $("#spotlite-nav-item").textContent = "개인 Spotlite";
+  $("#spotlite-nav-item")?.classList.toggle("hidden", !isPersonal);
   $("#wiki-nav-item").textContent = isPersonal ? "개인 위키" : "업무 위키";
   $("#ingest-nav-item").textContent = isPersonal ? "개인 지식 주입" : "업무 지식 주입";
   $("#chat-nav-item").textContent = isPersonal ? "개인 GLM 챗" : "업무 GLM 챗";
+  $("#decisions-nav-item").textContent = "정합성 대기";
 }
 
 function activateWorkspace(space) {
@@ -3026,7 +3357,7 @@ function activateWorkspace(space) {
   state.activeProjectKey = "";
   updateWorkspaceChrome();
   loadChatProjects();
-  const current = document.querySelector(".view.active")?.id || "spotlite-work";
+  const current = document.querySelector(".view.active")?.id || "mission";
   activateView(logicalViewId(current));
 }
 
@@ -3036,17 +3367,19 @@ function activateView(viewId) {
   document.querySelectorAll(".nav-item").forEach((item) => item.classList.toggle("active", item.dataset.view === logicalId));
   document.querySelectorAll(".view").forEach((view) => view.classList.toggle("active", view.id === actualViewId));
   $("#view-title").textContent = logicalId === "spotlite"
-    ? (state.activeSpace === "personal" ? "개인 Spotlite" : "업무 Spotlite")
+    ? "개인 Spotlite"
     : `${workspaceLabel()} · ${titles[actualViewId] || titles[logicalId] || actualViewId}`;
   updateWorkspaceChrome();
   renderSectionAnchors(actualViewId);
-  if (actualViewId === "mission") loadMissionControl();
+  if (actualViewId === "mission") {
+    loadMissionControl();
+    if (!state.spotlite.work) loadSpotlite("work");
+    else renderSpotlite("work", state.spotlite.work);
+  }
   if (actualViewId === "decisions") {
     if (state.decisionQueue.length) renderDecisionWorkbench();
     else loadMissionControl();
   }
-  if (actualViewId === "spotlite-work" && !state.spotlite.work) loadSpotlite("work");
-  if (actualViewId === "spotlite-work") renderSpotliteTemplates("work");
   if (actualViewId === "spotlite-personal") renderPersonalLock();
   if (actualViewId === "spotlite-personal") renderSpotliteTemplates("personal");
   if (actualViewId === "pipeline") loadSlackRouting();
@@ -3569,24 +3902,43 @@ async function sendChat() {
   await ensureActiveChatProject();
   const input = $("#chat-input");
   const text = input.value.trim();
+  if (!text && !state.chatPendingFiles.length && !state.chatAttachments.length && !state.chatSelectedSkillTags.length) return;
+  if (state.chatPendingFiles.length) {
+    try {
+      await uploadQueuedChatFiles(text);
+    } catch {
+      return;
+    }
+  }
   const attachmentContext = chatAttachmentContext();
-  if (!text && !attachmentContext) return;
-  const messageText = [text || "첨부 파일을 분석해 업무 관점으로 정리해줘.", attachmentContext].filter(Boolean).join("\n\n");
+  const skillTagContext = selectedSkillTagContext();
+  const fallbackText = state.chatAttachments.length
+    ? "첨부 파일을 분석해 업무 관점으로 정리해줘."
+    : "선택한 스킬 태그를 반영해 업무 관점으로 정리해줘.";
+  const messageText = [text || fallbackText, skillTagContext, attachmentContext].filter(Boolean).join("\n\n");
   state.lastChatText = messageText;
   state.pendingUserMessageId = "";
   const sentAttachments = [...state.chatAttachments];
+  closeChatPlusMenu();
+  closeChatMentionSuggestions();
   setChatPhase("sending", "메시지를 저장하고 GLM 요청을 준비 중입니다.");
   appendMessage("user", messageText);
   input.value = "";
   state.chatAttachments = [];
   renderChatAttachments();
+  renderChatMentionSuggestions();
 
   try {
     const streaming = appendStreamingAssistantMessage();
     setChatPhase("thinking", "GLM 스트리밍 thinking/reasoning 중입니다. 응답이 끝날 때까지 다음 메시지를 잠급니다.");
     let finalStatus = "completed";
     let failure = "";
-    await apiStream("/api/chat/glm/stream", { message: messageText, projectId: state.activeChatProjectId, workspace: wikiWorkspaceParam() }, {
+    await apiStream("/api/chat/glm/stream", {
+      message: messageText,
+      projectId: state.activeChatProjectId,
+      workspace: wikiWorkspaceParam(),
+      skillTags: state.chatSelectedSkillTags,
+    }, {
       status: (data) => {
         const thinkingBudget = data.thinking?.budget_tokens ? ` · thinking ${data.thinking.budget_tokens} tokens` : "";
         const contextMode = data.tokenBudget?.mode ? ` · context ${data.tokenBudget.mode}/${data.tokenBudget.maxCards} cards` : "";
@@ -3876,6 +4228,12 @@ $("#mission-refresh")?.addEventListener("click", loadMissionControl);
 $("#mission-open-pipeline")?.addEventListener("click", () => document.querySelector("[data-view='pipeline']")?.click());
 $("#mission-command-chat")?.addEventListener("click", missionCommandToChat);
 $("#mission-command-collect")?.addEventListener("click", missionCommandToPipeline);
+$("#mission-command-input")?.addEventListener("keydown", (event) => {
+  if (event.key !== "Enter") return;
+  if (event.shiftKey || event.metaKey || event.ctrlKey || event.altKey) return;
+  event.preventDefault();
+  missionCommandToChat();
+});
 $("#decision-refresh")?.addEventListener("click", loadMissionControl);
 $("#decision-open-mission")?.addEventListener("click", () => document.querySelector("[data-view='mission']")?.click());
 $("#decision-prev")?.addEventListener("click", () => moveDecisionFocus(-1));
@@ -4059,7 +4417,7 @@ $("#knowledge-promote-button").addEventListener("click", promoteKnowledgeFromIng
 $("#chat-send").addEventListener("click", sendChat);
 $("#chat-stop").addEventListener("click", stopChatReasoning);
 $("#chat-file-button")?.addEventListener("click", () => $("#chat-file-input")?.click());
-$("#chat-file-input")?.addEventListener("change", uploadChatFiles);
+$("#chat-file-input")?.addEventListener("change", queueChatFiles);
 $("#chat-settings-open").addEventListener("click", openChatSettingsModal);
 $("#chat-settings-close").addEventListener("click", closeChatSettingsModal);
 $("#chat-settings-cancel").addEventListener("click", closeChatSettingsModal);
@@ -4068,8 +4426,58 @@ $("#chat-project-settings-open")?.addEventListener("click", openChatProjectSetti
 $("#chat-project-settings-close")?.addEventListener("click", closeChatProjectSettingsModal);
 $("#close-promotion-panel").addEventListener("click", closeKnowledgePromotionPanel);
 $("#execute-promotion").addEventListener("click", executeKnowledgePromotion);
+$("#decision-chat-directive")?.addEventListener("input", (event) => {
+  setDecisionChatDirective(event.target.value);
+});
+$("#decision-chat-directive")?.addEventListener("keydown", (event) => {
+  if (event.key !== "Enter") return;
+  if (event.isComposing) return;
+  if (event.shiftKey) return;
+  event.preventDefault();
+  openDecisionChatForItem();
+});
+$("#decision-chat-open")?.addEventListener("click", () => openDecisionChatForItem());
+$("#decision-chat-preset-approve")?.addEventListener("click", () => {
+  setDecisionChatDirective("근거 충돌을 비교해 승인 가능 여부를 먼저 판단하고, Conflict_Register.md 반영 문구 초안과 남길 provenance를 정리해줘.");
+});
+$("#decision-chat-preset-hold")?.addEventListener("click", () => {
+  setDecisionChatDirective("지금 병합하면 안 되는 이유를 우선 따지고, 보류 조건, 추가 확인 문서, 재검토 트리거를 정리해줘.");
+});
+$("#decision-chat-preset-investigate")?.addEventListener("click", () => {
+  setDecisionChatDirective("근거 충돌과 누락 정보를 중심으로 추가 조사 계획을 만들고, 확인 대상 문서와 비교해야 할 값을 구체적으로 적어줘.");
+});
+$("#decision-chat-preset-plan")?.addEventListener("click", () => {
+  setDecisionChatDirective("충돌난 문서들을 비교해 병합안, 선택 기준, Conflict_Register.md에 남길 최종 문구를 제안해줘.");
+});
 $("#wiki-query").addEventListener("keydown", (event) => {
   if (event.key === "Enter") searchWiki();
+});
+$("#chat-plus-button")?.addEventListener("click", (event) => {
+  event.stopPropagation();
+  toggleChatPlusMenu();
+});
+$("#chat-plus-attach")?.addEventListener("click", () => {
+  closeChatPlusMenu();
+  $("#chat-file-input")?.click();
+});
+$("#chat-plus-skill-picker")?.addEventListener("click", () => {
+  closeChatPlusMenu();
+  const input = $("#chat-input");
+  if (!input) return;
+  const cursor = input.selectionStart ?? input.value.length;
+  input.value = `${input.value.slice(0, cursor)}@${input.value.slice(cursor)}`;
+  input.selectionStart = input.selectionEnd = cursor + 1;
+  input.focus();
+  renderChatMentionSuggestions();
+});
+$("#chat-skill-picker-button")?.addEventListener("click", () => {
+  const input = $("#chat-input");
+  if (!input) return;
+  const cursor = input.selectionStart ?? input.value.length;
+  input.value = `${input.value.slice(0, cursor)}@${input.value.slice(cursor)}`;
+  input.selectionStart = input.selectionEnd = cursor + 1;
+  input.focus();
+  renderChatMentionSuggestions();
 });
 $("#chat-input").addEventListener("compositionstart", () => {
   state.chatComposing = true;
@@ -4077,9 +4485,33 @@ $("#chat-input").addEventListener("compositionstart", () => {
 $("#chat-input").addEventListener("compositionend", () => {
   requestAnimationFrame(() => {
     state.chatComposing = false;
+    renderChatMentionSuggestions();
   });
 });
+$("#chat-input").addEventListener("input", () => {
+  renderChatMentionSuggestions();
+});
 $("#chat-input").addEventListener("keydown", (event) => {
+  const mention = chatMentionMatch();
+  if ((event.key === "ArrowDown" || event.key === "ArrowUp") && mention?.tags?.length) {
+    event.preventDefault();
+    const max = Math.min(mention.tags.length, 6);
+    const delta = event.key === "ArrowDown" ? 1 : -1;
+    state.chatMentionActiveIndex = (state.chatMentionActiveIndex + delta + max) % max;
+    renderChatMentionSuggestions();
+    return;
+  }
+  if ((event.key === "Enter" || event.key === "Tab") && mention?.tags?.length && !event.shiftKey) {
+    event.preventDefault();
+    const skill = mention.tags[Math.min(state.chatMentionActiveIndex, mention.tags.length - 1)];
+    if (skill) applyChatMentionSkill(skill.id);
+    return;
+  }
+  if (event.key === "Escape") {
+    closeChatMentionSuggestions();
+    closeChatPlusMenu();
+    return;
+  }
   if (event.key === "Tab" && event.shiftKey) {
     event.preventDefault();
     const input = event.currentTarget;
@@ -4094,6 +4526,11 @@ $("#chat-input").addEventListener("keydown", (event) => {
   if (event.shiftKey) return;
   event.preventDefault();
   sendChat();
+});
+
+document.addEventListener("click", (event) => {
+  if (!event.target.closest(".chat-composer-tools")) closeChatPlusMenu();
+  if (!event.target.closest(".chat-composer-main")) closeChatMentionSuggestions();
 });
 
 document.addEventListener("keydown", (event) => {
@@ -4128,6 +4565,7 @@ renderEvents("#run-list", state.runs);
 renderAutomationState();
 renderSchedules();
 renderSkills();
+renderChatSkillTags();
 renderPaperclip({
   status: "초기화 중",
   url: "-",
