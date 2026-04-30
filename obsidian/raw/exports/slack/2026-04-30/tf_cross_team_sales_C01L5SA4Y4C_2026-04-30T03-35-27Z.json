@@ -1,0 +1,478 @@
+{
+  "type": "slack_channel_export",
+  "workspace": "RTM Slack",
+  "collected_at": "2026-04-30T03:35:27.248712+00:00",
+  "channel": {
+    "id": "C01L5SA4Y4C",
+    "name": "tf_cross_team_sales",
+    "type": "public_channel",
+    "is_archived": false,
+    "is_private": false,
+    "created": "2021-01-27T04:41:26+00:00",
+    "topic": "고객 대응업무 관련 일체에 대한 크로스팀 소통 채널",
+    "purpose": "",
+    "member_count": 38,
+    "routing": {
+      "channel_bucket": "mixed",
+      "conversation_mode": "mixed_triage",
+      "rationale": "mixed_channel_prefix",
+      "wiki_workspace": "rtm",
+      "wiki_target_root": "obsidian/Wiki/Common/Slack_Project_Intake",
+      "wiki_target_kind": "common"
+    }
+  },
+  "routing": {
+    "channel_bucket": "mixed",
+    "conversation_mode": "mixed_triage",
+    "rationale": "mixed_channel_prefix",
+    "wiki_workspace": "rtm",
+    "wiki_target_root": "obsidian/Wiki/Common/Slack_Project_Intake",
+    "wiki_target_kind": "common",
+    "project_wiki_target_root": "obsidian/Wiki/Common/Slack_Project_Intake",
+    "company_wiki_target_root": "obsidian/Wiki/Common/Slack_Company_News"
+  },
+  "history_window": {
+    "oldest_ts": "1776656389.924839",
+    "limit_per_channel": 500,
+    "include_threads": true,
+    "include_files": true
+  },
+  "messages": [
+    {
+      "ts": "1776821339.656439",
+      "type": "message",
+      "subtype": "thread_broadcast",
+      "user": "U04C3UYFY1F",
+      "text": "",
+      "thread_ts": "1774604433.664609",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": {
+        "user": "USLACKBOT",
+        "ts": "1776824145.000000"
+      },
+      "files": []
+    },
+    {
+      "ts": "1776821369.625559",
+      "type": "message",
+      "subtype": null,
+      "user": "UBKL1FZ28",
+      "text": "<@U04C3UYFY1F>님, 어제 VM 미팅 참석자 분중\n키큰 장비 cs 담당하셨던 팀장께는 이번에 새로 만든 ts agent 덱을 메일로 보내주시면서 장비 유지보수 데이터가 없어서 셋업 매뉴얼, sop 등을 가지고 첫작업을 할수 있을을 안내해주십시오.\n공정 팀장께는 알박처럼 장비 한대에 대해 데모 진행 방안을 안내해주시구요",
+      "thread_ts": "1776821369.625559",
+      "reply_count": 1,
+      "reply_users": [
+        "U0A11G512F3"
+      ],
+      "latest_reply": "1776823780.698849",
+      "reactions": [
+        {
+          "name": "white_check_mark",
+          "users": [
+            "U0A11G512F3",
+            "U04C3UYFY1F"
+          ],
+          "count": 2
+        },
+        {
+          "name": "eyes",
+          "users": [
+            "U0A11G512F3",
+            "U04C3UYFY1F"
+          ],
+          "count": 2
+        }
+      ],
+      "edited": null,
+      "files": [],
+      "thread_replies": [
+        {
+          "ts": "1776823780.698849",
+          "type": "message",
+          "subtype": null,
+          "user": "U0A11G512F3",
+          "text": "<@U04C3UYFY1F> 님, 제가 메일로 송부했습니다.",
+          "thread_ts": "1776821369.625559",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [
+            {
+              "name": "white_check_mark",
+              "users": [
+                "U04C3UYFY1F"
+              ],
+              "count": 1
+            },
+            {
+              "name": "감사콩",
+              "users": [
+                "U04C3UYFY1F"
+              ],
+              "count": 1
+            }
+          ],
+          "edited": null,
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1776846660.175219",
+      "type": "message",
+      "subtype": null,
+      "user": "U03NJDDPZPZ",
+      "text": "*RISA 소개서자료, 이거 말고 최신본 있을까요?* <@UBKL1FZ28> <@U04C3UYFY1F>\nSIMTOS 유입 잠재고객에게 발송하기 위해 확인 중에 여쭤봅니다.",
+      "thread_ts": "1776846660.175219",
+      "reply_count": 4,
+      "reply_users": [
+        "U049Z3PQ2KA",
+        "U04C3UYFY1F",
+        "UBKL1FZ28",
+        "U03NJDDPZPZ"
+      ],
+      "latest_reply": "1776848156.354319",
+      "reactions": [],
+      "edited": null,
+      "files": [
+        {
+          "id": "F0AU1UBKL23",
+          "name": "260313_RTM_RISA_산업안전제품_소개.pdf",
+          "title": "260313_RTM_RISA_산업안전제품_소개.pdf",
+          "mimetype": "application/pdf",
+          "filetype": "pdf",
+          "pretty_type": "PDF",
+          "size": 499795,
+          "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0AU1UBKL23/260313_rtm_risa__________________________.pdf",
+          "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0AU1UBKL23/260313_rtm_risa__________________________.pdf"
+        }
+      ],
+      "thread_replies": [
+        {
+          "ts": "1776846788.267819",
+          "type": "message",
+          "subtype": null,
+          "user": "U049Z3PQ2KA",
+          "text": "정님이 업데이트한 260319 버전있습니다!",
+          "thread_ts": "1776846660.175219",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [
+            {
+              "name": "white_check_mark",
+              "users": [
+                "U03NJDDPZPZ"
+              ],
+              "count": 1
+            },
+            {
+              "name": "감사콩",
+              "users": [
+                "U03NJDDPZPZ"
+              ],
+              "count": 1
+            }
+          ],
+          "edited": null,
+          "files": [
+            {
+              "id": "F0AUB1EDRU3",
+              "name": "[산업안전] 산업안전 솔루션 소개_Ver.02_20260319.pptx",
+              "title": "[산업안전] 산업안전 솔루션 소개_Ver.02_20260319.pptx",
+              "mimetype": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+              "filetype": "pptx",
+              "pretty_type": "PowerPoint Presentation",
+              "size": 46294399,
+              "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0AUB1EDRU3/__________________________________________________________________________________________________________________ver.02_20260319.pptx",
+              "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0AUB1EDRU3/__________________________________________________________________________________________________________________ver.02_20260319.pptx"
+            }
+          ]
+        },
+        {
+          "ts": "1776846967.798359",
+          "type": "message",
+          "subtype": null,
+          "user": "U04C3UYFY1F",
+          "text": "일부수정중이긴 한데 우선 이걸로 발송하시고 수정본 따로 전달드리겠습니다",
+          "thread_ts": "1776846660.175219",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [
+            {
+              "name": "넵",
+              "users": [
+                "U03NJDDPZPZ"
+              ],
+              "count": 1
+            }
+          ],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776847281.021289",
+          "type": "message",
+          "subtype": null,
+          "user": "UBKL1FZ28",
+          "text": "정진님이 오늘 주신버전",
+          "thread_ts": "1776846660.175219",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [
+            {
+              "name": "white_check_mark",
+              "users": [
+                "U03NJDDPZPZ"
+              ],
+              "count": 1
+            },
+            {
+              "name": "+1",
+              "users": [
+                "U04C3UYFY1F",
+                "U03NJDDPZPZ"
+              ],
+              "count": 2
+            }
+          ],
+          "edited": null,
+          "files": [
+            {
+              "id": "F0AUM28PDN0",
+              "name": "risa_.pdf",
+              "title": "risa_.pdf",
+              "mimetype": "application/pdf",
+              "filetype": "pdf",
+              "pretty_type": "PDF",
+              "size": 4805505,
+              "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0AUM28PDN0/risa_.pdf",
+              "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0AUM28PDN0/risa_.pdf"
+            },
+            {
+              "id": "F0AUM2AFJR2",
+              "name": "risa_.pptx",
+              "title": "risa_.pptx",
+              "mimetype": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+              "filetype": "pptx",
+              "pretty_type": "PowerPoint Presentation",
+              "size": 41997046,
+              "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0AUM2AFJR2/risa_.pptx",
+              "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0AUM2AFJR2/risa_.pptx"
+            }
+          ]
+        },
+        {
+          "ts": "1776848156.354319",
+          "type": "message",
+          "subtype": null,
+          "user": "U03NJDDPZPZ",
+          "text": "진우님이 주신 버전으로 발송했습니다. 감사합니다.",
+          "thread_ts": "1776846660.175219",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1776925555.214239",
+      "type": "message",
+      "subtype": null,
+      "user": "U025MG70MNX",
+      "text": "*2026.04.23 경동나비엔 미팅 결과* *<@U04C3UYFY1F>* *<@UBKL1FZ28>* *<@U0A11G512F3>*\n*1. 미팅 개요*\n• *일시*: 2026.04.23 (목) 10:00\n• *목적*: 프레스 및 사출 공정 AI 예지보전* 솔루션 도입 스코프 설정 및 데이터 수집 환경 논의\n• *참석자*:\n    ◦ 경동나비엔: 부문장, 권민관 수석, 신하철 수석매니저, MES/설비 담당 매니저\n    ◦ RTM: 이욱 이사, 유남규 매니저(PM)\n*2. 주요 논의 및 결정 사항*\n• *[국책과제 현황 및 프로젝트 추진 방향]*\n    ◦ *결정 내용*: *국책과제(뿌리산업) 선정 시 프레스 공정 15대 우선 진행, 미선정 시 사출 공정으로 대체하여 AI 지능화 프로젝트 무조건 추진*\n    ◦ *세부 논의*: 한국산업기술기획평가원(산기평) 주관 '뿌리 산업 혁신 공정 장비 개발' 과제 발표 대기 중임(금주 내 결과 예상). 대표이사의 지능화 프로젝트 추진 의지가 확고하여, 과제 당락과 무관하게 사업을 강행하기로 합의함. 프레스 공정 추진 시 1년 차에 셔틀 라인 포함 15대 설비를 대상으로 파일럿 테스트 및 데이터 적재를 진행할 계획임.\n• *[공정 Pain Point 및 RTM 솔루션 적용/레퍼런스 방어]*\n    ◦ *결정 내용*: *단순 품질 사후 검사(초중종 샘플링) 한계를 탈피하고, 설비 시계열 데이터 기반의 사전 이상 감지 모델 도입*\n    ◦ *세부 논의*: 현재 프레스 타발 공정 중 철가루(파티클) 및 타발 스크랩으로 인한 금형 찍힘/파손 불량이 발생하고 있으나, 불량 인지 후 작업자가 5대 이상의 라인을 수동으로 멈추고 원인을 탐색해야 하는 비효율이 존재함. 고객사 측에서 RTM의 프레스 전용 레퍼런스 부재를 우려했으나, RTM 측은 반도체(드라이 스트립, 본더 등) 및 LG엔솔 배터리 용접 공정에서의 고속 데이터 처리 및 비전 AI 양산 전개 경험을 소명하여 우려를 불식시킴.\n• *[결과 교차 검증을 위한 카메라(비전) 센서 도입 및 인프라 구축]*\n    ◦ *결정 내용*: *이상 감지 이벤트의 정확한 기록 및 교차 검증을 위해 비전 카메라 도입 확정, 트래픽을 고려하여 온프레미스(On-premise) 통합 서버 구축*\n    ◦ *세부 논의*: RTM 측은 이상 징후 발생 시점의 정확한 상황 기록과 AI 판정 결과의 비교 검증을 위해 비전 카메라가 필수적임을 강력히 어필함. 타발 속도를 커버할 수 있는 카메라 사양 검토가 필요함. 고객사 내부 규정상 CCTV 데이터의 클라우드 동기화가 대역폭 문제로 제한되므로, 영상 데이터를 엣지/온프레미스 통합 서버(CPU/GPU 결합 워크스테이션 또는 서버급)에서 1차 추론한 뒤, 문제 프레임만 발췌하여 저장/전송하는 아키텍처로 합의함.\n• *[설비 데이터 수집 환경 파악 및 센서 중복 투자 방지]*\n    ◦ *결정 내용*: *EES는 가상 바코드(제품 ID) 매핑용으로만 활용, AI 학습용 시계열 데이터는 신규 구축 중인 프레스 PLC 데이터 활용 및 외부 센서 중복 여부 사전 검증*\n    ◦ *세부 논의*: 고객사의 EES(Equipment Engineering System) 인프라 확인 결과, 현재 수집되는 데이터(SPM, 앵글, 하중, 크랭크 온도 등)는 약 7초 주기의 단발성 결과(이벤트) 값에 불과하여 AI 시계열 분석에 부적합함. 단, 시퀀스 묶음 단위로 생성되는 가상 바코드는 레시피별 골든 프로파일(Golden Profile) 생성을 위한 제품 ID 추적용으로 활용 가능함.\n    ◦ 실질적인 분석은 현재 ACS 미들웨어를 통해 연동 구축 중인 프레스 PLC 실시간 데이터를 기반으로 수행하기로 함(사출은 PLC 계획 없음). 불필요한 센서 비용 낭비를 막기 위해, 구축 중인 프레스 PLC 데이터의 스키마 및 수집 주기를 최우선으로 확인한 뒤, 외부 센서(진동, 소음 등)와의 데이터 중복 여부를 판별하여 최종 센서 도입 스펙을 확정하기로 함.\n*3. Next Steps / TO DO*\n*담당*\n*기한*\n*액션 아이템*\n경동나비엔 \n\n구축 중인 프레스 설비 PLC 데이터 스키마 및 실시간 수집 주기 상세 정보 송부\nRTM \n데이터 수령 후\nPLC 스키마 기반 데이터 중복 여부 확인, 타겟 설비 최종 센서 선정 및 H/W 스코프 견적 산출\n\n**[_주석]_* 경동나비엔 측은 미팅 중 통상적으로 '예지보전'이라는 표현을 혼용하나, 논의된 요구사항과 솔루션 구현 목표의 실상은 '이상 감지(Anomaly Detection)' 영역에 해당함.\n:page_facing_up: *요약 (Key Summary)*\n• 4/23 경동나비엔 1st 프레스/사출 공정 AI 예지보전(이상 감지) 솔루션 도입 킥오프 미팅 진행\n• 타발 공정 내 파티클/금형 깨짐 불량의 수동 사후 대응 방식을 탈피하기 위한 설비 시계열 데이터 기반 사전 이상 탐지 모델 구축 목적\n• 프레스 레퍼런스 부재 이슈는 RTM의 반도체·배터리 공정 고속 데이터 처리 및 AI 양산 사례로 방어 완료했으며, 국책과제 탈락 시에도 프로젝트 강행 확약\n• 원인 규명 및 교차 검증을 위한 비전 카메라의 중요성을 관철시켰으며, 트래픽 과부하를 막기 위해 엣지/온프레미스에서 추론 후 이상 프레임만 전송하는 아키텍처로 합의\n• 현행 EES 데이터는 단발성 이벤트 기록이므로 제품 ID 추적용으로만 활용하고, 실제 학습은 신규 구축 중인 프레스 PLC 데이터를 활용하기로 함 (사출은 해당 없음)\n• 중복 투자 방지를 위해 프레스 PLC의 데이터 스키마 및 수집 주기를 선제적으로 파악한 후, 외부 센서와의 중복을 배제하여 최종 센서 구성 및 견적 산출 예정",
+      "thread_ts": "1776925555.214239",
+      "reply_count": 1,
+      "reply_users": [
+        "U04C3UYFY1F"
+      ],
+      "latest_reply": "1776931737.327589",
+      "reactions": [
+        {
+          "name": "eyes",
+          "users": [
+            "U04C3UYFY1F",
+            "U0A11G512F3"
+          ],
+          "count": 2
+        },
+        {
+          "name": "감사콩",
+          "users": [
+            "U0A11G512F3"
+          ],
+          "count": 1
+        }
+      ],
+      "edited": null,
+      "files": [],
+      "thread_replies": [
+        {
+          "ts": "1776931737.327589",
+          "type": "message",
+          "subtype": null,
+          "user": "U04C3UYFY1F",
+          "text": "수고 많으셨습니다.\n금형(특히 프레스)는 제가 조금 지식이 있습니다. 좀 더 구체적인 논의 시 필요하면 같이 방문하시죠",
+          "thread_ts": "1776925555.214239",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [
+            {
+              "name": "+1",
+              "users": [
+                "U025MG70MNX"
+              ],
+              "count": 1
+            }
+          ],
+          "edited": null,
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1777022261.378829",
+      "type": "message",
+      "subtype": null,
+      "user": "U04C3UYFY1F",
+      "text": "<@UBKL1FZ28> <@U05AWGZ1TRD> <@U0A11G512F3> <@U025MG70MNX> \n\n■ 고객명: 몽고식품\n■ 방문 일자: 2026.04.24\n■ 참석자: 몽고식품 박성준 차장 (생산관리팀) / 모은정보기술 안원희 상무 / RTM: 허정\n■ 방문 목적: 정부 지원 과제를 통한\n간장 용기 외관 불량 검출 AI 도입 검토 및 현장 요구사항 확인\n■ 결과\n• 실제 사업 진행을 위한 현장 방문 및 요구사항 구체화 진행\n• 업무 범위(광학/자동화/AI) 관련 RTM–모은정보기술 간 추가 협의 필요(모은정보내부 재확인)\n■ 미팅 및 논의 내용\n• 몽고식품은 모은정보기술의 MES/자동화 솔루션을 사용하는 기존 고객\n• 이번 과제를 통해 간장 용기 2개 라인 자동 검사 도입 추진\n       ' PET 라인: 0.9L / 1.5L / 1.8L\n       '13L 라인: 업소용/납품용\n• 현 전 공정 육안 검사 및 수작업 선별/재작업 진행 중\n• 검사 항목\n      PET 라인: 뚜껑 체결 상태 / 제조일자 오류 / 라벨 위치 / 라벨 기울어짐\n      13L 라인: 뚜껑 체결 상태 / 라벨 위치 / 유통기한 오류\n• 몽고측 광학계 + AI + 자동 취출 포함한 전체 자동화를 희망\n• 실제 수행 범위는 RTM vs 모은정보기술 간 역할 정의 필요(AI만 수행 또는 광학/자동화 포함 전체 수행)\n• RTM 입장에서는 AI 솔루션 중심 대응이 가장 현실적인 옵션\n• 업무 스코프이 광학 및 자동화 포함 시에는 협력사 동반 재방문(5월 초 예정)하여 설비 구성 및 적용 방안 검토 계획\n■ Next Plan\n• RTM / 모은정보기술: 업무 범위 및 역할 정의 협의\n• 필요 시 5월 초 협력사 포함 현장 재방문\n• RTM: 적용 가능성 및 대응 범위 검토",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [
+        {
+          "name": "eyes",
+          "users": [
+            "U05AWGZ1TRD",
+            "U0A11G512F3"
+          ],
+          "count": 2
+        },
+        {
+          "name": "+1",
+          "users": [
+            "U0A11G512F3",
+            "U05AWGZ1TRD"
+          ],
+          "count": 2
+        }
+      ],
+      "edited": {
+        "user": "U04C3UYFY1F",
+        "ts": "1777028596.000000"
+      },
+      "files": [
+        {
+          "id": "F0AV0SS8TTL",
+          "name": "1000044414.jpg",
+          "title": "1000044414.jpg",
+          "mimetype": "image/jpeg",
+          "filetype": "jpg",
+          "pretty_type": "JPEG",
+          "size": 400562,
+          "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0AV0SS8TTL/1000044414.jpg",
+          "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0AV0SS8TTL/1000044414.jpg"
+        },
+        {
+          "id": "F0AV4EU05GU",
+          "name": "1000044412.jpg",
+          "title": "1000044412.jpg",
+          "mimetype": "image/jpeg",
+          "filetype": "jpg",
+          "pretty_type": "JPEG",
+          "size": 678105,
+          "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0AV4EU05GU/1000044412.jpg",
+          "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0AV4EU05GU/1000044412.jpg"
+        },
+        {
+          "id": "F0AUXEQSZ1T",
+          "name": "1000044411.jpg",
+          "title": "1000044411.jpg",
+          "mimetype": "image/jpeg",
+          "filetype": "jpg",
+          "pretty_type": "JPEG",
+          "size": 593292,
+          "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0AUXEQSZ1T/1000044411.jpg",
+          "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0AUXEQSZ1T/1000044411.jpg"
+        },
+        {
+          "id": "F0B0F5BNX40",
+          "name": "1000044409.mp4",
+          "title": "1000044409.mp4",
+          "mimetype": "video/mp4",
+          "filetype": "mp4",
+          "pretty_type": "MPEG 4 Video",
+          "size": 5202259,
+          "url_private": "https://files.slack.com/files-tmb/TBL1JAWKF-F0B0F5BNX40-ccae3b6c78/1000044409.mp4",
+          "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0B0F5BNX40/1000044409.mp4"
+        },
+        {
+          "id": "F0AUKDCHJB1",
+          "name": "1000044402.jpg",
+          "title": "1000044402.jpg",
+          "mimetype": "image/jpeg",
+          "filetype": "jpg",
+          "pretty_type": "JPEG",
+          "size": 242619,
+          "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0AUKDCHJB1/1000044402.jpg",
+          "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0AUKDCHJB1/1000044402.jpg"
+        },
+        {
+          "id": "F0AVDPVSCNM",
+          "name": "1000044396.mp4",
+          "title": "1000044396.mp4",
+          "mimetype": "video/mp4",
+          "filetype": "mp4",
+          "pretty_type": "MPEG 4 Video",
+          "size": 22391609,
+          "url_private": "https://files.slack.com/files-tmb/TBL1JAWKF-F0AVDPVSCNM-9ed768c403/1000044396.mp4",
+          "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0AVDPVSCNM/1000044396.mp4"
+        }
+      ]
+    },
+    {
+      "ts": "1777366436.794979",
+      "type": "message",
+      "subtype": null,
+      "user": "U0A11G512F3",
+      "text": "<@U04C3UYFY1F>\nCC : <@UBKL1FZ28> <@U05AWGZ1TRD> <@U02MA1AEU8K> <@U07DYT1V7UH> <@U03NJDDPZPZ> <@U025MG70MNX>\n\n■ 고객명: 엠티에스코리아 (<http://www.mts-posco.co.kr|www.mts-posco.co.kr>)\n■ 방문 일자: 2026.04.28\n■ 참석자: 심충도 상무 (연구소장), 황인선 이사 (전기팀) / RTM: 허정, 이욱\n■ 방문 목적: RISA 소개 및 도입 협의\n■ 결과\n• RISA 도입 의지 적극 표명 \n• 안전 펜스 솔루션과 연계한 상품화 및 사업 확대 추진 의사 확인\n■ 미팅 및 논의 내용\n• 엠티에스코리아는 제철소 내 설비 유지보수 및 안전펜스 제작/설치\n• 포스코 사내벤처로 출범\n• 주요 고객: 광양 포스코, 당진 현대제철 등\n• SIMTOS 전시회에서 RISA 확인 후 안전 펜스와 결합 모델 제안\n• 안전 펜스 도어를 비추는 CCTV를 통해 사람의 입출입을 모니터링하고 \n• 펜스 내에 사람이 있을 경우 설비 가동 인터락 \n• 펜스 길이는 라인에 따라 300~500m (현재 제안 중인 포스코 내 안전 펜스는 500m)\n• 약 10개 구역, CCTV 50~150개로 구성 예정 (CCTV 화각은 서로 겹치지 않게 설치)\n• 펜스 도어 30~40개 \n• 요구 기능은 사람 감지가 아닌 출입 인원 추적 기반 안전 관리가 목적\n• RISA에서 CCTV 10개당 PC 1대면, 현재의 컨셉에서 몇대의 PC를 운영할지 검토 필요\n• 여러 PC를 운영할 경우 (사람 출입)정보 전달이 가능하게끔 개발 필요\n■ 협의 결과\n• RISA를 안전 펜스와 결합한 형태로 적용 검토\n• 포스코 프로젝트에 RISA 포함한 제안 방향 설정\n■ Next Plan\n• 엠티에스코리아: 포스코 대상 RISA를 포함한 제안서 작성 예정\n• RTM: 기능 구현 가능여부 검토 및 적용 컨셉, 견적서 제출 (~5/15)\n• 양사: 추가 협의 및 기술 지원 진행",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [
+        {
+          "name": "+1",
+          "users": [
+            "U07DYT1V7UH",
+            "U05AWGZ1TRD",
+            "U04C3UYFY1F",
+            "U03NJDDPZPZ",
+            "U0A4WTXD15L",
+            "UBKL1FZ28"
+          ],
+          "count": 6
+        },
+        {
+          "name": "eyes",
+          "users": [
+            "U04C3UYFY1F",
+            "UBKL1FZ28"
+          ],
+          "count": 2
+        }
+      ],
+      "edited": null,
+      "files": []
+    }
+  ]
+}

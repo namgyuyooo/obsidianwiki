@@ -1,0 +1,297 @@
+{
+  "type": "slack_channel_filtered_export",
+  "workspace": "RTM Slack",
+  "collected_at": "2026-04-30T03:35:27.248712+00:00",
+  "channel": {
+    "id": "C08R7N3C37Y",
+    "name": "고려대-반도체fab-모니터링시스템구축",
+    "type": "public_channel",
+    "is_archived": false,
+    "is_private": false,
+    "created": "2025-05-08T05:55:54+00:00",
+    "topic": "",
+    "purpose": "",
+    "member_count": 6,
+    "routing": {
+      "channel_bucket": "company_news",
+      "conversation_mode": "company_updates",
+      "rationale": "default_company_updates",
+      "wiki_workspace": "rtm",
+      "wiki_target_root": "obsidian/Wiki/Common/Slack_Company_News",
+      "wiki_target_kind": "common"
+    }
+  },
+  "routing": {
+    "channel_profile": {
+      "channel_bucket": "company_news",
+      "conversation_mode": "company_updates",
+      "rationale": "default_company_updates",
+      "wiki_workspace": "rtm",
+      "wiki_target_root": "obsidian/Wiki/Common/Slack_Company_News",
+      "wiki_target_kind": "common",
+      "project_wiki_target_root": "obsidian/Wiki/Common/Slack_Project_Intake",
+      "company_wiki_target_root": "obsidian/Wiki/Common/Slack_Company_News"
+    },
+    "primary_bucket": "company_news",
+    "bucket_counts": {
+      "project": 3,
+      "company_news": 5,
+      "casual": 5
+    },
+    "wiki_targets": [
+      {
+        "path": "obsidian/Wiki/Common/Slack_Company_News",
+        "count": 5
+      },
+      {
+        "path": "obsidian/Wiki/Common/Slack_Project_Intake",
+        "count": 3
+      }
+    ]
+  },
+  "history_window": {
+    "oldest_ts": "1776656429.470771",
+    "limit_per_channel": 500,
+    "include_threads": true,
+    "include_files": true
+  },
+  "filter": {
+    "provider": "local_rule",
+    "summary": "GLM unavailable; local rule filter applied",
+    "kept_count": 8,
+    "excluded_count": 5
+  },
+  "messages": [
+    {
+      "ts": "1776761337.575909",
+      "type": "message",
+      "subtype": "bot_message",
+      "user": "USLACKBOT",
+      "text": "*DP* has removed themselves from this channel.",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1776816075.601219",
+      "type": "message",
+      "subtype": "bot_message",
+      "user": "USLACKBOT",
+      "text": "This channel is now shared with *DP*.",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1777348044.647949",
+      "type": "message",
+      "subtype": null,
+      "user": "U03NJDDPZPZ",
+      "text": "<@U060T8LHBD5> 연구원님, 안녕하세요. 보내주신 이메일 확인하였습니다.\n\n고려대 측과 상의하기 전에 몇 가지 확인이 필요한데요.\n\n4/14에 이메일을 통하여 최초 고려대 측에서 공유기 설치 관련된 문제사항 공유 및 해결을 요청하였을 때, 구체적으로 어떤 상황이었나요? 기존에 UDS에서 구축해놓은 것에서 이상이 생겨서 시스템 연결이 안 되는 이슈가 발생한 것인가요? 아니면 다른 사유로 그렇게 된건가요?",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1777350989.792619",
+      "type": "message",
+      "subtype": null,
+      "user": "U060T8LHBD5",
+      "text": "고려대 측에서 저희가 구축해 놓은 서버에서 LAN선을 뽑은 후 Wifi를 연결하여 Clean 룸 내부에서 wifi를 사용 가능한 방법에 대해 물어보셔서 방안을 알려드렸고,\n고려대 측에서 여러 테스트 진행했고 wifi 연결이 실패한 후, 저희 쪽 서버에 LAN 선을 다시 연결했는데 서비스가 동작하지 않는다고 한 내용입니다.",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": {
+        "user": "U060T8LHBD5",
+        "ts": "1777351017.000000"
+      },
+      "files": []
+    },
+    {
+      "ts": "1777351597.269649",
+      "type": "message",
+      "subtype": null,
+      "user": "U03NJDDPZPZ",
+      "text": "네, 그럼 Wifi 연결 시도한 것은 고려대측에서 필요에 의하여 진행 된 것이네요. 그런데 LAN선을 다시 연결했는데 서비스가 동작하지 않는 것은 어떤 사유인지 파악되셨나요?",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1777353312.356799",
+      "type": "message",
+      "subtype": null,
+      "user": "U060T8LHBD5",
+      "text": "저희가 구축해 놓은 방식이랑 같게 LAN선 연결을 진행했다고 하면 문제가 없을 것으로 생각됩니다. 해당 부분에 대해서는 서버에 모니터 연결해서 ip 세팅부분을 확인해 보아야지 확실히 알 수 있습니다.",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1777354442.430149",
+      "type": "message",
+      "subtype": null,
+      "user": "U03NJDDPZPZ",
+      "text": "네, 알겠습니다. 그럼 일단 고려대 측에서 필요에 의해서 Wifi 연결 작업을 시도했다가, LAN 재연결 과정에서 정상적으로 이행하지 못해서 발생한 문제이므로 저희가 납품한 사항에서 문제가 발생한 것으로 보기는 어려운 상황으로 보이네요.\n\n다만, 고객사에 납품된 제품을 제대로 사용하실 수 있어야 하므로 정상 작동하도록 원상 복구하는 작업의 지원은 해주는게 좋을 것 같구요. 현장 방문 조치는 의무적으로 해야 할 상황으로 보이진 않는데, 그럼에도 불구하고 UDS에서 현장 방문하여 원상복구 작업을 진행하길 희망할 경우 고려대측에서 UDS에 별도로 출장비를 지급하여 진행될 수 있도록 하면 어떨까 싶은데요.",
+      "thread_ts": "1777354442.430149",
+      "reply_count": 1,
+      "reply_users": [
+        "U060T8LHBD5"
+      ],
+      "latest_reply": "1777356332.750779",
+      "reactions": [],
+      "edited": {
+        "user": "U03NJDDPZPZ",
+        "ts": "1777354449.000000"
+      },
+      "files": [],
+      "thread_replies": [
+        {
+          "ts": "1777356332.750779",
+          "type": "message",
+          "subtype": "thread_broadcast",
+          "user": "U060T8LHBD5",
+          "text": "해당 내용 확인했습니다.",
+          "thread_ts": "1777354442.430149",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1777356332.750779",
+      "type": "message",
+      "subtype": "thread_broadcast",
+      "user": "U060T8LHBD5",
+      "text": "해당 내용 확인했습니다.",
+      "thread_ts": "1777354442.430149",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    }
+  ],
+  "routed_messages": [
+    {
+      "ts": "1776761337.575909",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "*DP* has removed themselves from this channel."
+    },
+    {
+      "ts": "1776816075.601219",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "This channel is now shared with *DP*."
+    },
+    {
+      "ts": "1777348044.647949",
+      "bucket": "project",
+      "reason": "project_keywords",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Project_Intake",
+      "text": "<@U060T8LHBD5> 연구원님, 안녕하세요. 보내주신 이메일 확인하였습니다.\n\n고려대 측과 상의하기 전에 몇 가지 확인이 필요한데요.\n\n4/14에 이메일을 통하여 최초 고려대 측에서 공유기 설치 관련된 문제사항 공유 및 해결을 요청하였을 때, 구체적으로 어떤 상황이었나요? 기존에 UDS에서 구축해놓은 것에서 이상이 생겨서 시스템 연결이 안 되는 이슈가 발생한 것인가요? 아니면 다른 사유로 그렇게 된건가요?"
+    },
+    {
+      "ts": "1777350989.792619",
+      "bucket": "project",
+      "reason": "project_keywords",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Project_Intake",
+      "text": "고려대 측에서 저희가 구축해 놓은 서버에서 LAN선을 뽑은 후 Wifi를 연결하여 Clean 룸 내부에서 wifi를 사용 가능한 방법에 대해 물어보셔서 방안을 알려드렸고,\n고려대 측에서 여러 테스트 진행했고 wifi 연결이 실패한 후, 저희 쪽 서버에 LAN 선을 다시 연결했는데 서비스가 동작하지 않는다고 한 내용입니다."
+    },
+    {
+      "ts": "1777351597.269649",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "네, 그럼 Wifi 연결 시도한 것은 고려대측에서 필요에 의하여 진행 된 것이네요. 그런데 LAN선을 다시 연결했는데 서비스가 동작하지 않는 것은 어떤 사유인지 파악되셨나요?"
+    },
+    {
+      "ts": "1777353312.356799",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "저희가 구축해 놓은 방식이랑 같게 LAN선 연결을 진행했다고 하면 문제가 없을 것으로 생각됩니다. 해당 부분에 대해서는 서버에 모니터 연결해서 ip 세팅부분을 확인해 보아야지 확실히 알 수 있습니다."
+    },
+    {
+      "ts": "1777354442.430149",
+      "bucket": "project",
+      "reason": "project_keywords",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Project_Intake",
+      "text": "네, 알겠습니다. 그럼 일단 고려대 측에서 필요에 의해서 Wifi 연결 작업을 시도했다가, LAN 재연결 과정에서 정상적으로 이행하지 못해서 발생한 문제이므로 저희가 납품한 사항에서 문제가 발생한 것으로 보기는 어려운 상황으로 보이네요.\n\n다만, 고객사에 납품된 제품을 제대로 사용하실 수 있어야 하므로 정상 작동하도록 원상 복구하는 작업의 지원은 해주는게 좋을 것 같구요. 현장 방문 조치는 의무적으로 해야 할 상황으로 보이진 않는데, 그럼에도 불구하고 UDS에서 현장 방문하여 원상복구 작업을 진행하길 희망할 경우 고려대측에서 UDS에 별도로 출장비를 지급하여 진행될 수 있도록 하면 어떨까 싶은데요."
+    },
+    {
+      "ts": "1777356332.750779",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "해당 내용 확인했습니다."
+    }
+  ],
+  "excluded_messages": [
+    {
+      "ts": "1776816075.060739",
+      "reason": "system_membership_event",
+      "bucket": "casual",
+      "text": "<@U031VMSAE0N> 님이 채널에 참여함",
+      "subtype": "channel_join"
+    },
+    {
+      "ts": "1776816075.182879",
+      "reason": "system_membership_event",
+      "bucket": "casual",
+      "text": "<@U0371A3RAH1> 님이 채널에 참여함",
+      "subtype": "channel_join"
+    },
+    {
+      "ts": "1776816075.305129",
+      "reason": "system_membership_event",
+      "bucket": "casual",
+      "text": "<@U03FAAJNUBT> 님이 채널에 참여함",
+      "subtype": "channel_join"
+    },
+    {
+      "ts": "1776816075.435429",
+      "reason": "system_membership_event",
+      "bucket": "casual",
+      "text": "<@U060T8LHBD5> 님이 채널에 참여함",
+      "subtype": "channel_join"
+    },
+    {
+      "ts": "1777520430.074819",
+      "reason": "system_membership_event",
+      "bucket": "casual",
+      "text": "<@U0B15H1AQJV> has joined the channel",
+      "subtype": "channel_join"
+    }
+  ]
+}

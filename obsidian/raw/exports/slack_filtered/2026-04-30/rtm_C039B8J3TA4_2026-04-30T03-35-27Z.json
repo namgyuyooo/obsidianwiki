@@ -1,0 +1,185 @@
+{
+  "type": "slack_channel_filtered_export",
+  "workspace": "RTM Slack",
+  "collected_at": "2026-04-30T03:35:27.248712+00:00",
+  "channel": {
+    "id": "C039B8J3TA4",
+    "name": "rtm",
+    "type": "public_channel",
+    "is_archived": false,
+    "is_private": false,
+    "created": "2022-03-25T03:57:53+00:00",
+    "topic": "",
+    "purpose": "",
+    "member_count": 23,
+    "routing": {
+      "channel_bucket": "company_news",
+      "conversation_mode": "company_updates",
+      "rationale": "company_channel_prefix",
+      "wiki_workspace": "rtm",
+      "wiki_target_root": "obsidian/Wiki/Common/Slack_Company_News",
+      "wiki_target_kind": "common"
+    }
+  },
+  "routing": {
+    "channel_profile": {
+      "channel_bucket": "company_news",
+      "conversation_mode": "company_updates",
+      "rationale": "company_channel_prefix",
+      "wiki_workspace": "rtm",
+      "wiki_target_root": "obsidian/Wiki/Common/Slack_Company_News",
+      "wiki_target_kind": "common",
+      "project_wiki_target_root": "obsidian/Wiki/Common/Slack_Project_Intake",
+      "company_wiki_target_root": "obsidian/Wiki/Common/Slack_Company_News"
+    },
+    "primary_bucket": "company_news",
+    "bucket_counts": {
+      "project": 0,
+      "company_news": 1,
+      "casual": 14
+    },
+    "wiki_targets": [
+      {
+        "path": "obsidian/Wiki/Common/Slack_Company_News",
+        "count": 1
+      }
+    ]
+  },
+  "history_window": {
+    "oldest_ts": "1776656329.022158",
+    "limit_per_channel": 500,
+    "include_threads": true,
+    "include_files": true
+  },
+  "filter": {
+    "provider": "local_rule",
+    "summary": "GLM unavailable; local rule filter applied",
+    "kept_count": 1,
+    "excluded_count": 14
+  },
+  "messages": [
+    {
+      "ts": "1776816074.536929",
+      "type": "message",
+      "subtype": "bot_message",
+      "user": "USLACKBOT",
+      "text": "이제 이 채널은 *RTM*과(와) 공유됩니다.",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    }
+  ],
+  "routed_messages": [
+    {
+      "ts": "1776816074.536929",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "이제 이 채널은 *RTM*과(와) 공유됩니다."
+    }
+  ],
+  "excluded_messages": [
+    {
+      "ts": "1776816071.956929",
+      "reason": "system_membership_event",
+      "bucket": "casual",
+      "text": "<@UBKL1FZ28> has joined the channel",
+      "subtype": "channel_join"
+    },
+    {
+      "ts": "1776816072.298809",
+      "reason": "system_membership_event",
+      "bucket": "casual",
+      "text": "<@UBL1JVCSZ> has joined the channel",
+      "subtype": "channel_join"
+    },
+    {
+      "ts": "1776816072.423789",
+      "reason": "system_membership_event",
+      "bucket": "casual",
+      "text": "<@U01C4A3GNQL> has joined the channel",
+      "subtype": "channel_join"
+    },
+    {
+      "ts": "1776816072.548959",
+      "reason": "system_membership_event",
+      "bucket": "casual",
+      "text": "<@U0235585LTZ> has joined the channel",
+      "subtype": "channel_join"
+    },
+    {
+      "ts": "1776816072.685459",
+      "reason": "system_membership_event",
+      "bucket": "casual",
+      "text": "<@U025MG70MNX> has joined the channel",
+      "subtype": "channel_join"
+    },
+    {
+      "ts": "1776816072.812759",
+      "reason": "system_membership_event",
+      "bucket": "casual",
+      "text": "<@U0328CH80JV> has joined the channel",
+      "subtype": "channel_join"
+    },
+    {
+      "ts": "1776816073.007449",
+      "reason": "system_membership_event",
+      "bucket": "casual",
+      "text": "<@U03NJDDPZPZ> has joined the channel",
+      "subtype": "channel_join"
+    },
+    {
+      "ts": "1776816073.122849",
+      "reason": "system_membership_event",
+      "bucket": "casual",
+      "text": "<@U03SF6T6RL0> has joined the channel",
+      "subtype": "channel_join"
+    },
+    {
+      "ts": "1776816073.245639",
+      "reason": "system_membership_event",
+      "bucket": "casual",
+      "text": "<@U041D9G5FLH> has joined the channel",
+      "subtype": "channel_join"
+    },
+    {
+      "ts": "1776816073.359079",
+      "reason": "system_membership_event",
+      "bucket": "casual",
+      "text": "<@U04FRP4PQF5> has joined the channel",
+      "subtype": "channel_join"
+    },
+    {
+      "ts": "1776816073.477829",
+      "reason": "system_membership_event",
+      "bucket": "casual",
+      "text": "<@U05TZEH8FS9> has joined the channel",
+      "subtype": "channel_join"
+    },
+    {
+      "ts": "1776816073.595959",
+      "reason": "system_membership_event",
+      "bucket": "casual",
+      "text": "<@U06U20JK1QE> has joined the channel",
+      "subtype": "channel_join"
+    },
+    {
+      "ts": "1776816073.721029",
+      "reason": "system_membership_event",
+      "bucket": "casual",
+      "text": "<@U07AJMY59QU> has joined the channel",
+      "subtype": "channel_join"
+    },
+    {
+      "ts": "1776816073.845829",
+      "reason": "system_membership_event",
+      "bucket": "casual",
+      "text": "<@U07N3NGH7TR> has joined the channel",
+      "subtype": "channel_join"
+    }
+  ]
+}

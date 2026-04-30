@@ -14,6 +14,10 @@ RUN apt-get update \
     unzip \
   && rm -rf /var/lib/apt/lists/*
 
+RUN python3 -m pip install --no-cache-dir --break-system-packages \
+    pypdf \
+    python-docx
+
 WORKDIR /workspace/wiki-repo
 
 COPY . /workspace/wiki-repo

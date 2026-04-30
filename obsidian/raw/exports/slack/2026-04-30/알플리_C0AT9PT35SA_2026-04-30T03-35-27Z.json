@@ -1,0 +1,106 @@
+{
+  "type": "slack_channel_export",
+  "workspace": "RTM Slack",
+  "collected_at": "2026-04-30T03:35:27.248712+00:00",
+  "channel": {
+    "id": "C0AT9PT35SA",
+    "name": "알플리",
+    "type": "public_channel",
+    "is_archived": false,
+    "is_private": false,
+    "created": "2026-04-16T11:21:13+00:00",
+    "topic": "DJ",
+    "purpose": "",
+    "member_count": 3,
+    "routing": {
+      "channel_bucket": "company_news",
+      "conversation_mode": "company_updates",
+      "rationale": "default_company_updates",
+      "wiki_workspace": "rtm",
+      "wiki_target_root": "obsidian/Wiki/Common/Slack_Company_News",
+      "wiki_target_kind": "common"
+    }
+  },
+  "routing": {
+    "channel_bucket": "company_news",
+    "conversation_mode": "company_updates",
+    "rationale": "default_company_updates",
+    "wiki_workspace": "rtm",
+    "wiki_target_root": "obsidian/Wiki/Common/Slack_Company_News",
+    "wiki_target_kind": "common",
+    "project_wiki_target_root": "obsidian/Wiki/Common/Slack_Project_Intake",
+    "company_wiki_target_root": "obsidian/Wiki/Common/Slack_Company_News"
+  },
+  "history_window": {
+    "oldest_ts": "1776656440.172023",
+    "limit_per_channel": 500,
+    "include_threads": true,
+    "include_files": true
+  },
+  "messages": [
+    {
+      "ts": "1777004509.935949",
+      "type": "message",
+      "subtype": null,
+      "user": "U019E51R1DM",
+      "text": "<https://youtu.be/iIn_1_XDuBM?si=Y772bpSre6gcXnI_>",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1777263953.676759",
+      "type": "message",
+      "subtype": null,
+      "user": "U019E51R1DM",
+      "text": "노동요",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1777263954.226479",
+      "type": "message",
+      "subtype": null,
+      "user": "U019E51R1DM",
+      "text": "<https://youtu.be/RCp6RJGOhDM?si=LW8y00XyE9dG7fa6>",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [
+        {
+          "name": "kirby_dance",
+          "users": [
+            "U025MG70MNX"
+          ],
+          "count": 1
+        }
+      ],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1777520440.796339",
+      "type": "message",
+      "subtype": "channel_join",
+      "user": "U0B15H1AQJV",
+      "text": "<@U0B15H1AQJV> has joined the channel",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    }
+  ]
+}

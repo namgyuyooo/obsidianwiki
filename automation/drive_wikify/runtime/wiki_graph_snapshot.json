@@ -1,10 +1,10 @@
 {
-  "generated_at": "2026-04-30T02:26:33.374488",
+  "generated_at": "2026-04-30T03:44:02.389386",
   "version": 1,
   "stats": {
-    "pages": 373,
-    "edges": 1238,
-    "orphan_pages": 93,
+    "pages": 383,
+    "edges": 1243,
+    "orphan_pages": 104,
     "projects": 36
   },
   "nodes": [
@@ -14,7 +14,7 @@
       "project_key": "아사히카세히_Project",
       "root_kind": "wiki",
       "type": "evidence",
-      "degree": 102
+      "degree": 104
     },
     {
       "id": "obsidian/Wiki/아사히카세히_Project/Project_Overview.md",
@@ -41,20 +41,12 @@
       "degree": 76
     },
     {
-      "id": "obsidian/Wiki/ZEUS_AIVoucher_Project/Decisions.md",
-      "title": "Decisions",
-      "project_key": "ZEUS_AIVoucher_Project",
-      "root_kind": "wiki",
-      "type": "log",
-      "degree": 64
-    },
-    {
       "id": "obsidian/Wiki/아사히카세히_Project/Change_Log.md",
       "title": "아사히카세히 Change Log",
       "project_key": "아사히카세히_Project",
       "root_kind": "wiki",
       "type": "changelog",
-      "degree": 63
+      "degree": 65
     },
     {
       "id": "obsidian/Wiki/아사히카세히_Project/Conflict_Register.md",
@@ -62,7 +54,15 @@
       "project_key": "아사히카세히_Project",
       "root_kind": "wiki",
       "type": "conflict",
-      "degree": 63
+      "degree": 65
+    },
+    {
+      "id": "obsidian/Wiki/ZEUS_AIVoucher_Project/Decisions.md",
+      "title": "Decisions",
+      "project_key": "ZEUS_AIVoucher_Project",
+      "root_kind": "wiki",
+      "type": "log",
+      "degree": 64
     },
     {
       "id": "obsidian/Wiki/아사히카세히_Project/Action_Items.md",
@@ -89,17 +89,17 @@
       "degree": 48
     },
     {
-      "id": "obsidian/Wiki/Common/RTM_YNG_Project_Knowledge_Base_2026-04-21.md",
-      "title": "RTM_YNG Project Knowledge Base",
-      "project_key": "Common",
-      "root_kind": "wiki",
-      "type": "knowledge",
-      "degree": 45
-    },
-    {
       "id": "obsidian/Wiki/ZEUS_AIVoucher_Project/Sources.md",
       "title": "Sources",
       "project_key": "ZEUS_AIVoucher_Project",
+      "root_kind": "wiki",
+      "type": "knowledge",
+      "degree": 47
+    },
+    {
+      "id": "obsidian/Wiki/Common/RTM_YNG_Project_Knowledge_Base_2026-04-21.md",
+      "title": "RTM_YNG Project Knowledge Base",
+      "project_key": "Common",
       "root_kind": "wiki",
       "type": "knowledge",
       "degree": 45
@@ -201,14 +201,6 @@
       "degree": 16
     },
     {
-      "id": "obsidian/Wiki/Common/Wiki_Global_Navigation.md",
-      "title": "Wiki Global Navigation",
-      "project_key": "Common",
-      "root_kind": "wiki",
-      "type": "index",
-      "degree": 16
-    },
-    {
       "id": "obsidian/Wiki/Common/RTM_YNG_Change_Log_2026-04-21.md",
       "title": "RTM_YNG Change Log",
       "project_key": "Common",
@@ -294,6 +286,14 @@
       "project_key": "Common",
       "root_kind": "wiki",
       "type": "knowledge",
+      "degree": 13
+    },
+    {
+      "id": "obsidian/Wiki/Common/Wiki_Global_Navigation.md",
+      "title": "Wiki Global Navigation",
+      "project_key": "Common",
+      "root_kind": "wiki",
+      "type": "index",
       "degree": 13
     },
     {
@@ -1361,6 +1361,22 @@
       "degree": 4
     },
     {
+      "id": "obsidian/Wiki/Common/Slack_Company_News/hub.md",
+      "title": "Slack Company News Hub",
+      "project_key": "Common",
+      "root_kind": "wiki",
+      "type": "hub",
+      "degree": 4
+    },
+    {
+      "id": "obsidian/Wiki/Common/Slack_Project_Intake/hub.md",
+      "title": "Slack Project Intake Hub",
+      "project_key": "Common",
+      "root_kind": "wiki",
+      "type": "hub",
+      "degree": 4
+    },
+    {
       "id": "obsidian/Wiki/Daeduck_AFVI_Project/Sources.md",
       "title": "Sources",
       "project_key": "Daeduck_AFVI_Project",
@@ -2033,30 +2049,6 @@
       "degree": 2
     },
     {
-      "id": "obsidian/L1_memory/GLM_Chat_Projects/1777452125800-새_GLM_프로젝트.md",
-      "title": "GLM Chat Project - 쏘닉스",
-      "project_key": "memory",
-      "root_kind": "l1_memory",
-      "type": "auxiliary_chat_project_memory",
-      "degree": 1
-    },
-    {
-      "id": "obsidian/L1_memory/GLM_Chat_Projects/default.md",
-      "title": "GLM Chat Project - 기본 업무 챗",
-      "project_key": "memory",
-      "root_kind": "l1_memory",
-      "type": "auxiliary_chat_project_memory",
-      "degree": 1
-    },
-    {
-      "id": "obsidian/L1_memory/GLM_Global_Instructions.md",
-      "title": "GLM Global Instructions",
-      "project_key": "memory",
-      "root_kind": "l1_memory",
-      "type": "global_chat_instruction",
-      "degree": 1
-    },
-    {
       "id": "obsidian/L1_memory/SanupAI_RnD_Project.md",
       "title": "산업현장문제해결형 산업AI 에이전트 기술개발 R&D — L1 Memory Snapshot",
       "project_key": "memory",
@@ -2249,6 +2241,30 @@
       "degree": 1
     },
     {
+      "id": "obsidian/L1_memory/GLM_Chat_Projects/1777452125800-새_GLM_프로젝트.md",
+      "title": "GLM Chat Project - 쏘닉스",
+      "project_key": "memory",
+      "root_kind": "l1_memory",
+      "type": "auxiliary_chat_project_memory",
+      "degree": 0
+    },
+    {
+      "id": "obsidian/L1_memory/GLM_Chat_Projects/default.md",
+      "title": "GLM Chat Project - 기본 업무 챗",
+      "project_key": "memory",
+      "root_kind": "l1_memory",
+      "type": "auxiliary_chat_project_memory",
+      "degree": 0
+    },
+    {
+      "id": "obsidian/L1_memory/GLM_Global_Instructions.md",
+      "title": "GLM Global Instructions",
+      "project_key": "memory",
+      "root_kind": "l1_memory",
+      "type": "global_chat_instruction",
+      "degree": 0
+    },
+    {
       "id": "obsidian/Wiki/2025_20240815545_00_1723770661746_제안요청서_Project/Conflict_Register.md",
       "title": "Conflict Register",
       "project_key": "2025_20240815545_00_1723770661746_제안요청서_Project",
@@ -2390,6 +2406,70 @@
       "project_key": "Business_Plan_Project",
       "root_kind": "wiki",
       "type": "log",
+      "degree": 0
+    },
+    {
+      "id": "obsidian/Wiki/Common/Slack_Company_News/Change_Log.md",
+      "title": "Change Log",
+      "project_key": "Common",
+      "root_kind": "wiki",
+      "type": "changelog",
+      "degree": 0
+    },
+    {
+      "id": "obsidian/Wiki/Common/Slack_Company_News/Conflict_Register.md",
+      "title": "Conflict Register",
+      "project_key": "Common",
+      "root_kind": "wiki",
+      "type": "conflict",
+      "degree": 0
+    },
+    {
+      "id": "obsidian/Wiki/Common/Slack_Company_News/Evidence_Log.md",
+      "title": "Evidence Log",
+      "project_key": "Common",
+      "root_kind": "wiki",
+      "type": "evidence",
+      "degree": 0
+    },
+    {
+      "id": "obsidian/Wiki/Common/Slack_Company_News/Sources.md",
+      "title": "Sources",
+      "project_key": "Common",
+      "root_kind": "wiki",
+      "type": "sources",
+      "degree": 0
+    },
+    {
+      "id": "obsidian/Wiki/Common/Slack_Project_Intake/Change_Log.md",
+      "title": "Change Log",
+      "project_key": "Common",
+      "root_kind": "wiki",
+      "type": "changelog",
+      "degree": 0
+    },
+    {
+      "id": "obsidian/Wiki/Common/Slack_Project_Intake/Conflict_Register.md",
+      "title": "Conflict Register",
+      "project_key": "Common",
+      "root_kind": "wiki",
+      "type": "conflict",
+      "degree": 0
+    },
+    {
+      "id": "obsidian/Wiki/Common/Slack_Project_Intake/Evidence_Log.md",
+      "title": "Evidence Log",
+      "project_key": "Common",
+      "root_kind": "wiki",
+      "type": "evidence",
+      "degree": 0
+    },
+    {
+      "id": "obsidian/Wiki/Common/Slack_Project_Intake/Sources.md",
+      "title": "Sources",
+      "project_key": "Common",
+      "root_kind": "wiki",
+      "type": "sources",
       "degree": 0
     },
     {
@@ -5645,6 +5725,46 @@
       "label": "Wiki/Common/Drive_Wikify_Coverage_Tracker"
     },
     {
+      "source": "obsidian/Wiki/Common/Slack_Company_News/hub.md",
+      "target": "obsidian/Wiki/ZEUS_AIVoucher_Project/Sources.md",
+      "label": "Wiki/Common/Slack_Company_News/Sources"
+    },
+    {
+      "source": "obsidian/Wiki/Common/Slack_Company_News/hub.md",
+      "target": "obsidian/Wiki/아사히카세히_Project/Evidence_Log.md",
+      "label": "Wiki/Common/Slack_Company_News/Evidence_Log"
+    },
+    {
+      "source": "obsidian/Wiki/Common/Slack_Company_News/hub.md",
+      "target": "obsidian/Wiki/아사히카세히_Project/Conflict_Register.md",
+      "label": "Wiki/Common/Slack_Company_News/Conflict_Register"
+    },
+    {
+      "source": "obsidian/Wiki/Common/Slack_Company_News/hub.md",
+      "target": "obsidian/Wiki/아사히카세히_Project/Change_Log.md",
+      "label": "Wiki/Common/Slack_Company_News/Change_Log"
+    },
+    {
+      "source": "obsidian/Wiki/Common/Slack_Project_Intake/hub.md",
+      "target": "obsidian/Wiki/ZEUS_AIVoucher_Project/Sources.md",
+      "label": "Wiki/Common/Slack_Project_Intake/Sources"
+    },
+    {
+      "source": "obsidian/Wiki/Common/Slack_Project_Intake/hub.md",
+      "target": "obsidian/Wiki/아사히카세히_Project/Evidence_Log.md",
+      "label": "Wiki/Common/Slack_Project_Intake/Evidence_Log"
+    },
+    {
+      "source": "obsidian/Wiki/Common/Slack_Project_Intake/hub.md",
+      "target": "obsidian/Wiki/아사히카세히_Project/Conflict_Register.md",
+      "label": "Wiki/Common/Slack_Project_Intake/Conflict_Register"
+    },
+    {
+      "source": "obsidian/Wiki/Common/Slack_Project_Intake/hub.md",
+      "target": "obsidian/Wiki/아사히카세히_Project/Change_Log.md",
+      "label": "Wiki/Common/Slack_Project_Intake/Change_Log"
+    },
+    {
       "source": "obsidian/Wiki/Common/Slack_Public_Evidence_Index.md",
       "target": "obsidian/Wiki/아사히카세히_Project/hub.md",
       "label": "Wiki/PSK_Project/hub"
@@ -5708,21 +5828,6 @@
       "source": "obsidian/Wiki/Common/Wiki_Global_Navigation.md",
       "target": "obsidian/Wiki/ZEUS_AIVoucher_Project/Sources.md",
       "label": "Wiki/ZEUS_AIVoucher_Project/Sources"
-    },
-    {
-      "source": "obsidian/Wiki/Common/Wiki_Global_Navigation.md",
-      "target": "obsidian/L1_memory/GLM_Chat_Projects/1777452125800-새_GLM_프로젝트.md",
-      "label": "L1_memory/GLM_Chat_Projects/1777452125800-새_GLM_프로젝트"
-    },
-    {
-      "source": "obsidian/Wiki/Common/Wiki_Global_Navigation.md",
-      "target": "obsidian/L1_memory/GLM_Chat_Projects/default.md",
-      "label": "L1_memory/GLM_Chat_Projects/default"
-    },
-    {
-      "source": "obsidian/Wiki/Common/Wiki_Global_Navigation.md",
-      "target": "obsidian/L1_memory/GLM_Global_Instructions.md",
-      "label": "L1_memory/GLM_Global_Instructions"
     },
     {
       "source": "obsidian/Wiki/Common/Wiki_Ingest_Operating_Model.md",
@@ -5906,6 +6011,11 @@
     },
     {
       "source": "obsidian/Wiki/Common/hub.md",
+      "target": "obsidian/Wiki/아사히카세히_Project/hub.md",
+      "label": "Wiki/Common/Slack_Project_Intake/hub"
+    },
+    {
+      "source": "obsidian/Wiki/Common/hub.md",
       "target": "obsidian/Wiki/Common/Government_RnD_Reusable_Wiki_Hub.md",
       "label": "Wiki/Common/Government_RnD_Reusable_Wiki_Hub"
     },
@@ -5938,11 +6048,6 @@
       "source": "obsidian/Wiki/Common/hub.md",
       "target": "obsidian/Wiki/Schema.md",
       "label": "Wiki/Schema"
-    },
-    {
-      "source": "obsidian/Wiki/Common/hub.md",
-      "target": "obsidian/Wiki/아사히카세히_Project/hub.md",
-      "label": "Wiki/PSK_Account/hub"
     },
     {
       "source": "obsidian/Wiki/Daeduck_AFVI_Project/Conflict_Register.md",
@@ -9189,7 +9294,7 @@
     {
       "path": "obsidian/Wiki/아사히카세히_Project/Evidence_Log.md",
       "title": "아사히카세히 Evidence Log",
-      "degree": 102,
+      "degree": 104,
       "project_key": "아사히카세히_Project"
     },
     {
@@ -9211,22 +9316,22 @@
       "project_key": "아사히카세히_Project"
     },
     {
-      "path": "obsidian/Wiki/ZEUS_AIVoucher_Project/Decisions.md",
-      "title": "Decisions",
-      "degree": 64,
-      "project_key": "ZEUS_AIVoucher_Project"
-    },
-    {
       "path": "obsidian/Wiki/아사히카세히_Project/Change_Log.md",
       "title": "아사히카세히 Change Log",
-      "degree": 63,
+      "degree": 65,
       "project_key": "아사히카세히_Project"
     },
     {
       "path": "obsidian/Wiki/아사히카세히_Project/Conflict_Register.md",
       "title": "아사히카세히 Conflict Register",
-      "degree": 63,
+      "degree": 65,
       "project_key": "아사히카세히_Project"
+    },
+    {
+      "path": "obsidian/Wiki/ZEUS_AIVoucher_Project/Decisions.md",
+      "title": "Decisions",
+      "degree": 64,
+      "project_key": "ZEUS_AIVoucher_Project"
     },
     {
       "path": "obsidian/Wiki/아사히카세히_Project/Action_Items.md",
@@ -9247,16 +9352,16 @@
       "project_key": "Common"
     },
     {
+      "path": "obsidian/Wiki/ZEUS_AIVoucher_Project/Sources.md",
+      "title": "Sources",
+      "degree": 47,
+      "project_key": "ZEUS_AIVoucher_Project"
+    },
+    {
       "path": "obsidian/Wiki/Common/RTM_YNG_Project_Knowledge_Base_2026-04-21.md",
       "title": "RTM_YNG Project Knowledge Base",
       "degree": 45,
       "project_key": "Common"
-    },
-    {
-      "path": "obsidian/Wiki/ZEUS_AIVoucher_Project/Sources.md",
-      "title": "Sources",
-      "degree": 45,
-      "project_key": "ZEUS_AIVoucher_Project"
     },
     {
       "path": "obsidian/Wiki/Common/RTM_YNG_Drive_Discovery_2026-04-21.md",
@@ -9331,13 +9436,16 @@
       "project_key": "Business_Plan_Project"
     },
     {
-      "path": "obsidian/Wiki/Common/Wiki_Global_Navigation.md",
-      "title": "Wiki Global Navigation",
-      "degree": 16,
+      "path": "obsidian/Wiki/Common/RTM_YNG_Change_Log_2026-04-21.md",
+      "title": "RTM_YNG Change Log",
+      "degree": 15,
       "project_key": "Common"
     }
   ],
   "orphan_pages": [
+    "obsidian/L1_memory/GLM_Chat_Projects/1777452125800-새_GLM_프로젝트.md",
+    "obsidian/L1_memory/GLM_Chat_Projects/default.md",
+    "obsidian/L1_memory/GLM_Global_Instructions.md",
     "obsidian/Wiki/2025_20240815545_00_1723770661746_제안요청서_Project/Conflict_Register.md",
     "obsidian/Wiki/2025_20240815545_00_1723770661746_제안요청서_Project/Decisions.md",
     "obsidian/Wiki/2025_20240815545_00_1723770661746_제안요청서_Project/Evidence_Log.md",
@@ -9356,6 +9464,14 @@
     "obsidian/Wiki/BGF_EcoSpecialty_Project/Risks.md",
     "obsidian/Wiki/Business_Plan_Project/Change_Log.md",
     "obsidian/Wiki/Business_Plan_Project/Conflict_Register.md",
+    "obsidian/Wiki/Common/Slack_Company_News/Change_Log.md",
+    "obsidian/Wiki/Common/Slack_Company_News/Conflict_Register.md",
+    "obsidian/Wiki/Common/Slack_Company_News/Evidence_Log.md",
+    "obsidian/Wiki/Common/Slack_Company_News/Sources.md",
+    "obsidian/Wiki/Common/Slack_Project_Intake/Change_Log.md",
+    "obsidian/Wiki/Common/Slack_Project_Intake/Conflict_Register.md",
+    "obsidian/Wiki/Common/Slack_Project_Intake/Evidence_Log.md",
+    "obsidian/Wiki/Common/Slack_Project_Intake/Sources.md",
     "obsidian/Wiki/Daeduck_AFVI_Project/Action_Items.md",
     "obsidian/Wiki/Daeduck_AFVI_Project/Change_Log.md",
     "obsidian/Wiki/Daeduck_AFVI_Project/Decisions.md",
@@ -9435,15 +9551,15 @@
   "projects": [
     {
       "project_key": "Common",
-      "pages": 87,
+      "pages": 97,
       "memory_pages": 0,
-      "links": 843
+      "links": 848
     },
     {
       "project_key": "memory",
       "pages": 40,
       "memory_pages": 40,
-      "links": 188
+      "links": 185
     },
     {
       "project_key": "Business_Plan_Project",
@@ -9527,7 +9643,7 @@
       "project_key": "ZEUS_AIVoucher_Project",
       "pages": 10,
       "memory_pages": 0,
-      "links": 239
+      "links": 241
     },
     {
       "project_key": "AdvancedElectricKorea_Project",
@@ -9563,7 +9679,7 @@
       "project_key": "아사히카세히_Project",
       "pages": 9,
       "memory_pages": 0,
-      "links": 473
+      "links": 479
     },
     {
       "project_key": "2025_20240815545_00_1723770661746_제안요청서_Project",

@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 
 
-ALLOWED_SUFFIXES = {".hwp", ".hwpx", ".pdf", ".docx", ".pptx", ".html", ".htm"}
+ALLOWED_SUFFIXES = {".hwp", ".hwpx", ".pdf", ".docx", ".pptx", ".xlsx", ".xls", ".csv", ".html", ".htm"}
 
 
 def build_manifest(root: Path, drive_name: str, output_path: Path, allowed_file_types: list[str] | None = None) -> int:

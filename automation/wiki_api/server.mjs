@@ -2,7 +2,7 @@ import { createServer } from "node:http";
 import { readFile, readdir, stat, writeFile, mkdir, unlink } from "node:fs/promises";
 import { createReadStream, existsSync } from "node:fs";
 import { spawn } from "node:child_process";
-import { extname, isAbsolute, join, normalize, relative, resolve } from "node:path";
+import { dirname, extname, isAbsolute, join, normalize, relative, resolve } from "node:path";
 
 const defaultRepoRoot = resolve(new URL("../../", import.meta.url).pathname);
 const repoRoot = resolve(process.env.WIKI_OPS_REPO_ROOT || defaultRepoRoot);
@@ -41,6 +41,7 @@ const documentUsageStatusPath = join(apiRuntime, "document_usage_statuses.json")
 const documentUsageAuditPath = join(apiRuntime, "document_usage_audit.jsonl");
 const decisionQueuePath = join(apiRuntime, "decision_queue.json");
 const decisionQueueAuditPath = join(apiRuntime, "decision_queue_audit.jsonl");
+const projectRegistryPath = join(apiRuntime, "project_registry.json");
 const llmUsagePath = join(apiRuntime, "llm_usage.json");
 const activeJobs = new Map();
 const activeChatRequests = new Map();
@@ -95,7 +96,19 @@ const editableSettings = new Set([
   "SLACK_OLDEST_DAYS",
   "SLACK_INCLUDE_THREADS",
   "SLACK_INCLUDE_FILES",
+  "SLACK_API_MIN_INTERVAL_SECONDS",
+  "SLACK_HISTORY_PAGE_PAUSE_SECONDS",
+  "SLACK_THREAD_PAUSE_SECONDS",
+  "SLACK_CHANNEL_PAUSE_SECONDS",
+  "SLACK_RATE_LIMIT_COOLDOWN_SECONDS",
   "SLACK_COLLECT_MAX_MINUTES",
+  "SLACK_FILTER_WITH_GLM",
+  "SLACK_FILTER_EXPORT_ROOT",
+  "SLACK_PROJECT_CHANNEL_PREFIXES",
+  "SLACK_COMPANY_CHANNEL_PREFIXES",
+  "SLACK_MIXED_CHANNEL_PREFIXES",
+  "SLACK_PROJECT_WIKI_ROOT",
+  "SLACK_COMPANY_WIKI_ROOT",
 ]);
 const sensitiveSettings = new Set(["GLM_API_KEY", "OPENCLAW_API_KEY", "PAPERCLIP_API_KEY", "SLACK_BOT_TOKEN", "SLACK_USER_TOKEN"]);
 
@@ -278,12 +291,34 @@ async function slackStatus() {
   const exportRoot = resolveConfigPath(env.SLACK_EXPORT_ROOT, "obsidian/raw/exports/slack");
   const statePath = resolveConfigPath(env.SLACK_STATE_PATH, "automation/wiki_api/runtime/slack_collection_state.json");
   const state = await readJsonFile(statePath, { channels: {} });
-  const channels = Object.values(state.channels || {});
+  const channels = Object.values(state.channels || {}).sort((a, b) => String(b.last_collected_at || "").localeCompare(String(a.last_collected_at || "")));
   const lastCollectedAt = channels
     .map((channel) => channel.last_collected_at)
     .filter(Boolean)
     .sort()
     .at(-1) || state.last_run_at || "";
+  const routingSummary = channels.reduce((summary, channel) => {
+    const profile = channel.routing?.channel_profile || {};
+    const bucket = profile.channel_bucket || "unknown";
+    summary.channelBuckets[bucket] = (summary.channelBuckets[bucket] || 0) + 1;
+    const counts = channel.routing?.bucket_counts || {};
+    summary.messageBuckets.project += Number(counts.project || 0);
+    summary.messageBuckets.company_news += Number(counts.company_news || 0);
+    summary.messageBuckets.casual += Number(counts.casual || 0);
+    const provider = channel.filter_provider || "missing";
+    summary.filterProviders[provider] = (summary.filterProviders[provider] || 0) + 1;
+    if (channel.filter_error) {
+      summary.filterErrors[channel.filter_error] = (summary.filterErrors[channel.filter_error] || 0) + 1;
+    }
+    summary.promotedDocuments += Array.isArray(channel.promoted_paths) ? channel.promoted_paths.length : 0;
+    return summary;
+  }, {
+    channelBuckets: { project: 0, company_news: 0, mixed: 0, unknown: 0 },
+    messageBuckets: { project: 0, company_news: 0, casual: 0 },
+    filterProviders: {},
+    filterErrors: {},
+    promotedDocuments: 0,
+  });
   return {
     configured: Boolean((env.SLACK_BOT_TOKEN || env.SLACK_USER_TOKEN || "").trim()),
     authMode: env.SLACK_BOT_TOKEN ? "bot_token" : env.SLACK_USER_TOKEN ? "user_token" : "missing",
@@ -296,8 +331,21 @@ async function slackStatus() {
     oldestDays: Number(env.SLACK_OLDEST_DAYS || 30),
     includeThreads: env.SLACK_INCLUDE_THREADS !== "false",
     includeFiles: env.SLACK_INCLUDE_FILES !== "false",
+    apiMinIntervalSeconds: Number(env.SLACK_API_MIN_INTERVAL_SECONDS || 1.2),
+    historyPagePauseSeconds: Number(env.SLACK_HISTORY_PAGE_PAUSE_SECONDS || 1.0),
+    threadPauseSeconds: Number(env.SLACK_THREAD_PAUSE_SECONDS || 1.0),
+    channelPauseSeconds: Number(env.SLACK_CHANNEL_PAUSE_SECONDS || 2.5),
+    rateLimitCooldownSeconds: Number(env.SLACK_RATE_LIMIT_COOLDOWN_SECONDS || 20),
+    filterWithGlm: env.SLACK_FILTER_WITH_GLM !== "false",
+    filterExportRoot: relative(repoRoot, resolveConfigPath(env.SLACK_FILTER_EXPORT_ROOT, "obsidian/raw/exports/slack_filtered")),
+    projectChannelPrefixes: (env.SLACK_PROJECT_CHANNEL_PREFIXES || "pjt_,pjt-,hubble-pjt-").split(",").map((item) => item.trim()).filter(Boolean),
+    companyChannelPrefixes: (env.SLACK_COMPANY_CHANNEL_PREFIXES || "sales_,rtm,0_rtm,1_rtm,team_,ai,vision_,apollo,hubble-general").split(",").map((item) => item.trim()).filter(Boolean),
+    mixedChannelPrefixes: (env.SLACK_MIXED_CHANNEL_PREFIXES || "tf_").split(",").map((item) => item.trim()).filter(Boolean),
+    projectWikiRoot: relative(repoRoot, resolveConfigPath(env.SLACK_PROJECT_WIKI_ROOT, "obsidian/Wiki/Common/Slack_Project_Intake")),
+    companyWikiRoot: relative(repoRoot, resolveConfigPath(env.SLACK_COMPANY_WIKI_ROOT, "obsidian/Wiki/Common/Slack_Company_News")),
     collectedChannels: channels.length,
     lastCollectedAt,
+    routingSummary,
     recentChannels: channels.slice(0, 20),
   };
 }
@@ -471,7 +519,7 @@ async function manifestSnapshot(env = {}) {
   const manifest = await readJsonFile(manifestPath, { documents: [] });
   const docs = manifest.documents || [];
   return {
-    manifestPath: relative(repoRoot, manifestPath),
+    manifestPath: displayPath(manifestPath),
     documents: docs.length,
     filePaths: docs.map((doc) => doc.file_path).filter(Boolean),
     updatedAt: manifest.generated_at || manifest.updated_at || "",
@@ -503,13 +551,13 @@ async function refreshManifestFromMirror(env = {}) {
   const payload = {
     generated_at: new Date().toISOString(),
     source: "wiki_api post-rclone manifest refresh",
-    mirror_root: relative(repoRoot, mirrorRoot),
+    mirror_root: displayPath(mirrorRoot),
     documents,
   };
   await writeFile(manifestPath, JSON.stringify(payload, null, 2), "utf-8");
   return {
-    manifestPath: relative(repoRoot, manifestPath),
-    mirrorRoot: relative(repoRoot, mirrorRoot),
+    manifestPath: displayPath(manifestPath),
+    mirrorRoot: displayPath(mirrorRoot),
     documents: documents.length,
   };
 }
@@ -534,6 +582,80 @@ function titleFromMarkdown(path, markdown) {
   const heading = markdown.match(/^#\s+(.+)$/m);
   if (heading) return heading[1].trim();
   return path.split("/").pop()?.replace(/\.md$/, "") || path;
+}
+
+const canonicalProjectDocNames = ["hub.md", "Sources.md", "Evidence_Log.md", "Action_Items.md", "Risks.md", "Decisions.md", "Conflict_Register.md"];
+
+function isProjectScopedDivision(division = "") {
+  return ["project", "account"].includes(division);
+}
+
+function projectKeyRule(path, frontmatter = {}) {
+  const classification = classifyWikiPage(path, frontmatter);
+  const expectedProjectKey = isProjectScopedDivision(classification.division) ? classification.projectKey : "";
+  const declaredProjectKey = String(frontmatter.projectKey || "").trim();
+  const issues = [];
+  if (expectedProjectKey) {
+    if (!declaredProjectKey) {
+      issues.push({
+        code: "missing_project_key",
+        severity: "error",
+        message: `frontmatter.projectKey가 필요합니다. expected=${expectedProjectKey}`,
+      });
+    } else if (declaredProjectKey !== expectedProjectKey) {
+      issues.push({
+        code: "project_key_mismatch",
+        severity: "error",
+        message: `frontmatter.projectKey=${declaredProjectKey} 이고 폴더 기준 expected=${expectedProjectKey} 입니다.`,
+      });
+    }
+  }
+  return {
+    classification,
+    expectedProjectKey,
+    declaredProjectKey,
+    required: Boolean(expectedProjectKey),
+    ok: issues.length === 0,
+    issues,
+  };
+}
+
+function upsertFrontmatterLine(block, key, value) {
+  const lines = block.split("\n");
+  const index = lines.findIndex((line) => new RegExp(`^${key}\\s*:`).test(line.trim()));
+  const nextLine = `${key}: ${value}`;
+  if (index >= 0) {
+    lines[index] = nextLine;
+    return lines.join("\n");
+  }
+  const typeIndex = lines.findIndex((line) => /^type\s*:/.test(line.trim()));
+  if (typeIndex >= 0) {
+    lines.splice(typeIndex + 1, 0, nextLine);
+    return lines.join("\n");
+  }
+  lines.push(nextLine);
+  return lines.join("\n");
+}
+
+function enforceProjectKeyFrontmatter(path, markdown = "") {
+  const text = String(markdown || "");
+  const parsed = parseFrontmatter(text);
+  const rule = projectKeyRule(path, parsed);
+  if (!rule.required) {
+    return { markdown: text, changed: false, rule };
+  }
+  if (text.startsWith("---")) {
+    const end = text.indexOf("\n---", 3);
+    if (end !== -1) {
+      const block = text.slice(3, end).replace(/^\n/, "");
+      const body = text.slice(end + 4).replace(/^\n/, "");
+      const nextBlock = upsertFrontmatterLine(block, "projectKey", rule.expectedProjectKey);
+      const nextMarkdown = `---\n${nextBlock}\n---\n${body}`;
+      return { markdown: nextMarkdown, changed: nextMarkdown !== text, rule };
+    }
+  }
+  const nextMarkdown = `---\nprojectKey: ${rule.expectedProjectKey}\n---\n\n${text}`;
+  return { markdown: nextMarkdown, changed: true, rule };
 }
 
 function findSnippet(markdown, query) {
@@ -1149,12 +1271,18 @@ async function wikiIndex(workspaceId = "rtm") {
     const path = relative(repoRoot, file);
     const frontmatter = parseFrontmatter(markdown);
     const section = path.startsWith("obsidian/L1_memory/") ? "L1_memory" : path.split("/")[2] || "Wiki";
-    const classification = classifyWikiPage(path, frontmatter);
+    const projectKeyState = projectKeyRule(path, frontmatter);
+    const classification = projectKeyState.classification;
     pages.push(applyWikiStatus({
       title: titleFromMarkdown(path, markdown),
       path,
       section,
       frontmatter,
+      projectKeyDeclared: projectKeyState.declaredProjectKey,
+      projectKeyExpected: projectKeyState.expectedProjectKey,
+      projectKeyRequired: projectKeyState.required,
+      projectKeyIntegrity: projectKeyState.ok ? "ok" : "error",
+      projectKeyIssues: projectKeyState.issues,
       updatedAt: fileStat?.mtime?.toISOString?.() || "",
       size: fileStat?.size || markdown.length,
       ...classification,
@@ -1583,14 +1711,18 @@ function writableWikiPath(path) {
 
 async function writeWikiPage(body = {}) {
   const fullPath = writableWikiPath(body.path);
-  const markdown = String(body.markdown ?? "");
-  if (!markdown.trim()) throw new Error("markdown is required");
-  await writeFile(fullPath, markdown, "utf-8");
+  const inputMarkdown = String(body.markdown ?? "");
+  if (!inputMarkdown.trim()) throw new Error("markdown is required");
+  const relPath = relative(repoRoot, fullPath);
+  const enforced = enforceProjectKeyFrontmatter(relPath, inputMarkdown);
+  await writeFile(fullPath, enforced.markdown, "utf-8");
   return {
     status: "saved",
     path: relative(repoRoot, fullPath),
     updatedAt: new Date().toISOString(),
-    title: titleFromMarkdown(relative(repoRoot, fullPath), markdown),
+    title: titleFromMarkdown(relative(repoRoot, fullPath), enforced.markdown),
+    projectKeyRule: enforced.rule,
+    projectKeyAutofixed: enforced.changed,
   };
 }
 
@@ -1615,6 +1747,98 @@ async function collectStatus() {
       driveDeleteSource: env.DRIVE_DELETE_SOURCE || "false",
       sourceDriveProtected: env.DRIVE_DELETE_SOURCE !== "true",
     },
+  };
+}
+
+async function projectKeyGovernance(workspaceId = "rtm") {
+  const pages = await wikiIndex(workspaceId);
+  const projectPages = pages.filter((page) => isProjectScopedDivision(page.division));
+  const groups = new Map();
+
+  for (const page of projectPages) {
+    const key = page.projectKeyExpected || page.projectKey || page.section;
+    if (!groups.has(key)) {
+      groups.set(key, {
+        projectKey: key,
+        projectLabel: page.projectLabel || key,
+        division: page.division,
+        hubPath: "",
+        pageCount: 0,
+        pages: [],
+        missingProjectKey: 0,
+        mismatchedProjectKey: 0,
+        issues: [],
+      });
+    }
+    const group = groups.get(key);
+    group.pageCount += 1;
+    if (page.isProjectHub) group.hubPath = page.path;
+    group.pages.push({
+      path: page.path,
+      title: page.title,
+      docKind: page.docKind,
+      declaredProjectKey: page.projectKeyDeclared || "",
+      expectedProjectKey: page.projectKeyExpected || "",
+      integrity: page.projectKeyIntegrity || "ok",
+      issues: page.projectKeyIssues || [],
+    });
+    for (const issue of page.projectKeyIssues || []) {
+      if (issue.code === "missing_project_key") group.missingProjectKey += 1;
+      if (issue.code === "project_key_mismatch") group.mismatchedProjectKey += 1;
+      group.issues.push({
+        code: issue.code,
+        severity: issue.severity,
+        message: issue.message,
+        path: page.path,
+      });
+    }
+  }
+
+  const projects = [...groups.values()].map((group) => {
+    const presentNames = new Set(group.pages.map((page) => page.path.split("/").at(-1)));
+    const missingDocs = canonicalProjectDocNames.filter((name) => !presentNames.has(name));
+    if (!group.hubPath) {
+      group.issues.push({
+        code: "missing_hub",
+        severity: "error",
+        message: "hub.md 가 없습니다.",
+        path: "",
+      });
+    }
+    for (const name of missingDocs) {
+      group.issues.push({
+        code: "missing_canonical_doc",
+        severity: name === "hub.md" ? "error" : "warning",
+        message: `${name} 가 없습니다.`,
+        path: group.hubPath || "",
+      });
+    }
+    return {
+      ...group,
+      canonicalCoverage: canonicalProjectDocNames.length - missingDocs.length,
+      canonicalExpected: canonicalProjectDocNames.length,
+      missingDocs,
+      issues: group.issues.sort((a, b) => a.severity.localeCompare(b.severity) || a.code.localeCompare(b.code)),
+    };
+  }).sort((a, b) => b.issues.length - a.issues.length || a.projectKey.localeCompare(b.projectKey));
+
+  const snapshot = {
+    generatedAt: new Date().toISOString(),
+    workspace: workspaceId,
+    summary: {
+      projects: projects.length,
+      projectPages: projectPages.length,
+      projectsWithIssues: projects.filter((project) => project.issues.length).length,
+      missingProjectKeyPages: projectPages.filter((page) => (page.projectKeyIssues || []).some((issue) => issue.code === "missing_project_key")).length,
+      mismatchedProjectKeyPages: projectPages.filter((page) => (page.projectKeyIssues || []).some((issue) => issue.code === "project_key_mismatch")).length,
+      missingCanonicalDocs: projects.reduce((sum, project) => sum + project.missingDocs.length, 0),
+    },
+    projects,
+  };
+  await writeJsonFile(projectRegistryPath, snapshot);
+  return {
+    ...snapshot,
+    registryPath: relative(repoRoot, projectRegistryPath),
   };
 }
 
@@ -1814,7 +2038,7 @@ async function coreDocuments(workspaceId = "rtm") {
 
   return {
     catalog: documentWorkflowCatalog,
-    manifestPath: relative(repoRoot, manifestPath),
+    manifestPath: displayPath(manifestPath),
     documents: candidates.sort((a, b) => b.score - a.score || String(b.modifiedTime).localeCompare(String(a.modifiedTime))).slice(0, 200),
     summary: {
       manifestDocuments: manifest.documents?.length || 0,
@@ -1990,24 +2214,146 @@ async function appendProjectDecision(projectKey, body = {}) {
 
 function decisionKindFromItem(item = {}) {
   const text = `${item.kind || ""} ${item.title || ""} ${item.content || ""}`.toLowerCase();
-  if (/risk|리스크|위험/.test(text)) return "risk";
-  if (/action|액션|todo|다음/.test(text)) return "action";
-  if (/conflict|충돌|불일치/.test(text)) return "conflict";
+  if (/conflict|충돌|불일치|상이|미확정|버전 차이|값 차이|서술 차이/.test(text)) return "conflict";
   return "decision";
 }
 
 function decisionTargetFile(kind) {
-  if (kind === "risk") return "Risks.md";
-  if (kind === "action") return "Action_Items.md";
   if (kind === "conflict") return "Conflict_Register.md";
   return "Decisions.md";
+}
+
+function projectContextFromDecision(item = {}, workspaceId = "rtm") {
+  const fallback = {
+    projectKey: String(item.projectKey || "").trim(),
+    projectLabel: String(item.projectLabel || "").trim(),
+    sourcePath: String(item.path || "").trim(),
+  };
+  if (fallback.projectKey) return fallback;
+  if (!fallback.sourcePath) return fallback;
+  const classification = classifyWikiPage(fallback.sourcePath, {});
+  if (!["project", "account"].includes(classification.division)) return fallback;
+  return {
+    projectKey: classification.projectKey,
+    projectLabel: classification.projectLabel,
+    sourcePath: fallback.sourcePath,
+  };
+}
+
+function decisionTargetPathFromContext(item = {}, workspaceId = "rtm") {
+  const workspace = wikiWorkspace(workspaceId);
+  const targetFile = decisionTargetFile(decisionKindFromItem(item));
+  const sourcePath = String(item.path || "").trim();
+  if (sourcePath) {
+    const classification = classifyWikiPage(sourcePath, {});
+    if (["project", "account"].includes(classification.division)) {
+      const sourceAbs = safeJoin(repoRoot, sourcePath);
+      const sourceDir = dirname(sourceAbs);
+      if (sourceDir === workspace.wikiRoot || sourceDir.startsWith(`${workspace.wikiRoot}/`)) {
+        return {
+          targetPath: join(sourceDir, targetFile),
+          targetFile,
+          projectKey: classification.projectKey,
+          projectLabel: classification.projectLabel,
+          mode: "source_path",
+        };
+      }
+    }
+  }
+  const projectKey = String(item.projectKey || "").trim();
+  if (!projectKey) {
+    return {
+      targetPath: "",
+      targetFile,
+      projectKey: "",
+      projectLabel: String(item.projectLabel || "").trim(),
+      mode: "missing_project",
+    };
+  }
+  return {
+    targetPath: join(projectDirForKey(projectKey, workspaceId), targetFile),
+    targetFile,
+    projectKey,
+    projectLabel: String(item.projectLabel || "").trim(),
+    mode: "project_key",
+  };
+}
+
+function isDataConflictPage(page = {}) {
+  if (!page || !page.statusManaged) return false;
+  if (!["project", "account"].includes(page.division)) return false;
+  if (!["conflict", "decisions", "evidence", "sources"].includes(page.docKind)) return false;
+  if (["completed", "archived", "not_applicable"].includes(page.workflowStatus)) return false;
+  return true;
+}
+
+function isOperationalWikiLine(line = "") {
+  const text = String(line || "").toLowerCase();
+  return [
+    /위키화/,
+    /문서화/,
+    /마크다운/,
+    /허브/,
+    /내비/,
+    /네비/,
+    /그래프/,
+    /graph/,
+    /navigation/,
+    /refresh/,
+    /태그/,
+    /링크/,
+    /인덱스/,
+    /index/,
+    /frontmatter/,
+    /paperclip/,
+    /glm/,
+    /slack/,
+    /drive/,
+    /수집/,
+    /manifest/,
+    /자동화/,
+    /운영 설정/,
+    /검색/,
+  ].some((pattern) => pattern.test(text));
+}
+
+function isDataConflictLine(line = "") {
+  const text = compactLine(String(line || "").trim(), 220);
+  if (!text) return false;
+  if (isOperationalWikiLine(text)) return false;
+  if (text.length < 12) return false;
+  if (/^[#>\-\*\d.\s]*(충돌 내용|확인 사항|질문|메모|비고|관리합니다|정리합니다|추가합니다)\s*:?\s*$/i.test(text)) return false;
+  if (/관리합니다|등록합니다|정리용|후보를 관리|현재 등록된 .*없음|없습니다\.?$/.test(text)) return false;
+  if (/^[#>\-\*\d.\s]*[가-힣A-Za-z0-9 _-]+\s*:\s*$/.test(text)) return false;
+  const conflictSignals = /충돌|불일치|상이|다르게 기재|서로 다름|값 차이|버전 차이|미확정|출처 상충|최신값 확인|확인 필요|정합성|근거 불일치|수치 불일치|일정 불일치/;
+  const weakSignals = /다름|상이|불일치|확인|최신|정정|수정|검증|출처|근거|버전|수치|일정/;
+  if (conflictSignals.test(text)) return true;
+  if (!weakSignals.test(text)) return false;
+  return /(어느 값|어떤 값|최신값|확인 필요|정정 필요|근거 비교|출처 비교|버전 확인)/.test(text);
+}
+
+function isBusinessPromotionCandidate(promotion = {}, pages = []) {
+  const projectHint = String(promotion.projectHint || "").trim();
+  if (!projectHint) return false;
+  const matched = pages.find((page) => page.projectKey === projectHint || page.projectLabel === projectHint);
+  if (!matched) return false;
+  return isDataConflictPage(matched);
 }
 
 async function decisionQueue(workspaceId = "rtm") {
   const store = await readJsonFile(decisionQueuePath, { version: 1, items: {} });
   const promotions = await readJsonFile(knowledgePromotionPath, []);
+  const pages = await wikiIndex(workspaceId).catch(() => []);
+  const businessPages = pages.filter(isDataConflictPage);
   const items = [];
   for (const promotion of promotions.slice(0, 80)) {
+    if (!isBusinessPromotionCandidate(promotion, businessPages)) continue;
+    const candidateLines = [
+      ...(promotion.candidates?.decisions || []),
+      ...(promotion.candidates?.conflicts || []),
+      ...(promotion.candidates?.actions || []),
+    ].filter(isDataConflictLine);
+    if (!candidateLines.length) continue;
     const id = promotion.id || `promotion-${promotion.createdAt}`;
     const state = store.items?.[id] || {};
     if (state.status && state.status !== "pending") {
@@ -2018,23 +2364,21 @@ async function decisionQueue(workspaceId = "rtm") {
       id,
       status: state.status || "pending",
       sourceType: "knowledge_promotion",
-      kind: "decision",
-      title: `지식승격 후보: ${promotion.projectHint || promotion.tool || "미지정"}`,
+      kind: "conflict",
+      title: `데이터 확인 후보: ${promotion.projectHint || promotion.tool || "미지정"}`,
       projectKey: promotion.projectHint || "",
-      content: [
-        ...(promotion.candidates?.decisions || []),
-        ...(promotion.candidates?.actions || []),
-        ...(promotion.candidates?.conflicts || []),
-      ].slice(0, 6).join("\n") || promotion.content || "",
+      content: candidateLines.slice(0, 6).join("\n") || promotion.content || "",
       path: promotion.path || "",
       createdAt: promotion.createdAt || "",
       original: promotion,
     });
   }
-  const pages = await wikiIndex(workspaceId).catch(() => []);
-  for (const page of pages.filter((item) => ["conflict", "decisions", "actions", "risks"].includes(item.docKind)).slice(0, 160)) {
+  for (const page of businessPages.slice(0, 160)) {
     const markdown = await readFile(resolve(repoRoot, page.path), "utf-8").catch(() => "");
-    const lines = extractPatternLines(markdown, /결정 필요|확인 필요|미확정|충돌|불일치|보류|추가 조사|리스크|해야|필요/i, 5);
+    const lines = extractPatternLines(markdown, /확인 필요|미확정|충돌|불일치|상이|값 차이|버전 차이|출처 상충|정합성|수치 불일치|일정 불일치|근거 비교|최신값/i, 8)
+      .filter(isDataConflictLine)
+      .slice(0, 5);
+    if (!lines.length) continue;
     for (const [index, line] of lines.entries()) {
       const id = `wiki-${page.path}-${index}`;
       const state = store.items?.[id] || {};
@@ -2078,6 +2422,7 @@ async function resolveDecisionQueueItem(id, body = {}) {
   const item = queue.items.find((entry) => entry.id === id) || { id, title: body.title || id, content: body.content || "", projectKey: body.projectKey || "" };
   const now = new Date().toISOString();
   const store = await readJsonFile(decisionQueuePath, { version: 1, items: {} });
+  const context = projectContextFromDecision({ ...item, ...body }, workspaceId);
   const status = action === "approve" || action === "edit_approve" ? "approved" : action === "reject" ? "rejected" : action === "investigate" ? "needs_investigation" : "hold";
   const resolved = {
     ...item,
@@ -2086,23 +2431,31 @@ async function resolveDecisionQueueItem(id, body = {}) {
     resolvedAt: now,
     note: body.note || "",
     content: body.content || item.content || "",
-    projectKey: body.projectKey || item.projectKey || "",
+    projectKey: body.projectKey || item.projectKey || context.projectKey || "",
+    projectLabel: body.projectLabel || item.projectLabel || context.projectLabel || "",
   };
   store.items[id] = resolved;
   await writeJsonFile(decisionQueuePath, store);
-  await appendJsonl(decisionQueueAuditPath, { timestamp: now, id, action, item: resolved });
 
   let appliedPath = "";
-  if ((action === "approve" || action === "edit_approve") && resolved.projectKey) {
-    const kind = decisionKindFromItem(resolved);
-    const projectDir = projectDirForKey(resolved.projectKey, workspaceId);
-    if (!existsSync(projectDir)) {
-      return { status: "resolved", action, item: resolved, appliedPath, note: "project folder not found; approval recorded without wiki write" };
+  const target = decisionTargetPathFromContext(resolved, workspaceId);
+  const targetFile = target.targetFile;
+  let note = "";
+  if (target.projectKey && !resolved.projectKey) {
+    resolved.projectKey = target.projectKey;
+    resolved.projectLabel = resolved.projectLabel || target.projectLabel;
+    store.items[id] = resolved;
+    await writeJsonFile(decisionQueuePath, store);
+  }
+  if ((action === "approve" || action === "edit_approve") && target.targetPath) {
+    const targetDir = dirname(target.targetPath);
+    if (!existsSync(targetDir)) {
+      await mkdir(targetDir, { recursive: true });
     }
-    const targetPath = join(projectDir, decisionTargetFile(kind));
+    const targetPath = target.targetPath;
     await mkdir(resolve(targetPath, ".."), { recursive: true });
     const current = await readFile(targetPath, "utf-8").catch(() => "");
-    const heading = current.trim() ? "" : `---\ntype: ${decisionTargetFile(kind).replace(/\.md$/, "").toLowerCase()}\ncreated: ${now.slice(0, 10)}\nupdated: ${now.slice(0, 10)}\nsource: "decision queue"\n---\n\n# ${decisionTargetFile(kind).replace(/_/g, " ").replace(/\.md$/, "")}\n`;
+    const heading = current.trim() ? "" : `---\ntype: ${targetFile.replace(/\.md$/, "").toLowerCase()}\ncreated: ${now.slice(0, 10)}\nupdated: ${now.slice(0, 10)}\nsource: "decision queue"\n---\n\n# ${targetFile.replace(/_/g, " ").replace(/\.md$/, "")}\n`;
     const block = [
       heading,
       `\n## Decision Queue Approval - ${now}`,
@@ -2115,8 +2468,50 @@ async function resolveDecisionQueueItem(id, body = {}) {
     ].filter(Boolean).join("\n");
     await writeFile(targetPath, `${current}${block}\n`, "utf-8");
     appliedPath = relative(repoRoot, targetPath);
+    note = `${targetFile}에 승인 내용을 append했습니다.`;
   }
-  return { status: "resolved", action, item: resolved, appliedPath };
+  if ((action === "approve" || action === "edit_approve") && !target.targetPath) {
+    note = resolved.path
+      ? `반영 경로를 계산하지 못했습니다. 근거 경로 ${resolved.path} 가 프로젝트/계정 위키 문서인지 확인하세요.`
+      : "반영 경로를 계산하지 못했습니다. projectKey 또는 근거 path가 필요합니다.";
+  }
+  await appendJsonl(decisionQueueAuditPath, {
+    timestamp: now,
+    id,
+    action,
+    item: resolved,
+    appliedPath,
+    targetFile,
+    note,
+  });
+  return { status: "resolved", action, item: resolved, appliedPath, targetFile, note };
+}
+
+async function enqueueDecisionQueueItem(item = {}) {
+  const id = item.id || `decision-${Date.now()}`;
+  const store = await readJsonFile(decisionQueuePath, { version: 1, items: {} });
+  if (store.items?.[id]?.status && store.items[id].status !== "pending") {
+    return store.items[id];
+  }
+  const now = new Date().toISOString();
+  const nextItem = {
+    id,
+    status: "pending",
+    sourceType: item.sourceType || "manual",
+    kind: item.kind || "decision",
+    title: item.title || "결정 필요 항목",
+    projectKey: item.projectKey || "",
+    projectLabel: item.projectLabel || "",
+    content: item.content || "",
+    path: item.path || "",
+    createdAt: item.createdAt || now,
+    original: item.original || null,
+  };
+  store.items = store.items || {};
+  store.items[id] = nextItem;
+  await writeJsonFile(decisionQueuePath, store);
+  await appendJsonl(decisionQueueAuditPath, { timestamp: now, id, action: "enqueue", item: nextItem });
+  return nextItem;
 }
 
 function runCapture(command, args, options = {}) {
@@ -3180,6 +3575,7 @@ function rcloneCopyTimeoutMinutes(env = {}, meta = {}) {
 function parseRcloneProgressText(text = "") {
   const normalized = String(text || "").replace(/\r/g, "\n");
   const lines = normalized.split("\n").map((line) => line.trim()).filter(Boolean);
+  const oneLineProgressMatches = [...normalized.matchAll(/([\d.]+\s*(?:B|KiB|MiB|GiB|TiB)\s*\/\s*[\d.]+\s*(?:B|KiB|MiB|GiB|TiB),\s*[\d.]+%,\s*[^,\n]+\/s,\s*ETA\s*[^()\n]+(?:\s*\(xfr#[^)]+\))?)/gi)];
   const progress = {
     summary: "",
     transferred: "",
@@ -3191,6 +3587,17 @@ function parseRcloneProgressText(text = "") {
     recentLines: lines.slice(-8),
     updatedAt: new Date().toISOString(),
   };
+  if (oneLineProgressMatches.length) {
+    const latest = oneLineProgressMatches.at(-1)[1].trim();
+    progress.summary = latest;
+    const parts = latest.match(/^([^,]+),\s*([\d.]+)%,\s*([^,]+),\s*ETA\s*([^()]+)/i);
+    if (parts) {
+      progress.transferred = parts[1].trim();
+      progress.percent = Number(parts[2]);
+      progress.speed = parts[3].trim();
+      progress.eta = parts[4].trim();
+    }
+  }
   for (const line of lines.slice(-80)) {
     if (/Transferred:/i.test(line)) {
       progress.summary = line;
@@ -3354,6 +3761,15 @@ async function runCommand(command, dryRun, meta = {}) {
           collectionSummary: finalEntry.collectionSummary,
         }, 200).catch(() => {});
       }
+      await recordLlmUsage({
+        provider: "local-rule",
+        feature: `automation:${command}`,
+        reason: "automation command executed without GLM inference",
+        status: finalEntry.status,
+        durationMs: Date.parse(finalEntry.finishedAt) - Date.parse(startedAt),
+        tokens: {},
+        fallback: dryRun ? "dry_run" : "",
+      }).catch(() => null);
       await suggestPaperclipAfterAutomation(command, finalEntry).catch(() => {});
       resolvePromise(finalEntry);
     });
@@ -3399,6 +3815,32 @@ async function fullCycle(dryRun) {
   }
   return {
     runId: `${Date.now()}-full-cycle`,
+    status: steps.every((step) => ["completed", "time_limited"].includes(step.status)) ? "completed" : "failed",
+    steps,
+    createdAt: new Date().toISOString(),
+  };
+}
+
+async function continueAfterCollection() {
+  if (activeJobs.size) {
+    return {
+      status: "blocked",
+      reason: "automation_running",
+      running: [...activeJobs.values()].map((job) => ({
+        runId: job.runId,
+        command: job.command,
+        status: job.status,
+        startedAt: job.startedAt,
+        progress: job.progress,
+      })),
+    };
+  }
+  const steps = [];
+  steps.push(await runCommand("build-manifest", false, { source: "continue_after_collection" }));
+  steps.push(await runCommand("run", false, { source: "continue_after_collection" }));
+  steps.push(await runCommand("refresh-global", false, { source: "continue_after_collection" }));
+  return {
+    runId: `${Date.now()}-continue-after-collection`,
     status: steps.every((step) => ["completed", "time_limited"].includes(step.status)) ? "completed" : "failed",
     steps,
     createdAt: new Date().toISOString(),
@@ -3724,6 +4166,97 @@ async function glmDigest(text, projectHint) {
     };
   } catch (error) {
     return { ...localDigest(text, projectHint), upstreamStatus: error.message };
+  }
+}
+
+function localConflictMergeSuggestion(body = {}) {
+  const sourceLines = String(body.sourceMarkdown || "").split("\n").map((line) => line.trim()).filter(Boolean);
+  const targetLines = String(body.targetMarkdown || "").split("\n").map((line) => line.trim()).filter(Boolean);
+  const sourceOnly = sourceLines.filter((line) => line && !targetLines.includes(line)).slice(0, 5);
+  const targetOnly = targetLines.filter((line) => line && !sourceLines.includes(line)).slice(0, 5);
+  return {
+    provider: "local-fallback",
+    summary: "GLM 연결이 없어서 규칙 기반 병합 초안을 생성했습니다. 출처 우선으로 보되 대상 문서의 기존 구조를 유지하는 방식으로 검토하세요.",
+    conflictingPoints: [
+      ...sourceOnly.map((line) => `출처에만 있는 내용: ${line}`),
+      ...targetOnly.map((line) => `대상에만 있는 내용: ${line}`),
+    ].slice(0, 8),
+    mergeStrategy: [
+      "출처의 최신 사실과 수치를 우선 검토합니다.",
+      "대상 문서의 섹션 구조와 기존 문맥은 가능하면 유지합니다.",
+      "불확실한 문장은 삭제하지 말고 확인 필요 메모로 남깁니다.",
+    ],
+    caution: "자동 병합안이므로 최신값, 고객 확인 필요 항목, 수치 충돌은 사용자가 최종 검토해야 합니다.",
+    mergedMarkdown: String(body.sourceMarkdown || body.targetMarkdown || "").trim(),
+  };
+}
+
+async function suggestConflictMerge(body = {}) {
+  const { values: env } = await readEnvFile();
+  const apiKey = process.env.GLM_API_KEY || env.GLM_API_KEY;
+  const apiUrl = process.env.GLM_API_URL || env.GLM_API_URL;
+  const model = process.env.GLM_MODEL || env.GLM_MODEL || "glm-4.5";
+  if (!apiKey || !apiUrl) return localConflictMergeSuggestion(body);
+  try {
+    const payload = {
+      id: body.id || "",
+      title: body.title || "",
+      content: body.content || "",
+      projectKey: body.projectKey || "",
+      projectLabel: body.projectLabel || "",
+      sourcePath: body.sourcePath || "",
+      targetPath: body.targetPath || "",
+      sourceMarkdown: String(body.sourceMarkdown || "").slice(0, 18000),
+      targetMarkdown: String(body.targetMarkdown || "").slice(0, 18000),
+    };
+    const { payload: completion, endpoint } = await requestGlmChatCompletion(apiUrl, apiKey, {
+      model,
+      messages: [
+        {
+          role: "system",
+          content: [
+            "당신은 Obsidian 위키 충돌 병합 보조자다.",
+            "반드시 한국어 JSON 객체만 반환한다.",
+            "입력으로 출처 문서와 대상 문서를 비교해 사용자가 실무적으로 판단할 수 있는 병합안을 제시한다.",
+            "사실 확정이 어려운 항목은 단정하지 말고 확인 필요로 둔다.",
+            "키는 정확히 summary, conflictingPoints, mergeStrategy, caution, mergedMarkdown 를 사용한다.",
+            "conflictingPoints 와 mergeStrategy 는 문자열 배열이다.",
+            "mergedMarkdown 는 대상 문서에 붙여넣을 수 있는 추천 병합 초안 전체다.",
+            "출처 수치나 일정이 더 최신으로 보이면 그 근거를 반영하되, 불확실하면 [확인 필요] 표기를 남긴다.",
+          ].join(" "),
+        },
+        {
+          role: "user",
+          content: JSON.stringify(payload),
+        },
+      ],
+      temperature: 0.1,
+      max_tokens: 2800,
+      thinking: glmThinkingOptions(env),
+      response_format: { type: "json_object" },
+    }, {
+      feature: "conflict_merge_suggestion",
+      reason: "user-triggered conflict merge proposal in decision deck",
+      fallback: "local_conflict_merge",
+    });
+    const content = glmMessageContent(completion);
+    const parsed = JSON.parse(content || "{}");
+    return {
+      provider: "glm",
+      model,
+      endpoint,
+      summary: String(parsed.summary || "").trim(),
+      conflictingPoints: Array.isArray(parsed.conflictingPoints) ? parsed.conflictingPoints.map((item) => String(item)).filter(Boolean) : [],
+      mergeStrategy: Array.isArray(parsed.mergeStrategy) ? parsed.mergeStrategy.map((item) => String(item)).filter(Boolean) : [],
+      caution: String(parsed.caution || "").trim(),
+      mergedMarkdown: String(parsed.mergedMarkdown || "").trim(),
+    };
+  } catch (error) {
+    return {
+      ...localConflictMergeSuggestion(body),
+      upstreamStatus: error.message,
+      summary: `GLM 병합안 생성에 실패해 규칙 기반 초안으로 대체했습니다. ${error.message}`,
+    };
   }
 }
 
@@ -5290,8 +5823,23 @@ async function updatePaperclipTask(taskId, updates) {
   return next.find((task) => task.id === taskId);
 }
 
-async function triggerPaperclipTask(templateId, options = {}) {
-  const task = await createPaperclipTask(templateId, options);
+async function executePaperclipTask(task) {
+  if (!task?.id) throw new Error("Paperclip task id is required");
+  if (task.status === "running") throw new Error("Paperclip task is already running");
+  if (task.status === "completed" && !task.payload?.allowReRun) {
+    throw new Error("Paperclip task is already completed. Create a new task for rerun.");
+  }
+  const startedAt = new Date().toISOString();
+  await updatePaperclipTask(task.id, {
+    status: "running",
+    startedAt,
+  });
+  await prependJsonHistory(paperclipEventsPath, {
+    taskId: task.id,
+    type: "task_started",
+    message: `${task.agent}: ${task.title}`,
+    createdAt: startedAt,
+  });
   let result;
   try {
     if (task.command === "openclaw") {
@@ -5307,9 +5855,27 @@ async function triggerPaperclipTask(templateId, options = {}) {
     result = { status: "failed", error: error.message };
   }
   const status = result.status === "completed" || result.status === "sent" ? "completed" : "failed";
+  let decisionQueueItem = null;
+  if (status === "completed" && (result.markdown || result.path || task.command === "validate")) {
+    decisionQueueItem = await enqueueDecisionQueueItem({
+      id: `paperclip-${task.id}`,
+      sourceType: "paperclip_task",
+      kind: task.templateId === "validator" ? "decision" : "knowledge",
+      title: `Paperclip 결과 검토: ${task.title}`,
+      projectKey: task.payload?.projectKey || task.payload?.projectHint || "",
+      content: result.markdown || result.summary || JSON.stringify(result).slice(0, 4000),
+      path: result.path || "",
+      original: {
+        taskId: task.id,
+        templateId: task.templateId,
+        command: task.command,
+        result,
+      },
+    }).catch(() => null);
+  }
   const updatedTask = await updatePaperclipTask(task.id, {
     status,
-    result,
+    result: decisionQueueItem ? { ...result, decisionQueueItemId: decisionQueueItem.id } : result,
     finishedAt: new Date().toISOString(),
   });
   await prependJsonHistory(paperclipEventsPath, {
@@ -5320,6 +5886,18 @@ async function triggerPaperclipTask(templateId, options = {}) {
     createdAt: new Date().toISOString(),
   });
   return { task: updatedTask, result };
+}
+
+async function triggerPaperclipTask(templateId, options = {}) {
+  const task = await createPaperclipTask(templateId, options);
+  return executePaperclipTask(task);
+}
+
+async function triggerExistingPaperclipTask(taskId) {
+  const tasks = await readJsonFile(paperclipTasksPath, []);
+  const task = tasks.find((item) => item.id === taskId);
+  if (!task) throw new Error(`Paperclip task not found: ${taskId}`);
+  return executePaperclipTask(task);
 }
 
 function paperclipSkillSystemPrompt(templateId) {
@@ -5359,17 +5937,30 @@ function extractLocalPaths(text, extensions = []) {
 function parseMultipartForm(buffer, contentType = "") {
   const boundary = contentType.match(/boundary=([^;]+)/i)?.[1];
   if (!boundary) throw new Error("multipart boundary is required");
-  const boundaryText = `--${boundary}`;
-  const raw = buffer.toString("binary");
-  const parts = raw.split(boundaryText).slice(1, -1);
+  const boundaryBuffer = Buffer.from(`--${boundary}`);
+  const separatorBuffer = Buffer.from("\r\n\r\n");
   const fields = {};
   const files = [];
-  for (const part of parts) {
-    const trimmed = part.replace(/^\r\n/, "").replace(/\r\n$/, "");
-    const separator = trimmed.indexOf("\r\n\r\n");
-    if (separator < 0) continue;
-    const headerText = trimmed.slice(0, separator);
-    const bodyText = trimmed.slice(separator + 4);
+  let cursor = 0;
+
+  while (cursor < buffer.length) {
+    const boundaryIndex = buffer.indexOf(boundaryBuffer, cursor);
+    if (boundaryIndex < 0) break;
+    cursor = boundaryIndex + boundaryBuffer.length;
+    if (buffer[cursor] === 45 && buffer[cursor + 1] === 45) break;
+    if (buffer[cursor] === 13 && buffer[cursor + 1] === 10) cursor += 2;
+    const headerEnd = buffer.indexOf(separatorBuffer, cursor);
+    if (headerEnd < 0) break;
+    const headerText = buffer.slice(cursor, headerEnd).toString("utf-8");
+    cursor = headerEnd + separatorBuffer.length;
+    let nextBoundary = buffer.indexOf(boundaryBuffer, cursor);
+    if (nextBoundary < 0) nextBoundary = buffer.length;
+    let bodyBuffer = buffer.slice(cursor, nextBoundary);
+    if (bodyBuffer.length >= 2 && bodyBuffer.at(-2) === 13 && bodyBuffer.at(-1) === 10) {
+      bodyBuffer = bodyBuffer.subarray(0, bodyBuffer.length - 2);
+    }
+    cursor = nextBoundary;
+
     const disposition = headerText.match(/content-disposition:\s*form-data;([^\r\n]+)/i)?.[1] || "";
     const name = disposition.match(/name="([^"]+)"/i)?.[1] || "";
     const filename = disposition.match(/filename="([^"]*)"/i)?.[1] || "";
@@ -5380,10 +5971,10 @@ function parseMultipartForm(buffer, contentType = "") {
         fieldName: name,
         filename,
         mimeType,
-        buffer: Buffer.from(bodyText, "binary"),
+        buffer: bodyBuffer,
       });
     } else {
-      fields[name] = Buffer.from(bodyText, "binary").toString("utf-8");
+      fields[name] = bodyBuffer.toString("utf-8");
     }
   }
   return { fields, files };
@@ -5811,6 +6402,10 @@ const server = createServer(async (req, res) => {
       const result = body.command === "full-cycle" ? await fullCycle(Boolean(body.dryRun)) : await runCommand(body.command, Boolean(body.dryRun));
       return sendJson(res, result.status === "completed" ? 200 : 500, result);
     }
+    if (pathname === "/api/automation/continue-after-collection" && req.method === "POST") {
+      const result = await continueAfterCollection();
+      return sendJson(res, result.status === "blocked" ? 409 : result.status === "completed" ? 200 : 500, result);
+    }
     if (pathname === "/api/automation/target-rclone-copy" && req.method === "POST") {
       const body = await readBody(req);
       if (!body.remotePath) return sendJson(res, 400, { error: "remotePath is required" });
@@ -5881,6 +6476,10 @@ const server = createServer(async (req, res) => {
       const workspace = url.searchParams.get("workspace") || "rtm";
       return sendJson(res, 200, { pages: await wikiIndex(workspace), workspace });
     }
+    if (pathname === "/api/wiki/project-governance" && req.method === "GET") {
+      const workspace = url.searchParams.get("workspace") || "rtm";
+      return sendJson(res, 200, await projectKeyGovernance(workspace));
+    }
     if (pathname === "/api/wiki/status" && req.method === "GET") {
       return sendJson(res, 200, { catalog: wikiStatusCatalog, store: await wikiStatusStore() });
     }
@@ -5917,6 +6516,10 @@ const server = createServer(async (req, res) => {
     if (pathname === "/api/wiki/search/brief" && req.method === "POST") {
       const body = await readBody(req);
       return sendJson(res, 200, await searchWikiBrief(body.query || "", body.paths || [], body.mode || "standard", body.workspace || "rtm"));
+    }
+    if (pathname === "/api/wiki/conflict-merge" && req.method === "POST") {
+      const body = await readBody(req);
+      return sendJson(res, 200, await suggestConflictMerge(body));
     }
     if (pathname === "/api/wiki/page" && req.method === "GET") {
       const path = url.searchParams.get("path") || "";
@@ -6055,6 +6658,10 @@ const server = createServer(async (req, res) => {
     if (pathname === "/api/paperclip/tasks" && req.method === "POST") {
       const body = await readBody(req);
       return sendJson(res, 200, { task: await createPaperclipTask(body.templateId || "validator", body) });
+    }
+    if (pathname.match(/^\/api\/paperclip\/tasks\/[^/]+\/trigger$/) && req.method === "POST") {
+      const id = decodeURIComponent(pathname.split("/")[4]);
+      return sendJson(res, 200, await triggerExistingPaperclipTask(id));
     }
     if (pathname === "/api/paperclip/trigger" && req.method === "POST") {
       const body = await readBody(req);

@@ -1,0 +1,166 @@
+{
+  "type": "slack_channel_filtered_export",
+  "workspace": "RTM Slack",
+  "collected_at": "2026-04-30T03:35:27.248712+00:00",
+  "channel": {
+    "id": "C07VAGXBPT6",
+    "name": "hubble-pjt-어드벤스일렉트릭코리아",
+    "type": "public_channel",
+    "is_archived": false,
+    "is_private": false,
+    "created": "2024-11-07T05:09:35+00:00",
+    "topic": "",
+    "purpose": "",
+    "member_count": 13,
+    "routing": {
+      "channel_bucket": "project",
+      "conversation_mode": "project_updates",
+      "rationale": "project_channel_prefix",
+      "wiki_workspace": "rtm",
+      "wiki_target_root": "obsidian/Wiki/Common/Slack_Project_Intake",
+      "wiki_target_kind": "common"
+    }
+  },
+  "routing": {
+    "channel_profile": {
+      "channel_bucket": "project",
+      "conversation_mode": "project_updates",
+      "rationale": "project_channel_prefix",
+      "wiki_workspace": "rtm",
+      "wiki_target_root": "obsidian/Wiki/Common/Slack_Project_Intake",
+      "wiki_target_kind": "common",
+      "project_wiki_target_root": "obsidian/Wiki/Common/Slack_Project_Intake",
+      "company_wiki_target_root": "obsidian/Wiki/Common/Slack_Company_News"
+    },
+    "primary_bucket": "project",
+    "bucket_counts": {
+      "project": 2,
+      "company_news": 0,
+      "casual": 1
+    },
+    "wiki_targets": [
+      {
+        "path": "obsidian/Wiki/Common/Slack_Project_Intake",
+        "count": 2
+      }
+    ]
+  },
+  "history_window": {
+    "oldest_ts": "1776656234.025783",
+    "limit_per_channel": 500,
+    "include_threads": true,
+    "include_files": true
+  },
+  "filter": {
+    "provider": "local_rule",
+    "summary": "GLM unavailable; local rule filter applied",
+    "kept_count": 2,
+    "excluded_count": 1
+  },
+  "messages": [
+    {
+      "ts": "1776830593.287039",
+      "type": "message",
+      "subtype": null,
+      "user": "U0328CH80JV",
+      "text": "2026.04.22(수) 어드벤스 일렉트릭 방문\n참석 : 최선우, 이여경, 배명식\n\n1. 검사기 성능\n - 불량 검출 확인 : 이전 회의에서 언급되었던 라벨 누락 등의 불량이 현재는 정상적으로 검출되고 있음.\n - 레시피 최적화 : 레시피(설정값)를 조정하며 안정화 작업 중\n\n*2. 행정 및 대금 관련*\n - 납품 확인서 : 인감 날인 후 스캔 본 공유하기로 함.\n - 산출물 : 오늘/내일중으로 최종 산출물 정리 회신하기로함.\n *- 대금 입금: 이번 달 28일경 입금 예정*\n\n3. 담당자 변경 및 인수인계\n - 신규 담당자: 최선우 계장 부서 이동으로 향후 업무는 임상혁 대리가 담당 예정.\n\n4. 향후 일정\n - 5월 6일에 교육 예정.\n - 5월 6일 방문 시 교육 후 식사 예정.(일정 가능시) <@U04C3UYFY1F> 참고해주세요.",
+      "thread_ts": "1776830593.287039",
+      "reply_count": 1,
+      "reply_users": [
+        "U0328CH80JV"
+      ],
+      "latest_reply": "1776833725.280389",
+      "reactions": [
+        {
+          "name": "+1",
+          "users": [
+            "U02MA1AEU8K",
+            "U05AWGZ1TRD",
+            "U04C3UYFY1F"
+          ],
+          "count": 3
+        }
+      ],
+      "edited": null,
+      "files": [],
+      "thread_replies": [
+        {
+          "ts": "1776833725.280389",
+          "type": "message",
+          "subtype": null,
+          "user": "U0328CH80JV",
+          "text": "세금계산서는 전체 금액이나, 선금 50% 는 이미 받았으므로, 잔금 50% 입금 예정이니 참고해주세요.",
+          "thread_ts": "1776830593.287039",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [
+            {
+              "name": "+1",
+              "users": [
+                "U04C3UYFY1F"
+              ],
+              "count": 1
+            },
+            {
+              "name": "ok_hand",
+              "users": [
+                "U04C3UYFY1F"
+              ],
+              "count": 1
+            }
+          ],
+          "edited": null,
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1776861603.447019",
+      "type": "message",
+      "subtype": null,
+      "user": "U0328CH80JV",
+      "text": "어드벤스 문서 중에 \"AI 모델 테스트 결과서\" 가 있는데 이 문서좀 부탁합니다.\n현재 배포된 모델 기준으로 성능이 정리되어 있으면 적당할듯 합니다.\n관련해서 내일 잠시 얘기좀 해보시죠. <@U02MA1AEU8K>",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [
+        {
+          "name": "white_check_mark",
+          "users": [
+            "U02MA1AEU8K"
+          ],
+          "count": 1
+        }
+      ],
+      "edited": null,
+      "files": []
+    }
+  ],
+  "routed_messages": [
+    {
+      "ts": "1776830593.287039",
+      "bucket": "project",
+      "reason": "project_keywords",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Project_Intake",
+      "text": "2026.04.22(수) 어드벤스 일렉트릭 방문\n참석 : 최선우, 이여경, 배명식\n\n1. 검사기 성능\n - 불량 검출 확인 : 이전 회의에서 언급되었던 라벨 누락 등의 불량이 현재는 정상적으로 검출되고 있음.\n - 레시피 최적화 : 레시피(설정값)를 조정하며 안정화 작업 중\n\n*2. 행정 및 대금 관련*\n - 납품 확인서 : 인감 날인 후 스캔 본 공유하기로 함.\n - 산출물 : 오늘/내일중으로 최종 산출물 정리 회신하기로함.\n *- 대금 입금: 이번 달 28일경 입금 예정*\n\n3. 담당자 변경 및 인수인계\n - 신규 담당자: 최선우 계장 부서 이동으로 향후 업무는 임상혁 대리가 담당 예정.\n\n4. 향후 일정\n - 5월 6일에 교육 예정.\n - 5월 6일 방문 시 교육 후 식사 예정.(일정 가능시) <@U04C3UYFY1F> 참고해주세요."
+    },
+    {
+      "ts": "1776861603.447019",
+      "bucket": "project",
+      "reason": "project_keywords",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Project_Intake",
+      "text": "어드벤스 문서 중에 \"AI 모델 테스트 결과서\" 가 있는데 이 문서좀 부탁합니다.\n현재 배포된 모델 기준으로 성능이 정리되어 있으면 적당할듯 합니다.\n관련해서 내일 잠시 얘기좀 해보시죠. <@U02MA1AEU8K>"
+    }
+  ],
+  "excluded_messages": [
+    {
+      "ts": "1777520234.656759",
+      "reason": "system_membership_event",
+      "bucket": "casual",
+      "text": "<@U0B15H1AQJV> has joined the channel",
+      "subtype": "channel_join"
+    }
+  ]
+}

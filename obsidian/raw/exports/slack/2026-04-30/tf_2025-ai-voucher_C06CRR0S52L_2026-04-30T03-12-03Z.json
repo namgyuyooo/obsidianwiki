@@ -1,0 +1,38 @@
+{
+  "type": "slack_channel_export",
+  "workspace": "RTM Slack",
+  "collected_at": "2026-04-30T03:12:03.517731+00:00",
+  "channel": {
+    "id": "C06CRR0S52L",
+    "name": "tf_2025-ai-voucher",
+    "type": "public_channel",
+    "is_archived": false,
+    "is_private": false,
+    "created": "2024-01-02T02:19:59+00:00",
+    "topic": "",
+    "purpose": "",
+    "member_count": 15
+  },
+  "history_window": {
+    "oldest_ts": "1777345926.164447",
+    "limit_per_channel": 50,
+    "include_threads": true,
+    "include_files": true
+  },
+  "messages": [
+    {
+      "ts": "1777518726.807529",
+      "type": "message",
+      "subtype": "channel_join",
+      "user": "U0B15H1AQJV",
+      "text": "<@U0B15H1AQJV> has joined the channel",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    }
+  ]
+}

@@ -1,0 +1,372 @@
+{
+  "type": "slack_channel_export",
+  "workspace": "RTM Slack",
+  "collected_at": "2026-04-30T03:35:27.248712+00:00",
+  "channel": {
+    "id": "C0A9JG263FZ",
+    "name": "tf_psk-업무대응",
+    "type": "public_channel",
+    "is_archived": false,
+    "is_private": false,
+    "created": "2026-01-21T07:44:17+00:00",
+    "topic": "",
+    "purpose": "",
+    "member_count": 16,
+    "routing": {
+      "channel_bucket": "mixed",
+      "conversation_mode": "mixed_triage",
+      "rationale": "mixed_channel_prefix",
+      "wiki_workspace": "rtm",
+      "wiki_target_root": "obsidian/Wiki/Common/Slack_Project_Intake",
+      "wiki_target_kind": "common"
+    }
+  },
+  "routing": {
+    "channel_bucket": "mixed",
+    "conversation_mode": "mixed_triage",
+    "rationale": "mixed_channel_prefix",
+    "wiki_workspace": "rtm",
+    "wiki_target_root": "obsidian/Wiki/Common/Slack_Project_Intake",
+    "wiki_target_kind": "common",
+    "project_wiki_target_root": "obsidian/Wiki/Common/Slack_Project_Intake",
+    "company_wiki_target_root": "obsidian/Wiki/Common/Slack_Company_News"
+  },
+  "history_window": {
+    "oldest_ts": "1776656403.031590",
+    "limit_per_channel": 500,
+    "include_threads": true,
+    "include_files": true
+  },
+  "messages": [
+    {
+      "ts": "1776907803.755329",
+      "type": "message",
+      "subtype": "bot_message",
+      "user": "B0ADXSTP01E",
+      "text": "*&lt;공지사항&gt;*\n\n*[1] <https://docs.google.com/spreadsheets/d/1FuQCkBm_CbGOJKh9Co-Czc1vhLhfeFwGb8ovZxvwIAQ/edit?gid=112627206#gid=112627206|PSK_MI-RTM 주간회의록> 작성*\n• 금주 주간회의록 작성 부탁드립니다.\n　\n*[2] PSK-RTM 주간회의 참석자 명단*\n• *EHM 고도화 Squad Leader* <@U01C4A3GNQL> \n    ◦ 고객사 데모 현황공유 및 논의 (Intel, TI, 삼성전자, Micron 등) \n    ◦ Health Score 기반 고도화 아이템 발굴 현황공유 및 논의\n• *AI Agent Squad Leader* <@UBKL1FZ28> \n    ◦ PE Agent PJT 현황공유 및 논의\n• *TS 자산화 Squad Leader* <@U0235585LTZ> \n    ◦ 고객사 데모 현황공유 및 논의 (Intel, TI, 삼성전자, Micron 등)\n    ◦ Health Score 기반 고도화 아이템 발굴 현황공유 및 논의\n• *Value Delivery #3 Squad Leader* <@U0328CH80JV>  \n    ◦ Precia Vision 솔루션 PJT 현황공유 및 논의\n• *CEO* <@UBL1JVCSZ> ",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1776917561.576709",
+      "type": "message",
+      "subtype": null,
+      "user": "U03NJDDPZPZ",
+      "text": ":pushpin: *PSK-RTM 공동기술개발 계약 건 관련 검토 및 의사결정 필요사항 공유*\n> 수신 : <@UBL1JVCSZ> <@UBKL1FZ28> <@U04C3UYFY1F> \n> 참조 : <@U01C4A3GNQL> <@U0328CH80JV> <@U0235585LTZ> <@U016489PE5S> \n*어제(4/22) PSK 날인된 공동기술개발 (5억원짜리) 계약서를 대표님께 전달 받아 검토 결과, 다음과 같은 특이사항들이 있습니다.*\n> 날인된 계약서 2부 확인 결과, 다른 항목들은 변동사항 없이 그대로였으나 첨부 이미지와 같이 '제20조(인공지능 관련 법령 준수)' 조항이 새로 추가되었음.\n> 그러나, 제20조가 추가되었음을 하태경 책임 또는 MI그룹 구성원에게 사전에 전달 받은 바 없음.\n> • 혹시나 휴가 또는 외근 등 일정으로 매주 금요일 PSK 주간회의에 참석하지 못했을 때, 제가 아닌 다른 RTM 구성원에게 언급했을 수도 있겠으나 저한테 직접 제20조 추가 부분에 대한 언급/고지를 한 적이 없음\n> • PSK 법무팀(또는 계약 검토 관련 팀)에서 계약서 내용 변경 후 하태경 책임님께 고지를 안 해서 책임님도 변경된 내용의 존재 여부를 모르고 날인본을 전달해준 경우일 수도 있을 것 같음\n아무튼 핵심은 2025년 1월 21일에 공포되었고 2026년 1월 22일부터 시행되는 'AI 기본법(인공지능 발전과 신뢰 기반 조성 등에 관한 기본법)'에 따라 '고영향 인공지능'에 해당하거나, '생성형 인공지능'을 사용할 경우 특정 규칙들을 준수해야 하는 의무가 발생합니다.\n\n알티엠처럼 제조 AI 솔루션을 개발/공급하는 경우, 고영향 AI에는 해당하지 않는 것으로 확인됩니다. (RTM의 AI 적용/서비스 분야가 채용, 금융(대출), 의료, 공공 서비스 영역에 해당하는가? → NO)\n\n*[이슈사항 1 : 제품 관련]*\n> 그러나, TS Agent 등 올해부터 본격적으로 제품화/상용화 중인 솔루션들은 LLM 모델을 사용하기에 '생성형 인공지능'을 사용하는 경우에 해당하여, AI 기본법 제31조 제2항에 의거하여 \"생성형 AI로 만든 이미지·데이터·리포트에 \"AI 생성\" 표시(워터마크 등)\"가 되도록 반영해야 하는 의무가 발생합니다.\n*[이슈사항 2 : 계약 관련]*\n> Claude를 활용하여 제20조에 대하여 법적 이슈사항이 있는지 여부에 대한 상세검토 결과, 공동기술개발계약이라는 목적과 성격에도 불구하고 AI 기본법을 위반하는 상황이 발생 시 그 책임은 온전히 RTM이 지는 것으로 규정하고 있습니다.\n> Claude 검토 결과 인용 : \"결과물(AI)의 법령 준수 책임을 을에게 100% 떠넘기고 있습니다. 공동으로 개발한 AI에 대해 갑도 결국 \"인공지능사업자\"에 해당할 가능성이 높음에도, 마지막 문장에서 **\"모든 법적 책임을 을이 부담하며 갑에게 손해가 발생한 경우 배상\"**이라고 규정한 것은 공동개발의 본질과 맞지 않습니다.\"\n> 또한 \"관련 법령\" 표현의 모호성과 손해배상 조항의 상한 부재 등의 이슈로 인해 \"법정 과태료는 최대 3천만원이지만, 계약상 손해배상은 갑의 평판 손해·영업 손실·재개발 비용 등으로 이론상 무한 확장 가능하다\"는 책임범위 과다의 이슈가 존재합니다.\n*결론적으로 의사결정 필요사항은 다음과 같습니다.*\n• 실질적으로 AI 기본법으로 인한 문제 발생 가능성이 (현재로서는) 낮을 것이므로 그냥 이대로 계약 체결할 것인지\n• 아니면 제20조 수정을 진행한 후 계약 체결 할 것인지 결정이 필요합니다.",
+      "thread_ts": "1776917561.576709",
+      "reply_count": 10,
+      "reply_users": [
+        "U03NJDDPZPZ",
+        "UBL1JVCSZ",
+        "UBKL1FZ28"
+      ],
+      "latest_reply": "1776925189.747029",
+      "reactions": [],
+      "edited": {
+        "user": "U03NJDDPZPZ",
+        "ts": "1776917676.000000"
+      },
+      "files": [
+        {
+          "id": "F0B056LMZ16",
+          "name": "IMG_0089.jpg",
+          "title": "IMG_0089.jpg",
+          "mimetype": "image/jpeg",
+          "filetype": "jpg",
+          "pretty_type": "JPEG",
+          "size": 417031,
+          "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0B056LMZ16/img_0089.jpg",
+          "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0B056LMZ16/img_0089.jpg"
+        }
+      ],
+      "thread_replies": [
+        {
+          "ts": "1776917650.776089",
+          "type": "message",
+          "subtype": null,
+          "user": "U03NJDDPZPZ",
+          "text": "상기 의사결정 필요사항에 대하여 코멘트 주시면 그에 맞춰 업무 진행하겠습니다. <@UBL1JVCSZ> <@UBKL1FZ28>",
+          "thread_ts": "1776917561.576709",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776917784.189649",
+          "type": "message",
+          "subtype": null,
+          "user": "U03NJDDPZPZ",
+          "text": "LLM 활용 기반 제품들 (TS/RCA/기타 Agents) 경우, 생성형 AI 기반 서비스에 해당하므로, AI 기본법에서 규정하는 규칙들을 준수하고, 워터마크 표시 등 일부 사항은 제품에 반영하는 작업이 필요해보입니다. <@UBKL1FZ28> <@U0235585LTZ>",
+          "thread_ts": "1776917561.576709",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776917863.662969",
+          "type": "message",
+          "subtype": null,
+          "user": "UBL1JVCSZ",
+          "text": "수정할 경우 어떻게 조항을 작성해야할지 제안을 만들어 주시겠어요? 정확히는 법무검토를 받아야겠지만 그렇게 되면 우리가 거의 가능성이 없는 사안에 대해 비용을 지불할 거 같으니",
+          "thread_ts": "1776917561.576709",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [
+            {
+              "name": "white_check_mark",
+              "users": [
+                "U03NJDDPZPZ"
+              ],
+              "count": 1
+            }
+          ],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776917905.154529",
+          "type": "message",
+          "subtype": null,
+          "user": "UBL1JVCSZ",
+          "text": "건영님과 클로드가 고민한거 알려주시면 보고 하태경 책임에게 검토해 달라고 하면 될 거 같습니다",
+          "thread_ts": "1776917561.576709",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [
+            {
+              "name": "white_check_mark",
+              "users": [
+                "U03NJDDPZPZ"
+              ],
+              "count": 1
+            }
+          ],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776918007.845199",
+          "type": "message",
+          "subtype": null,
+          "user": "UBKL1FZ28",
+          "text": "제가 보기에는 무리가 없어보입니다. ",
+          "thread_ts": "1776917561.576709",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [
+            {
+              "name": "white_check_mark",
+              "users": [
+                "U03NJDDPZPZ"
+              ],
+              "count": 1
+            }
+          ],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776918092.703769",
+          "type": "message",
+          "subtype": null,
+          "user": "U03NJDDPZPZ",
+          "text": "일단 클로드 기반 수정안은 만들어서 공유 드리겠습니다.",
+          "thread_ts": "1776917561.576709",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776918375.543299",
+          "type": "message",
+          "subtype": null,
+          "user": "U03NJDDPZPZ",
+          "text": ":arrow_down: Claude 기반으로 작성한 수정안 공유 드립니다.\n\n*제20조(인공지능 관련 법령 준수 및 책임 분담)*\n\n*① (공동 준수 의무)* 갑과 을은 본 계약의 이행 및 본 계약에 따라 공동으로 개발되는 인공지능 제품·서비스(이하 \"본 결과물\")의 제공과 관련하여 「인공지능 발전과 신뢰 기반 조성 등에 관한 기본법」(이하 \"AI 기본법\") 및 그 하위법령·고시·가이드라인을 성실히 준수하여야 한다.\n\n*② (당사자의 역할 구분)* 본 조의 적용에 있어 당사자의 역할은 다음과 같이 구분한다.\n　1. 을: AI 기본법 제2조 제7호 가목에 따른 \"인공지능개발사업자\"로서 본 결과물의 설계·학습·개발·검증을 주도한다.\n　2. 갑: AI 기본법 제2조 제7호 나목에 따른 \"인공지능이용사업자\"로서 본 결과물을 활용하여 최종 이용자에게 제품·서비스를 제공한다.\n　3. 당사자 일방이 법령상 두 지위를 겸하는 경우 그 지위에 따른 의무를 함께 부담한다.\n\n*③ (을의 주된 이행 사항)* 을은 AI 기본법상 개발·기술적 조치와 관련하여 다음 사항을 주된 책임으로 이행한다.\n　1. AI 기본법 제32조에 따른 인공지능 안전성 확보 조치(해당 시)\n　2. AI 기본법 제34조 제1항 제2호에 따른 최종결과 도출 기준·학습용데이터 개요 등에 관한 설명자료의 작성·제공(해당 시)\n　3. AI 기본법 제34조 제1항 제5호에 따른 조치 근거 문서의 작성 및 보관(해당 시)\n　4. 학습용데이터의 적법한 수집·처리 및 저작권·개인정보 관련 법령의 준수\n　5. 본 결과물에 대한 위험 식별·평가·완화 방안의 기술적 구현\n\n*④ (갑의 주된 이행 사항)* 갑은 본 결과물을 활용하여 제품·서비스를 제공하는 단계에서 다음 사항을 주된 책임으로 이행한다.\n　1. AI 기본법 제31조 제1항에 따른 AI 기반 운용 사실의 최종 이용자에 대한 사전 고지\n　2. AI 기본법 제31조 제2항·제3항에 따른 생성형 AI 결과물 표시 및 합성 결과물 인식 표시(해당 시)\n　3. AI 기본법 제34조 제1항 제4호에 따른 이용자 보호 방안의 수립·운영(해당 시)\n　4. 갑이 국내에 주소·영업소가 없는 경우 AI 기본법 제36조에 따른 국내대리인 지정\n　5. 최종 이용자와의 직접적 접점에서 발생하는 고지·표시 및 민원 대응\n\n*⑤ (개발사업자 이행의 효과)* AI 기본법 시행령에 따라, 을이 제3항의 의무를 이행하고 갑이 본 결과물에 중대한 기능 변경을 가하지 아니한 경우, 갑의 관련 의무 이행은 을의 이행에 의하여 충족된 것으로 본다. 을은 갑이 자신의 의무 이행을 소명할 수 있도록 관련 자료를 합리적인 범위에서 제공한다.\n\n*⑥ (상호 협력 의무)* 갑과 을은 다음 사항에 관하여 상호 성실히 협력한다.\n　1. 본 결과물의 고영향 인공지능 해당 여부 검토 및 판단\n　2. 과학기술정보통신부 등 관계 당국의 사실조사·자료제출 요구에 대한 공동 대응\n　3. AI 기본법 제40조 제3항에 따른 중지·시정명령이 발령된 경우 그 이행을 위한 필요한 조치\n　4. AI 기본법 및 관련 하위법령의 제·개정에 따른 본 결과물의 수정·보완\n\n*⑦ (과실에 따른 책임 분담)* AI 기본법 위반으로 인하여 과태료, 벌금, 시정명령 이행 비용, 제3자로부터의 손해배상청구 등 법적 책임(이하 \"법적 책임\")이 발생한 경우 그 책임은 다음 원칙에 따라 분담한다.\n　1. *을의 고의 또는 과실*로 제3항 각 호의 사항을 위반하여 법적 책임이 발생한 경우, *을이 이를 전부 부담*한다.\n　2. *갑의 고의 또는 과실*로 제4항 각 호의 사항을 위반하여 법적 책임이 발생한 경우, *갑이 이를 전부 부담*한다.\n　3. 양 당사자의 고의 또는 과실이 경합하여 법적 책임이 발생한 경우, *각자의 과실 비율에 따라 분담*한다.\n　4. 어느 당사자의 고의 또는 과실에도 귀책되지 아니하는 사유(법령의 사후 제·개정, 관계 당국의 해석 변경 등)로 법적 책임이 발생한 경우, 당사자는 상호 협의하여 분담 방안을 정한다.\n\n*⑧ (손해배상의 범위와 한도)* 제7항에 따라 책임을 부담하는 당사자는 상대방에게 이로 인하여 발생한 *직접 손해*(과태료·벌금, 시정 이행 비용, 관계 당국 대응을 위한 법률 자문 비용 등)를 배상한다. 배상액은 본 계약의 총 계약금액을 한도로 하며, 간접손해·특별손해·일실이익·평판 손해는 배상 범위에서 제외한다. 다만, 책임 당사자의 *고의 또는 중과실*로 인한 위반의 경우에는 위 한도 및 제외 범위를 적용하지 아니한다.\n\n*⑨ (통지 및 협의 의무)* 어느 당사자가 관계 당국으로부터 AI 기본법 관련 조사·질의·명령을 받거나 제3자로부터 관련 분쟁이 제기된 경우, 지체 없이 상대방에게 그 사실을 통지하고 대응 방안을 협의하여야 한다.",
+          "thread_ts": "1776917561.576709",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": {
+            "user": "U03NJDDPZPZ",
+            "ts": "1776918402.000000"
+          },
+          "files": []
+        },
+        {
+          "ts": "1776918629.149799",
+          "type": "message",
+          "subtype": null,
+          "user": "U03NJDDPZPZ",
+          "text": "방금 하태경 책임님께 DM으로 확인해보니, 전에 진우님께 말씀드렸다고 하네요.\n\n현재 작성된 제20조 내용대로 진행해도 괜찮으면 오늘 날인하겠습니다.\n\n대표님의 최종 의견 부탁드립니다. <@UBL1JVCSZ>",
+          "thread_ts": "1776917561.576709",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776918670.085299",
+          "type": "message",
+          "subtype": null,
+          "user": "UBL1JVCSZ",
+          "text": "네 그럼 그냥 현재 내용대로 날인하고 전달 부탁드립니다",
+          "thread_ts": "1776917561.576709",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [
+            {
+              "name": "white_check_mark",
+              "users": [
+                "U03NJDDPZPZ"
+              ],
+              "count": 1
+            }
+          ],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776925189.747029",
+          "type": "message",
+          "subtype": null,
+          "user": "UBKL1FZ28",
+          "text": "저한테 구두로 3주 전쯤에 AI 관련해서 기본 법령이 생긴 게 있고 그걸 준수 하는 기본 조항들이 들어갈 거다 이야기 한 적이 있습니다. 문구는 저도 지금 처음 보는 거구요. 실제로 내용도 그래 보여서 문제 없을 것 같습니다.",
+          "thread_ts": "1776917561.576709",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [
+            {
+              "name": "넵",
+              "users": [
+                "U03NJDDPZPZ"
+              ],
+              "count": 1
+            }
+          ],
+          "edited": null,
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1776917577.369139",
+      "type": "message",
+      "subtype": "channel_join",
+      "user": "U016489PE5S",
+      "text": "<@U016489PE5S> has joined the channel",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1776996615.793889",
+      "type": "message",
+      "subtype": null,
+      "user": "U016489PE5S",
+      "text": "계약서 공유 드립니다~^^",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [
+        {
+          "name": "감사콩",
+          "users": [
+            "U03NJDDPZPZ"
+          ],
+          "count": 1
+        }
+      ],
+      "edited": null,
+      "files": [
+        {
+          "id": "F0AUT4C1JAF",
+          "name": "PSK_RTM 2026_공동기술개발 계약서.pdf",
+          "title": "PSK_RTM 2026_공동기술개발 계약서.pdf",
+          "mimetype": "application/pdf",
+          "filetype": "pdf",
+          "pretty_type": "PDF",
+          "size": 534036,
+          "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0AUT4C1JAF/psk_rtm_2026_____________________________.pdf",
+          "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0AUT4C1JAF/psk_rtm_2026_____________________________.pdf"
+        }
+      ]
+    },
+    {
+      "ts": "1776996736.688529",
+      "type": "message",
+      "subtype": null,
+      "user": "U016489PE5S",
+      "text": "<@UBKL1FZ28> 문서 보관함에 계약서 업로드 하였습니다.",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [
+        {
+          "name": "white_check_mark",
+          "users": [
+            "UBKL1FZ28"
+          ],
+          "count": 1
+        }
+      ],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1777512602.570359",
+      "type": "message",
+      "subtype": "bot_message",
+      "user": "B0ADXSTP01E",
+      "text": "*&lt;공지사항&gt;*\n\n*[1] <https://docs.google.com/spreadsheets/d/1FuQCkBm_CbGOJKh9Co-Czc1vhLhfeFwGb8ovZxvwIAQ/edit?gid=112627206#gid=112627206|PSK_MI-RTM 주간회의록> 작성*\n• 금주 주간회의록 작성 부탁드립니다.\n　\n*[2] PSK-RTM 주간회의 참석자 명단*\n• *EHM 고도화 Squad Leader* <@U01C4A3GNQL> \n    ◦ 고객사 데모 현황공유 및 논의 (Intel, TI, 삼성전자, Micron 등) \n    ◦ Health Score 기반 고도화 아이템 발굴 현황공유 및 논의\n• *AI Agent Squad Leader* <@UBKL1FZ28> \n    ◦ PE Agent PJT 현황공유 및 논의\n• *TS 자산화 Squad Leader* <@U0235585LTZ> \n    ◦ 고객사 데모 현황공유 및 논의 (Intel, TI, 삼성전자, Micron 등)\n    ◦ Health Score 기반 고도화 아이템 발굴 현황공유 및 논의\n• *Value Delivery #3 Squad Leader* <@U0328CH80JV>  \n    ◦ Precia Vision 솔루션 PJT 현황공유 및 논의\n• *CEO* <@UBL1JVCSZ> ",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1777520403.654429",
+      "type": "message",
+      "subtype": "channel_join",
+      "user": "U0B15H1AQJV",
+      "text": "<@U0B15H1AQJV> has joined the channel",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    }
+  ]
+}

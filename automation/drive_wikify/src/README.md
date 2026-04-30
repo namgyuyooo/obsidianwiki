@@ -36,7 +36,7 @@
 - `python -m drive_wikify.cli slack-channels --json`
 - `python -m drive_wikify.cli slack-collect --channel sales_team --channel pjt_zeus_ai바우처 --json`
 
-Slack 수집은 위키 반영을 바로 수행하지 않는다. 먼저 raw export와 상태 파일을 남기고, 이후 `Sources.md`, `Evidence_Log.md`, `Conflict_Register.md`, `Change_Log.md`로 승격하는 후속 단계에서 해석/검수한다.
+Slack 수집은 raw export와 filtered export를 남긴 뒤, 분기된 `wiki_target` 기준으로 `Sources.md`, `Evidence_Log.md`, `Conflict_Register.md`, `Change_Log.md`에 append 승격한다. 다만 GLM 필터가 실패하면 상태 파일에 `filter_error`를 남기고 `local_rule`로 폴백한다.
 
 ## 남은 보강 포인트
 

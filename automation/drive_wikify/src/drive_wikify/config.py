@@ -186,6 +186,21 @@ class RuntimeConfig:
     slack_oldest_days: int = 30
     slack_include_threads: bool = True
     slack_include_files: bool = True
+    slack_api_min_interval_seconds: float = 1.2
+    slack_history_page_pause_seconds: float = 1.0
+    slack_thread_pause_seconds: float = 1.0
+    slack_channel_pause_seconds: float = 2.5
+    slack_rate_limit_cooldown_seconds: float = 20.0
+    slack_filter_with_glm: bool = True
+    slack_filter_export_root: Path | None = None
+    slack_project_channel_prefixes: list[str] = field(default_factory=list)
+    slack_company_channel_prefixes: list[str] = field(default_factory=list)
+    slack_mixed_channel_prefixes: list[str] = field(default_factory=list)
+    slack_project_wiki_root: Path | None = None
+    slack_company_wiki_root: Path | None = None
+    glm_api_url: str | None = None
+    glm_api_key: str | None = None
+    glm_model: str | None = None
 
     @staticmethod
     def repo_root() -> Path:
@@ -227,7 +242,7 @@ class RuntimeConfig:
             log_page=_resolve_config_path(base, _require_string(payload, "LOG_PAGE")),
             allowed_file_types=_as_list(
                 payload.get("ALLOWED_FILE_TYPES"),
-                ["hwp", "hwpx", "pdf", "docx", "pptx", "html", "htm", "gdoc", "gslides"],
+                ["hwp", "hwpx", "pdf", "docx", "pptx", "xlsx", "xls", "csv", "html", "htm", "gdoc", "gsheet", "gslides"],
             ),
             max_folders_per_run=_as_int(payload.get("MAX_FOLDERS_PER_RUN"), 3),
             max_files_per_folder=_as_int(payload.get("MAX_FILES_PER_FOLDER"), 50),
@@ -264,6 +279,21 @@ class RuntimeConfig:
             slack_oldest_days=_as_int(payload.get("SLACK_OLDEST_DAYS"), 30),
             slack_include_threads=_as_bool(payload.get("SLACK_INCLUDE_THREADS"), default=True),
             slack_include_files=_as_bool(payload.get("SLACK_INCLUDE_FILES"), default=True),
+            slack_api_min_interval_seconds=_as_float(payload.get("SLACK_API_MIN_INTERVAL_SECONDS"), 1.2),
+            slack_history_page_pause_seconds=_as_float(payload.get("SLACK_HISTORY_PAGE_PAUSE_SECONDS"), 1.0),
+            slack_thread_pause_seconds=_as_float(payload.get("SLACK_THREAD_PAUSE_SECONDS"), 1.0),
+            slack_channel_pause_seconds=_as_float(payload.get("SLACK_CHANNEL_PAUSE_SECONDS"), 2.5),
+            slack_rate_limit_cooldown_seconds=_as_float(payload.get("SLACK_RATE_LIMIT_COOLDOWN_SECONDS"), 20.0),
+            slack_filter_with_glm=_as_bool(payload.get("SLACK_FILTER_WITH_GLM"), default=True),
+            slack_filter_export_root=_resolve_config_path(base, payload.get("SLACK_FILTER_EXPORT_ROOT", "obsidian/raw/exports/slack_filtered")),
+            slack_project_channel_prefixes=_as_list(payload.get("SLACK_PROJECT_CHANNEL_PREFIXES"), ["pjt_", "pjt-", "hubble-pjt-"]),
+            slack_company_channel_prefixes=_as_list(payload.get("SLACK_COMPANY_CHANNEL_PREFIXES"), ["sales_", "rtm", "0_rtm", "1_rtm", "team_", "ai", "vision_", "apollo", "hubble-general"]),
+            slack_mixed_channel_prefixes=_as_list(payload.get("SLACK_MIXED_CHANNEL_PREFIXES"), ["tf_"]),
+            slack_project_wiki_root=_resolve_config_path(base, payload.get("SLACK_PROJECT_WIKI_ROOT", "obsidian/Wiki/Common/Slack_Project_Intake")),
+            slack_company_wiki_root=_resolve_config_path(base, payload.get("SLACK_COMPANY_WIKI_ROOT", "obsidian/Wiki/Common/Slack_Company_News")),
+            glm_api_url=payload.get("GLM_API_URL"),
+            glm_api_key=payload.get("GLM_API_KEY"),
+            glm_model=payload.get("GLM_MODEL", "glm-5.1"),
         )
 
     @classmethod

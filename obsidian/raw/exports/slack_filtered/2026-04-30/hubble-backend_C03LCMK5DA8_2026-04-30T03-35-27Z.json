@@ -1,0 +1,129 @@
+{
+  "type": "slack_channel_filtered_export",
+  "workspace": "RTM Slack",
+  "collected_at": "2026-04-30T03:35:27.248712+00:00",
+  "channel": {
+    "id": "C03LCMK5DA8",
+    "name": "hubble-backend",
+    "type": "public_channel",
+    "is_archived": false,
+    "is_private": false,
+    "created": "2022-06-20T03:18:32+00:00",
+    "topic": "",
+    "purpose": "",
+    "member_count": 7,
+    "routing": {
+      "channel_bucket": "company_news",
+      "conversation_mode": "company_updates",
+      "rationale": "default_company_updates",
+      "wiki_workspace": "rtm",
+      "wiki_target_root": "obsidian/Wiki/Common/Slack_Company_News",
+      "wiki_target_kind": "common"
+    }
+  },
+  "routing": {
+    "channel_profile": {
+      "channel_bucket": "company_news",
+      "conversation_mode": "company_updates",
+      "rationale": "default_company_updates",
+      "wiki_workspace": "rtm",
+      "wiki_target_root": "obsidian/Wiki/Common/Slack_Company_News",
+      "wiki_target_kind": "common",
+      "project_wiki_target_root": "obsidian/Wiki/Common/Slack_Project_Intake",
+      "company_wiki_target_root": "obsidian/Wiki/Common/Slack_Company_News"
+    },
+    "primary_bucket": "company_news",
+    "bucket_counts": {
+      "project": 0,
+      "company_news": 0,
+      "casual": 10
+    },
+    "wiki_targets": []
+  },
+  "history_window": {
+    "oldest_ts": "1776656220.561009",
+    "limit_per_channel": 500,
+    "include_threads": true,
+    "include_files": true
+  },
+  "filter": {
+    "provider": "local_rule",
+    "summary": "GLM unavailable; local rule filter applied",
+    "kept_count": 0,
+    "excluded_count": 10
+  },
+  "messages": [],
+  "routed_messages": [],
+  "excluded_messages": [
+    {
+      "ts": "1776663059.687499",
+      "reason": "empty_text",
+      "bucket": "casual",
+      "text": "",
+      "subtype": null
+    },
+    {
+      "ts": "1776663059.933919",
+      "reason": "empty_text",
+      "bucket": "casual",
+      "text": "",
+      "subtype": "thread_broadcast"
+    },
+    {
+      "ts": "1776663418.576979",
+      "reason": "empty_text",
+      "bucket": "casual",
+      "text": "",
+      "subtype": null
+    },
+    {
+      "ts": "1776818739.456169",
+      "reason": "empty_text",
+      "bucket": "casual",
+      "text": "",
+      "subtype": null
+    },
+    {
+      "ts": "1776936000.888809",
+      "reason": "empty_text",
+      "bucket": "casual",
+      "text": "",
+      "subtype": null
+    },
+    {
+      "ts": "1777003983.843169",
+      "reason": "empty_text",
+      "bucket": "casual",
+      "text": "",
+      "subtype": null
+    },
+    {
+      "ts": "1777005933.955519",
+      "reason": "empty_text",
+      "bucket": "casual",
+      "text": "",
+      "subtype": null
+    },
+    {
+      "ts": "1777016973.476729",
+      "reason": "empty_text",
+      "bucket": "casual",
+      "text": "",
+      "subtype": null
+    },
+    {
+      "ts": "1777448793.258489",
+      "reason": "empty_text",
+      "bucket": "casual",
+      "text": "",
+      "subtype": null
+    },
+    {
+      "ts": "1777520221.174959",
+      "reason": "system_membership_event",
+      "bucket": "casual",
+      "text": "<@U0B15H1AQJV> has joined the channel",
+      "subtype": "channel_join"
+    }
+  ]
+}

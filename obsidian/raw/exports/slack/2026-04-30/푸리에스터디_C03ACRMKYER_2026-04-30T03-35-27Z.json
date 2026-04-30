@@ -1,0 +1,56 @@
+{
+  "type": "slack_channel_export",
+  "workspace": "RTM Slack",
+  "collected_at": "2026-04-30T03:35:27.248712+00:00",
+  "channel": {
+    "id": "C03ACRMKYER",
+    "name": "푸리에스터디",
+    "type": "public_channel",
+    "is_archived": false,
+    "is_private": false,
+    "created": "2022-04-07T01:25:37+00:00",
+    "topic": "DFT, FFT, DWT, DCT, Hamming, Hanning, DST, LT, ZT, RadonT, Phase Imaging ...",
+    "purpose": "현업에서 푸리에변환을 써먹는 사람들의 모임",
+    "member_count": 3,
+    "routing": {
+      "channel_bucket": "company_news",
+      "conversation_mode": "company_updates",
+      "rationale": "default_company_updates",
+      "wiki_workspace": "rtm",
+      "wiki_target_root": "obsidian/Wiki/Common/Slack_Company_News",
+      "wiki_target_kind": "common"
+    }
+  },
+  "routing": {
+    "channel_bucket": "company_news",
+    "conversation_mode": "company_updates",
+    "rationale": "default_company_updates",
+    "wiki_workspace": "rtm",
+    "wiki_target_root": "obsidian/Wiki/Common/Slack_Company_News",
+    "wiki_target_kind": "common",
+    "project_wiki_target_root": "obsidian/Wiki/Common/Slack_Project_Intake",
+    "company_wiki_target_root": "obsidian/Wiki/Common/Slack_Company_News"
+  },
+  "history_window": {
+    "oldest_ts": "1776656456.221389",
+    "limit_per_channel": 500,
+    "include_threads": true,
+    "include_files": true
+  },
+  "messages": [
+    {
+      "ts": "1777520456.830089",
+      "type": "message",
+      "subtype": "channel_join",
+      "user": "U0B15H1AQJV",
+      "text": "<@U0B15H1AQJV> has joined the channel",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    }
+  ]
+}

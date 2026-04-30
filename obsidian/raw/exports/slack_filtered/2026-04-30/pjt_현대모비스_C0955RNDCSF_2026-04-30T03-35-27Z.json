@@ -1,0 +1,115 @@
+{
+  "type": "slack_channel_filtered_export",
+  "workspace": "RTM Slack",
+  "collected_at": "2026-04-30T03:35:27.248712+00:00",
+  "channel": {
+    "id": "C0955RNDCSF",
+    "name": "pjt_현대모비스",
+    "type": "public_channel",
+    "is_archived": false,
+    "is_private": false,
+    "created": "2025-07-11T03:45:53+00:00",
+    "topic": "현대모비스향 Pre-PoC 진행",
+    "purpose": "현대모비스향 TSI유닛, Vision유닛 각각의 Pre-PoC 및 EHM Demo 진행을 위한 업무 소통 채널",
+    "member_count": 18,
+    "routing": {
+      "channel_bucket": "project",
+      "conversation_mode": "project_updates",
+      "rationale": "project_channel_prefix",
+      "wiki_workspace": "rtm",
+      "wiki_target_root": "obsidian/Wiki/Common/Slack_Project_Intake",
+      "wiki_target_kind": "common"
+    }
+  },
+  "routing": {
+    "channel_profile": {
+      "channel_bucket": "project",
+      "conversation_mode": "project_updates",
+      "rationale": "project_channel_prefix",
+      "wiki_workspace": "rtm",
+      "wiki_target_root": "obsidian/Wiki/Common/Slack_Project_Intake",
+      "wiki_target_kind": "common",
+      "project_wiki_target_root": "obsidian/Wiki/Common/Slack_Project_Intake",
+      "company_wiki_target_root": "obsidian/Wiki/Common/Slack_Company_News"
+    },
+    "primary_bucket": "project",
+    "bucket_counts": {
+      "project": 1,
+      "company_news": 0,
+      "casual": 1
+    },
+    "wiki_targets": [
+      {
+        "path": "obsidian/Wiki/Common/Slack_Project_Intake",
+        "count": 1
+      }
+    ]
+  },
+  "history_window": {
+    "oldest_ts": "1776656317.308913",
+    "limit_per_channel": 500,
+    "include_threads": true,
+    "include_files": true
+  },
+  "filter": {
+    "provider": "local_rule",
+    "summary": "GLM unavailable; local rule filter applied",
+    "kept_count": 1,
+    "excluded_count": 1
+  },
+  "messages": [
+    {
+      "ts": "1777256992.685309",
+      "type": "message",
+      "subtype": "thread_broadcast",
+      "user": "U03NJDDPZPZ",
+      "text": "*<현대모비스 프로젝트 수주작업 현황 공유_v26.04.27>*\n> 수신 : <@U04C3UYFY1F> <@U019E51R1DM> <@U041D9G5FLH> <@U07N3NGH7TR> \n> 참조 : <@UBKL1FZ28> <@UBL1JVCSZ>\n금일(4/27) 오전에 김명하 책임님과 통화 완료\n• 지난주(4/20~24)에 진천공장 내부 결제는 완료하였고, 본사 심의 들어갔음. 정확한 사유는 모르겠으나, 평소에 심의 진행되는 속도 보다는 다소 딜레이가 되는 상황\n• 이번주(~4/30) 내로 전체 결재는 다 끝날 것 같은데 일단 대기 중. 결과 나오는 대로 연락드리겠음. 만약 심의 결과 나오는게 차주로 밀리게 되면 메일이든 문자든 드리겠음\n• 차주(5/4)부터 2주간 해외 출장 예정이라, 프로젝트 착수 시 업무 소통은 이메일로 진행",
+      "thread_ts": "1776142407.762379",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [
+        {
+          "name": "eyes",
+          "users": [
+            "U041D9G5FLH",
+            "U019E51R1DM",
+            "U04C3UYFY1F",
+            "U07N3NGH7TR"
+          ],
+          "count": 4
+        },
+        {
+          "name": "white_check_mark",
+          "users": [
+            "U04C3UYFY1F"
+          ],
+          "count": 1
+        }
+      ],
+      "edited": {
+        "user": "U03NJDDPZPZ",
+        "ts": "1777257043.000000"
+      },
+      "files": []
+    }
+  ],
+  "routed_messages": [
+    {
+      "ts": "1777256992.685309",
+      "bucket": "project",
+      "reason": "project_keywords",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Project_Intake",
+      "text": "*<현대모비스 프로젝트 수주작업 현황 공유_v26.04.27>*\n> 수신 : <@U04C3UYFY1F> <@U019E51R1DM> <@U041D9G5FLH> <@U07N3NGH7TR> \n> 참조 : <@UBKL1FZ28> <@UBL1JVCSZ>\n금일(4/27) 오전에 김명하 책임님과 통화 완료\n• 지난주(4/20~24)에 진천공장 내부 결제는 완료하였고, 본사 심의 들어갔음. 정확한 사유는 모르겠으나, 평소에 심의 진행되는 속도 보다는 다소 딜레이가 되는 상황\n• 이번주(~4/30) 내로 전체 결재는 다 끝날 것 같은데 일단 대기 중. 결과 나오는 대로 연락드리겠음. 만약 심의 결과 나오는게 차주로 밀리게 되면 메일이든 문자든 드리겠음\n• 차주(5/4)부터 2주간 해외 출장 예정이라, 프로젝트 착수 시 업무 소통은 이메일로 진행"
+    }
+  ],
+  "excluded_messages": [
+    {
+      "ts": "1777520317.902989",
+      "reason": "system_membership_event",
+      "bucket": "casual",
+      "text": "<@U0B15H1AQJV> has joined the channel",
+      "subtype": "channel_join"
+    }
+  ]
+}

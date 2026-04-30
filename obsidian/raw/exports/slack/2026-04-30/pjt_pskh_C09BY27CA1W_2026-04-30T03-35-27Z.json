@@ -1,0 +1,141 @@
+{
+  "type": "slack_channel_export",
+  "workspace": "RTM Slack",
+  "collected_at": "2026-04-30T03:35:27.248712+00:00",
+  "channel": {
+    "id": "C09BY27CA1W",
+    "name": "pjt_pskh",
+    "type": "public_channel",
+    "is_archived": false,
+    "is_private": false,
+    "created": "2025-08-20T01:59:16+00:00",
+    "topic": "",
+    "purpose": "",
+    "member_count": 4,
+    "routing": {
+      "channel_bucket": "project",
+      "conversation_mode": "project_updates",
+      "rationale": "project_channel_prefix",
+      "wiki_workspace": "rtm",
+      "wiki_target_root": "obsidian/Wiki/Common/Slack_Project_Intake",
+      "wiki_target_kind": "common"
+    }
+  },
+  "routing": {
+    "channel_bucket": "project",
+    "conversation_mode": "project_updates",
+    "rationale": "project_channel_prefix",
+    "wiki_workspace": "rtm",
+    "wiki_target_root": "obsidian/Wiki/Common/Slack_Project_Intake",
+    "wiki_target_kind": "common",
+    "project_wiki_target_root": "obsidian/Wiki/Common/Slack_Project_Intake",
+    "company_wiki_target_root": "obsidian/Wiki/Common/Slack_Company_News"
+  },
+  "history_window": {
+    "oldest_ts": "1776656293.408620",
+    "limit_per_channel": 500,
+    "include_threads": true,
+    "include_files": true
+  },
+  "messages": [
+    {
+      "ts": "1777436208.397579",
+      "type": "message",
+      "subtype": null,
+      "user": "U05AWGZ1TRD",
+      "text": "<@U093NJW4JDS>\nPSKH 과제 추가 분석 요청이 왔는데요. 이거는 레이블링 하고 모델리을 해야할 것 같아요,\nVISION_NAS:\\00_프로젝트\\26_PSKH국책과제\\레이저 공정평가 2D,3D 데이터.7z\n\n레이저 가공영역(검정영역)의 주변부(흰색영역)을 HAZ로 정의하고 이 HAZ를 segmentation으로 검출해야함.\n\n공유드린 경로의 데이터 보시면, 두 개의 폴더가 있는데 아래와 같이 구분 되어 있고,\n41-2 : HAZ 최소화 또는 제거 → 흰색 시인이 안될 정도로 쫍음\n43-4 : 넓은 영역의 HAZ 존재 → 흰색 영역이 도드라지는 영역이 많음\n\n데이터 확인해 보시고, 모델과 추론 결과 언제까지 나올 수 있는지 편하게 의견 주세요.",
+      "thread_ts": "1777436208.397579",
+      "reply_count": 3,
+      "reply_users": [
+        "U093NJW4JDS",
+        "U05AWGZ1TRD"
+      ],
+      "latest_reply": "1777454476.031219",
+      "reactions": [
+        {
+          "name": "eyes",
+          "users": [
+            "U093NJW4JDS"
+          ],
+          "count": 1
+        }
+      ],
+      "edited": null,
+      "files": [],
+      "thread_replies": [
+        {
+          "ts": "1777438847.083489",
+          "type": "message",
+          "subtype": null,
+          "user": "U093NJW4JDS",
+          "text": "상준님 폴더 내 .bmp 파일들만 검토하면 될까요?",
+          "thread_ts": "1777436208.397579",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1777438890.013489",
+          "type": "message",
+          "subtype": null,
+          "user": "U05AWGZ1TRD",
+          "text": "네 일단은 2D bmp 파일만 검토 부탁드립니다. 3D surf 파일들은 제가 지금 보고 있어요",
+          "thread_ts": "1777436208.397579",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [
+            {
+              "name": "넵",
+              "users": [
+                "U093NJW4JDS"
+              ],
+              "count": 1
+            }
+          ],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1777454476.031219",
+          "type": "message",
+          "subtype": null,
+          "user": "U093NJW4JDS",
+          "text": "데이터 확인 후 HAZ 영역 라벨 오버레이 파일 경로를 공유드립니다. 43-4 기준으로만 라벨링하였습니다.\n경로 : /VISION_NAS/00_프로젝트/26_PSKH국책과제/result_2026/20260429_2D_HAZ_mask_검토/43-4_haz\n확인 부탁드립니다.\n\n타겟 일정은 고객사 확인 후 모델링을 진행하거나 비전 실험 병행 수행하면서 5월 3주차 수요일 마무리를 목표로 준비하도록 하겠습니다.",
+          "thread_ts": "1777436208.397579",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [
+            {
+              "name": "eyes",
+              "users": [
+                "U05AWGZ1TRD"
+              ],
+              "count": 1
+            }
+          ],
+          "edited": null,
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1777520293.987389",
+      "type": "message",
+      "subtype": "channel_join",
+      "user": "U0B15H1AQJV",
+      "text": "<@U0B15H1AQJV> has joined the channel",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    }
+  ]
+}

@@ -1,0 +1,1852 @@
+{
+  "type": "slack_channel_export",
+  "workspace": "RTM Slack",
+  "collected_at": "2026-04-30T03:35:27.248712+00:00",
+  "channel": {
+    "id": "C0AT96B541E",
+    "name": "ai-image-labeling",
+    "type": "public_channel",
+    "is_archived": false,
+    "is_private": false,
+    "created": "2026-04-13T05:26:59+00:00",
+    "topic": "",
+    "purpose": "",
+    "member_count": 5,
+    "routing": {
+      "channel_bucket": "company_news",
+      "conversation_mode": "company_updates",
+      "rationale": "company_channel_prefix",
+      "wiki_workspace": "rtm",
+      "wiki_target_root": "obsidian/Wiki/Common/Slack_Company_News",
+      "wiki_target_kind": "common"
+    }
+  },
+  "routing": {
+    "channel_bucket": "company_news",
+    "conversation_mode": "company_updates",
+    "rationale": "company_channel_prefix",
+    "wiki_workspace": "rtm",
+    "wiki_target_root": "obsidian/Wiki/Common/Slack_Company_News",
+    "wiki_target_kind": "common",
+    "project_wiki_target_root": "obsidian/Wiki/Common/Slack_Project_Intake",
+    "company_wiki_target_root": "obsidian/Wiki/Common/Slack_Company_News"
+  },
+  "history_window": {
+    "oldest_ts": "1776656185.883704",
+    "limit_per_channel": 500,
+    "include_threads": true,
+    "include_files": true
+  },
+  "messages": [
+    {
+      "ts": "1776744667.917079",
+      "type": "message",
+      "subtype": null,
+      "user": "U0AS556AAJ0",
+      "text": "260420 라벨링 작업일지\n\n:bug:작업요약\n• OSP변색: 볼패드 여러개 불량인데 한두개만 잡힌 경우 많음- Not Accurate 처리함\n• 범프누락: 범프누락 부분 여러개인데 일부만 잡힌 경우 많음-Not Accurate 처리함\n• SR후이물: SR에 이물영역 넓은데 부분만 잡힌 경우 많음 (오히려 이번 케이스에는 볼패드 영역 침범 많지 않았음)-Not Accurate 처리함\n• SR후상처: 긴 스크래치인데 영역이 중앙부분만 잡힌 경우 많음--Not Accurate 처리함\n작업완료",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [
+        {
+          "name": "감사콩",
+          "users": [
+            "U033Z97MZ3N"
+          ],
+          "count": 1
+        }
+      ],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1776916013.987709",
+      "type": "message",
+      "subtype": null,
+      "user": "U0354SL90UV",
+      "text": "<@U0AS556AAJ0>\n보람님 안녕하세요, 다음 라벨링 업무 할당하기 전, 전용 라벨링 툴 사용이 필요하여 오후에 알려드리는 시간을 가지고자 합니다.\nvision NAS의 아래 경로에 있는 파일들을 모두 노트북에 다운로드 후, 가이드를 확인하고 계시면 감사하겠습니다.\n• /VISION_NAS/01_파트/AI/products/Deeplens/ver_OCR\n사용 실습은 1시반에 진행하고자 하는데, 괜찮으실까요?",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1776916562.051869",
+      "type": "message",
+      "subtype": null,
+      "user": "U0AS556AAJ0",
+      "text": "네네! 확인하고 있겠습니다~",
+      "thread_ts": "1776916562.051869",
+      "reply_count": 2,
+      "reply_users": [
+        "U0354SL90UV",
+        "U0AS556AAJ0"
+      ],
+      "latest_reply": "1776917885.774769",
+      "reactions": [],
+      "edited": null,
+      "files": [],
+      "thread_replies": [
+        {
+          "ts": "1776917316.836959",
+          "type": "message",
+          "subtype": null,
+          "user": "U0354SL90UV",
+          "text": "1시반 10층 A 회의실로 잡아두었습니다.",
+          "thread_ts": "1776916562.051869",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776917885.774769",
+          "type": "message",
+          "subtype": null,
+          "user": "U0AS556AAJ0",
+          "text": "네",
+          "thread_ts": "1776916562.051869",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1776934828.878659",
+      "type": "message",
+      "subtype": null,
+      "user": "U0354SL90UV",
+      "text": "<@U0AS556AAJ0>\n보람님 안녕하세요, 오후에 이야기드렸던대로, 우선 라벨링 기준에 대한 이해도를 맞추기 위해서\n2개의 폴더만 드렸습니다. 해당 폴더 라벨링 완료 이후에 티켓의 업로드 경로에 올려주시면 됩니다.\n<https://app.clickup.com/t/86exbqk3v>\n• OCR 라벨링 특성상, 금주 내에 2개 폴더를 다 진행하지 못하였을 경우, 완료된 내용만이라도 올려주시면 감사하겠습니다.",
+      "thread_ts": "1776934828.878659",
+      "reply_count": 3,
+      "reply_users": [
+        "U0AS556AAJ0",
+        "U0354SL90UV"
+      ],
+      "latest_reply": "1776958563.023899",
+      "reactions": [],
+      "edited": null,
+      "files": [],
+      "thread_replies": [
+        {
+          "ts": "1776934970.791579",
+          "type": "message",
+          "subtype": null,
+          "user": "U0AS556AAJ0",
+          "text": "네 알겠습니다!",
+          "thread_ts": "1776934828.878659",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776935004.857109",
+          "type": "message",
+          "subtype": null,
+          "user": "U0354SL90UV",
+          "text": "아직 vision nas에 데이터를 업로드하는 중이라, 15분쯤 뒤에 확인해주시면 감사하겠습니다",
+          "thread_ts": "1776934828.878659",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776958563.023899",
+          "type": "message",
+          "subtype": null,
+          "user": "U0AS556AAJ0",
+          "text": "폴더 12,13 해달라고 하셨는데 폴더 13은 비어있는걸로 나와요~ 확인 부탁드립니다. 먼저 폴더12 부터 진행하고 있을게요!",
+          "thread_ts": "1776934828.878659",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [
+            {
+              "name": "man-gesturing-ok",
+              "users": [
+                "U0354SL90UV"
+              ],
+              "count": 1
+            }
+          ],
+          "edited": null,
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1777039279.194069",
+      "type": "message",
+      "subtype": null,
+      "user": "U0AS556AAJ0",
+      "text": "업로드 완료했습니다<@U0354SL90UV>",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [
+        {
+          "name": "감사콩",
+          "users": [
+            "U0354SL90UV"
+          ],
+          "count": 1
+        }
+      ],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1777249066.564689",
+      "type": "message",
+      "subtype": null,
+      "user": "U0AS556AAJ0",
+      "text": "260424 라벨링 작업일지\n\n:bug:작업요약\n• ( , 1, ) 가 혼동되어 잡혀있는 경우 종종 있음\n• 3,8 혼동된 경우 종종 있음\n• 5,6 혼동된 경우 종종 있음\n-그 외에 오류에서는 유사점 발견되지 않음\n  폴더12 완료",
+      "thread_ts": "1777249066.564689",
+      "reply_count": 45,
+      "reply_users": [
+        "U0354SL90UV",
+        "U0AS556AAJ0"
+      ],
+      "latest_reply": "1777263612.163439",
+      "reactions": [],
+      "edited": null,
+      "files": [],
+      "thread_replies": [
+        {
+          "ts": "1777254660.487459",
+          "type": "message",
+          "subtype": null,
+          "user": "U0354SL90UV",
+          "text": "실시간으로 검수하면서 피드백 여기에 남겨놓겠습니다~",
+          "thread_ts": "1777249066.564689",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1777254692.746419",
+          "type": "message",
+          "subtype": null,
+          "user": "U0354SL90UV",
+          "text": "우측 B &gt; 잘려서 E로 혼동될 가능성 있음. 해당 라벨 지우거나 해당 이미지는 넘기는 것을 추천.",
+          "thread_ts": "1777249066.564689",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": [
+            {
+              "id": "F0AUY86C6QP",
+              "name": "image.png",
+              "title": "image.png",
+              "mimetype": "image/png",
+              "filetype": "png",
+              "pretty_type": "PNG",
+              "size": 607080,
+              "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0AUY86C6QP/image.png",
+              "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0AUY86C6QP/image.png"
+            }
+          ]
+        },
+        {
+          "ts": "1777254828.157279",
+          "type": "message",
+          "subtype": null,
+          "user": "U0354SL90UV",
+          "text": "KPa &gt; KPS 로 잘못 라벨링",
+          "thread_ts": "1777249066.564689",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": [
+            {
+              "id": "F0AVA9XTY3X",
+              "name": "image.png",
+              "title": "image.png",
+              "mimetype": "image/png",
+              "filetype": "png",
+              "pretty_type": "PNG",
+              "size": 791437,
+              "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0AVA9XTY3X/image.png",
+              "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0AVA9XTY3X/image.png"
+            },
+            {
+              "id": "F0AUY8DU63H",
+              "name": "image.png",
+              "title": "image.png",
+              "mimetype": "image/png",
+              "filetype": "png",
+              "pretty_type": "PNG",
+              "size": 840536,
+              "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0AUY8DU63H/image.png",
+              "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0AUY8DU63H/image.png"
+            }
+          ]
+        },
+        {
+          "ts": "1777254969.025339",
+          "type": "message",
+          "subtype": null,
+          "user": "U0354SL90UV",
+          "text": "psi 우측 닫는 괄호 누락\n및 위샘플과 동일한 KPa 케이스",
+          "thread_ts": "1777249066.564689",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": [
+            {
+              "id": "F0AVAA3V32R",
+              "name": "image.png",
+              "title": "image.png",
+              "mimetype": "image/png",
+              "filetype": "png",
+              "pretty_type": "PNG",
+              "size": 782954,
+              "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0AVAA3V32R/image.png",
+              "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0AVAA3V32R/image.png"
+            },
+            {
+              "id": "F0B0CKB6MLH",
+              "name": "image.png",
+              "title": "image.png",
+              "mimetype": "image/png",
+              "filetype": "png",
+              "pretty_type": "PNG",
+              "size": 783534,
+              "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0B0CKB6MLH/image.png",
+              "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0B0CKB6MLH/image.png"
+            }
+          ]
+        },
+        {
+          "ts": "1777255032.569009",
+          "type": "message",
+          "subtype": null,
+          "user": "U0354SL90UV",
+          "text": "일부가 잘렸지만, 판단이 확실한 경우 라벨링 필요(a)",
+          "thread_ts": "1777249066.564689",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": [
+            {
+              "id": "F0AVBLJ7A8N",
+              "name": "image.png",
+              "title": "image.png",
+              "mimetype": "image/png",
+              "filetype": "png",
+              "pretty_type": "PNG",
+              "size": 790378,
+              "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0AVBLJ7A8N/image.png",
+              "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0AVBLJ7A8N/image.png"
+            },
+            {
+              "id": "F0AUY8SMFGX",
+              "name": "image.png",
+              "title": "image.png",
+              "mimetype": "image/png",
+              "filetype": "png",
+              "pretty_type": "PNG",
+              "size": 791617,
+              "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0AUY8SMFGX/image.png",
+              "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0AUY8SMFGX/image.png"
+            }
+          ]
+        },
+        {
+          "ts": "1777255147.993819",
+          "type": "message",
+          "subtype": null,
+          "user": "U0354SL90UV",
+          "text": "추가 라벨링이 누락된 케이스\n(enter로 복사를 먼저 누른 뒤 라벨링을 하신 것 같습니다.)",
+          "thread_ts": "1777249066.564689",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": [
+            {
+              "id": "F0B03AKUJQL",
+              "name": "image.png",
+              "title": "image.png",
+              "mimetype": "image/png",
+              "filetype": "png",
+              "pretty_type": "PNG",
+              "size": 786202,
+              "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0B03AKUJQL/image.png",
+              "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0B03AKUJQL/image.png"
+            }
+          ]
+        },
+        {
+          "ts": "1777255206.845649",
+          "type": "message",
+          "subtype": null,
+          "user": "U0354SL90UV",
+          "text": "학습할 라벨이 없는건 복사 안하셔도 됩니다!",
+          "thread_ts": "1777249066.564689",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": [
+            {
+              "id": "F0B0U197NMN",
+              "name": "image.png",
+              "title": "image.png",
+              "mimetype": "image/png",
+              "filetype": "png",
+              "pretty_type": "PNG",
+              "size": 757928,
+              "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0B0U197NMN/image.png",
+              "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0B0U197NMN/image.png"
+            }
+          ]
+        },
+        {
+          "ts": "1777255239.337449",
+          "type": "message",
+          "subtype": null,
+          "user": "U0354SL90UV",
+          "text": "라벨 오기입 (+ &gt; M)",
+          "thread_ts": "1777249066.564689",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": [
+            {
+              "id": "F0AVDNSPVH8",
+              "name": "image.png",
+              "title": "image.png",
+              "mimetype": "image/png",
+              "filetype": "png",
+              "pretty_type": "PNG",
+              "size": 360399,
+              "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0AVDNSPVH8/image.png",
+              "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0AVDNSPVH8/image.png"
+            }
+          ]
+        },
+        {
+          "ts": "1777255388.613339",
+          "type": "message",
+          "subtype": null,
+          "user": "U0354SL90UV",
+          "text": "라벨 오기입 (3&gt;5)",
+          "thread_ts": "1777249066.564689",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": [
+            {
+              "id": "F0AV7BZ4K99",
+              "name": "image.png",
+              "title": "image.png",
+              "mimetype": "image/png",
+              "filetype": "png",
+              "pretty_type": "PNG",
+              "size": 407172,
+              "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0AV7BZ4K99/image.png",
+              "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0AV7BZ4K99/image.png"
+            },
+            {
+              "id": "F0AV7C1A2R1",
+              "name": "image.png",
+              "title": "image.png",
+              "mimetype": "image/png",
+              "filetype": "png",
+              "pretty_type": "PNG",
+              "size": 407324,
+              "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0AV7C1A2R1/image.png",
+              "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0AV7C1A2R1/image.png"
+            }
+          ]
+        },
+        {
+          "ts": "1777255437.719469",
+          "type": "message",
+          "subtype": null,
+          "user": "U0354SL90UV",
+          "text": "일부 라벨 누락 NYLON 1 뒤 2개",
+          "thread_ts": "1777249066.564689",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": [
+            {
+              "id": "F0B0U1U2UKA",
+              "name": "image.png",
+              "title": "image.png",
+              "mimetype": "image/png",
+              "filetype": "png",
+              "pretty_type": "PNG",
+              "size": 793641,
+              "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0B0U1U2UKA/image.png",
+              "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0B0U1U2UKA/image.png"
+            }
+          ]
+        },
+        {
+          "ts": "1777255496.495889",
+          "type": "message",
+          "subtype": null,
+          "user": "U0354SL90UV",
+          "text": "마찬가지로, 이정도면 8 이외의 다른 가능성이 없기 때문에 8 라벨링 해도 될 것 같습니다.",
+          "thread_ts": "1777249066.564689",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": [
+            {
+              "id": "F0AVBMK005U",
+              "name": "image.png",
+              "title": "image.png",
+              "mimetype": "image/png",
+              "filetype": "png",
+              "pretty_type": "PNG",
+              "size": 798047,
+              "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0AVBMK005U/image.png",
+              "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0AVBMK005U/image.png"
+            }
+          ]
+        },
+        {
+          "ts": "1777255542.032469",
+          "type": "message",
+          "subtype": null,
+          "user": "U0354SL90UV",
+          "text": "반대로 가장 좌측 8 (S로 라벨 된 것)은 라벨 제거가 필요",
+          "thread_ts": "1777249066.564689",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": {
+            "user": "U0354SL90UV",
+            "ts": "1777255553.000000"
+          },
+          "files": [
+            {
+              "id": "F0B0U21EEQY",
+              "name": "image.png",
+              "title": "image.png",
+              "mimetype": "image/png",
+              "filetype": "png",
+              "pretty_type": "PNG",
+              "size": 854746,
+              "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0B0U21EEQY/image.png",
+              "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0B0U21EEQY/image.png"
+            }
+          ]
+        },
+        {
+          "ts": "1777255650.541359",
+          "type": "message",
+          "subtype": null,
+          "user": "U0354SL90UV",
+          "text": "라벨 누락 (특별히 신경써야 하는 케이스, 상단부 TREADWEAR, TRACTION, TEMPERATURE 시리즈)",
+          "thread_ts": "1777249066.564689",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": [
+            {
+              "id": "F0B0U26NMCY",
+              "name": "image.png",
+              "title": "image.png",
+              "mimetype": "image/png",
+              "filetype": "png",
+              "pretty_type": "PNG",
+              "size": 896189,
+              "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0B0U26NMCY/image.png",
+              "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0B0U26NMCY/image.png"
+            }
+          ]
+        },
+        {
+          "ts": "1777255726.779599",
+          "type": "message",
+          "subtype": null,
+          "user": "U0354SL90UV",
+          "text": "여기 1도 비스듬한 대분자 I와 유사하기때문에 라벨 제거",
+          "thread_ts": "1777249066.564689",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": [
+            {
+              "id": "F0B0U2DHHNC",
+              "name": "image.png",
+              "title": "image.png",
+              "mimetype": "image/png",
+              "filetype": "png",
+              "pretty_type": "PNG",
+              "size": 735656,
+              "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0B0U2DHHNC/image.png",
+              "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0B0U2DHHNC/image.png"
+            }
+          ]
+        },
+        {
+          "ts": "1777255789.093809",
+          "type": "message",
+          "subtype": null,
+          "user": "U0354SL90UV",
+          "text": "U 라벨 누락",
+          "thread_ts": "1777249066.564689",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": [
+            {
+              "id": "F0AVBN2NM7G",
+              "name": "image.png",
+              "title": "image.png",
+              "mimetype": "image/png",
+              "filetype": "png",
+              "pretty_type": "PNG",
+              "size": 873592,
+              "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0AVBN2NM7G/image.png",
+              "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0AVBN2NM7G/image.png"
+            }
+          ]
+        },
+        {
+          "ts": "1777255886.799409",
+          "type": "message",
+          "subtype": null,
+          "user": "U0354SL90UV",
+          "text": "가장 작은 단어 라벨링\n• 안하고 해당 이미지를 버려도 되나, 라벨링을 진행할 경우 검수가 필요함\n    ◦ S > P로 잘못된 라벨링\n    ◦ Y가 하단부로 조금 넓게 라벨링이 되어있음",
+          "thread_ts": "1777249066.564689",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": {
+            "user": "U0354SL90UV",
+            "ts": "1777255914.000000"
+          },
+          "files": [
+            {
+              "id": "F0AVABYJW3X",
+              "name": "image.png",
+              "title": "image.png",
+              "mimetype": "image/png",
+              "filetype": "png",
+              "pretty_type": "PNG",
+              "size": 839914,
+              "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0AVABYJW3X/image.png",
+              "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0AVABYJW3X/image.png"
+            }
+          ]
+        },
+        {
+          "ts": "1777256027.078769",
+          "type": "message",
+          "subtype": null,
+          "user": "U0354SL90UV",
+          "text": "R로 판단하기에 무리가 있을 정도로 잘림 (F와 혼동 가능성), 라벨 삭제",
+          "thread_ts": "1777249066.564689",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": [
+            {
+              "id": "F0AVBNH6RQE",
+              "name": "image.png",
+              "title": "image.png",
+              "mimetype": "image/png",
+              "filetype": "png",
+              "pretty_type": "PNG",
+              "size": 818361,
+              "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0AVBNH6RQE/image.png",
+              "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0AVBNH6RQE/image.png"
+            }
+          ]
+        },
+        {
+          "ts": "1777256086.405169",
+          "type": "message",
+          "subtype": null,
+          "user": "U0354SL90UV",
+          "text": "T &gt; box 정확도 수정 필요",
+          "thread_ts": "1777249066.564689",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": [
+            {
+              "id": "F0AV7DA28PM",
+              "name": "image.png",
+              "title": "image.png",
+              "mimetype": "image/png",
+              "filetype": "png",
+              "pretty_type": "PNG",
+              "size": 810107,
+              "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0AV7DA28PM/image.png",
+              "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0AV7DA28PM/image.png"
+            }
+          ]
+        },
+        {
+          "ts": "1777256171.532709",
+          "type": "message",
+          "subtype": null,
+          "user": "U0354SL90UV",
+          "text": "일부 라벨링 누락 및 수정 필요\n(6 > 9)",
+          "thread_ts": "1777249066.564689",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": {
+            "user": "U0354SL90UV",
+            "ts": "1777256188.000000"
+          },
+          "files": [
+            {
+              "id": "F0AUYAZ7Q79",
+              "name": "image.png",
+              "title": "image.png",
+              "mimetype": "image/png",
+              "filetype": "png",
+              "pretty_type": "PNG",
+              "size": 835096,
+              "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0AUYAZ7Q79/image.png",
+              "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0AUYAZ7Q79/image.png"
+            },
+            {
+              "id": "F0B0CMPFR4Z",
+              "name": "image.png",
+              "title": "image.png",
+              "mimetype": "image/png",
+              "filetype": "png",
+              "pretty_type": "PNG",
+              "size": 817770,
+              "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0B0CMPFR4Z/image.png",
+              "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0B0CMPFR4Z/image.png"
+            }
+          ]
+        },
+        {
+          "ts": "1777256307.416219",
+          "type": "message",
+          "subtype": null,
+          "user": "U0354SL90UV",
+          "text": "이정도 잘린 케이스는 라벨링해도 무방할 것 같습니다.(우측상단 6)",
+          "thread_ts": "1777249066.564689",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": [
+            {
+              "id": "F0AVBP0ET9C",
+              "name": "image.png",
+              "title": "image.png",
+              "mimetype": "image/png",
+              "filetype": "png",
+              "pretty_type": "PNG",
+              "size": 579483,
+              "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0AVBP0ET9C/image.png",
+              "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0AVBP0ET9C/image.png"
+            }
+          ]
+        },
+        {
+          "ts": "1777256329.613139",
+          "type": "message",
+          "subtype": null,
+          "user": "U0354SL90UV",
+          "text": "",
+          "thread_ts": "1777249066.564689",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": [
+            {
+              "id": "F0B0CMZMTQ9",
+              "name": "image.png",
+              "title": "image.png",
+              "mimetype": "image/png",
+              "filetype": "png",
+              "pretty_type": "PNG",
+              "size": 4088,
+              "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0B0CMZMTQ9/image.png",
+              "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0B0CMZMTQ9/image.png"
+            }
+          ]
+        },
+        {
+          "ts": "1777256810.660829",
+          "type": "message",
+          "subtype": null,
+          "user": "U0354SL90UV",
+          "text": "1. 라벨링 누락 (라벨링 전 enter 실수가 있었던 것으로 추측)\n    a. TREAD \"W\"EAR\n    b. 1 \"1\" 2 6\n2. 위 케이스와 동일하게, 가장 작은 각인들의 경우 학습 대상이 아니나, 더 많은 데이터가 필요한 TREADWEAR 시리즈가 포함되어있어 이미지를 버리기 아까움  + 가장 작은 각인들이 *매우 선명하게 나타나있음* 2가지를 고려하여 저라도 라벨링에 포함했을 것 같습니다.\n3. 보람님도 저와 같은 판단으로 해당 이미지를 버리지 않고 사용하여 복사를 진행, 학습에 사용될 이미지로 선정이 되었으므로, 선명한 경우에는 아래 작은 글씨들도 라벨링이 필요\n    a. 잘못된 모델 결과 (MAY RESU &gt; MAY R\"R\"S) 수정\n    b. 없는 라벨링들 추가 라벨링",
+          "thread_ts": "1777249066.564689",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": [
+            {
+              "id": "F0AUYBR8TT9",
+              "name": "image.png",
+              "title": "image.png",
+              "mimetype": "image/png",
+              "filetype": "png",
+              "pretty_type": "PNG",
+              "size": 614573,
+              "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0AUYBR8TT9/image.png",
+              "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0AUYBR8TT9/image.png"
+            }
+          ]
+        },
+        {
+          "ts": "1777256975.933839",
+          "type": "message",
+          "subtype": null,
+          "user": "U0354SL90UV",
+          "text": "이정도 가장 작은 라벨들이 많이 들어있다면 제외해도 무방합니다.",
+          "thread_ts": "1777249066.564689",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": [
+            {
+              "id": "F0B0U4KHGM6",
+              "name": "image.png",
+              "title": "image.png",
+              "mimetype": "image/png",
+              "filetype": "png",
+              "pretty_type": "PNG",
+              "size": 619050,
+              "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0B0U4KHGM6/image.png",
+              "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0B0U4KHGM6/image.png"
+            }
+          ]
+        },
+        {
+          "ts": "1777261061.920019",
+          "type": "message",
+          "subtype": null,
+          "user": "U0354SL90UV",
+          "text": "o 라벨 누락",
+          "thread_ts": "1777249066.564689",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": [
+            {
+              "id": "F0B003NSUFL",
+              "name": "image.png",
+              "title": "image.png",
+              "mimetype": "image/png",
+              "filetype": "png",
+              "pretty_type": "PNG",
+              "size": 775842,
+              "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0B003NSUFL/image.png",
+              "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0B003NSUFL/image.png"
+            }
+          ]
+        },
+        {
+          "ts": "1777261119.569429",
+          "type": "message",
+          "subtype": null,
+          "user": "U0354SL90UV",
+          "text": "2 라벨 누락",
+          "thread_ts": "1777249066.564689",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": [
+            {
+              "id": "F0B003R9XFU",
+              "name": "image.png",
+              "title": "image.png",
+              "mimetype": "image/png",
+              "filetype": "png",
+              "pretty_type": "PNG",
+              "size": 709727,
+              "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0B003R9XFU/image.png",
+              "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0B003R9XFU/image.png"
+            },
+            {
+              "id": "F0AVC1ZB1FY",
+              "name": "image.png",
+              "title": "image.png",
+              "mimetype": "image/png",
+              "filetype": "png",
+              "pretty_type": "PNG",
+              "size": 703260,
+              "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0AVC1ZB1FY/image.png",
+              "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0AVC1ZB1FY/image.png"
+            }
+          ]
+        },
+        {
+          "ts": "1777261248.167059",
+          "type": "message",
+          "subtype": null,
+          "user": "U0354SL90UV",
+          "text": "T, 5 라벨누락",
+          "thread_ts": "1777249066.564689",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": [
+            {
+              "id": "F0B0D138VPT",
+              "name": "image.png",
+              "title": "image.png",
+              "mimetype": "image/png",
+              "filetype": "png",
+              "pretty_type": "PNG",
+              "size": 770160,
+              "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0B0D138VPT/image.png",
+              "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0B0D138VPT/image.png"
+            }
+          ]
+        },
+        {
+          "ts": "1777261283.306399",
+          "type": "message",
+          "subtype": null,
+          "user": "U0354SL90UV",
+          "text": "좌측 3,1,2 라벨 누락",
+          "thread_ts": "1777249066.564689",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": [
+            {
+              "id": "F0B0UC1L20G",
+              "name": "image.png",
+              "title": "image.png",
+              "mimetype": "image/png",
+              "filetype": "png",
+              "pretty_type": "PNG",
+              "size": 1126342,
+              "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0B0UC1L20G/image.png",
+              "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0B0UC1L20G/image.png"
+            }
+          ]
+        },
+        {
+          "ts": "1777261346.944709",
+          "type": "message",
+          "subtype": null,
+          "user": "U0354SL90UV",
+          "text": "좌측 T 라벨 제거 필요",
+          "thread_ts": "1777249066.564689",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": [
+            {
+              "id": "F0AV7NEDC5R",
+              "name": "image.png",
+              "title": "image.png",
+              "mimetype": "image/png",
+              "filetype": "png",
+              "pretty_type": "PNG",
+              "size": 1159152,
+              "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0AV7NEDC5R/image.png",
+              "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0AV7NEDC5R/image.png"
+            }
+          ]
+        },
+        {
+          "ts": "1777261416.592449",
+          "type": "message",
+          "subtype": null,
+          "user": "U0354SL90UV",
+          "text": "버려도 되는 이미지",
+          "thread_ts": "1777249066.564689",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": [
+            {
+              "id": "F0B00480G3C",
+              "name": "image.png",
+              "title": "image.png",
+              "mimetype": "image/png",
+              "filetype": "png",
+              "pretty_type": "PNG",
+              "size": 1008714,
+              "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0B00480G3C/image.png",
+              "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0B00480G3C/image.png"
+            }
+          ]
+        },
+        {
+          "ts": "1777261480.693079",
+          "type": "message",
+          "subtype": null,
+          "user": "U0354SL90UV",
+          "text": "라벨 누락",
+          "thread_ts": "1777249066.564689",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": [
+            {
+              "id": "F0B0D1GB7C1",
+              "name": "image.png",
+              "title": "image.png",
+              "mimetype": "image/png",
+              "filetype": "png",
+              "pretty_type": "PNG",
+              "size": 961148,
+              "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0B0D1GB7C1/image.png",
+              "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0B0D1GB7C1/image.png"
+            }
+          ]
+        },
+        {
+          "ts": "1777261590.730989",
+          "type": "message",
+          "subtype": null,
+          "user": "U0354SL90UV",
+          "text": "라벨 누락",
+          "thread_ts": "1777249066.564689",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": [
+            {
+              "id": "F0AVAN01CR3",
+              "name": "image.png",
+              "title": "image.png",
+              "mimetype": "image/png",
+              "filetype": "png",
+              "pretty_type": "PNG",
+              "size": 883321,
+              "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0AVAN01CR3/image.png",
+              "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0AVAN01CR3/image.png"
+            }
+          ]
+        },
+        {
+          "ts": "1777261629.547499",
+          "type": "message",
+          "subtype": null,
+          "user": "U0354SL90UV",
+          "text": "라벨 누락",
+          "thread_ts": "1777249066.564689",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": [
+            {
+              "id": "F0AVAN150A1",
+              "name": "image.png",
+              "title": "image.png",
+              "mimetype": "image/png",
+              "filetype": "png",
+              "pretty_type": "PNG",
+              "size": 936089,
+              "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0AVAN150A1/image.png",
+              "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0AVAN150A1/image.png"
+            }
+          ]
+        },
+        {
+          "ts": "1777261822.964869",
+          "type": "message",
+          "subtype": null,
+          "user": "U0354SL90UV",
+          "text": "위의 설명과 동일, 이미지를 버리지 않았을 경우, 선명하지 않다면 라벨을 지워주시길 요청드리겠습니다.\n(선명하면 위 케이스들중 1건과 같이 라벨링을 해야함)",
+          "thread_ts": "1777249066.564689",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": [
+            {
+              "id": "F0B004S5VJN",
+              "name": "image.png",
+              "title": "image.png",
+              "mimetype": "image/png",
+              "filetype": "png",
+              "pretty_type": "PNG",
+              "size": 895003,
+              "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0B004S5VJN/image.png",
+              "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0B004S5VJN/image.png"
+            }
+          ]
+        },
+        {
+          "ts": "1777261846.775229",
+          "type": "message",
+          "subtype": null,
+          "user": "U0354SL90UV",
+          "text": "이정도 보이지 않는 라벨은 제거",
+          "thread_ts": "1777249066.564689",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": [
+            {
+              "id": "F0AVANBQKGV",
+              "name": "image.png",
+              "title": "image.png",
+              "mimetype": "image/png",
+              "filetype": "png",
+              "pretty_type": "PNG",
+              "size": 835491,
+              "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0AVANBQKGV/image.png",
+              "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0AVANBQKGV/image.png"
+            },
+            {
+              "id": "F0B004V2H9Q",
+              "name": "image.png",
+              "title": "image.png",
+              "mimetype": "image/png",
+              "filetype": "png",
+              "pretty_type": "PNG",
+              "size": 549209,
+              "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0B004V2H9Q/image.png",
+              "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0B004V2H9Q/image.png"
+            }
+          ]
+        },
+        {
+          "ts": "1777261913.001159",
+          "type": "message",
+          "subtype": null,
+          "user": "U0354SL90UV",
+          "text": "라벨 누락 TA21, 1",
+          "thread_ts": "1777249066.564689",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": [
+            {
+              "id": "F0AVANGEKHB",
+              "name": "image.png",
+              "title": "image.png",
+              "mimetype": "image/png",
+              "filetype": "png",
+              "pretty_type": "PNG",
+              "size": 850976,
+              "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0AVANGEKHB/image.png",
+              "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0AVANGEKHB/image.png"
+            }
+          ]
+        },
+        {
+          "ts": "1777262107.295019",
+          "type": "message",
+          "subtype": null,
+          "user": "U0354SL90UV",
+          "text": "L bounding box의 좌측 여백이 너무 넓어, bbox 수정이 필요",
+          "thread_ts": "1777249066.564689",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": [
+            {
+              "id": "F0B005ADWPL",
+              "name": "image.png",
+              "title": "image.png",
+              "mimetype": "image/png",
+              "filetype": "png",
+              "pretty_type": "PNG",
+              "size": 508141,
+              "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0B005ADWPL/image.png",
+              "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0B005ADWPL/image.png"
+            },
+            {
+              "id": "F0B005CJHR8",
+              "name": "image.png",
+              "title": "image.png",
+              "mimetype": "image/png",
+              "filetype": "png",
+              "pretty_type": "PNG",
+              "size": 384902,
+              "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0B005CJHR8/image.png",
+              "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0B005CJHR8/image.png"
+            }
+          ]
+        },
+        {
+          "ts": "1777262203.190089",
+          "type": "message",
+          "subtype": null,
+          "user": "U0354SL90UV",
+          "text": "2, 6 bounding box 수정 필요",
+          "thread_ts": "1777249066.564689",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": {
+            "user": "U0354SL90UV",
+            "ts": "1777262231.000000"
+          },
+          "files": [
+            {
+              "id": "F0AV7PVB2V9",
+              "name": "image.png",
+              "title": "image.png",
+              "mimetype": "image/png",
+              "filetype": "png",
+              "pretty_type": "PNG",
+              "size": 797244,
+              "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0AV7PVB2V9/image.png",
+              "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0AV7PVB2V9/image.png"
+            }
+          ]
+        },
+        {
+          "ts": "1777262303.163689",
+          "type": "message",
+          "subtype": null,
+          "user": "U0354SL90UV",
+          "text": "E &gt; 해당 케이스는 문자가 아닌 그림으로 판단, 라벨링 X",
+          "thread_ts": "1777249066.564689",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": [
+            {
+              "id": "F0B0UDPUJ4Q",
+              "name": "image.png",
+              "title": "image.png",
+              "mimetype": "image/png",
+              "filetype": "png",
+              "pretty_type": "PNG",
+              "size": 813302,
+              "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0B0UDPUJ4Q/image.png",
+              "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0B0UDPUJ4Q/image.png"
+            }
+          ]
+        },
+        {
+          "ts": "1777262544.400079",
+          "type": "message",
+          "subtype": null,
+          "user": "U0354SL90UV",
+          "text": "해당 케이스는 +에서 제외(마크로 판단됨)",
+          "thread_ts": "1777249066.564689",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": [
+            {
+              "id": "F0AVC4F7L6A",
+              "name": "image.png",
+              "title": "image.png",
+              "mimetype": "image/png",
+              "filetype": "png",
+              "pretty_type": "PNG",
+              "size": 819858,
+              "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0AVC4F7L6A/image.png",
+              "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0AVC4F7L6A/image.png"
+            }
+          ]
+        },
+        {
+          "ts": "1777262669.371379",
+          "type": "message",
+          "subtype": null,
+          "user": "U0354SL90UV",
+          "text": "좌측상단 제일큰 a &gt; 이정도는 판단이 안될것같습니다, 라벨 제거",
+          "thread_ts": "1777249066.564689",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": [
+            {
+              "id": "F0AUYN79S31",
+              "name": "image.png",
+              "title": "image.png",
+              "mimetype": "image/png",
+              "filetype": "png",
+              "pretty_type": "PNG",
+              "size": 831103,
+              "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0AUYN79S31/image.png",
+              "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0AUYN79S31/image.png"
+            }
+          ]
+        },
+        {
+          "ts": "1777262917.592259",
+          "type": "message",
+          "subtype": null,
+          "user": "U0354SL90UV",
+          "text": "가장 작은 라벨이 차지하는 비중이 크지 않아 버리지않음 + 비교적 선명함\n• 라벨링 추가 및 수정 필요",
+          "thread_ts": "1777249066.564689",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": [
+            {
+              "id": "F0B006F3EDQ",
+              "name": "image.png",
+              "title": "image.png",
+              "mimetype": "image/png",
+              "filetype": "png",
+              "pretty_type": "PNG",
+              "size": 747615,
+              "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0B006F3EDQ/image.png",
+              "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0B006F3EDQ/image.png"
+            },
+            {
+              "id": "F0B006KBN58",
+              "name": "image.png",
+              "title": "image.png",
+              "mimetype": "image/png",
+              "filetype": "png",
+              "pretty_type": "PNG",
+              "size": 737513,
+              "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0B006KBN58/image.png",
+              "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0B006KBN58/image.png"
+            }
+          ]
+        },
+        {
+          "ts": "1777262982.854639",
+          "type": "message",
+          "subtype": null,
+          "user": "U0354SL90UV",
+          "text": "라벨링 오류 (6 &gt; 5로 잘못 라벨링)",
+          "thread_ts": "1777249066.564689",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": [
+            {
+              "id": "F0AVC56SGTY",
+              "name": "image.png",
+              "title": "image.png",
+              "mimetype": "image/png",
+              "filetype": "png",
+              "pretty_type": "PNG",
+              "size": 798565,
+              "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0AVC56SGTY/image.png",
+              "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0AVC56SGTY/image.png"
+            },
+            {
+              "id": "F0AVC598P0E",
+              "name": "image.png",
+              "title": "image.png",
+              "mimetype": "image/png",
+              "filetype": "png",
+              "pretty_type": "PNG",
+              "size": 571689,
+              "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0AVC598P0E/image.png",
+              "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0AVC598P0E/image.png"
+            }
+          ]
+        },
+        {
+          "ts": "1777263016.648799",
+          "type": "message",
+          "subtype": null,
+          "user": "U0354SL90UV",
+          "text": "+ 일부 라벨링 박스 수정 필요",
+          "thread_ts": "1777249066.564689",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": [
+            {
+              "id": "F0AVAQJU1JR",
+              "name": "image.png",
+              "title": "image.png",
+              "mimetype": "image/png",
+              "filetype": "png",
+              "pretty_type": "PNG",
+              "size": 533358,
+              "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0AVAQJU1JR/image.png",
+              "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0AVAQJU1JR/image.png"
+            }
+          ]
+        },
+        {
+          "ts": "1777263219.455229",
+          "type": "message",
+          "subtype": "thread_broadcast",
+          "user": "U0354SL90UV",
+          "text": "<@U0AS556AAJ0>\n피드백 드린 부분은 제가 수정 완료했습니다,\n해당 쓰레드에 올린 피드백 부분 한번 쭐 훑어보시고, 고려하여 이번주 라벨링 진행해주시면 감사하겠습니다.\n\n13 ~15번폴더 3개 (폴더 1장당 들어있는 데이터 수량이 12번폴더보다 많음)\n금주에 진행해주시면 감사하겠습니다.\n\n속도를 생각하면 2개폴더 완료하고 15번폴더 일부까지 완료가 될 것으로 생각되는데, 아직은 시간을 측정하는 단계라 하는만큼 올려주시면 됩니다.\n\n저도 중간중간 피드백 지속하게끔, 하루 작업 완료량은 그날 바로 올려주시면 감사하겠습니다 (검수 피드백은 매일 드리지 못할수도 있습니다.)",
+          "thread_ts": "1777249066.564689",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1777263612.163439",
+          "type": "message",
+          "subtype": null,
+          "user": "U0AS556AAJ0",
+          "text": "네 오류가 많이 있네요. 피드백 꼼꼼히 살펴보고 진행하겠습니다~ 대덕건과 같이 진행하게 될 것 같아 되는대로 하루량을 올려보겠습니다! 아침부터 수정하느라 수고하셨어요:bow:",
+          "thread_ts": "1777249066.564689",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1777263219.455229",
+      "type": "message",
+      "subtype": "thread_broadcast",
+      "user": "U0354SL90UV",
+      "text": "<@U0AS556AAJ0>\n피드백 드린 부분은 제가 수정 완료했습니다,\n해당 쓰레드에 올린 피드백 부분 한번 쭐 훑어보시고, 고려하여 이번주 라벨링 진행해주시면 감사하겠습니다.\n\n13 ~15번폴더 3개 (폴더 1장당 들어있는 데이터 수량이 12번폴더보다 많음)\n금주에 진행해주시면 감사하겠습니다.\n\n속도를 생각하면 2개폴더 완료하고 15번폴더 일부까지 완료가 될 것으로 생각되는데, 아직은 시간을 측정하는 단계라 하는만큼 올려주시면 됩니다.\n\n저도 중간중간 피드백 지속하게끔, 하루 작업 완료량은 그날 바로 올려주시면 감사하겠습니다 (검수 피드백은 매일 드리지 못할수도 있습니다.)",
+      "thread_ts": "1777249066.564689",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1777299347.101129",
+      "type": "message",
+      "subtype": null,
+      "user": "U0AS556AAJ0",
+      "text": "20260427 업로드 완료했습니다 <@U0354SL90UV>",
+      "thread_ts": "1777299347.101129",
+      "reply_count": 9,
+      "reply_users": [
+        "U0354SL90UV",
+        "U0AS556AAJ0"
+      ],
+      "latest_reply": "1777341731.373219",
+      "reactions": [],
+      "edited": null,
+      "files": [],
+      "thread_replies": [
+        {
+          "ts": "1777341289.851759",
+          "type": "message",
+          "subtype": null,
+          "user": "U0354SL90UV",
+          "text": "이미 지운 상태로 캡쳐했는데, s 좌측에 있던 e는 라벨 제거했습니다",
+          "thread_ts": "1777299347.101129",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": [
+            {
+              "id": "F0B0MCB70KB",
+              "name": "image.png",
+              "title": "image.png",
+              "mimetype": "image/png",
+              "filetype": "png",
+              "pretty_type": "PNG",
+              "size": 878619,
+              "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0B0MCB70KB/image.png",
+              "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0B0MCB70KB/image.png"
+            }
+          ]
+        },
+        {
+          "ts": "1777341321.596689",
+          "type": "message",
+          "subtype": null,
+          "user": "U0AS556AAJ0",
+          "text": "아 네!",
+          "thread_ts": "1777299347.101129",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1777341353.863929",
+          "type": "message",
+          "subtype": null,
+          "user": "U0AS556AAJ0",
+          "text": "어느정도 가늠이 되더라도 불확실한것들은 라벨 잡지 않는게 좋을까요",
+          "thread_ts": "1777299347.101129",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1777341367.480989",
+          "type": "message",
+          "subtype": null,
+          "user": "U0354SL90UV",
+          "text": "네, 그렇게 해주세요!",
+          "thread_ts": "1777299347.101129",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1777341523.194969",
+          "type": "message",
+          "subtype": null,
+          "user": "U0354SL90UV",
+          "text": "샘플이 적지만 올려주신 부분은 모두 확인했습니다~",
+          "thread_ts": "1777299347.101129",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1777341549.005119",
+          "type": "message",
+          "subtype": null,
+          "user": "U0354SL90UV",
+          "text": "이번주는 양 신경쓰지 마시고 하시는대로 올려주시면 감사하겠습니다.",
+          "thread_ts": "1777299347.101129",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1777341666.160219",
+          "type": "message",
+          "subtype": null,
+          "user": "U0AS556AAJ0",
+          "text": "네네 ! 좌측상단에 225/ 이런 경우는 숫자가 기울어져 있어서 저렇게 잡히는데 괜찮을까요",
+          "thread_ts": "1777299347.101129",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": [
+            {
+              "id": "F0AV72J7V8X",
+              "name": "image.png",
+              "title": "image.png",
+              "mimetype": "image/png",
+              "filetype": "png",
+              "pretty_type": "PNG",
+              "size": 514556,
+              "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0AV72J7V8X/image.png",
+              "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0AV72J7V8X/image.png"
+            }
+          ]
+        },
+        {
+          "ts": "1777341717.529049",
+          "type": "message",
+          "subtype": null,
+          "user": "U0354SL90UV",
+          "text": "네, 저정도면 bbox는 괜찮습니다\n기울어진 경우는 어쩔 수 없이 앞뒤로 겹쳐져도 괜찮습니다.",
+          "thread_ts": "1777299347.101129",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1777341731.373219",
+          "type": "message",
+          "subtype": null,
+          "user": "U0AS556AAJ0",
+          "text": "넵",
+          "thread_ts": "1777299347.101129",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1777299469.905519",
+      "type": "message",
+      "subtype": null,
+      "user": "U0AS556AAJ0",
+      "text": "medium_sampled SR떨어짐 완료했는데, 업로드 과정에 문제가 살짝 있어서 내일 아침에 확인받고 올리겠습니다~\n내일 출근합니다 <@U033Z97MZ3N>",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1777390825.617009",
+      "type": "message",
+      "subtype": null,
+      "user": "U0AS556AAJ0",
+      "text": "Rssult 폴더에\nSR후이물_260428_medium_sampled_DD 업로드 완료했습니다.\n마찬가지로 수정 완료된 파일만 분리하는데 문제가 있어서 done레이블로 체크하여 올렸어요 확인헤주세요\n<@U033Z97MZ3N>",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1777390964.137319",
+      "type": "message",
+      "subtype": null,
+      "user": "U0AS556AAJ0",
+      "text": "20260428 업로드 완료했습니다 <@U0354SL90UV>",
+      "thread_ts": "1777390964.137319",
+      "reply_count": 2,
+      "reply_users": [
+        "U0354SL90UV"
+      ],
+      "latest_reply": "1777427983.194019",
+      "reactions": [],
+      "edited": null,
+      "files": [],
+      "thread_replies": [
+        {
+          "ts": "1777427921.154209",
+          "type": "message",
+          "subtype": null,
+          "user": "U0354SL90UV",
+          "text": "잘못된 라벨이 겹쳐있는 경우가 가끔 있습니다, 확인해주시면 감사하겠습니다~",
+          "thread_ts": "1777390964.137319",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": [
+            {
+              "id": "F0B0FG7RK8E",
+              "name": "image.png",
+              "title": "image.png",
+              "mimetype": "image/png",
+              "filetype": "png",
+              "pretty_type": "PNG",
+              "size": 832957,
+              "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0B0FG7RK8E/image.png",
+              "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0B0FG7RK8E/image.png"
+            }
+          ]
+        },
+        {
+          "ts": "1777427983.194019",
+          "type": "message",
+          "subtype": null,
+          "user": "U0354SL90UV",
+          "text": "",
+          "thread_ts": "1777390964.137319",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": [
+            {
+              "id": "F0B0WF4534Z",
+              "name": "스크린샷 2026-04-29 오전 10.58.05.png",
+              "title": "스크린샷 2026-04-29 오전 10.58.05.png",
+              "mimetype": "image/png",
+              "filetype": "png",
+              "pretty_type": "PNG",
+              "size": 834246,
+              "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0B0WF4534Z/_______________________________2026-04-29_________________10.58.05.png",
+              "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0B0WF4534Z/_______________________________2026-04-29_________________10.58.05.png"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "ts": "1777391799.753239",
+      "type": "message",
+      "subtype": null,
+      "user": "U0AS556AAJ0",
+      "text": "• 현재 대덕전자와 금호타이어 업무를 함께 진행하고 있습니다. \n      우선 대덕전자 건은 목요일까지 요청해 주신 할당량이 있어 해당 업무를 차질 없이 마무리한 뒤, 이어서 금호타이어 건을 진행할 예정입니다",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [
+        {
+          "name": "man-gesturing-ok",
+          "users": [
+            "U0354SL90UV"
+          ],
+          "count": 1
+        }
+      ],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1777454232.835519",
+      "type": "message",
+      "subtype": null,
+      "user": "U0AS556AAJ0",
+      "text": "SR후상처_260429_medium_sampled_DD 업로드 했습니다 <@U033Z97MZ3N>",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [
+        {
+          "name": "감사콩",
+          "users": [
+            "U033Z97MZ3N"
+          ],
+          "count": 1
+        }
+      ],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1777473131.110219",
+      "type": "message",
+      "subtype": null,
+      "user": "U0AS556AAJ0",
+      "text": "20260429 업로드 완료했습니다 <@U0354SL90UV>",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [
+        {
+          "name": "감사콩",
+          "users": [
+            "U0354SL90UV"
+          ],
+          "count": 1
+        }
+      ],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1777520186.521649",
+      "type": "message",
+      "subtype": "channel_join",
+      "user": "U0B15H1AQJV",
+      "text": "<@U0B15H1AQJV> has joined the channel",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    }
+  ]
+}

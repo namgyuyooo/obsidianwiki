@@ -1,0 +1,1116 @@
+{
+  "type": "slack_channel_filtered_export",
+  "workspace": "RTM Slack",
+  "collected_at": "2026-04-30T03:35:27.248712+00:00",
+  "channel": {
+    "id": "C05FRQHFG2F",
+    "name": "2_개인사정으로",
+    "type": "public_channel",
+    "is_archived": false,
+    "is_private": false,
+    "created": "2023-07-06T07:37:33+00:00",
+    "topic": "시차/연차/자리비움/외근/출장 등 근무와 관련된 내용을 알려주세요!",
+    "purpose": "",
+    "member_count": 40,
+    "routing": {
+      "channel_bucket": "company_news",
+      "conversation_mode": "company_updates",
+      "rationale": "default_company_updates",
+      "wiki_workspace": "rtm",
+      "wiki_target_root": "obsidian/Wiki/Common/Slack_Company_News",
+      "wiki_target_kind": "common"
+    }
+  },
+  "routing": {
+    "channel_profile": {
+      "channel_bucket": "company_news",
+      "conversation_mode": "company_updates",
+      "rationale": "default_company_updates",
+      "wiki_workspace": "rtm",
+      "wiki_target_root": "obsidian/Wiki/Common/Slack_Company_News",
+      "wiki_target_kind": "common",
+      "project_wiki_target_root": "obsidian/Wiki/Common/Slack_Project_Intake",
+      "company_wiki_target_root": "obsidian/Wiki/Common/Slack_Company_News"
+    },
+    "primary_bucket": "company_news",
+    "bucket_counts": {
+      "project": 0,
+      "company_news": 24,
+      "casual": 62
+    },
+    "wiki_targets": [
+      {
+        "path": "obsidian/Wiki/Common/Slack_Company_News",
+        "count": 24
+      }
+    ]
+  },
+  "history_window": {
+    "oldest_ts": "1776656145.666347",
+    "limit_per_channel": 500,
+    "include_threads": true,
+    "include_files": true
+  },
+  "filter": {
+    "provider": "local_rule",
+    "summary": "GLM unavailable; local rule filter applied",
+    "kept_count": 24,
+    "excluded_count": 62
+  },
+  "messages": [
+    {
+      "ts": "1776667239.106579",
+      "type": "message",
+      "subtype": null,
+      "user": "U04MGQUE6U8",
+      "text": "잠시 자리비움 하겠습니다",
+      "thread_ts": "1776667239.106579",
+      "reply_count": 1,
+      "reply_users": [
+        "U04MGQUE6U8"
+      ],
+      "latest_reply": "1776671497.276059",
+      "reactions": [],
+      "edited": null,
+      "files": [],
+      "thread_replies": [
+        {
+          "ts": "1776671497.276059",
+          "type": "message",
+          "subtype": null,
+          "user": "U04MGQUE6U8",
+          "text": "복귀했습니다",
+          "thread_ts": "1776667239.106579",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1776730511.060319",
+      "type": "message",
+      "subtype": null,
+      "user": "U035802E4UA",
+      "text": "오전 시차 사용합니다. 12시 30분 출근 예정입니다.",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1776733288.905039",
+      "type": "message",
+      "subtype": null,
+      "user": "U03S8T88QGP",
+      "text": "~오전 시차 사용합니다. 12시 30분 출근 예정입니다.~\n연차로 변경합니다.",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": {
+        "user": "U03S8T88QGP",
+        "ts": "1776738966.000000"
+      },
+      "files": []
+    },
+    {
+      "ts": "1776733880.094279",
+      "type": "message",
+      "subtype": null,
+      "user": "U082RGK8J15",
+      "text": "오전 시차 사용합니다. 12시 30분 출근 예정입니다.",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1776751973.473869",
+      "type": "message",
+      "subtype": null,
+      "user": "U03NJDDPZPZ",
+      "text": "병원 진료가 길어져, 시차 사용합니다. (15:55 복귀)",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1776778087.364829",
+      "type": "message",
+      "subtype": null,
+      "user": "U035802E4UA",
+      "text": "원격 근무 시작합니다.",
+      "thread_ts": "1776778087.364829",
+      "reply_count": 1,
+      "reply_users": [
+        "U035802E4UA"
+      ],
+      "latest_reply": "1776788341.707749",
+      "reactions": [
+        {
+          "name": "fire",
+          "users": [
+            "U03NJDDPZPZ"
+          ],
+          "count": 1
+        }
+      ],
+      "edited": null,
+      "files": [],
+      "thread_replies": [
+        {
+          "ts": "1776788341.707749",
+          "type": "message",
+          "subtype": null,
+          "user": "U035802E4UA",
+          "text": "종료합니다.",
+          "thread_ts": "1776778087.364829",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": {
+            "user": "U035802E4UA",
+            "ts": "1776788346.000000"
+          },
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1776818932.784629",
+      "type": "message",
+      "subtype": null,
+      "user": "U049Z3PQ2KA",
+      "text": "오전 시차 사용합니다. 12시 30분 출근 예정입니다.",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1776821146.616339",
+      "type": "message",
+      "subtype": null,
+      "user": "U082RGK8J15",
+      "text": "병원 진료가 길어져 오전 시차 사용합니다",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1776833118.363109",
+      "type": "message",
+      "subtype": null,
+      "user": "U0328CH80JV",
+      "text": "외근 종료 후 시차 사용합니다. (13:30~)",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [
+        {
+          "name": "eyes",
+          "users": [
+            "U02MA1AEU8K",
+            "U05AWGZ1TRD"
+          ],
+          "count": 2
+        }
+      ],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1776902656.549229",
+      "type": "message",
+      "subtype": null,
+      "user": "U04C3UYFY1F",
+      "text": "원격근무시작합니다.\n(11시경 외근으로 전환)",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1776908121.778789",
+      "type": "message",
+      "subtype": null,
+      "user": "U035802E4UA",
+      "text": "오전 시차 사용합니다. 12시 30분 출근 예정입니다.",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1776919210.253699",
+      "type": "message",
+      "subtype": null,
+      "user": "U016489PE5S",
+      "text": "재택 전환하여 근무 중입니다. 편하게 연락 주세요~ (12:30~)",
+      "thread_ts": "1776919210.253699",
+      "reply_count": 1,
+      "reply_users": [
+        "U016489PE5S"
+      ],
+      "latest_reply": "1776930774.123929",
+      "reactions": [],
+      "edited": null,
+      "files": [],
+      "thread_replies": [
+        {
+          "ts": "1776930774.123929",
+          "type": "message",
+          "subtype": null,
+          "user": "U016489PE5S",
+          "text": "근무 종료합니다.",
+          "thread_ts": "1776919210.253699",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1776990681.308629",
+      "type": "message",
+      "subtype": null,
+      "user": "U049Z3PQ2KA",
+      "text": "오전 시차 사용합니다. 12시 30분 출근 예정입니다.",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1776993838.212919",
+      "type": "message",
+      "subtype": null,
+      "user": "U082RGK8J15",
+      "text": "오전기타 사용합니다 11:00 출근 예정입니다",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [
+        {
+          "name": "guitar",
+          "users": [
+            "U04FRP4PQF5",
+            "U04MGQUE6U8",
+            "U035802E4UA",
+            "U019E51R1DM",
+            "U049Z3PQ2KA",
+            "U04C3UYFY1F",
+            "U02MA1AEU8K"
+          ],
+          "count": 7
+        }
+      ],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1777242509.454769",
+      "type": "message",
+      "subtype": null,
+      "user": "U0328CH80JV",
+      "text": "시차사용후 오후출근합니다.",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1777249438.218269",
+      "type": "message",
+      "subtype": null,
+      "user": "U07RPDCF0DR",
+      "text": "오전 시차 사용합니다. 12시 30분 출근 예정입니다.",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1777251658.812409",
+      "type": "message",
+      "subtype": null,
+      "user": "U04FRP4PQF5",
+      "text": "12:30 출근 예정입니다",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1777339124.822099",
+      "type": "message",
+      "subtype": null,
+      "user": "U082RGK8J15",
+      "text": "오전시차 사용합니다 11:00 출근 예정입니다",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1777339702.184619",
+      "type": "message",
+      "subtype": null,
+      "user": "U049Z3PQ2KA",
+      "text": "오전 시차 사용합니다. 12시 30분 출근 예정입니다.",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1777423219.171239",
+      "type": "message",
+      "subtype": null,
+      "user": "U035802E4UA",
+      "text": "오전 시차 사용합니다. 12시 30분 출근 예정입니다.",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1777424742.248459",
+      "type": "message",
+      "subtype": null,
+      "user": "U049Z3PQ2KA",
+      "text": "~오전 시차 사용합니다. 12시 30분 출근 예정입니다.~\n연차로 전환합니다. 업무 연락 언제든지 편하게 주세요!",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": {
+        "user": "U049Z3PQ2KA",
+        "ts": "1777428225.000000"
+      },
+      "files": []
+    },
+    {
+      "ts": "1777467562.755289",
+      "type": "message",
+      "subtype": null,
+      "user": "U03SF6T6RL0",
+      "text": "원격 근무 시작합니다.",
+      "thread_ts": "1777467562.755289",
+      "reply_count": 1,
+      "reply_users": [
+        "U03SF6T6RL0"
+      ],
+      "latest_reply": "1777492203.763479",
+      "reactions": [],
+      "edited": null,
+      "files": [],
+      "thread_replies": [
+        {
+          "ts": "1777492203.763479",
+          "type": "message",
+          "subtype": null,
+          "user": "U03SF6T6RL0",
+          "text": "종료합니다",
+          "thread_ts": "1777467562.755289",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1777509730.524469",
+      "type": "message",
+      "subtype": null,
+      "user": "U049Z3PQ2KA",
+      "text": "오전 시차 사용합니다. 12시 30분 출근 예정입니다.",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1777510036.794929",
+      "type": "message",
+      "subtype": null,
+      "user": "U025MG70MNX",
+      "text": "오전 시차 사용합니다. 11:30 출근 예정입니다.",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    }
+  ],
+  "routed_messages": [
+    {
+      "ts": "1776667239.106579",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "잠시 자리비움 하겠습니다"
+    },
+    {
+      "ts": "1776730511.060319",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "오전 시차 사용합니다. 12시 30분 출근 예정입니다."
+    },
+    {
+      "ts": "1776733288.905039",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "~오전 시차 사용합니다. 12시 30분 출근 예정입니다.~\n연차로 변경합니다."
+    },
+    {
+      "ts": "1776733880.094279",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "오전 시차 사용합니다. 12시 30분 출근 예정입니다."
+    },
+    {
+      "ts": "1776751973.473869",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "병원 진료가 길어져, 시차 사용합니다. (15:55 복귀)"
+    },
+    {
+      "ts": "1776778087.364829",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "원격 근무 시작합니다."
+    },
+    {
+      "ts": "1776818932.784629",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "오전 시차 사용합니다. 12시 30분 출근 예정입니다."
+    },
+    {
+      "ts": "1776821146.616339",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "병원 진료가 길어져 오전 시차 사용합니다"
+    },
+    {
+      "ts": "1776833118.363109",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "외근 종료 후 시차 사용합니다. (13:30~)"
+    },
+    {
+      "ts": "1776902656.549229",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "원격근무시작합니다.\n(11시경 외근으로 전환)"
+    },
+    {
+      "ts": "1776908121.778789",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "오전 시차 사용합니다. 12시 30분 출근 예정입니다."
+    },
+    {
+      "ts": "1776919210.253699",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "재택 전환하여 근무 중입니다. 편하게 연락 주세요~ (12:30~)"
+    },
+    {
+      "ts": "1776990681.308629",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "오전 시차 사용합니다. 12시 30분 출근 예정입니다."
+    },
+    {
+      "ts": "1776993838.212919",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "오전기타 사용합니다 11:00 출근 예정입니다"
+    },
+    {
+      "ts": "1777242509.454769",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "시차사용후 오후출근합니다."
+    },
+    {
+      "ts": "1777249438.218269",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "오전 시차 사용합니다. 12시 30분 출근 예정입니다."
+    },
+    {
+      "ts": "1777251658.812409",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "12:30 출근 예정입니다"
+    },
+    {
+      "ts": "1777339124.822099",
+      "bucket": "company_news",
+      "reason": "company_keywords",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "오전시차 사용합니다 11:00 출근 예정입니다"
+    },
+    {
+      "ts": "1777339702.184619",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "오전 시차 사용합니다. 12시 30분 출근 예정입니다."
+    },
+    {
+      "ts": "1777423219.171239",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "오전 시차 사용합니다. 12시 30분 출근 예정입니다."
+    },
+    {
+      "ts": "1777424742.248459",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "~오전 시차 사용합니다. 12시 30분 출근 예정입니다.~\n연차로 전환합니다. 업무 연락 언제든지 편하게 주세요!"
+    },
+    {
+      "ts": "1777467562.755289",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "원격 근무 시작합니다."
+    },
+    {
+      "ts": "1777509730.524469",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "오전 시차 사용합니다. 12시 30분 출근 예정입니다."
+    },
+    {
+      "ts": "1777510036.794929",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "오전 시차 사용합니다. 11:30 출근 예정입니다."
+    }
+  ],
+  "excluded_messages": [
+    {
+      "ts": "1776667114.068489",
+      "reason": "too_short_without_evidence",
+      "bucket": "casual",
+      "text": "잠시휴게합니다",
+      "subtype": null
+    },
+    {
+      "ts": "1776670519.269039",
+      "reason": "too_short_without_evidence",
+      "bucket": "casual",
+      "text": "휴게 시작합니다",
+      "subtype": null
+    },
+    {
+      "ts": "1776673492.493739",
+      "reason": "too_short_without_evidence",
+      "bucket": "casual",
+      "text": "잠시 휴게합니다",
+      "subtype": null
+    },
+    {
+      "ts": "1776673976.497719",
+      "reason": "too_short_without_evidence",
+      "bucket": "casual",
+      "text": "원격 근무 시작합니다",
+      "subtype": null
+    },
+    {
+      "ts": "1776731438.035459",
+      "reason": "too_short_without_evidence",
+      "bucket": "casual",
+      "text": "외근 시작합니다.",
+      "subtype": null
+    },
+    {
+      "ts": "1776731856.060549",
+      "reason": "too_short_without_evidence",
+      "bucket": "casual",
+      "text": "외근 시작합니다",
+      "subtype": null
+    },
+    {
+      "ts": "1776732079.406619",
+      "reason": "too_short_without_evidence",
+      "bucket": "casual",
+      "text": "외근 시작합니다",
+      "subtype": null
+    },
+    {
+      "ts": "1776732722.614479",
+      "reason": "too_short_without_evidence",
+      "bucket": "casual",
+      "text": "외근 시작합니다",
+      "subtype": null
+    },
+    {
+      "ts": "1776732827.482689",
+      "reason": "too_short_without_evidence",
+      "bucket": "casual",
+      "text": "외근시작합니다",
+      "subtype": null
+    },
+    {
+      "ts": "1776734556.155559",
+      "reason": "too_short_without_evidence",
+      "bucket": "casual",
+      "text": "외근 시작합니다",
+      "subtype": null
+    },
+    {
+      "ts": "1776762667.151859",
+      "reason": "too_short_without_evidence",
+      "bucket": "casual",
+      "text": "휴게 시작합니다",
+      "subtype": null
+    },
+    {
+      "ts": "1776772866.986709",
+      "reason": "too_short_without_evidence",
+      "bucket": "casual",
+      "text": "원격근무 시작합니다",
+      "subtype": null
+    },
+    {
+      "ts": "1776812723.128789",
+      "reason": "too_short_without_evidence",
+      "bucket": "casual",
+      "text": "외근시작합니다",
+      "subtype": null
+    },
+    {
+      "ts": "1776814193.625649",
+      "reason": "too_short_without_evidence",
+      "bucket": "casual",
+      "text": "외근 시작합니다",
+      "subtype": null
+    },
+    {
+      "ts": "1776817934.770059",
+      "reason": "too_short_without_evidence",
+      "bucket": "casual",
+      "text": "외근 시작합니다",
+      "subtype": null
+    },
+    {
+      "ts": "1776818624.330779",
+      "reason": "too_short_without_evidence",
+      "bucket": "casual",
+      "text": "외근 시작합니다",
+      "subtype": null
+    },
+    {
+      "ts": "1776819446.258129",
+      "reason": "too_short_without_evidence",
+      "bucket": "casual",
+      "text": "외근 시작합니다",
+      "subtype": null
+    },
+    {
+      "ts": "1776820361.835599",
+      "reason": "too_short_without_evidence",
+      "bucket": "casual",
+      "text": "외근 시작합니다",
+      "subtype": null
+    },
+    {
+      "ts": "1776863349.262699",
+      "reason": "too_short_without_evidence",
+      "bucket": "casual",
+      "text": "원격 근무 시작합니다",
+      "subtype": null
+    },
+    {
+      "ts": "1776869807.763139",
+      "reason": "too_short_without_evidence",
+      "bucket": "casual",
+      "text": "원격근무 시작합니다.",
+      "subtype": null
+    },
+    {
+      "ts": "1776903981.590509",
+      "reason": "too_short_without_evidence",
+      "bucket": "casual",
+      "text": "외근 시작합니다",
+      "subtype": null
+    },
+    {
+      "ts": "1776905717.020869",
+      "reason": "too_short_without_evidence",
+      "bucket": "casual",
+      "text": "외근 시작합니다",
+      "subtype": null
+    },
+    {
+      "ts": "1776905793.809079",
+      "reason": "too_short_without_evidence",
+      "bucket": "casual",
+      "text": "외근 시작합니다",
+      "subtype": null
+    },
+    {
+      "ts": "1776907666.313969",
+      "reason": "too_short_without_evidence",
+      "bucket": "casual",
+      "text": "외근 시작합니다",
+      "subtype": null
+    },
+    {
+      "ts": "1776933336.215529",
+      "reason": "too_short_without_evidence",
+      "bucket": "casual",
+      "text": "잠시휴게합니다",
+      "subtype": null
+    },
+    {
+      "ts": "1776950702.250999",
+      "reason": "too_short_without_evidence",
+      "bucket": "casual",
+      "text": "원격 근무 시작합니다",
+      "subtype": null
+    },
+    {
+      "ts": "1776951062.580399",
+      "reason": "too_short_without_evidence",
+      "bucket": "casual",
+      "text": "원격 근무 시작합니다",
+      "subtype": null
+    },
+    {
+      "ts": "1776951282.337449",
+      "reason": "too_short_without_evidence",
+      "bucket": "casual",
+      "text": "원격 근무 시작합니다",
+      "subtype": null
+    },
+    {
+      "ts": "1776991211.305459",
+      "reason": "too_short_without_evidence",
+      "bucket": "casual",
+      "text": "외근 시작합니다",
+      "subtype": null
+    },
+    {
+      "ts": "1776992054.917019",
+      "reason": "too_short_without_evidence",
+      "bucket": "casual",
+      "text": "외근 시작합니다",
+      "subtype": null
+    },
+    {
+      "ts": "1776992688.193839",
+      "reason": "too_short_without_evidence",
+      "bucket": "casual",
+      "text": "외근 시작합니다",
+      "subtype": null
+    },
+    {
+      "ts": "1776993957.436299",
+      "reason": "too_short_without_evidence",
+      "bucket": "casual",
+      "text": "외근 시작합니다",
+      "subtype": null
+    },
+    {
+      "ts": "1777115974.801329",
+      "reason": "too_short_without_evidence",
+      "bucket": "casual",
+      "text": "원격 근무 시작합니다",
+      "subtype": null
+    },
+    {
+      "ts": "1777189740.426999",
+      "reason": "too_short_without_evidence",
+      "bucket": "casual",
+      "text": "원격 근무 시작합니다",
+      "subtype": null
+    },
+    {
+      "ts": "1777249225.187929",
+      "reason": "too_short_without_evidence",
+      "bucket": "casual",
+      "text": "외근 시작합니다",
+      "subtype": null
+    },
+    {
+      "ts": "1777249342.582139",
+      "reason": "too_short_without_evidence",
+      "bucket": "casual",
+      "text": "외근 시작합니다",
+      "subtype": null
+    },
+    {
+      "ts": "1777249964.282789",
+      "reason": "too_short_without_evidence",
+      "bucket": "casual",
+      "text": "외근 시작합니다",
+      "subtype": null
+    },
+    {
+      "ts": "1777250072.328169",
+      "reason": "too_short_without_evidence",
+      "bucket": "casual",
+      "text": "외근 시작합니다",
+      "subtype": null
+    },
+    {
+      "ts": "1777272260.035909",
+      "reason": "too_short_without_evidence",
+      "bucket": "casual",
+      "text": "잠시휴게합니다",
+      "subtype": null
+    },
+    {
+      "ts": "1777277329.079049",
+      "reason": "too_short_without_evidence",
+      "bucket": "casual",
+      "text": "잠시 휴게합니다",
+      "subtype": null
+    },
+    {
+      "ts": "1777281075.210139",
+      "reason": "too_short_without_evidence",
+      "bucket": "casual",
+      "text": "잠시 휴게합니다",
+      "subtype": null
+    },
+    {
+      "ts": "1777331088.610619",
+      "reason": "too_short_without_evidence",
+      "bucket": "casual",
+      "text": "외근 시작합니다",
+      "subtype": null
+    },
+    {
+      "ts": "1777332143.537709",
+      "reason": "too_short_without_evidence",
+      "bucket": "casual",
+      "text": "외근 시작합니다",
+      "subtype": null
+    },
+    {
+      "ts": "1777336933.698689",
+      "reason": "too_short_without_evidence",
+      "bucket": "casual",
+      "text": "외근 시작합니다",
+      "subtype": null
+    },
+    {
+      "ts": "1777337281.044189",
+      "reason": "too_short_without_evidence",
+      "bucket": "casual",
+      "text": "외근 시작합니다",
+      "subtype": null
+    },
+    {
+      "ts": "1777337365.972249",
+      "reason": "too_short_without_evidence",
+      "bucket": "casual",
+      "text": "외근 시작합니다",
+      "subtype": null
+    },
+    {
+      "ts": "1777339573.770869",
+      "reason": "too_short_without_evidence",
+      "bucket": "casual",
+      "text": "외근 시작합니다",
+      "subtype": null
+    },
+    {
+      "ts": "1777381215.607219",
+      "reason": "too_short_without_evidence",
+      "bucket": "casual",
+      "text": "원격 근무 시작합니다",
+      "subtype": null
+    },
+    {
+      "ts": "1777382133.668879",
+      "reason": "too_short_without_evidence",
+      "bucket": "casual",
+      "text": "원격 근무 시작합니다",
+      "subtype": null
+    },
+    {
+      "ts": "1777418284.952109",
+      "reason": "too_short_without_evidence",
+      "bucket": "casual",
+      "text": "외근 시작합니다",
+      "subtype": null
+    },
+    {
+      "ts": "1777423416.605499",
+      "reason": "too_short_without_evidence",
+      "bucket": "casual",
+      "text": "외근 시작합니다",
+      "subtype": null
+    },
+    {
+      "ts": "1777424001.556369",
+      "reason": "too_short_without_evidence",
+      "bucket": "casual",
+      "text": "외근 시작합니다",
+      "subtype": null
+    },
+    {
+      "ts": "1777424039.644449",
+      "reason": "too_short_without_evidence",
+      "bucket": "casual",
+      "text": "외근 시작합니다",
+      "subtype": null
+    },
+    {
+      "ts": "1777425252.655379",
+      "reason": "too_short_without_evidence",
+      "bucket": "casual",
+      "text": "외근 시작합니다",
+      "subtype": null
+    },
+    {
+      "ts": "1777445844.899229",
+      "reason": "too_short_without_evidence",
+      "bucket": "casual",
+      "text": "잠시휴게합니다",
+      "subtype": null
+    },
+    {
+      "ts": "1777453680.032009",
+      "reason": "too_short_without_evidence",
+      "bucket": "casual",
+      "text": "잠시 자리비움 합니다",
+      "subtype": null
+    },
+    {
+      "ts": "1777454800.047769",
+      "reason": "too_short_without_evidence",
+      "bucket": "casual",
+      "text": "휴게시작",
+      "subtype": null
+    },
+    {
+      "ts": "1777505463.899349",
+      "reason": "too_short_without_evidence",
+      "bucket": "casual",
+      "text": "잠시 휴게합니다",
+      "subtype": null
+    },
+    {
+      "ts": "1777510360.122589",
+      "reason": "too_short_without_evidence",
+      "bucket": "casual",
+      "text": "외근 시작합니다",
+      "subtype": null
+    },
+    {
+      "ts": "1777510609.666159",
+      "reason": "too_short_without_evidence",
+      "bucket": "casual",
+      "text": "외근 시작합니다",
+      "subtype": null
+    },
+    {
+      "ts": "1777510879.619299",
+      "reason": "too_short_without_evidence",
+      "bucket": "casual",
+      "text": "외근 시작합니다",
+      "subtype": null
+    },
+    {
+      "ts": "1777511835.946849",
+      "reason": "too_short_without_evidence",
+      "bucket": "casual",
+      "text": "오전시차 사용합니다",
+      "subtype": null
+    }
+  ]
+}

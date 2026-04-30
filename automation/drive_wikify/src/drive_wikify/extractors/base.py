@@ -8,6 +8,7 @@ from .html import extract_html
 from .hwp_hwpx import extract_hwp, extract_hwpx
 from .pdf import extract_pdf
 from .pptx import extract_pptx
+from .spreadsheet import extract_csv, extract_xls, extract_xlsx
 
 
 def extract_document(path: Path) -> ExtractedContent:
@@ -22,6 +23,12 @@ def extract_document(path: Path) -> ExtractedContent:
         return extract_docx(path)
     if suffix == ".pptx":
         return extract_pptx(path)
+    if suffix == ".xlsx":
+        return extract_xlsx(path)
+    if suffix == ".xls":
+        return extract_xls(path)
+    if suffix == ".csv":
+        return extract_csv(path)
     if suffix in {".html", ".htm"}:
         return extract_html(path)
     text = path.read_text(encoding="utf-8", errors="ignore")

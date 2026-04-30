@@ -1,0 +1,692 @@
+{
+  "type": "slack_channel_filtered_export",
+  "workspace": "RTM Slack",
+  "collected_at": "2026-04-30T03:35:27.248712+00:00",
+  "channel": {
+    "id": "C0A8CGZUREW",
+    "name": "sq-ehm-고도화",
+    "type": "public_channel",
+    "is_archived": false,
+    "is_private": false,
+    "created": "2026-01-13T07:46:54+00:00",
+    "topic": "",
+    "purpose": "",
+    "member_count": 11,
+    "routing": {
+      "channel_bucket": "company_news",
+      "conversation_mode": "company_updates",
+      "rationale": "default_company_updates",
+      "wiki_workspace": "rtm",
+      "wiki_target_root": "obsidian/Wiki/Common/Slack_Company_News",
+      "wiki_target_kind": "common"
+    }
+  },
+  "routing": {
+    "channel_profile": {
+      "channel_bucket": "company_news",
+      "conversation_mode": "company_updates",
+      "rationale": "default_company_updates",
+      "wiki_workspace": "rtm",
+      "wiki_target_root": "obsidian/Wiki/Common/Slack_Company_News",
+      "wiki_target_kind": "common",
+      "project_wiki_target_root": "obsidian/Wiki/Common/Slack_Project_Intake",
+      "company_wiki_target_root": "obsidian/Wiki/Common/Slack_Company_News"
+    },
+    "primary_bucket": "company_news",
+    "bucket_counts": {
+      "project": 3,
+      "company_news": 6,
+      "casual": 9
+    },
+    "wiki_targets": [
+      {
+        "path": "obsidian/Wiki/Common/Slack_Company_News",
+        "count": 6
+      },
+      {
+        "path": "obsidian/Wiki/Common/Slack_Project_Intake",
+        "count": 3
+      }
+    ]
+  },
+  "history_window": {
+    "oldest_ts": "1776656363.081489",
+    "limit_per_channel": 500,
+    "include_threads": true,
+    "include_files": true
+  },
+  "filter": {
+    "provider": "local_rule",
+    "summary": "GLM unavailable; local rule filter applied",
+    "kept_count": 9,
+    "excluded_count": 9
+  },
+  "messages": [
+    {
+      "ts": "1776731470.489439",
+      "type": "message",
+      "subtype": null,
+      "user": "U01C4A3GNQL",
+      "text": "<@U07N3NGH7TR> 이번에 <https://rtm-universe.slack.com/archives/C07CD12ELB0/p1776216515764109|PSK에서 발주나온 EHM 건(베로나2)>은 아직 설비 개발 및 IO 세팅이 미완료 상태라 일단 납품하고 같이 EHM에서 센서 설정 잡기로 했습니다. 베로나 버전으로 해서 일단 납품 진행 부탁드립니다. (재고 선정, EHM 설치, 근홍님에게 납품처와 함께 내용 전달) CC. <@U093SP8GFFU>",
+      "thread_ts": "1776731470.489439",
+      "reply_count": 1,
+      "reply_users": [
+        "U07N3NGH7TR"
+      ],
+      "latest_reply": "1776743884.887039",
+      "reactions": [
+        {
+          "name": "eyes",
+          "users": [
+            "U093SP8GFFU",
+            "U03SF6T6RL0",
+            "U07N3NGH7TR"
+          ],
+          "count": 3
+        }
+      ],
+      "edited": null,
+      "files": [],
+      "thread_replies": [
+        {
+          "ts": "1776743884.887039",
+          "type": "message",
+          "subtype": null,
+          "user": "U07N3NGH7TR",
+          "text": "<@U01C4A3GNQL>, <@U093SP8GFFU>\n• 수주 및 재고 관리 내용 업데이트 하였습니다.\n• <https://docs.google.com/spreadsheets/d/11gVHa4uNb8PrOfAoP8Jw8_R2sKWHxigP7-BpnC-vIYs/edit?usp=sharing|RTM 재고 관리 대장>\n    ◦ '알티엠수주관리표_final' - 관리번호 31번\n    ◦ '재고 관리표_final' - 재고번호 12번",
+          "thread_ts": "1776731470.489439",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [
+            {
+              "name": "eyes",
+              "users": [
+                "U093SP8GFFU"
+              ],
+              "count": 1
+            }
+          ],
+          "edited": null,
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1776742441.481619",
+      "type": "message",
+      "subtype": null,
+      "user": "U048M5F5MUY",
+      "text": "<@U01C4A3GNQL> 어제 말씀하신 spc 보는 페이지 만들었습니다. <http://10.10.100.10:8743>",
+      "thread_ts": "1776742441.481619",
+      "reply_count": 2,
+      "reply_users": [
+        "U01C4A3GNQL"
+      ],
+      "latest_reply": "1776750982.399489",
+      "reactions": [
+        {
+          "name": "+1",
+          "users": [
+            "U01C4A3GNQL"
+          ],
+          "count": 1
+        }
+      ],
+      "edited": null,
+      "files": [],
+      "thread_replies": [
+        {
+          "ts": "1776750897.893709",
+          "type": "message",
+          "subtype": null,
+          "user": "U01C4A3GNQL",
+          "text": "<http://192.168.30.252:8743/>\nPSK 판교 네트워크 타고 여기에 설치 가능하실까요?",
+          "thread_ts": "1776742441.481619",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776750982.399489",
+          "type": "message",
+          "subtype": null,
+          "user": "U01C4A3GNQL",
+          "text": "<https://app.clickup.com/9018369309/v/dc/8crjt8x-1938/8crjt8x-1018>",
+          "thread_ts": "1776742441.481619",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1776823606.022669",
+      "type": "message",
+      "subtype": null,
+      "user": "U093SP8GFFU",
+      "text": "15분에 1층에서 모여서 가실까여",
+      "thread_ts": "1776823606.022669",
+      "reply_count": 1,
+      "reply_users": [
+        "U03SF6T6RL0"
+      ],
+      "latest_reply": "1776823806.638489",
+      "reactions": [],
+      "edited": null,
+      "files": [],
+      "thread_replies": [
+        {
+          "ts": "1776823806.638489",
+          "type": "message",
+          "subtype": "thread_broadcast",
+          "user": "U03SF6T6RL0",
+          "text": "진규님이랑 저 35분 쯤도착예정입니다. 예약해서 자리 확보했으니 참고 부탁드려요",
+          "thread_ts": "1776823606.022669",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [
+            {
+              "name": "janmang",
+              "users": [
+                "U07N3NGH7TR",
+                "U093SP8GFFU",
+                "U048M5F5MUY"
+              ],
+              "count": 3
+            }
+          ],
+          "edited": null,
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1776823806.638489",
+      "type": "message",
+      "subtype": "thread_broadcast",
+      "user": "U03SF6T6RL0",
+      "text": "진규님이랑 저 35분 쯤도착예정입니다. 예약해서 자리 확보했으니 참고 부탁드려요",
+      "thread_ts": "1776823606.022669",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [
+        {
+          "name": "janmang",
+          "users": [
+            "U07N3NGH7TR",
+            "U093SP8GFFU",
+            "U048M5F5MUY"
+          ],
+          "count": 3
+        }
+      ],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1776841854.974889",
+      "type": "message",
+      "subtype": null,
+      "user": "U093SP8GFFU",
+      "text": "<@U07N3NGH7TR> <@U041D9G5FLH>\nwtm rta-core에서 사용하는 config 입니다. (스레드 댓글 확인)",
+      "thread_ts": "1776841854.974889",
+      "reply_count": 4,
+      "reply_users": [
+        "U093SP8GFFU",
+        "U07N3NGH7TR"
+      ],
+      "latest_reply": "1776848359.739559",
+      "reactions": [],
+      "edited": null,
+      "files": [],
+      "thread_replies": [
+        {
+          "ts": "1776841868.252489",
+          "type": "message",
+          "subtype": null,
+          "user": "U093SP8GFFU",
+          "text": "{\n  \"FM_to_BM\": {\n    \"Band_Types\": [\n      {\n        \"Band_Type\": \"Factor_Band\",\n        \"Band_Params\": {\n          \"Ref_Data\": 50,\n          \"Upper_Factor\": 1.2,\n          \"Lower_Factor\": 1.2,\n          \"Threshold_Value\": 0\n        }\n      },\n      {\n        \"Band_Type\": \"IQR_Inner_Band\",\n        \"Band_Params\": {\n          \"Ref_Data\": 50,\n          \"IQR_Multiplier\": 1.5,\n          \"Threshold_Value\": 0\n        }\n      },\n      {\n        \"Band_Type\": \"IQR_Outer_Band\",\n        \"Band_Params\": {\n          \"Ref_Data\": 50,\n          \"IQR_Multiplier\": 3.0,\n          \"Threshold_Value\": 0\n        }\n      }\n    ]\n  },\n  \"BM_to_FM\": {\n    \"Band_Types\": [\n      {\n        \"Band_Type\": \"Factor_Band\",\n        \"Band_Params\": {\n          \"Ref_Data\": 50,\n          \"Upper_Factor\": 1.2,\n          \"Lower_Factor\": 1.2,\n          \"Threshold_Value\": 0\n        }\n      },\n      {\n        \"Band_Type\": \"IQR_Inner_Band\",\n        \"Band_Params\": {\n          \"Ref_Data\": 50,\n          \"IQR_Multiplier\": 1.5,\n          \"Threshold_Value\": 0\n        }\n      },\n      {\n        \"Band_Type\": \"IQR_Outer_Band\",\n        \"Band_Params\": {\n          \"Ref_Data\": 50,\n          \"IQR_Multiplier\": 3.0,\n          \"Threshold_Value\": 0\n        }\n      }\n    ]\n  },\n  \"BM_to_TM\": {\n    \"Threshold_Value\": {\n      \"config_type\": \"con\",\n      \"value\": 0,\n      \"description\": \"역압 판정 기준값. pressure_diff &lt; threshold → Abnormal\"\n    }\n  },\n  \"TM_to_BM\": {\n    \"Threshold_Value\": {\n      \"config_type\": \"con\",\n      \"value\": 0,\n      \"description\": \"역압 판정 기준값. pressure_diff &lt; threshold → Abnormal\"\n    }\n  },\n  \"TM_to_PM\": {\n    \"Threshold_Value\": {\n      \"config_type\": \"con\",\n      \"value\": 0,\n      \"description\": \"PM 압력차 판정 기준값. abs(pressure_diff) &gt; threshold → Abnormal\"\n    }\n  },\n  \"PM_to_TM\": {\n    \"Threshold_Value\": {\n      \"config_type\": \"con\",\n      \"value\": 0,\n      \"description\": \"PM 압력차 판정 기준값. abs(pressure_diff) &gt; threshold → Abnormal\"\n    }\n  },\n  \"n2_curtain\": {\n    \"Threshold_Value\": {\n      \"config_type\": \"con\",\n      \"value\": 20.00,\n      \"description\": \"%MAE 판정 기준값. pct_mae &gt; threshold → Abnormal\"\n    }\n  }\n}",
+          "thread_ts": "1776841854.974889",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776843172.065829",
+          "type": "message",
+          "subtype": null,
+          "user": "U093SP8GFFU",
+          "text": "<@U041D9G5FLH> <@U07N3NGH7TR>\n출장 중, wtm 운용 방안 하태경 책임과 협의 필요 (박근홍 진행 예정)",
+          "thread_ts": "1776841854.974889",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776843930.162069",
+          "type": "message",
+          "subtype": null,
+          "user": "U07N3NGH7TR",
+          "text": "<@U093SP8GFFU>\n이 내용 검토 + 기본값 기입",
+          "thread_ts": "1776841854.974889",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": [
+            {
+              "id": "F0AULLDEHUL",
+              "name": "TM-PM_configuration.json",
+              "title": "TM-PM_configuration.json",
+              "mimetype": "text/plain",
+              "filetype": "json",
+              "pretty_type": "JSON",
+              "size": 269,
+              "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0AULLDEHUL/tm-pm_configuration.json",
+              "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0AULLDEHUL/tm-pm_configuration.json"
+            },
+            {
+              "id": "F0AUDL9MKN1",
+              "name": "LL-TM_configuration.json",
+              "title": "LL-TM_configuration.json",
+              "mimetype": "text/plain",
+              "filetype": "json",
+              "pretty_type": "JSON",
+              "size": 233,
+              "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0AUDL9MKN1/ll-tm_configuration.json",
+              "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0AUDL9MKN1/ll-tm_configuration.json"
+            },
+            {
+              "id": "F0AUH30H6JE",
+              "name": "EFEM-LL_configuration.json",
+              "title": "EFEM-LL_configuration.json",
+              "mimetype": "text/plain",
+              "filetype": "json",
+              "pretty_type": "JSON",
+              "size": 637,
+              "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0AUH30H6JE/efem-ll_configuration.json",
+              "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0AUH30H6JE/efem-ll_configuration.json"
+            }
+          ]
+        },
+        {
+          "ts": "1776848359.739559",
+          "type": "message",
+          "subtype": null,
+          "user": "U093SP8GFFU",
+          "text": "<@U07N3NGH7TR>\n정수님 첨부 파일에서 referenceTargetCount와 n2_curtain_threshold_value 기본값 수정했습니다.\n참고 부탁드립니다.",
+          "thread_ts": "1776841854.974889",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [
+            {
+              "name": "넵",
+              "users": [
+                "U07N3NGH7TR"
+              ],
+              "count": 1
+            }
+          ],
+          "edited": null,
+          "files": [
+            {
+              "id": "F0AUM5TDN3W",
+              "name": "TM-PM_configuration_v2.json",
+              "title": "TM-PM_configuration_v2.json",
+              "mimetype": "text/plain",
+              "filetype": "json",
+              "pretty_type": "JSON",
+              "size": 273,
+              "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0AUM5TDN3W/tm-pm_configuration_v2.json",
+              "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0AUM5TDN3W/tm-pm_configuration_v2.json"
+            },
+            {
+              "id": "F0AUHHTRCQJ",
+              "name": "EFEM-LL_configuration_v2.json",
+              "title": "EFEM-LL_configuration_v2.json",
+              "mimetype": "text/plain",
+              "filetype": "json",
+              "pretty_type": "JSON",
+              "size": 638,
+              "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0AUHHTRCQJ/efem-ll_configuration_v2.json",
+              "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0AUHHTRCQJ/efem-ll_configuration_v2.json"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "ts": "1776845585.317239",
+      "type": "message",
+      "subtype": null,
+      "user": "U07N3NGH7TR",
+      "text": "<@U04FRP4PQF5>, <@U041D9G5FLH>\n<https://app.clickup.com/t/9018369309/SU-2916>\n모델 설정 페이지 디스크립션 영역 추가 및 콘텐츠 수정 태스크 입니다.\n변경된 텍스트 파일은 바로 전달해드릴게요. 상현님 적용 부탁드려요.",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [
+        {
+          "name": "o",
+          "users": [
+            "U041D9G5FLH"
+          ],
+          "count": 1
+        },
+        {
+          "name": "eyes",
+          "users": [
+            "U04FRP4PQF5"
+          ],
+          "count": 1
+        }
+      ],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1777266548.668579",
+      "type": "message",
+      "subtype": "thread_broadcast",
+      "user": "U093SP8GFFU",
+      "text": "<@U03SF6T6RL0>\n승철님 삼전팹 내방 일정 참여하시는걸까요?\n방금 유택님이랑 intel 데이터 관련해서 허들했는데\n승철님이 방문 얘기가 지난주 금요일날 나왔다고 들어서요",
+      "thread_ts": "1776402522.554349",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1777272659.435509",
+      "type": "message",
+      "subtype": null,
+      "user": "U01C4A3GNQL",
+      "text": "<@U03SF6T6RL0> 10.10.100.10:8743 &lt;- spc 내부 주소",
+      "thread_ts": "1777272659.435509",
+      "reply_count": 4,
+      "reply_users": [
+        "U03SF6T6RL0",
+        "U048M5F5MUY"
+      ],
+      "latest_reply": "1777272999.905599",
+      "reactions": [],
+      "edited": null,
+      "files": [],
+      "thread_replies": [
+        {
+          "ts": "1777272706.034509",
+          "type": "message",
+          "subtype": null,
+          "user": "U03SF6T6RL0",
+          "text": "사용자가 아래 주소로 브라우저 접속하도록 셋팅.\n58.72.34.146:63762\n\n<@U048M5F5MUY>\n10서버에 8743 포트로 스트림릿 열것",
+          "thread_ts": "1777272659.435509",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1777272745.405589",
+          "type": "message",
+          "subtype": null,
+          "user": "U048M5F5MUY",
+          "text": "10서버는 지금 열려있을껄요",
+          "thread_ts": "1777272659.435509",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1777272794.942549",
+          "type": "message",
+          "subtype": null,
+          "user": "U048M5F5MUY",
+          "text": "내일아침에 확인해보고 안열려있으면 다시 열어두겠습니다",
+          "thread_ts": "1777272659.435509",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1777272999.905599",
+          "type": "message",
+          "subtype": null,
+          "user": "U03SF6T6RL0",
+          "text": "판교 우리 사무실에서 되도록 셋팅했습니다.\nIP로 필터링했기때문에 지정된 IP만 접속할 수 있는데, 기존 PE Agent 와 동일한 IP 설정을 부여했습니다.",
+          "thread_ts": "1777272659.435509",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1777314594.866249",
+      "type": "message",
+      "subtype": null,
+      "user": "U041D9G5FLH",
+      "text": "TI 전경입니다",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [
+        {
+          "name": "+1",
+          "users": [
+            "U04FRP4PQF5",
+            "UBKL1FZ28",
+            "U048M5F5MUY",
+            "UBL1JVCSZ",
+            "U093SP8GFFU"
+          ],
+          "count": 5
+        },
+        {
+          "name": "eyes",
+          "users": [
+            "UBKL1FZ28",
+            "U048M5F5MUY"
+          ],
+          "count": 2
+        }
+      ],
+      "edited": null,
+      "files": [
+        {
+          "id": "F0AV4HWRJKZ",
+          "name": "IMG_0220.jpg",
+          "title": "IMG_0220",
+          "mimetype": "image/jpeg",
+          "filetype": "jpg",
+          "pretty_type": "JPEG",
+          "size": 884103,
+          "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0AV4HWRJKZ/img_0220.jpg",
+          "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0AV4HWRJKZ/img_0220.jpg"
+        },
+        {
+          "id": "F0B0JUFMPUZ",
+          "name": "IMG_0222.jpg",
+          "title": "IMG_0222",
+          "mimetype": "image/jpeg",
+          "filetype": "jpg",
+          "pretty_type": "JPEG",
+          "size": 1360365,
+          "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0B0JUFMPUZ/img_0222.jpg",
+          "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0B0JUFMPUZ/img_0222.jpg"
+        },
+        {
+          "id": "F0B02KGJ27P",
+          "name": "IMG_0223.jpg",
+          "title": "IMG_0223",
+          "mimetype": "image/jpeg",
+          "filetype": "jpg",
+          "pretty_type": "JPEG",
+          "size": 1014029,
+          "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0B02KGJ27P/img_0223.jpg",
+          "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0B02KGJ27P/img_0223.jpg"
+        }
+      ]
+    }
+  ],
+  "routed_messages": [
+    {
+      "ts": "1776731470.489439",
+      "bucket": "project",
+      "reason": "project_keywords",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Project_Intake",
+      "text": "<@U07N3NGH7TR> 이번에 <https://rtm-universe.slack.com/archives/C07CD12ELB0/p1776216515764109|PSK에서 발주나온 EHM 건(베로나2)>은 아직 설비 개발 및 IO 세팅이 미완료 상태라 일단 납품하고 같이 EHM에서 센서 설정 잡기로 했습니다. 베로나 버전으로 해서 일단 납품 진행 부탁드립니다. (재고 선정, EHM 설치, 근홍님에게 납품처와 함께 내용 전달) CC. <@U093SP8GFFU>"
+    },
+    {
+      "ts": "1776742441.481619",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "<@U01C4A3GNQL> 어제 말씀하신 spc 보는 페이지 만들었습니다. <http://10.10.100.10:8743>"
+    },
+    {
+      "ts": "1776823606.022669",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "15분에 1층에서 모여서 가실까여"
+    },
+    {
+      "ts": "1776823806.638489",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "진규님이랑 저 35분 쯤도착예정입니다. 예약해서 자리 확보했으니 참고 부탁드려요"
+    },
+    {
+      "ts": "1776841854.974889",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "<@U07N3NGH7TR> <@U041D9G5FLH>\nwtm rta-core에서 사용하는 config 입니다. (스레드 댓글 확인)"
+    },
+    {
+      "ts": "1776845585.317239",
+      "bucket": "project",
+      "reason": "project_keywords",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Project_Intake",
+      "text": "<@U04FRP4PQF5>, <@U041D9G5FLH>\n<https://app.clickup.com/t/9018369309/SU-2916>\n모델 설정 페이지 디스크립션 영역 추가 및 콘텐츠 수정 태스크 입니다.\n변경된 텍스트 파일은 바로 전달해드릴게요. 상현님 적용 부탁드려요."
+    },
+    {
+      "ts": "1777266548.668579",
+      "bucket": "project",
+      "reason": "project_keywords",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Project_Intake",
+      "text": "<@U03SF6T6RL0>\n승철님 삼전팹 내방 일정 참여하시는걸까요?\n방금 유택님이랑 intel 데이터 관련해서 허들했는데\n승철님이 방문 얘기가 지난주 금요일날 나왔다고 들어서요"
+    },
+    {
+      "ts": "1777272659.435509",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "<@U03SF6T6RL0> 10.10.100.10:8743 &lt;- spc 내부 주소"
+    },
+    {
+      "ts": "1777314594.866249",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "TI 전경입니다 IMG_0220 IMG_0222 IMG_0223"
+    }
+  ],
+  "excluded_messages": [
+    {
+      "ts": "1776657503.397229",
+      "reason": "empty_text",
+      "bucket": "casual",
+      "text": "",
+      "subtype": "huddle_thread"
+    },
+    {
+      "ts": "1776665394.032089",
+      "reason": "casual_or_social",
+      "bucket": "casual",
+      "text": "저희 이번주 수요일 점심 회식 어떠실까요? 다들 참석 가능하실까요?",
+      "subtype": null
+    },
+    {
+      "ts": "1776736399.354399",
+      "reason": "casual_or_social",
+      "bucket": "casual",
+      "text": "ㅋㅋ다들 애슐리인 관계로 예약 진행합니다. IMG_5698 IMG_5697",
+      "subtype": "thread_broadcast"
+    },
+    {
+      "ts": "1776918145.393489",
+      "reason": "empty_text",
+      "bucket": "casual",
+      "text": "",
+      "subtype": "huddle_thread"
+    },
+    {
+      "ts": "1776920761.698459",
+      "reason": "empty_text",
+      "bucket": "casual",
+      "text": "",
+      "subtype": "huddle_thread"
+    },
+    {
+      "ts": "1777012567.100729",
+      "reason": "empty_text",
+      "bucket": "casual",
+      "text": "",
+      "subtype": "huddle_thread"
+    },
+    {
+      "ts": "1777339655.492269",
+      "reason": "empty_text",
+      "bucket": "casual",
+      "text": "",
+      "subtype": "huddle_thread"
+    },
+    {
+      "ts": "1777339720.475259",
+      "reason": "empty_text",
+      "bucket": "casual",
+      "text": "",
+      "subtype": "huddle_thread"
+    },
+    {
+      "ts": "1777520363.693509",
+      "reason": "system_membership_event",
+      "bucket": "casual",
+      "text": "<@U0B15H1AQJV> has joined the channel",
+      "subtype": "channel_join"
+    }
+  ]
+}

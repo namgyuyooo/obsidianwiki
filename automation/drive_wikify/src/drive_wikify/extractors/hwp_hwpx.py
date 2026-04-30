@@ -13,10 +13,19 @@ def _normalize_text(text: str) -> str:
     return re.sub(r"\s+", " ", text).strip()
 
 
+def _normalize_line(text: str) -> str:
+    return re.sub(r"[ \t]+", " ", text).strip()
+
+
 def _run_rhwp(path: Path) -> str | None:
     candidates = [
         ["rhwp", "dump", str(path)],
         ["python3", "-m", "rhwp", "dump", str(path)],
+        [
+            "/Users/rtm/Documents/GitHub/Obsidian_wiki/.tmp_rhwp/rhwp/target/release/rhwp",
+            "dump",
+            str(path),
+        ],
         [
             "python3",
             "/Users/rtm/Documents/GitHub/Obsidian_wiki/.tmp_rhwp/rhwp/rhwp.py",
@@ -32,6 +41,30 @@ def _run_rhwp(path: Path) -> str | None:
         except (subprocess.CalledProcessError, FileNotFoundError):
             continue
     return None
+
+
+def _extract_rhwp_text(dump: str) -> str:
+    lines: list[str] = []
+    seen: set[str] = set()
+    for raw_line in dump.splitlines():
+        line = raw_line.strip()
+        text = ""
+        paragraph_match = re.search(r'텍스트:\s*"?(.*?)"?$', line)
+        cell_match = re.search(r'text="(.*?)"', line)
+        if paragraph_match:
+            candidate = paragraph_match.group(1).strip()
+            if candidate and candidate != "(빈 문단)":
+                text = candidate
+        elif cell_match:
+            text = cell_match.group(1).strip()
+        if not text:
+            continue
+        normalized = _normalize_line(text.replace("|", "\n"))
+        if not normalized or normalized in seen:
+            continue
+        seen.add(normalized)
+        lines.append(normalized)
+    return "\n".join(lines)
 
 
 def _extract_utf16_strings(blob: bytes, min_chars: int = 4) -> list[str]:
@@ -60,9 +93,10 @@ def extract_hwp(path: Path) -> ExtractedContent:
     dump = _run_rhwp(path)
     warnings: list[str] = []
     if dump:
+        extracted = _extract_rhwp_text(dump)
         return ExtractedContent(
-            extractor_name="rhwp_dump",
-            text=_normalize_text(dump),
+            extractor_name="rhwp_dump_text" if extracted else "rhwp_dump",
+            text=extracted or _normalize_text(dump),
             warnings=warnings,
         )
     try:

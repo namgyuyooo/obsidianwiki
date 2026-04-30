@@ -1,0 +1,2981 @@
+{
+  "type": "slack_channel_filtered_export",
+  "workspace": "RTM Slack",
+  "collected_at": "2026-04-30T03:35:27.248712+00:00",
+  "channel": {
+    "id": "C04HHRZLY73",
+    "name": "market-intelligence",
+    "type": "public_channel",
+    "is_archived": false,
+    "is_private": false,
+    "created": "2023-01-02T03:46:27+00:00",
+    "topic": "",
+    "purpose": "RTM의 목표시장 또는 사업과 관련하여 인사이트 획득이 가능한 자료 공유 및 토의",
+    "member_count": 38,
+    "routing": {
+      "channel_bucket": "company_news",
+      "conversation_mode": "company_updates",
+      "rationale": "default_company_updates",
+      "wiki_workspace": "rtm",
+      "wiki_target_root": "obsidian/Wiki/Common/Slack_Company_News",
+      "wiki_target_kind": "common"
+    }
+  },
+  "routing": {
+    "channel_profile": {
+      "channel_bucket": "company_news",
+      "conversation_mode": "company_updates",
+      "rationale": "default_company_updates",
+      "wiki_workspace": "rtm",
+      "wiki_target_root": "obsidian/Wiki/Common/Slack_Company_News",
+      "wiki_target_kind": "common",
+      "project_wiki_target_root": "obsidian/Wiki/Common/Slack_Project_Intake",
+      "company_wiki_target_root": "obsidian/Wiki/Common/Slack_Company_News"
+    },
+    "primary_bucket": "company_news",
+    "bucket_counts": {
+      "project": 35,
+      "company_news": 63,
+      "casual": 0
+    },
+    "wiki_targets": [
+      {
+        "path": "obsidian/Wiki/Common/Slack_Company_News",
+        "count": 63
+      },
+      {
+        "path": "obsidian/Wiki/Common/Slack_Project_Intake",
+        "count": 35
+      }
+    ]
+  },
+  "history_window": {
+    "oldest_ts": "1776656247.278451",
+    "limit_per_channel": 500,
+    "include_threads": true,
+    "include_files": true
+  },
+  "filter": {
+    "provider": "local_rule",
+    "summary": "GLM unavailable; local rule filter applied",
+    "kept_count": 98,
+    "excluded_count": 0
+  },
+  "messages": [
+    {
+      "ts": "1776658133.955249",
+      "type": "message",
+      "subtype": null,
+      "user": "U03NJDDPZPZ",
+      "text": "<https://www.aitimes.com/news/articleView.html?idxno=209446|https://www.aitimes.com/news/articleView.html?idxno=209446>",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1776662015.154209",
+      "type": "message",
+      "subtype": "bot_message",
+      "user": "B05EBG8R2MV",
+      "text": "<https://yozm.wishket.com/magazine/detail/slack/3716/?h=TBL1JAWKF&utm_source=slack&utm_medium=bot&utm_campaign=TBL1JAWKF|엔비디아가 25년째 놓지 않는 이 기업의 생존법>\n다쏘시스템은 제조업을 겨냥해 3차원(3D) 소프트웨어를 공급하는 글로벌 기업이다. 제품이 생산되기 전 단계에서 가상 환경을 통해 설계, 검증, 최적화를 수행하는 솔루션을 다룬다. 유럽에 본사를 둔 제조업 특화 기업이라는 점 때문에 국내 주목도는 상대적으로 낮은 편이다. 그러나 흥미롭게도 이 기업의 행보는 체질 개선에 어려움을 겪는 국내 SI 산업에 의미 있는 시사점을 던진다. 엔터프라이즈 대상의 반복 매출이라는 안정적인 캐시카우를 지키면서도, 중견·중소기업과 스타트업으로 고객층을 넓혔기 때문이다. 동시에 SaaS와 플랫폼으로의 전환을 이뤄냈고, AI 비즈니스 모델까지 성공적으로 일구고 있다. 엔비디아가 25년째 놓지 않는 이 기업의 생존법",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1776730416.486179",
+      "type": "message",
+      "subtype": "bot_message",
+      "user": "B05EBG8R2MV",
+      "text": "<https://yozm.wishket.com/magazine/detail/slack/3717/?h=TBL1JAWKF&utm_source=slack&utm_medium=bot&utm_campaign=TBL1JAWKF|‘사고 근육’을 지켜주는 AI 글쓰기 방법 5가지>\nAI로 작성한 글을 사람의 글처럼 바꾸는 프롬프트나 방법론이 등장하고 있다. 어떻게든 AI로 편하게 글을 쓰려는 쪽과 이를 걸러내려는 쪽의 대립이 마치 창과 방패의 싸움과 같다. 하지만 이로 인해 생겨날 수 있는 문제들은 단순히 AI 특유의 문체를 자연스럽게 고치거나 탐지를 피하는 방식으로 해결될 종류의 것이 아니다. 더 중요한 점은 AI로 글을 쓰는 과정에서 인간의 사고력과 인지 능력이 저하될 수 있다는 점이다. 마치 운동을 하지 않으면 근력이 저하되듯, 생각하지 않으면 사고력과 인지 능력 역시 약해질 수 있다. ‘사고 근육’을 지켜주는 AI 글쓰기 방법 5가지",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1776731678.465369",
+      "type": "message",
+      "subtype": null,
+      "user": "U03NJDDPZPZ",
+      "text": "<https://www.fnnews.com/news/202604201509547345|https://www.fnnews.com/news/202604201509547345>",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1776731867.172019",
+      "type": "message",
+      "subtype": null,
+      "user": "U03NJDDPZPZ",
+      "text": "<https://www.joongang.co.kr/article/25421802|https://www.joongang.co.kr/article/25421802>",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1776738961.610159",
+      "type": "message",
+      "subtype": null,
+      "user": "U03NJDDPZPZ",
+      "text": ":bar_chart: *[a16z 리포트] 엔터프라이즈 AI 도입, 실제로 어디까지 왔나?*\n출처: Andreessen Horowitz | 작성: Kimberly Tan | 2026.04.08\n:link: <https://a16z.com/where-enterprises-are-actually-adopting-ai/|https://a16z.com/where-enterprises-are-actually-adopting-ai/>\n\n━━━━━━━━━━━━━━━━━━━\n\n*:dart: 핵심 한 줄*\n\"MIT '95% 파일럿 실패' 주장은 틀렸다 — Fortune 500의 29%가 이미 AI를 실전 도입했다\"\n\n━━━━━━━━━━━━━━━━━━━\n\n*:chart_with_upwards_trend: 도입 현황 (실제 계약 기준)*\n• Fortune 500 → *29%* 가 AI 스타트업과 정식 계약 체결 및 실운영 중\n• Global 2000 → *19%* 동일 기준 충족\n• (파일럿 전환 실패 아닌, 실제 go-live 기준 집계)\n\n━━━━━━━━━━━━━━━━━━━\n\n*:moneybag: 돈이 몰리는 3대 유즈케이스*\n\n*1. 코딩 (압도적 1위, 타 유즈케이스 대비 ~10배)*\n• Cursor, Claude Code, Codex 등 폭발적 성장\n• 엔지니어 생산성 *10~20배* 향상 사례 다수\n• 이유: 데이터 풍부 / 결과 검증 용이 / 단독 작업 특성 / 부분 자동화도 즉시 ROI\n• 시사점: 코드는 모든 소프트웨어의 upstream → AI 코딩 가속이 전 산업 가속으로 연결\n*2. 고객 지원 (Support)*\n• Decagon, Sierra, Salient, HappyRobot 등 빠른 성장\n• 이유: SOP 명확 / 지표 정량화(티켓수·CSAT·해결율) / 이미 BPO 아웃소싱 → 체인지 매니지먼트 부담 낮음\n• 100% 자동화 불필요 → 에스컬레이션 구조로 리스크 관리 용이\n*3. 검색 (Search / Knowledge Retrieval)*\n• 사내 분산 정보 통합 검색: Glean\n• 법률 특화: Harvey\n• 의료 특화: OpenEvidence\n• ChatGPT 사용량의 핵심이 사실상 '서치'이므로 실제 규모는 더 큼\n━━━━━━━━━━━━━━━━━━━\n\n*:factory: AI 도입 속도 빠른 3대 산업*\n\n*Tech (1위, 예상된 결과)*\n• ChatGPT 기업 사용자의 27%가 테크 업종\n*Legal (의외의 얼리어답터)*\n• 기존엔 소프트웨어 도입 가장 느렸던 업종\n• AI가 텍스트 파싱·요약·드래프팅에서 명확한 가치 입증\n• Harvey: 창업 3년 내 ARR ~$200M / $11B 밸류에이션\n• Eve (원고 전문): 고객 450개사 / $1B 밸류\n*Healthcare*\n• Abridge(의료 스크라이빙), OpenEvidence, Tennr 등 급성장\n• 기존 EHR(Epic 등) 교체 없이 그 위에 레이어로 작동 → 도입 마찰 최소화\n━━━━━━━━━━━━━━━━━━━\n\n*:crystal_ball: 모델 능력 개선 속도 (GDPval 벤치마크 기준)*\n• 최근 4개월간 회계·감사 분야: *+20%p* 점프\n• 경찰·수사 분야: *+30%p* 점프\n• → 아직 시장 돌파구 없는 영역에서 곧 빠른 제품화 예상\n━━━━━━━━━━━━━━━━━━━\n\n*:warning: 도입이 느린 영역의 공통점*\n물리 세계 연계 / 대인관계 의존 / 다수 이해관계자 조율 필요 / 강한 규제 / 결과 검증 어려움\n\n━━━━━━━━━━━━━━━━━━━\n\n*:hammer_and_wrench: 빌더를 위한 시사점*\n1. Tech·Legal·Healthcare는 지금 당장 fertile ground — 단, 카테고리 내 세분 영역 공략 필요\n2. 모델 역량은 올라왔는데 아직 breakout 기업 없는 영역 = 지금이 진입 타이밍\n3. 랩들이 집중하는 곳 주목: long-horizon agent / computer use / 스프레드시트·비정형 워크플로우\n━━━━━━━━━━━━━━━━━━\n_요약 by Claude | 원문 전문 읽기 → 위 링크_",
+      "thread_ts": "1776738961.610159",
+      "reply_count": 1,
+      "reply_users": [
+        "U03NJDDPZPZ"
+      ],
+      "latest_reply": "1776739220.222129",
+      "reactions": [],
+      "edited": null,
+      "files": [],
+      "thread_replies": [
+        {
+          "ts": "1776739220.222129",
+          "type": "message",
+          "subtype": "thread_broadcast",
+          "user": "U03NJDDPZPZ",
+          "text": "",
+          "thread_ts": "1776738961.610159",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": [
+            {
+              "id": "F0AUKKV6X25",
+              "name": "iOS 이미지.jpg",
+              "title": "iOS 이미지",
+              "mimetype": "image/jpeg",
+              "filetype": "jpg",
+              "pretty_type": "JPEG",
+              "size": 143229,
+              "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0AUKKV6X25/ios__________.jpg",
+              "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0AUKKV6X25/ios__________.jpg"
+            },
+            {
+              "id": "F0AV11C8924",
+              "name": "iOS 이미지.jpg",
+              "title": "iOS 이미지",
+              "mimetype": "image/jpeg",
+              "filetype": "jpg",
+              "pretty_type": "JPEG",
+              "size": 167049,
+              "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0AV11C8924/ios__________.jpg",
+              "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0AV11C8924/ios__________.jpg"
+            },
+            {
+              "id": "F0AU0BN1DH9",
+              "name": "iOS 이미지.jpg",
+              "title": "iOS 이미지",
+              "mimetype": "image/jpeg",
+              "filetype": "jpg",
+              "pretty_type": "JPEG",
+              "size": 124734,
+              "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0AU0BN1DH9/ios__________.jpg",
+              "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0AU0BN1DH9/ios__________.jpg"
+            },
+            {
+              "id": "F0AV11CH0N4",
+              "name": "iOS 이미지.jpg",
+              "title": "iOS 이미지",
+              "mimetype": "image/jpeg",
+              "filetype": "jpg",
+              "pretty_type": "JPEG",
+              "size": 154936,
+              "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0AV11CH0N4/ios__________.jpg",
+              "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0AV11CH0N4/ios__________.jpg"
+            },
+            {
+              "id": "F0AU6NWBD0A",
+              "name": "iOS 이미지.jpg",
+              "title": "iOS 이미지",
+              "mimetype": "image/jpeg",
+              "filetype": "jpg",
+              "pretty_type": "JPEG",
+              "size": 202862,
+              "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0AU6NWBD0A/ios__________.jpg",
+              "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0AU6NWBD0A/ios__________.jpg"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "ts": "1776739220.222129",
+      "type": "message",
+      "subtype": "thread_broadcast",
+      "user": "U03NJDDPZPZ",
+      "text": "",
+      "thread_ts": "1776738961.610159",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": [
+        {
+          "id": "F0AUKKV6X25",
+          "name": "iOS 이미지.jpg",
+          "title": "iOS 이미지",
+          "mimetype": "image/jpeg",
+          "filetype": "jpg",
+          "pretty_type": "JPEG",
+          "size": 143229,
+          "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0AUKKV6X25/ios__________.jpg",
+          "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0AUKKV6X25/ios__________.jpg"
+        },
+        {
+          "id": "F0AV11C8924",
+          "name": "iOS 이미지.jpg",
+          "title": "iOS 이미지",
+          "mimetype": "image/jpeg",
+          "filetype": "jpg",
+          "pretty_type": "JPEG",
+          "size": 167049,
+          "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0AV11C8924/ios__________.jpg",
+          "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0AV11C8924/ios__________.jpg"
+        },
+        {
+          "id": "F0AU0BN1DH9",
+          "name": "iOS 이미지.jpg",
+          "title": "iOS 이미지",
+          "mimetype": "image/jpeg",
+          "filetype": "jpg",
+          "pretty_type": "JPEG",
+          "size": 124734,
+          "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0AU0BN1DH9/ios__________.jpg",
+          "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0AU0BN1DH9/ios__________.jpg"
+        },
+        {
+          "id": "F0AV11CH0N4",
+          "name": "iOS 이미지.jpg",
+          "title": "iOS 이미지",
+          "mimetype": "image/jpeg",
+          "filetype": "jpg",
+          "pretty_type": "JPEG",
+          "size": 154936,
+          "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0AV11CH0N4/ios__________.jpg",
+          "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0AV11CH0N4/ios__________.jpg"
+        },
+        {
+          "id": "F0AU6NWBD0A",
+          "name": "iOS 이미지.jpg",
+          "title": "iOS 이미지",
+          "mimetype": "image/jpeg",
+          "filetype": "jpg",
+          "pretty_type": "JPEG",
+          "size": 202862,
+          "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0AU6NWBD0A/ios__________.jpg",
+          "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0AU6NWBD0A/ios__________.jpg"
+        }
+      ]
+    },
+    {
+      "ts": "1776739626.413529",
+      "type": "message",
+      "subtype": null,
+      "user": "U03NJDDPZPZ",
+      "text": "<https://aimatters.co.kr/news-report/40741/|https://aimatters.co.kr/news-report/40741/>",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1776739772.472099",
+      "type": "message",
+      "subtype": null,
+      "user": "U03NJDDPZPZ",
+      "text": "*앤트로픽, 매출에서 오픈AI 추월 — 연간 환산 매출 300억 달러 돌파*\n\n주요 AI 기업 간 경쟁에서 주목할 만한 변화가 일어났다. AI 어시스턴트 클로드를 개발한 앤트로픽이 오픈AI를 제치고 연간 환산 매출(ARR) 1위에 올랐다. 앤트로픽의 ARR은 300억 달러를 돌파한 반면, 오픈AI는 연간 약 240~250억 달러(월 20억 달러) 수준이다. 이 격차의 핵심은 전략적 방향의 차이에 있다. 앤트로픽은 일관되게 기업 고객(B2B) 시장을 공략해온 반면, 오픈AI는 전통적으로 ChatGPT를 통한 일반 소비자 시장에 집중해왔다.\n\n*앤트로픽: 기업 고객에서 폭발적 성장*\n\n앤트로픽이 공개한 수치는 인상적이다. 2025년 말 기준 ARR은 약 90억 달러였으나, 그 이후 세 배 이상으로 뛰었다. 특히 주목할 부분은 대형 고객 세그먼트의 성장이다. 2026년 2월 시리즈 G 펀딩 라운드 발표 당시, 앤트로픽의 연간 지출 100만 달러 이상 기업 고객 수는 500개를 넘었다. 현재는 이미 1,000개 이상으로 불어났다 — 두 달도 채 안 되어 두 배가 된 것이다.\n\n*오픈AI: 기록적 성장, 그러나 다른 모델*\n\n오픈AI 역시 인상적인 성장세를 보이고 있다. 기술 플랫폼으로서 1,000만 명, 이후 1억 명의 사용자를 그 어떤 기업보다 빠르게 확보했다. ChatGPT 출시 후 1년 만에 연매출 10억 달러를 달성했고, 2024년 말에는 분기 매출 10억 달러를 기록했다. 현재 월 매출은 20억 달러에 달한다. 오픈AI는 알파벳, 메타 등 인터넷·모바일 시대를 정의한 기업들보다 4배 빠른 속도로 매출이 성장하고 있다고 주장한다.\n\n그러나 핵심적인 차이는 고객 구조에 있다. 오픈AI의 성장은 소비자 대상의 대중적 제품인 ChatGPT에 크게 의존하고 있다. 반면 앤트로픽은 처음부터 기업 고객과 API 활용, 즉 클로드를 자사 제품과 프로세스에 통합하는 기업들에 집중해왔다.\n\n*성장의 토대: 인프라 투자*\n\n추가 성장을 확보하기 위해 앤트로픽은 구글·브로드컴과 수 기가와트 규모의 차세대 연산 용량을 확보하는 광범위한 인프라 협약을 체결했다. 새로운 TPU 용량은 2027년부터 단계적으로 가동될 예정이며, 대부분 미국 내에 위치한다. 이는 2025년 11월 발표된 미국 AI 인프라 500억 달러 투자 약속의 연장선이다.\n\n앤트로픽은 AWS Trainium, 구글 TPU, 엔비디아 GPU를 포함한 폭넓은 하드웨어 기반 위에서 모델을 운용하고 있다. 아마존은 여전히 주요 클라우드 파트너이자 학습 파트너로 남아 있다. 클로드는 또한 세 개의 주요 클라우드 플랫폼 — AWS(Bedrock), 구글 클라우드(Vertex AI), 마이크로소프트 애저(Foundry) — 모두에서 이용 가능한 유일한 프런티어 AI 모델이기도 하다.\n\n앤트로픽이 매출에서 오픈AI를 추월할 것이라는 예측은 이미 2026년 2월 Epoch AI에 의해 제시된 바 있었으며, 예상 시점은 2026년 중반이었다. 그런데 실제로는 그보다 훨씬 일찍 실현됐다.​​​​​​​​​​​​​​​​",
+      "thread_ts": "1776739772.472099",
+      "reply_count": 1,
+      "reply_users": [
+        "U03NJDDPZPZ"
+      ],
+      "latest_reply": "1776739803.447089",
+      "reactions": [],
+      "edited": null,
+      "files": [],
+      "thread_replies": [
+        {
+          "ts": "1776739803.447089",
+          "type": "message",
+          "subtype": null,
+          "user": "U03NJDDPZPZ",
+          "text": "출처:\n<https://www.trendingtopics.eu/anthropic-overtakes-openai-in-revenue-hitting-30-billion-run-rate/|https://www.trendingtopics.eu/anthropic-overtakes-openai-in-revenue-hitting-30-billion-run-rate/> ",
+          "thread_ts": "1776739772.472099",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1776740183.816419",
+      "type": "message",
+      "subtype": null,
+      "user": "U03NJDDPZPZ",
+      "text": "<https://www.aitimes.com/news/articleView.html?idxno=209507|https://www.aitimes.com/news/articleView.html?idxno=209507>",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1776740727.244549",
+      "type": "message",
+      "subtype": null,
+      "user": "U03NJDDPZPZ",
+      "text": "<https://www.aitimes.com/news/articleView.html?idxno=209496|https://www.aitimes.com/news/articleView.html?idxno=209496>",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1776740880.476179",
+      "type": "message",
+      "subtype": null,
+      "user": "U03NJDDPZPZ",
+      "text": "<https://www.yna.co.kr/view/AKR20260421005300091|https://www.yna.co.kr/view/AKR20260421005300091>",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1776741167.854209",
+      "type": "message",
+      "subtype": null,
+      "user": "U03NJDDPZPZ",
+      "text": "*中 애지봇 휴머노이드 로봇, 태블릿PC 생산라인 투입*\n> '징링 G2' 투입된 생산 현장 8시간 라이브로 공개\n중국에서 전자제품 실제 제조 과정에 휴머노이드 로봇이 투입돼 성공적으로 임무를 완수했다. \n\n15일 중국 지역 언론 상하이옵저버에 따르면 중국 전자제품 ODM 기업 룽치어(Longcheer, 龙旗科技)의 난창(南昌) 소재 태블릿PC 제조 공장에서 애지봇(AgiBot, 智元机器人)의 휴머노이드 로봇 '징링(精灵) G2'가 생산라인에서 근무하는 장면이 공개됐다. \n\n7시간 라이브로 공개된 태블릿PC 생산라인 현장에서 두 대의 *징링 G2 휴머노이드 로봇이 직원처럼 8시간 연속 작업을 했다*. \n\n*시간당 310건 물품 작업을 완수해 성공률 100%, 고장율 0%를 기록*했다고 매체는 전했다. \n\n로봇은 생산라인에서 태블릿PC를 검측 장비 안에 집어넣었다. 검측이 완료된 이후엔 합격품을 생산라인 다음 단계에 옮겨놨으며, 불량품이 발견되문 회수 라인으로 옮겼다. \n\n징링 G2는 태블릿PC의 MMIT(다매체통합테스트) 작업 공간에서 자재 운반을 맡은 것이다. \n\n룽치어에 따르면 이 임무는 복잡하지 않아도 정밀한 조작이 요구된다. 기존 로봇팔은 고정된 좌표에 의존했지만 태블릿PC가 비뚤어지게 놓이면 오류로 보고됐다. 하지만 *징링 G2는 토크 센서와 비전 감지에 기반해 물품의 위치가 정확하게 놓인지 감지하고, 사람처럼 유연하게 조정*한다. 제품을 집어들기 전에 똑바로 세우거나 비스듬히 집어든 다음 똑바로 세울 수 있다. \n\n이처럼 생산라인에서 작동하기 위해 로봇은 4개월 이상의 훈련을 거쳤다. 생산라인의 1:1 디지털 트윈 복제본을 이용해 연구개발 테스트의 90%를 완수했다. 이어 공장의 보조 생산라인에서 실제 조명 및 신호 환경에 적응하도록 디버깅 작업을 진행했다. 생산라인에 투입되기 전에는 메인 생산라인의 가동 중단 시간 동안 일주일간 스트레스 테스트를 거쳤다. 생산라인에 적용되기 전까지 최소 8시간 연속 작업이 가능해야 했다. \n\n로봇 때문에 생산라인이 중단될 수 없기 때문에 룽치어는 '실패없이, 7일 연속, 가동 중단 없는 운영'이라는 요구 조건을 제시했다. 이에 애지봇 측은 지난해 9월 양사 공동 태스크포스 구성 이래 로봇을 개선해왔다. *초기 로봇 작업 완수에 100초 이상이 걸렸지만 4개월 간의 반복적 개선끝에 최근 약 20초 만에 작업을 완료하고 24시간 연속 가동도 가능하다.* \n\n두 대의 징링 G2 로봇이 8시간 연속 가동하면서 2283건의 정밀 운반 작업을 수행하고 시간당 310개의 제품을 만들어낸 것이다. \n\n옆쪽 수동 검사 라인에서는, 작업자들이 10m가 넘는 생산라인을 오가며 태블릿PC를 옮기고 있었다. 수없이 반복되는 작업을 위해 하루에 몇 만보를 걸어야 하는 환경이다. 작업자들의 노고 외에 관리상 어려움도 있다. 사람은 실수를 하는 데다 감정과 체력의 영향을 받고, 생산량도 변동된다. 젊은 직원들의 퇴사율도 높고 신입 직원의 재교육이 필요하다는 점도 인건비 부담으로 작용한다. \n\n로봇팔을 대신하는 휴머노이드 로봇의 장점은 넓은 작업 범위를 요구하는 상황, 배치 동작과 제품 모델 변경 등에 유연하게 대처할 수 있다는 점이다. 징링 G2는 전방향 섀시, 접이식 및 높이 조절 가능한 하체, 3방향 회전 허리, 듀얼 암 협업 기능 등을 통해 비표준 작업 환경을 커버할 수 있다. 스마트폰이나 태블릿PC 등 제품은 교체 주기가 빠르다는 점에서 맞춤형 생산라인 조성에도 유리하다. \n\n*올해 3분기 애지봇은 공장 내부에 100대의 로봇을 설치하고 자동차 제조, 반도체, 신재생 에너지 등 분야에 광범위하게 적용할 계획이다.*\n\n<https://www.irobotnews.com/news/articleView.html?idxno=45904|https://www.irobotnews.com/news/articleView.html?idxno=45904>",
+      "thread_ts": "1776741167.854209",
+      "reply_count": 1,
+      "reply_users": [
+        "U03NJDDPZPZ"
+      ],
+      "latest_reply": "1776741596.838749",
+      "reactions": [],
+      "edited": {
+        "user": "U03NJDDPZPZ",
+        "ts": "1776741875.000000"
+      },
+      "files": [],
+      "thread_replies": [
+        {
+          "ts": "1776741596.838749",
+          "type": "message",
+          "subtype": "thread_broadcast",
+          "user": "U03NJDDPZPZ",
+          "text": "*로봇 성능이 발전할수록 AI 솔루션(*이 필요한*) 영역이 줄어들 수 있으므로 주의깊게 살펴봐야 하는 시장 영역*\n\n<https://youtu.be/aGZ9qTgXJcA?si=0oB9AD7QX_xtoHXq|https://youtu.be/aGZ9qTgXJcA?si=0oB9AD7QX_xtoHXq>",
+          "thread_ts": "1776741167.854209",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1776741596.838749",
+      "type": "message",
+      "subtype": "thread_broadcast",
+      "user": "U03NJDDPZPZ",
+      "text": "*로봇 성능이 발전할수록 AI 솔루션(*이 필요한*) 영역이 줄어들 수 있으므로 주의깊게 살펴봐야 하는 시장 영역*\n\n<https://youtu.be/aGZ9qTgXJcA?si=0oB9AD7QX_xtoHXq|https://youtu.be/aGZ9qTgXJcA?si=0oB9AD7QX_xtoHXq>",
+      "thread_ts": "1776741167.854209",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1776748430.220299",
+      "type": "message",
+      "subtype": "bot_message",
+      "user": "B05EBG8R2MV",
+      "text": "<https://yozm.wishket.com/magazine/detail/slack/3718/?h=TBL1JAWKF&utm_source=slack&utm_medium=bot&utm_campaign=TBL1JAWKF|에이전트 하네스 완전 해부>\n이 글은 AI 에이전트 시스템에서 모델을 감싸는 인프라, 즉 '하네스(Harness)'의 개념을 정의하고, 파일시스템·샌드박스·메모리·컨텍스트 관리 등 핵심 구성 요소를 모델의 한계에서 역추적하여 도출하는 과정을 담고 있습니다. LangChain이 자사 코딩 에이전트의 하네스만 변경하여 Terminal Bench 2.0에서 Top 30에서 Top 5로 끌어올린 사례를 포함해, 하네스 엔지니어링의 현재와 미래를 구체적으로 소개합니다. 에이전트 하네스 완전 해부",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1776750678.653789",
+      "type": "message",
+      "subtype": null,
+      "user": "U03NJDDPZPZ",
+      "text": "Qwen3.6 Local + Claude Code Game making test.\n유료 비싼 API 쓰지 않고 무료 오프소스 Qwen3.6 Local PC에서 Claude Code 를 통해 심플 웹기반 방탈출 3D 게임 만들어 보았습니다. \n\n오프소스 Qwen3.6 를 로컬에서 활용가능한지 알아보고자 했는데, 한글도 잘 인식하고 코딩도 꽤 잘 하는 것 같습니다. 물론 유료 API만큼은 속도나 성능은 좀 떨어지기는 한 것 같지만 비용 대체 생각하거나 외부로 나가면 안되는 보안 데이터 사용 가능 차원에서는 고려 가능 할 듯 합니다.  \n\ngemma4로도 시도해 보았는데 이것은 좀 잘 안되네요. 좀더 잘 해보면 될지도 모르겠지만 일단 간단하게 시켜본 바로는 진행이 되지 못했습니다.   \n\n\"Three.js를 사용한 심플 탈출 게임\"을 만들 계획서(PRD)를 만든후 게임을 만들어줘. 지시를 통해 만들었습니다. \n\n테스트 환경 : 3090 GPU, Claude Code, Ollama, Qwen 3.6, Linux PC\n\n#Qwen36 #ClaudeCode #wonwizard",
+      "thread_ts": "1776750678.653789",
+      "reply_count": 5,
+      "reply_users": [
+        "U03NJDDPZPZ",
+        "UBKL1FZ28",
+        "U05TZEH8FS9"
+      ],
+      "latest_reply": "1776754633.729679",
+      "reactions": [],
+      "edited": null,
+      "files": [],
+      "thread_replies": [
+        {
+          "ts": "1776750691.889879",
+          "type": "message",
+          "subtype": null,
+          "user": "U03NJDDPZPZ",
+          "text": "출처: <https://www.facebook.com/share/v/1KgaVSJ55A/?mibextid=wwXIfr|https://www.facebook.com/share/v/1KgaVSJ55A/?mibextid=wwXIfr> ",
+          "thread_ts": "1776750678.653789",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776750701.229879",
+          "type": "message",
+          "subtype": null,
+          "user": "U03NJDDPZPZ",
+          "text": "cc <@UBKL1FZ28> ",
+          "thread_ts": "1776750678.653789",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776751254.489559",
+          "type": "message",
+          "subtype": null,
+          "user": "UBKL1FZ28",
+          "text": "감마4 보다 qwen3.6 이 더 훌륭한가보네요 <@U05TZEH8FS9> ",
+          "thread_ts": "1776750678.653789",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776751763.077959",
+          "type": "message",
+          "subtype": null,
+          "user": "U05TZEH8FS9",
+          "text": "전체적인 성능은 비슷하나 qwen3.6이 코딩 성능은 더 우수하다고 하네요",
+          "thread_ts": "1776750678.653789",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [
+            {
+              "name": "+1",
+              "users": [
+                "U03NJDDPZPZ"
+              ],
+              "count": 1
+            }
+          ],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776754633.729679",
+          "type": "message",
+          "subtype": null,
+          "user": "U05TZEH8FS9",
+          "text": "실제 사용해 보니 Qwen 3.6은 프로젝트 개발에 쓰기엔 거의 불가능한 수준입니다. 컨텍스트 유지가 안돼서 딱 단위 기능 개발 정도만 가능합니다.\n전반적인 느낌은 *Sonnet 3.7(작년모델) &gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt; Gemma 4 &gt; Qwen 3.6* 입니다.",
+          "thread_ts": "1776750678.653789",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [
+            {
+              "name": "white_check_mark",
+              "users": [
+                "UBKL1FZ28"
+              ],
+              "count": 1
+            },
+            {
+              "name": "+1",
+              "users": [
+                "U03NJDDPZPZ"
+              ],
+              "count": 1
+            }
+          ],
+          "edited": null,
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1776755347.820719",
+      "type": "message",
+      "subtype": null,
+      "user": "U03NJDDPZPZ",
+      "text": "*<https://zdnet.co.kr/view/?no=20260420152039|\"AI, 이제 현장 성과로\"…코오롱베니트, 제조 AX 판 키운다>*\n&gt; *광주·대구·천안 지역 로드쇼 개최…AI 얼라이언스 기반 지원 체계 공개*\n코오롱베니트가 *제조 현장 중심 인공지능 전환(AX) 전략을 앞세워 산업계 공략*에 나섰다. 품질·설비·안전 등 핵심 생산 영역을 아우르는 실행형 AX 모델을 통해 제조업의 실질적인 성과 창출을 지원한다는 전략이다.\n\n코오롱베니트는 *광주·대구·천안 등 3개 지역에서 '성공사례로 보는 AX 도입 전략 로드쇼'를 개최*했다고 20일 밝혔다.\n\n이번 행사에는 50여 개 기업 소속 약 90명의 제조업 관계자가 참석해 *현장 중심 AX 적용 전략과 실제 도입 사례에 높은 관심*을 보였다. 코오롱베니트는 AI 도입을 넘어 실제 현장 성과로 연결하는 실행 방안을 공유했다.\n\n최근 제조업에선 AI 기반 스마트공장 도입이 확산되면서 단순 구축을 넘어 운영과 성능 개선, 보안, 현장 확산까지 이어지는 전주기 실행 역량이 중요해지고 있다. 코오롱베니트는 AX가 개념검증(PoC)에 머무르지 않기 위해서는 문제 정의부터 구축·운영·확산까지 함께할 수 있는 신뢰할 수 있는 파트너로 자리매김한다는 방침이다.\n\n회사는 제조기업의 주요 고민인 '무엇부터 시작할 것인가'와 'PoC 이후 어떻게 현장에 적용·확산할 것인가'를 중심으로 이번 로드쇼를 구성했다. 품질·설비·안전 분야 AX와 생성형 AI, 데이터 인프라를 하나의 실행 로드맵으로 연결해 제시한 것이 특징이다.\n\n특히 코오롱베니트는 *AI 얼라이언스를 기반으로 한 통합 AX 모델을 강조*했다. *뉴로클, 비스텔리전스, 아시아나IDT 등 파트너사*와 협력해 개별 솔루션이 아닌 제조 현장의 과제 중심으로 기술을 결합한 점을 내세웠다.\n\n또 '문제 정의부터 구축·운영까지 지속 가능한 AX 지원 체계' 세션을 통해 데이터 분산과 확장성 부족으로 인해 AX가 PoC 단계에 머무르는 한계를 짚고 진단부터 구축·운영·확산까지 이어지는 엔드투엔드 지원 체계를 공유했다. 비전 AI 기반 품질 검사, 설비 예지보전, 비전언어모델(VLM) 기반 영상 관제 등 주요 제조 영역별 AX 패키지를 통해 빠른 현장 적용 방안도 제시했다.\n\n데이터 인프라 중요성도 강조됐다. 코오롱베니트는 데이터 수집·연결·분석으로 이어지는 3단계 실행 체계를 통해 통합 데이터 기반이 AX 성과를 좌우하는 핵심 요소라고 설명했다. 이를 통해 불량 분석, 설비 관리, 안전 관제, 공정 최적화 등 제조 현장의 실제 문제를 해결할 수 있다는 점을 부각했다.\n\n코오롱베니트는 향후 AI 얼라이언스와 AX 솔루션 패키지를 기반으로 제조기업의 디지털 전환을 넘어 실질적인 성과 창출까지 지원하는 역할을 강화할 계획이다.\n\n강재훈 코오롱베니트 AX커머스팀장은 \"AX는 이제 도입 여부가 아니라 현장 문제를 어떻게 성과로 연결하고 이후 어떻게 확산할 것인가로 전환되고 있다\"며 \"AI 얼라이언스와 현장 적용이 가능한 AX 솔루션 패키지를 기반으로 고객 비즈니스에 실질적인 성과를 만들어 나가겠다\"고 밝혔다.",
+      "thread_ts": "1776755347.820719",
+      "reply_count": 1,
+      "reply_users": [
+        "U03NJDDPZPZ"
+      ],
+      "latest_reply": "1776755457.574229",
+      "reactions": [],
+      "edited": null,
+      "files": [
+        {
+          "id": "F0AULSNAN3B",
+          "name": "image.png",
+          "title": "image.png",
+          "mimetype": "image/png",
+          "filetype": "png",
+          "pretty_type": "PNG",
+          "size": 372024,
+          "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0AULSNAN3B/image.png",
+          "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0AULSNAN3B/image.png"
+        }
+      ],
+      "thread_replies": [
+        {
+          "ts": "1776755457.574229",
+          "type": "message",
+          "subtype": null,
+          "user": "U03NJDDPZPZ",
+          "text": "cc <!subteam^S0A8KJGN4DC> <@UBKL1FZ28>\n\n*뉴로클, 비스텔리전스*의 경우 대기업 코오롱 그룹 IT/SI 담당 계열사인 *코오롱베니트와 얼라이언스를 구축*해서 *파트너십 기반 비즈니스(공동 사업개발)*를 하고 있네요.",
+          "thread_ts": "1776755347.820719",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1776816817.449199",
+      "type": "message",
+      "subtype": "bot_message",
+      "user": "B05EBG8R2MV",
+      "text": "<https://yozm.wishket.com/magazine/detail/slack/3719/?h=TBL1JAWKF&utm_source=slack&utm_medium=bot&utm_campaign=TBL1JAWKF|유니온 타입에서 막히는 순간, 타입 좁히기가 필요하다>\n타입스크립트를 쓰다 보면 하나의 변수가 여러 타입을 가질 수 있는 상황을 자주 만나게 됩니다. 함수의 매개변수가 string일 수도, number일 수도 있고, API 응답이 성공 데이터일 수도, 에러 객체일 수도 있습니다. 이처럼 다양한 가능성을 안고 있는 변수를 다룰 때, 타입스크립트는 꽤 보수적으로 반응합니다. 해당 변수가 “어떤 타입인지 아직 모르겠으니” 특정 타입 전용 메서드를 사용하지 못하도록 막아버리는 것입니다. 이 문제를 해결하는 방법이 바로 타입 좁히기(Type Narrowing)입니다. 타입 좁히기란 조건문 등을 활용해 넓은 타입을 더 구체적인 타입으로 확정해가는 과정을 말합니다. 유니온 타입에서 막히는 순간, 타입 좁히기가 필요하다",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1776817338.851389",
+      "type": "message",
+      "subtype": null,
+      "user": "U03NJDDPZPZ",
+      "text": "<https://www.mt.co.kr/future/2026/04/21/2026042115301238206|https://www.mt.co.kr/future/2026/04/21/2026042115301238206>",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1776819152.685819",
+      "type": "message",
+      "subtype": null,
+      "user": "U03NJDDPZPZ",
+      "text": "<https://www.unicornfactory.co.kr/article/2026042113540847619|https://www.unicornfactory.co.kr/article/2026042113540847619>",
+      "thread_ts": "1776819152.685819",
+      "reply_count": 1,
+      "reply_users": [
+        "U03NJDDPZPZ"
+      ],
+      "latest_reply": "1776820957.929069",
+      "reactions": [],
+      "edited": null,
+      "files": [],
+      "thread_replies": [
+        {
+          "ts": "1776820957.929069",
+          "type": "message",
+          "subtype": null,
+          "user": "U03NJDDPZPZ",
+          "text": "*VDPU와 고성능 벡터 데이터베이스 개요*\n\n*1. VDPU (Vector Data Processing Unit)란?*\n\nVDPU는 벡터 연산에 특화된 전용 하드웨어 프로세서입니다. GPU나 CPU와의 차이를 먼저 이해하면 쉽습니다.\n\nCPU는 범용 직렬 연산 목적으로 설계되어 벡터 연산이 가능하지만 비효율적이고, GPU는 병렬 그래픽/행렬 연산 목적으로 벡터 연산이 가능하지만 과잉 설계에 해당합니다. 반면 VDPU는 벡터 검색·처리 전용으로 설계되어 해당 연산에 최적화되어 있습니다.\n\nLLM과 AI 시스템에서 핵심 연산은 결국 \"벡터 간 유사도 계산\"입니다. 텍스트, 이미지, 오디오 등 모든 데이터를 수백~수천 차원의 숫자 배열(벡터)로 변환하고, 그 벡터들 사이의 거리를 빠르게 계산하는 것이죠. VDPU는 이 특정 연산만을 위해 회로 수준에서 최적화된 칩입니다.\n\n*왜 필요한가?* GPU는 원래 그래픽 렌더링을 위해 만들어진 칩이라, AI에 전용으로 쓰면 전력 대비 효율이 낮고 가격이 매우 비쌉니다. NVIDIA H100 한 장이 수천만 원 수준이죠. VDPU는 벡터 연산만 하면 되기 때문에 설계가 단순하고, 같은 전력·비용 대비 벡터 검색 처리량이 GPU보다 훨씬 높을 수 있습니다.\n\n*2. VDPU가 LLM 기반 사업의 비용효율에 기여하는 방식*\n\n실제 LLM 서비스 운영 비용은 크게 두 가지로 나뉩니다.\n\n① LLM 추론 비용 (토큰 생성) — OpenAI, Anthropic 등 API 호출 비용\n② 검색·컨텍스트 구성 비용 (벡터 검색) — RAG 파이프라인에서 관련 문서를 찾는 비용\n\nRAG(Retrieval-Augmented Generation) 시스템에서는 LLM에 질문을 넣기 전에 반드시 수백만~수억 개의 벡터 중에서 관련 문서를 먼저 검색합니다. 이 검색이 느리거나 비싸면 전체 시스템이 병목에 걸립니다.\n\nVDPU가 기여하는 방식은 구체적으로 이렇습니다.\n\n*지연시간(Latency) 감소*: 벡터 검색이 밀리초 단위로 빨라지면 사용자 응답 속도가 개선되고, 동시 처리 가능한 요청 수가 늘어납니다. *인프라 비용 절감*: GPU 서버 대신 VDPU 전용 하드웨어를 쓰면 동일 성능 대비 전력 소비와 서버 비용이 낮아집니다. *엣지 배포 가능*: Mnemos™처럼 소형 기기에 탑재할 수 있어, 클라우드 API 비용 없이 온디바이스에서 처리 가능합니다. 데이터 외부 전송 비용과 개인정보 리스크도 동시에 줄어듭니다.\n\n*3. 고성능 벡터 데이터베이스 vs 기존 데이터베이스*\n\n기존 데이터베이스(PostgreSQL, MySQL 등)는 정확한 값 매칭에 최적화되어 있습니다. \"이름이 '홍길동'인 사람 찾기\"는 잘 하지만, \"이 문장과 의미적으로 가장 비슷한 문서 100개 찾기\"는 근본적으로 설계가 맞지 않습니다.\n\n전통적 RDB는 행(row)·열(column) 단위로 저장하며 정확한 값 일치(WHERE 절) 방식으로 검색합니다. 정형 데이터에 적합하며 수평 확장이 어렵습니다. 반면 벡터 데이터베이스는 벡터(embedding) 단위로 저장하며 유사도 기반 근사 검색(ANN) 방식으로 \"이 벡터와 가장 가까운 K개\"를 찾습니다. 텍스트, 이미지, 음성 같은 비정형 데이터에 적합하며 대규모 벡터 인덱싱에 최적화되어 있습니다.\n\n벡터 DB의 핵심 기술은 ANN(Approximate Nearest Neighbor) 알고리즘입니다. 10억 개의 벡터 중에서 유사한 것을 정확하게 전부 비교하면 시간이 너무 오래 걸리므로, 충분히 정확하면서도 빠르게 찾는 근사 알고리즘(HNSW, IVF 등)을 씁니다. 대표적인 벡터 DB로는 Pinecone, Weaviate, Qdrant, Milvus 등이 있습니다.\n\n*4. LLM 사업에서 벡터 DB가 비용효율에 기여하는 방식*\n\nRAG 기반 서비스(기업용 챗봇, 지식 검색, 문서 분석 등)를 예로 들면 이렇습니다.\n\n*벡터 DB 없이 순수 LLM만 쓸 때의 문제*: 수만 페이지의 내부 문서를 LLM 컨텍스트에 전부 넣을 수 없습니다 (토큰 한계 + 비용 폭증). 매 쿼리마다 전체 문서를 다시 처리해야 합니다.\n\n*벡터 DB를 결합할 때의 이점*: 질문과 관련된 문서 3~5개만 검색해서 LLM에 넘기므로 토큰 사용량이 90% 이상 줄어드는 경우도 있습니다. 새로운 문서가 추가돼도 LLM 재훈련 없이 벡터만 추가하면 되므로 모델 업데이트 비용이 없습니다. 검색 결과에 출처를 붙일 수 있어 환각(hallucination) 문제도 억제됩니다.\n\n*요약*\n디노티시아의 전략은 한마디로 \"벡터 연산의 수직 통합\"입니다. VDPU(하드웨어) → Seahorse™(벡터 DB 소프트웨어) → Mnemos™(엣지 기기) → RAG 시스템(응용)으로 이어지는 스택을 자체적으로 가지면, 각 레이어에서 타사 솔루션 대비 최적화된 성능을 낼 수 있고, 기업 고객에게는 GPU 클라우드 의존도를 줄이는 실질적인 비용 절감 가치를 제공할 수 있습니다.",
+          "thread_ts": "1776819152.685819",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1776820014.132749",
+      "type": "message",
+      "subtype": null,
+      "user": "U03NJDDPZPZ",
+      "text": "*<https://www.ddaily.co.kr/page/view/2026042110490928042|중기부, 중기·스타트업에 GPU 264장 공급…\"AX 본격 지원\">*\n\n중소벤처기업부는 제6회 과학기술관계장관회의를 통해 심의·의결된 ‘국가 AI(인공지능) 프로젝트'에 따라 확보한 첨단 그래픽처리장치(GPU) 264장을 중소기업 제조현장과 창업기업 혁신에 지원한다고 21일 밝혔다.\n\n이번 국가 프로젝트로 배분된 GPU 자원은 *전량 중소·벤처기업과 창업기업에 지원될 예정*이며 AI 인프라 부족으로 어려움을 겪는 기업의 기술 개발과 사업화에 활용된다.\n\n중기부가 *시행 예정인 2개 과제는 공모 및 선정평가(4~5월)를 거쳐 올해 6월부터 지원*한다. 과제에 *선정된 기업들은 민간 데이터센터(NHN클라우드)와 연계*해 *센터가 보유한 GPU를 원격으로 이용하는 서비스(클라우드 방식)를 연말까지 무상으로 지원*받을 수 있다.\n\n국가 AI 프로젝트에 중기부는 *'중소제조 특화 멀티 AI 에이전트 개발(R&amp;D) 사업(AI 에이전트)'*과 *'혁신 AI 스타트업 전략 기술 상용화 및 인공지능 전환(AX) 가속 프로젝트(초격자 스타트업)'* 등 2개 과제를 신청해 모두 선정됐다.\n\n이에 따라 중기부는 'AI 에이전트'와 '초격차 스타트업' 과제 각각 64장과 200장 등 총 264장의 GPU(B200)를 확보했다. 특히 초격차 창업기업 과제는 국가 AI 프로젝트의 GPU 기반 혁신 AI 창업기업의 성장 촉진을 위한 주요 과제로 채택됐다.\n\n세부 추진내용을 보면 먼저 'AI 에이전트' 과제는 기술기업-제조기업 컨소시엄을 대상으로 중소제조 현장의 공정·품질 최적화를 위한 기술개발부터 현장적용까지 전주기를 지원한다.\n\n해당 과제를 통해 기술기업-제조기업 컨소시엄은 제조 공정에 대한 AI 학습, 데이터 확보 및 기술 실증화를 포함한 AI 에이전트 기술개발에 GPU를 활용할 수 있다.\n\n200장을 배정받은 초격차 스타트업(창업기업) 과제는 창업기업을 대상으로 대학·출연연의 전문역량과 창업기업 기술을 합친 '전략 AI' 개발에 85장을 지원한다. 기업 간 협업을 통해 특정 산업 분야에 특화된 맞춤형 AI 솔루션 개발도 85장을 분배한다.\n\n박용순 중기부 중소기업정책실장은 \"이번 국가 AI 프로젝트 참여를 통해 확보한 GPU는 제조현장의 인공지능 전환과 AI 기반 사업모델을 추진하는 창업기업에게 실질적인 도움이 될 것\"이라며 \"중기부는 제조현장과 창업 생태계 전반에 AI 활용을 확산해 기업의 성장 기반을 강화해 나겠다\"고 말했다.",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": [
+        {
+          "id": "F0AUF4RV7J6",
+          "name": "image.png",
+          "title": "image.png",
+          "mimetype": "image/png",
+          "filetype": "png",
+          "pretty_type": "PNG",
+          "size": 492904,
+          "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0AUF4RV7J6/image.png",
+          "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0AUF4RV7J6/image.png"
+        }
+      ]
+    },
+    {
+      "ts": "1776823305.418319",
+      "type": "message",
+      "subtype": null,
+      "user": "U03NJDDPZPZ",
+      "text": "<https://www.fnnews.com/news/202604211532120521|https://www.fnnews.com/news/202604211532120521>",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1776823370.325729",
+      "type": "message",
+      "subtype": null,
+      "user": "U03NJDDPZPZ",
+      "text": "<https://www.aitimes.com/news/articleView.html?idxno=209553|https://www.aitimes.com/news/articleView.html?idxno=209553>",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1776824002.135349",
+      "type": "message",
+      "subtype": null,
+      "user": "U03NJDDPZPZ",
+      "text": "<https://www.aitimes.com/news/articleView.html?idxno=209522|https://www.aitimes.com/news/articleView.html?idxno=209522>",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1776824122.389019",
+      "type": "message",
+      "subtype": null,
+      "user": "U03NJDDPZPZ",
+      "text": "<https://www.mt.co.kr/tech/2026/04/22/2026041616203743418|https://www.mt.co.kr/tech/2026/04/22/2026041616203743418>",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1776824155.055239",
+      "type": "message",
+      "subtype": null,
+      "user": "U03NJDDPZPZ",
+      "text": "<https://www.aitimes.com/news/articleView.html?idxno=209526|https://www.aitimes.com/news/articleView.html?idxno=209526>",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1776824573.590139",
+      "type": "message",
+      "subtype": null,
+      "user": "U03NJDDPZPZ",
+      "text": "<https://biz.heraldcorp.com/article/10722281|https://biz.heraldcorp.com/article/10722281>",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1776824773.194459",
+      "type": "message",
+      "subtype": null,
+      "user": "U03NJDDPZPZ",
+      "text": "<https://www.mk.co.kr/news/it/12023082|https://www.mk.co.kr/news/it/12023082>",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1776828417.352149",
+      "type": "message",
+      "subtype": null,
+      "user": "U03NJDDPZPZ",
+      "text": "*<https://news.einfomax.co.kr/news/articleView.html?idxno=4410940|스페이스X, AI 코딩 기업 '커서'와 맞손…600억 달러 인수 옵션>*\n\n일론 머스크의 우주 탐사 기업 스페이스X가 인공지능(AI) 코딩 기업 *'커서(Cursor)'와 전략적 파트너십을 체결*했다. 이번 계약에는 *연말까지 600억 달러(약 88조 9천억원) 규모로 회사를 인수할 수 있는 권리도 포함*됐다.\n\n21일(현지시간) 스페이스X는 자사의 X(옛 트위터)를 통해 \"커서와 협력해 세계 최고 수준의 코딩 및 지식 노동용 AI를 구축할 것\"이라고 발표했다.\n\n양사 간의 계약에는 파격적인 인수 옵션도 포함됐다. 커서는 올해 말 스페이스X에 600억 달러 규모로 회사를 매각할 수 있는 권리를 부여했다. 만약 인수가 무산되더라도 스페이스X는 그간의 협업 대가로 100억 달러를 지불하는 조건이다.\n\n이번 파트너십의 핵심은 커서의 제품 경쟁력과 스페이스X의 압도적인 컴퓨팅 자원을 결합하는 데 있다. 스페이스X는 엔비디아의 H100 GPU 100만 개에 달하는 성능을 갖춘 초거대 AI 슈퍼컴퓨터 '콜로서스(Colossus)'를 훈련에 투입할 계획이다.\n\n한편, 스페이스X는 오는 6월 기업공개(IPO)를 목표로 하고 있다.",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [
+        {
+          "name": "eyes",
+          "users": [
+            "U02MA1AEU8K"
+          ],
+          "count": 1
+        }
+      ],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1776830464.065829",
+      "type": "message",
+      "subtype": null,
+      "user": "U03NJDDPZPZ",
+      "text": "<https://openai.com/index/introducing-chatgpt-images-2-0/?fbclid=IwZnRzaARVJ0ZleHRuA2FlbQIxMQBzcnRjBmFwcF9pZAo2NjI4NTY4Mzc5AAEeMWWyA2r0FLne5_bIJefxzX8KPBER_E41u4hWQIW4pcGLvcHHfbvT-iDnMVQ_aem_zFPzz15koyTvlFcddK3bdQ|https://openai.com/index/introducing-chatgpt-images-2-0/?fbclid=IwZnRzaARVJ0ZleHRuA2FlbQIxMQBzcnRjBmFwcF9pZAo2NjI4NTY4Mzc5AAEeMWWyA2r0FLne5_bIJefxzX8KPBER_E41u4hWQIW4pcGLvcHHfbvT-iDnMVQ_aem_zFPzz15koyTvlFcddK3bdQ>",
+      "thread_ts": "1776830464.065829",
+      "reply_count": 1,
+      "reply_users": [
+        "U03NJDDPZPZ"
+      ],
+      "latest_reply": "1776899312.172949",
+      "reactions": [],
+      "edited": null,
+      "files": [],
+      "thread_replies": [
+        {
+          "ts": "1776899312.172949",
+          "type": "message",
+          "subtype": "thread_broadcast",
+          "user": "U03NJDDPZPZ",
+          "text": "<https://wowtale.net/2026/04/23/257527/?fbclid=IwZnRzaARWNCZleHRuA2FlbQIxMQBzcnRjBmFwcF9pZAo2NjI4NTY4Mzc5AAEekF_3cZfibojqGJJ6UDk_P_OBvcKhFhgEcEdkwSnT3UMsKbioHx3xZuJkT8w_aem_l7hOkyv-JUBcQ_3hQFK5Qg|https://wowtale.net/2026/04/23/257527/?fbclid=IwZnRzaARWNCZleHRuA2FlbQIxMQBzcnRjBmFwcF9pZAo2NjI4NTY4Mzc5AAEekF_3cZfibojqGJJ6UDk_P_OBvcKhFhgEcEdkwSnT3UMsKbioHx3xZuJkT8w_aem_l7hOkyv-JUBcQ_3hQFK5Qg>",
+          "thread_ts": "1776830464.065829",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1776834816.286199",
+      "type": "message",
+      "subtype": "bot_message",
+      "user": "B05EBG8R2MV",
+      "text": "<https://yozm.wishket.com/magazine/detail/slack/3720/?h=TBL1JAWKF&utm_source=slack&utm_medium=bot&utm_campaign=TBL1JAWKF|2개의 스쿼드를 AI와 함께 이끌어봤습니다>\n올해 들어 제품 내에서 살펴야 할 피처의 넓이와 깊이가 모두 깊어졌고, 인수한 제품의 특성상 우리가 아직 모르는 동작도 훨씬 많아졌습니다. 그 와중에 2개의 스쿼드의 PO 역할을 담당하려다 보니, 물리적으로 혼자 감당할 수 있는 범위를 이미 넘어선 상황이었죠. 그래서 두 주니어 AI를 통해 빈자리를 단단하게 채워보려고 했습니다. 그 과정을 지금부터 소개하겠습니다. 2개의 스쿼드를 AI와 함께 이끌어봤습니다",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1776899312.172949",
+      "type": "message",
+      "subtype": "thread_broadcast",
+      "user": "U03NJDDPZPZ",
+      "text": "<https://wowtale.net/2026/04/23/257527/?fbclid=IwZnRzaARWNCZleHRuA2FlbQIxMQBzcnRjBmFwcF9pZAo2NjI4NTY4Mzc5AAEekF_3cZfibojqGJJ6UDk_P_OBvcKhFhgEcEdkwSnT3UMsKbioHx3xZuJkT8w_aem_l7hOkyv-JUBcQ_3hQFK5Qg|https://wowtale.net/2026/04/23/257527/?fbclid=IwZnRzaARWNCZleHRuA2FlbQIxMQBzcnRjBmFwcF9pZAo2NjI4NTY4Mzc5AAEekF_3cZfibojqGJJ6UDk_P_OBvcKhFhgEcEdkwSnT3UMsKbioHx3xZuJkT8w_aem_l7hOkyv-JUBcQ_3hQFK5Qg>",
+      "thread_ts": "1776830464.065829",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1776903218.728869",
+      "type": "message",
+      "subtype": "bot_message",
+      "user": "B05EBG8R2MV",
+      "text": "<https://yozm.wishket.com/magazine/detail/slack/3721/?h=TBL1JAWKF&utm_source=slack&utm_medium=bot&utm_campaign=TBL1JAWKF|막힐 때마다 직접 만들었더니, AI 풀스택 기업이 된 사연>\n최근 AI 시장에서 일어나고 있는 변화가 있습니다. 바로 경쟁의 축이 '모델'에서 '인프라'로 이동하고 있다는 겁니다. 여기서 핵심은 ‘AI 에이전트’입니다. 문제는 이 과정에서 토큰 소비량이 기하급수적으로 증가한다는 건데요. 요즘IT는 이 흐름을 가장 가까이서 지켜본 팀을 만나보기로 했습니다. 바로 GPU 클라우드를 직접 구축하고 운영해 온 AI 풀스택 기업, 엘리스입니다. 이들이 직접 겪어온 이야기를 듣기 위해, 엘리스 박정국 CTO와 김시완 클라우드 전략이사를 만나 인터뷰를 진행했습니다. 그리고 실전에서 기업들의 AX 전환이 막히는 이유와 체크리스트도 함께 정리해 봤습니다. 막힐 때마다 직접 만들었더니, AI 풀스택 기업이 된 사연",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1776904274.850879",
+      "type": "message",
+      "subtype": null,
+      "user": "U03NJDDPZPZ",
+      "text": "<https://m.sedaily.com/article/20035815|https://m.sedaily.com/article/20035815>",
+      "thread_ts": "1776904274.850879",
+      "reply_count": 2,
+      "reply_users": [
+        "U03NJDDPZPZ",
+        "U04C3UYFY1F"
+      ],
+      "latest_reply": "1776904330.944279",
+      "reactions": [],
+      "edited": null,
+      "files": [],
+      "thread_replies": [
+        {
+          "ts": "1776904289.748179",
+          "type": "message",
+          "subtype": null,
+          "user": "U03NJDDPZPZ",
+          "text": "cc <!subteam^S0A8KJGN4DC> ",
+          "thread_ts": "1776904274.850879",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776904330.944279",
+          "type": "message",
+          "subtype": null,
+          "user": "U04C3UYFY1F",
+          "text": ":eyes:",
+          "thread_ts": "1776904274.850879",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1776904479.581929",
+      "type": "message",
+      "subtype": null,
+      "user": "U03NJDDPZPZ",
+      "text": "<http://www.itdaily.kr/news/articleView.html?idxno=239007|http://www.itdaily.kr/news/articleView.html?idxno=239007>",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1776904641.425009",
+      "type": "message",
+      "subtype": null,
+      "user": "U03NJDDPZPZ",
+      "text": "<https://www.fnnews.com/news/202604221519494988|https://www.fnnews.com/news/202604221519494988>",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1776904832.200769",
+      "type": "message",
+      "subtype": null,
+      "user": "U03NJDDPZPZ",
+      "text": "<https://www.donga.com/news/It/article/all/20260422/133792736/1|https://www.donga.com/news/It/article/all/20260422/133792736/1>",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1776904971.531929",
+      "type": "message",
+      "subtype": null,
+      "user": "U03NJDDPZPZ",
+      "text": "<https://www.aitimes.com/news/articleView.html?idxno=209602|https://www.aitimes.com/news/articleView.html?idxno=209602>",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1776905076.772129",
+      "type": "message",
+      "subtype": null,
+      "user": "U03NJDDPZPZ",
+      "text": "<https://www.fnnews.com/news/202604221642184772|https://www.fnnews.com/news/202604221642184772>",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1776910058.604249",
+      "type": "message",
+      "subtype": null,
+      "user": "U03NJDDPZPZ",
+      "text": "*<https://www.aitimes.com/news/articleView.html?idxno=209589|오픈AI, '코덱스' 주간 사용자 400만 돌파...기업 확장 위해 ‘코덱스 랩스’ 출범>*\n\n오픈AI의 개발자 AI 도구 ‘코덱스’가 2주 만에 주간 활성 사용자(WAU) 100만명을 추가했다. 이런 빠른 확산세를 바탕으로, 컨설팅 프로그램 ‘코덱스 랩스(Codex Labs)’를 출범하고 글로벌 컨설팅 업체들과 협력해 대규모 기업 고객 확보에 나섰다.\n\n오픈AI는 21일(현지시간) 4월 초 기준 주간 활성 사용자 수가 300만명이던 코덱스가 불과 2주 만에 400만명을 돌파했다고 밝혔다.\n\n또 지난달 200만명 수준이었던 것과 비교하면 매우 가파른 성장세를 보이고 있다. 개인 개발자뿐 아니라 기업 현장에서도 실제 업무에 빠르게 도입되고 있다는 분석이다.\n\n실제로 다양한 기업들이 소프트웨어 개발 전 과정에 코덱스를 활용하고 있다. 버진 애틀랜틱은 테스트 커버리지 확대와 개발 속도 개선에 활용하고 있으며, 램프는 코드 리뷰를 자동화하고 있다. 노션은 신규 기능 개발에, 시스코는 대규모 코드 저장소 분석에 활용 중이다. 라쿠텐은 장애 대응 등 운영 영역에서 코덱스를 적용하고 있다.\n\n*코덱스는 이제 단순 코딩을 넘어 브라우저 작업, 이미지 생성, 메모리 기능, 다양한 앱 연동까지 지원*하며 ‘지식 노동 전반’을 아우르는 도구로 확장되고 있다. 마케팅, 재무, 영업 등 비개발 부서에서도 정보를 통합·분석해 보고서, 계획서, 체크리스트 등을 생성하고 실행까지 이어지는 사례가 늘고 있다. 이는 앤트로픽의 '클로드 코워크'와 흡사한 모습이다.\n\n이 같은 흐름 속에서 오픈AI는 기업의 도입 장벽을 낮추기 위해 *‘코덱스 랩스’를 출범*했다. *오픈AI 전문가들이 직접 기업에 참여해 워크숍과 실습 세션을 제공*하고, *실제 업무에 코덱스를 적용하는 방법을 지원*한다.\n\n초기 테스트 단계를 넘어 *반복 가능한 배포 체계를 구축하도록 돕는 것이 목표*다. 이들은 '전방 배치 엔지니어(FDE)' 역할을 하게 된다.\n\n다만 기업들의 수요가 급증하면서 오픈AI 단독으로는 대응이 어려운 상황이다. 이에 따라 *액센츄어, 캡제미니, 코그니전트, 인포시스, PwC, 타타 컨설턴시 서비스, CGI 등 글로벌 기술 컨설팅 기업들과 협력*하고 있다. 이들은 기업 *내부 시스템 통합, 조직 변화 관리, 파일럿 프로젝트의 상용화 전환 등을 지원*한다.\n\n데니스 드레서 오픈AI 최고 매출책임자(CRO)는 “기업들이 AI를 실제 업무에 적용하고 확장하는 과정에서 겪는 간극을 줄이는 것이 중요하다”며 “이번 파트너십을 통해 전 세계 기업으로 확산 속도를 높일 수 있을 것”이라고 밝혔다.\n\n여기에 구글 클라우드 출신 콜린 카파세를 글로벌 파트너십 총괄 부사장으로 영입, 생태계 확장에 힘을 싣고 있다.\n\n이번 전략은 경쟁사 앤트로픽과의 기업 시장 경쟁이 치열해지는 가운데 나온 행보다. 앤트로픽은 코딩과 에이전트 중심 제품을 앞세워 기업 고객을 빠르게 늘리고 있으며, 오픈AI도 코덱스와 ‘프론티어(Frontier)’ 플랫폼을 통해 전사 업무 자동화를 겨냥하고 있다.\n\n오픈AI는 앞으로 코덱스를 모든 업무 라인에 적용 가능한 AI 도구로 발전시킨다는 계획이다.\n\n드레서 CRO는 “코덱스로 구축한 개인용 AI 에이전트가 회의 요약, 문서 작성, CRM 업데이트 등을 수행하고 있다”라고 소개하며, 코덱스가 단순 개발 도구를 넘어 기업 운영 전반을 재편하는 핵심 인프라로 자리 잡을 것이라고 강조했다.",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": [
+        {
+          "id": "F0AU922QB3R",
+          "name": "image.png",
+          "title": "image.png",
+          "mimetype": "image/png",
+          "filetype": "png",
+          "pretty_type": "PNG",
+          "size": 832583,
+          "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0AU922QB3R/image.png",
+          "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0AU922QB3R/image.png"
+        }
+      ]
+    },
+    {
+      "ts": "1776910165.014539",
+      "type": "message",
+      "subtype": null,
+      "user": "U03NJDDPZPZ",
+      "text": "*<https://m.etnews.com/20260421000334|“로봇이 SI를 집어삼킨다”…스마트팩토리 주도권 교체>*\n&gt; *피지컬AI가 제어·연동*\n&gt; *시스템통합 비용 절반↓*\n&gt; *프로세스 단순화 이끌어*\n로봇 자동화 기업 뉴로메카는 휴머노이드 '에이르'를 활용해 스마트팩토리 구축에 드는 고객사의 시스템통합(SI) 비용을 줄여준다. 기존 자동화 라인에서는 로봇 도입 후 지그(보조기구) 설계, 공정 연동, 제어 최적화 등 SI 작업에 하드웨어(HW) 비용 못지않은 추가 비용이 발생했다. 로봇 에이르는 양팔로 사람과 유사한 동작을 수행하면서 별도 지그나 설비 변경 없이 기존 공정에 투입할 수 있어 고객사의 SI 비용 부담을 절반 수준으로 낮춘다는 게 회사 측 설명이다.\n\n*스마트팩토리 시장 주도권이 기존 SI에서 로봇으로 넘어가고 있다.* 인공지능(AI) 기술 발달과 함께 판단·제어 기능이 로봇 내부로 들어오면서 *공정별 SI 기업이 하던 일까지 로봇으로 흡수*되면서다. *고성능 AI 로봇이 SI 비용 부담을 줄이고 구조 단순화 등을 이루면서 스마트팩토리 시장의 새로운 열쇠*로 떠올랐다.\n\n21일 업계에 따르면 로봇 기업이 피지컬AI 기술을 활용해 단순 HW 공급을 넘어 공정 적용, 운영, 소프트웨어(SW)까지 아우르는 형태로 사업 영역을 넓히고 있다. 다양한 산업 현장에서 실증과 적용 작업이 진행 중이다.\n\n전통적 스마트팩토리는 장비·자동화, SI, 로봇, SW 기업이 각기 역할을 나눠 구축하고 업무를 수행하는 구조(장비-연동-로봇-데이터)다. 설비 구축 이후 제어 시스템을 연동하고, 공정에 맞춰 로봇을 적용한 뒤 상위 SW로 데이터를 관리하는 방식이다. 공정별 환경 차이가 커 맞춤형 설계와 연동이 중요하다. 이 때문에 전체 과정에서 SI 기업이 핵심 역할을 담당해왔다.\n\n최근 이같은 흐름에 변화가 생겼다. *피지컬AI 확산으로 로봇이 시스템 제어, 연동 등 SI 기업이 하던 일을 대체하기 시작*했다. *공정별 SI 개입 범위가 점차 줄어들고 있다*는 의미다.\n\n티로보틱스는 반도체·디스플레이 공장을 대상으로 자율이동로봇(AMR)에 로봇 팔(매니퓰레이터)을 결합한 통합 자동화 솔루션 공급을 추진 중이다. 물류 이동과 작업 공정을 별도로 구축하던 방식을 하나의 로봇 시스템으로 통합, 공정 연동 범위를 줄인다. 회사는 레인보우로보틱스, 일본 화낙 등과 협력해 국내 반도체·디스플레이 대기업 대상 개념검증(PoC)을 하고 있다.\n\n자이스웍스는 로봇용 소프트웨어(SW)로 SI 영역 일부를 대체하는 접근을 시도한다. 공정 영상을 업로드하면 작업자 동작을 분석해 로봇 제어 모델을 생성하고, 이를 디지털 트윈 환경에서 시뮬레이션해 적용하는 방식이다. 기존 12단계 엔지니어링과 4억원 이상이 필요했던 공정 자동화 비용을 1억~2억원 수준으로 낮출 수 있다. 자이스웍스는 원전 연료봉 교체 용접 공정을 위한 실증 작업을 하고 있다. .\n\n과거 스마트팩토리는 로봇 가격 대비 비싼 공정 연동 비용이 확산의 제약 요인으로 지목돼왔다. 로봇을 통해 장비-연동-로봇-데이터로 나뉜 기존 분업형 모델의 공정 설계와 운영 기능을 통합하면 비용 절감은 물론 프로세스 단순화가 가능해진다. 로봇을 얼마나 빠르게 현장에 적용하고 안정적으로 운영하느냐가 스마트팩토리의 성공 기준이 될 것이라는 게 업계 중론이다.\n\n로봇업계 관계자는 “스마트팩토리에서 기존 SI의 역할이 완전히 사라지지는 않겠지만 성격이 달라질 것”이라며 “로봇을 얼마나 잘 적용하고 유지하느냐를 중심으로 스마트팩토리 시장이 재편될 것”이라고 말했다.",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": [
+        {
+          "id": "F0B04PQSLPJ",
+          "name": "image.png",
+          "title": "image.png",
+          "mimetype": "image/png",
+          "filetype": "png",
+          "pretty_type": "PNG",
+          "size": 558030,
+          "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0B04PQSLPJ/image.png",
+          "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0B04PQSLPJ/image.png"
+        }
+      ]
+    },
+    {
+      "ts": "1776914005.943829",
+      "type": "message",
+      "subtype": null,
+      "user": "U03NJDDPZPZ",
+      "text": "<https://www.donga.com/news/Economy/article/all/20260422/133789564/2|https://www.donga.com/news/Economy/article/all/20260422/133789564/2>",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1776921218.513789",
+      "type": "message",
+      "subtype": "bot_message",
+      "user": "B05EBG8R2MV",
+      "text": "<https://yozm.wishket.com/magazine/detail/slack/3722/?h=TBL1JAWKF&utm_source=slack&utm_medium=bot&utm_campaign=TBL1JAWKF|한국에서 인기 있는 앱이 왜 영국에선 통하지 않을까?>\n현재 영국에 지내다 보니 국가에 따라 앱 서비스 사용하는 상황에 차이가 있다는 걸 알게 됐다. 그 예시로 스타벅스 사이렌 오더가 주문이 익숙한 한국과 달리, 영국은 매장에서 직접 주문하는 경우가 많다. 오히려 앱 주문을 어색해하고 앱 사용에 어려움을 겪는 것이다. 서비스 측에서도 앱 사용을 이끌기 위한 프로모션을 시행하는 것도 드물었다. 이처럼 같은 서비스여도 나라마다 앱 사용률의 차이를 체감하니, 타 국가에 서비스를 안착시키기 위해선 어떤 접근 방식을 따를지 고민하게 된다. 이번 글에서는 Customer Journey Shadowing 방법을 활용하여, 고객을 이해하고 보다 유의미한 가설을 세우는 접근 방식에 관해 이야기하고자 한다. 한국에서 인기 있는 앱이 왜 영국에선 통하지 않을까?",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1776932021.864909",
+      "type": "message",
+      "subtype": "bot_message",
+      "user": "B05EBG8R2MV",
+      "text": "<https://yozm.wishket.com/magazine/detail/slack/3723/?h=TBL1JAWKF&utm_source=slack&utm_medium=bot&utm_campaign=TBL1JAWKF|왜 지금 다시 클로드 코드인가: 클코나잇 시즌 2>\n클로드 코드가 처음 등장했을 때를 기억하시나요? “이게 진짜 되네?” 하고 놀라워하던 순간이 있었죠. 이제는 개발자뿐만 아니라, PM, 기획자, 마케터까지 클로드 코드를 활용해 문제를 직접 해결하고 있습니다. 팀 단위로 도입하거나, 조직 전체의 워크플로우를 바꾼 사례도 하나둘 늘어나고 있고요. 그 흐름을 보며 자연스럽게 한 가지 질문이 떠올랐습니다. “현업에서 이 도구를 매일 써온 사람들은, 실제로 어떻게 활용하고 있을까?” 그래서 요즘IT는 ‘클로드 코드 나잇(일명 클코나잇)’을 기획했고, 시즌 1을 통해 그 이야기들을 직접 들어 볼 수 있었습니다. 그리고 2026년 클코나잇 시즌 2를 준비하며, 이번 여정을 함께 만들어갈 발표자분들을 찾고 있습니다. 왜 지금 다시 클로드 코드인가: 클코나잇 시즌 2",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1776933586.538249",
+      "type": "message",
+      "subtype": null,
+      "user": "U082RGK8J15",
+      "text": "<https://www.dailysecu.com/news/articleView.html?idxno=206410>\n\nPE Agent 기사화 되었습니다! (<@UBKL1FZ28> <@U07M5E33KDW>)",
+      "thread_ts": "1776933586.538249",
+      "reply_count": 2,
+      "reply_users": [
+        "U03NJDDPZPZ",
+        "U082RGK8J15"
+      ],
+      "latest_reply": "1776939201.286179",
+      "reactions": [
+        {
+          "name": "감사콩",
+          "users": [
+            "U07M5E33KDW"
+          ],
+          "count": 1
+        },
+        {
+          "name": "+1",
+          "users": [
+            "UBKL1FZ28",
+            "U0A11G512F3",
+            "U05AWGZ1TRD",
+            "U03NJDDPZPZ",
+            "U04FRP4PQF5"
+          ],
+          "count": 5
+        }
+      ],
+      "edited": null,
+      "files": [],
+      "thread_replies": [
+        {
+          "ts": "1776936518.756539",
+          "type": "message",
+          "subtype": null,
+          "user": "U03NJDDPZPZ",
+          "text": "서연님, 안녕하세요. 보도자료 작업하느라 고생하셨습니다.\n\n한 가지 수정 (또는 다음번 보도자료 배포 시 반영) 필요한 부분이 있는데요.\n\nPE Agent는 PSK에 데모/납품 향으로만 사용하는 제품 명칭이고, 대외 일반 공개/배포용 명칭은 TS Agent를 사용하고 있습니다.\n\n(제가 만든 소개서 명칭에서도 TS Agent를 사용 중. PE는 PSK의 필드 서비스 담당 부서인 PEE 팀의 명칭을 따온 것)\n\n그래서 수정이 가능하다면 보도자료에 언급된 제품 명칭은 TS Agent로 통일되도록 변경이 필요해보입니다.",
+          "thread_ts": "1776933586.538249",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": {
+            "user": "U03NJDDPZPZ",
+            "ts": "1776936534.000000"
+          },
+          "files": []
+        },
+        {
+          "ts": "1776939201.286179",
+          "type": "message",
+          "subtype": null,
+          "user": "U082RGK8J15",
+          "text": "이미 발송된 건이라 본 건은 수정이 어려울 것 같습니다.\n다음 외부 배포 시에는 TS Agent로 명칭 정정하겠습니다.",
+          "thread_ts": "1776933586.538249",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [
+            {
+              "name": "+1",
+              "users": [
+                "U03NJDDPZPZ"
+              ],
+              "count": 1
+            }
+          ],
+          "edited": null,
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1776989617.273439",
+      "type": "message",
+      "subtype": "bot_message",
+      "user": "B05EBG8R2MV",
+      "text": "<https://yozm.wishket.com/magazine/detail/slack/3724/?h=TBL1JAWKF&utm_source=slack&utm_medium=bot&utm_campaign=TBL1JAWKF|전 메타·구글 임원이 말하는, PM 절반이 어려워지는 이유>\n코딩 성능은 올랐는데 토큰 소모와 범용 품질 논란이 함께 온 Claude Opus 4.7, 너무 위험해서 공개하지 않겠다던 Mythos가 공개 첫날 뚫린 사건, 그리고 전 메타·구글 임원 Nikhyl Singhal이 말하는 PM 절반이 위기에 처한 이유까지. 이번 주 프로덕트 메이커가 주목할 세 가지를 정리했습니다. 전 메타·구글 임원이 말하는, PM 절반이 어려워지는 이유",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1776990680.721709",
+      "type": "message",
+      "subtype": null,
+      "user": "U03NJDDPZPZ",
+      "text": "*<https://www.investchosun.com/site/data/html_dir/2026/04/23/2026042380181.html|AI 상장 1호 마키나락스, '흥행여부'보다 '심사기조'가 더 관심?>*\n&gt; *파두 사태 이후 엄격해진 심사 기조…AI 등 신산업도 \"예외 없다\"*\n&gt; *기술특례 문턱 낮춘다지만…공시·지배구조 검증은 오히려 강화*\n&gt; *\"마키나락스가 가늠할 'AI IPO 기준선'…후속 딜까지 영향 불가피\"*\n마키나락스가 올해 인공지능(AI) 기업 기업공개(IPO) 시장의 '바로미터'로 평가받고 있다. 단순히 AI 기술기업의 첫 상장 도전이라는 의미를 넘어, 달라진 당국의 심사 기조가 처음 명확하게 적용되는 사례로 거론되기 때문이다. 관심의 초점도 흥행 여부보다 어떤 검증을 거쳐 상장에 이르느냐에 맞춰져 있다.\n\n마키나락스는 지난달 증권신고서를 제출하며 코스닥 상장 절차에 들어갔다. 총 263만5000주를 공모하며 희망 공모가는 1만2500원~1만5000원, 공모 규모는 약 329억~395억원이다. 일반청약은 다음달 11~12일로 예정돼 있다. 예정대로 일정이 진행 중인 가운데, 이번 딜은 단순한 'AI 상장 1호'가 아닌 기술기업 심사 기준의 시험대로 받아들여지는 분위기다.\n\n거래소와 금융당국은 이번 딜을 예년보다 더 촘촘하게 들여다보고 있는 것으로 전해진다. 마키나락스는 최근 몇 년간 매출 외형을 키우며 기술기업 심사에서 중요하게 보는 재무 실적 측면에서 일정 부분 성과를 냈다. 초기 1억원대에 불과하던 매출은 100억원대로 확대됐고, 지난해 수주 규모도 200억원 수준까지 늘었다.\n\n파두 사태 이후 기술특례 기업 전반에 대한 신뢰도가 흔들리면서, AI 등 기술기업에 대한 평가 기준 자체가 한층 보수적으로 바뀌었다는 게 업계의 시각이다. 실적의 절대 규모와 수익성, 향후 매출의 지속 가능성은 물론 프로젝트 기반 매출 구조에서 비롯되는 변동성까지 점검 대상에 올라 있다는 것이다. 업계에 따르면 마키나락스 역시 증권신고서 제출 이후 업황과 사업 구조 전반에 대해 추가 설명을 요구받은 것으로 알려졌다.\n\n여기에 더해 지배구조에 대한 점검도 강화되는 분위기다. 최근 한국거래소의 코스닥 상장 심사 과정에서는 최대주주와 경영진의 상장 이후 잔류 의지, 이른바 '오너 리텐션(retention)' 여부를 명확히 하도록 요구하는 사례가 늘고 있는 것으로 전해진다. 오너의 단기 엑시트 우려를 줄이고 상장 이후 경영 책임을 유지하도록 유도하기 위한 조치로 풀이된다.\n\n이 같은 흐름은 지난해 말 세미파이브 사례에서 이미 확인됐다. 세미파이브는 증권신고서 효력 발생 이후에도 향후 실적과 관련한 추가 보완 공시를 요구받았다. 통상 효력 발생은 심사가 사실상 마무리된 단계로 받아들여졌지만, 해당 사례를 계기로 마지막 단계까지도 검증이 이어질 수 있다는 인식이 확산됐다.\n\n최근 IPO 심사는 기술특례 여부와 무관하게 공시와 실적, 지배구조를 전방위적으로 점검하는 방향으로 강화되고 있다는 평가다. 과거처럼 산업 성장성과 기술력만으로는 설명이 충분하지 않다는 의미다. 특히 AI 기업은 성장 가정과 기술 확장성에 대한 의존도가 높은 만큼, 이를 얼마나 현실적인 숫자로 뒷받침할 수 있는지가 핵심 변수로 떠오르고 있다.\n\n업계에선 이번 딜을 통해 설정되는 검증 수준이 향후 AI 기업 IPO 전반의 기준선으로 작용할 가능성이 크다고 보고 있다. 조 단위 몸값이 거론되는 업스테이지 등 후속 딜 역시 같은 잣대 위에서 평가될 수밖에 없다는 의미다.\n\n이 지점에서 정책과 심사 간 괴리도 드러난다. 정부와 거래소는 AI를 포함한 첨단산업 육성을 위해 기술특례상장 제도 확대를 추진하고 있다. 인공지능·항공우주·반도체·자동차·방산 등을 포함한 'ABCD 육성 방안'을 통해 재무 요건이 다소 부족하더라도 기술력과 성장성이 있는 기업의 상장 문턱을 낮추는 방향의 제도 정비가 논의되고 있다.\n\n기술특례상장은 최소 재무요건만으로 상장예비심사 신청을 허용하는 제도로, 그동안 바이오 기업 중심으로 활용돼 왔다. 거래소는 이를 AI 등으로 확장해 산업 다변화를 유도하겠다는 입장이다.\n\n하지만 자본시장에서의 판단 기준은 별도로 작동하고 있다. 금융당국은 상장 예정 기업에 대한 재무 검증과 공시 책임을 강화하는 방향으로 움직이고 있다. 산업 정책은 ‘육성’을 전제로 하지만, 자본시장 규율은 ‘검증’을 우선하는 구조다.\n\n결과적으로 AI를 둘러싼 메시지는 이중적으로 전달되고 있다. 상장 문턱을 낮추겠다는 정책과 달리, 실제 심사 기준은 더 높아지고 있다는 인식이다. 이런 맥락에서 마키나락스 상장은 현 IPO 시장의 심사 기조를 가늠할 수 있는 사례로 받아들여진다. 기술이나 성장 서사가 아니라, 그것을 어떻게 설명하고 입증하느냐가 상장의 관건이 되는 흐름이다.\n\n한 대형사 ECM 관계자는 \"정부가 신산업 기업 육성을 강조하고 있지만, 상장 심사 기조는 오히려 더 강화됐다고 보는 분위기\"라며 \"마키나락스를 계기로 AI 기업 상장에 요구되는 기준이 한 단계 높아질 가능성이 크다\"고 말했다.",
+      "thread_ts": "1776990680.721709",
+      "reply_count": 2,
+      "reply_users": [
+        "U03NJDDPZPZ"
+      ],
+      "latest_reply": "1776991335.583579",
+      "reactions": [],
+      "edited": null,
+      "files": [
+        {
+          "id": "F0B0DALUARW",
+          "name": "image.png",
+          "title": "image.png",
+          "mimetype": "image/png",
+          "filetype": "png",
+          "pretty_type": "PNG",
+          "size": 220762,
+          "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0B0DALUARW/image.png",
+          "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0B0DALUARW/image.png"
+        }
+      ],
+      "thread_replies": [
+        {
+          "ts": "1776991016.387899",
+          "type": "message",
+          "subtype": null,
+          "user": "U03NJDDPZPZ",
+          "text": "cc <@UBL1JVCSZ> <@UBKL1FZ28>",
+          "thread_ts": "1776990680.721709",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776991335.583579",
+          "type": "message",
+          "subtype": null,
+          "user": "U03NJDDPZPZ",
+          "text": "<https://www.newsworker.co.kr/news/articleViewAmp.html?idxno=422955>",
+          "thread_ts": "1776990680.721709",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1776990731.395759",
+      "type": "message",
+      "subtype": null,
+      "user": "U03NJDDPZPZ",
+      "text": "<https://www.consumernews.co.kr/news/articleView.html?idxno=754647>",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1776990984.076209",
+      "type": "message",
+      "subtype": null,
+      "user": "U03NJDDPZPZ",
+      "text": "*<https://news.mtn.co.kr/news-detail/2026042309433679632|마키나락스-현대차, 글로벌 생산 거점 1400여 로봇에 특화 AI 솔루션 적용 (26.04.23)>*\n\n마키나락스는 현대자동차 *아산공장을 시작*으로 *국내외 주요 생산 거점*에 *산업용 로봇 특화 예지보전 솔루션(PHM)을 확대 중*이라고 23일 밝혔다.\n\n양사는 로봇 동작 데이터를 기반으로 딥러닝 알고리즘을 적용해 *고장을 5일 전, 90% 이상의 정확도로 예측하는 예지 보전 시스템을 구축*하며 다운타임을 획기적으로 줄였다.\n\n마키나락스가 현대자동차와 함께 만든 로봇 특화 예지보전 솔루션은 *△구동부 상태 진단 △셋업 이상 탐지 △상태 변동점 알림을 수행*하며, 진단 가능 항목을 지속 확대해 생산라인의 예기치 못한 다운타임을 최소화한다.\n\n해당 솔루션은 아산 공장을 기점으로 *울산, 인도, 전주 등 국내외 주요 생산 거점에 빠르게 확장*되고 있다.\n\n최근에는 *울산EV공장, 화성기아EV공장 등 전기차 생산 라인에도 확대 적용 중*이며, *올해 안에 총 1400여대의 로봇에 적용될 예정*이다. 양사는 RPMS 솔루션의 향후 적용 거점을 지속적으로 확대하고, 안정적인 운영과 고도화를 위해 인력·조직 체계도 함께 강화해 나갈 방침이다.\n\n마키나락스는 지난 2018년 현대자동차그룹의 오픈 이노베이션 플랫폼 제로원(ZER01NE)에서 투자한 스타트업으로 선정되며 현대자동차와 인연을 맺었다. 현대자동차는 당시 마키나락스의 기술력을 높이 평가해 지분 투자를 단행하며 전략적 투자자(SI)로서 긴밀한 협력을 이어왔다.\n\n현대자동차 관계자는 \"현대자동차는 SDF로의 전환을 가속하며 완성차 시장에서의 압도적인 경쟁력을 확보해나가고 있다\"며 \"마키나락스와 오랜 기간 검증한 AI 기반 예지보전 기술을 글로벌 생산 거점에 표준화 함으로써 제조 공정의 유연성과 무결점 품질을 확보해 초생산성을 실현해 나갈 것\"이라고 전했다.\n\n윤성호 마키나락스 대표는 \"현대자동차는 창업 초기 우리의 성장을 이끌어준 중요한 전략적 투자자였고, 이제는 제조 현장에서 지능화를 함께 실현하고 있는 핵심 고객\"이라며 \"제조 현장의 복잡성을 극복해 현대자동차가 그리는 SDF를 함께 실현할 수 있는 신뢰받는 파트너로서 협력을 지속적으로 강화해 나갈 것\"이라고 말했다.",
+      "thread_ts": "1776990984.076209",
+      "reply_count": 1,
+      "reply_users": [
+        "U03NJDDPZPZ"
+      ],
+      "latest_reply": "1776991003.511409",
+      "reactions": [],
+      "edited": null,
+      "files": [
+        {
+          "id": "F0AV2LMEZ2Q",
+          "name": "image.png",
+          "title": "image.png",
+          "mimetype": "image/png",
+          "filetype": "png",
+          "pretty_type": "PNG",
+          "size": 27928,
+          "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0AV2LMEZ2Q/image.png",
+          "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0AV2LMEZ2Q/image.png"
+        }
+      ],
+      "thread_replies": [
+        {
+          "ts": "1776991003.511409",
+          "type": "message",
+          "subtype": null,
+          "user": "U03NJDDPZPZ",
+          "text": "cc <!subteam^S08ERG3PMT6> <!subteam^S0A8KJGN4DC>",
+          "thread_ts": "1776990984.076209",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1776991613.529809",
+      "type": "message",
+      "subtype": null,
+      "user": "U03NJDDPZPZ",
+      "text": "*<https://www.fajournal.com/news/articleView.html?idxno=20881|[AMWS 2026 프리뷰] 인이지, 제조 피지컬AI 기반 ‘공정 자율제어’ 기술 공개>*\n&gt; *[참관포인트] 누적 자율운전 6만 시간·처리량 1,000만톤 돌파 성과*\n&gt; ‘2026 자율제조AI 월드쇼 : AMWS 2026’가 오는 4월 27일(월) 서울 코엑스(COEX) 1층 그랜드볼룸에서 개최된다. AMWS 2026는 △인공지능 △지능형 센서 △디지털트윈 △스마트 머신비전 △지능형 로봇 △스마트팩토리 제조 솔루션 등 미래 자율제조 공장을 구축을 위한 다양한 인사이트를 공유한다.\n(선략)\n\nAMWS 2026에서는 피지컬AI(PhysicalAI) 기반 제조 파운데이션 모델(Manufacturing Foundation Model, MFM)과 LLM 기반 의사결정 지원 기술을 새롭게 공개하며 단순 분석을 넘어 ‘공정 자율제어’를 구현하는 제조AI 기술을 선보인다는 계획이다.\n\n*“예측 넘어 제어”… 제조AI 패러다임 전환 이끄는 MFM 구조*\n\n인이지 기술의 핵심은 데이터를 분석하는 수준을 넘어, AI가 실제 공정 설비를 직접 제어하는 ‘피지컬AI’에 있다.\n\n기존 제조AI가 센서 데이터를 기반으로 이상을 예측하거나 운영자에게 판단을 보조하는 역할에 머물렀다면, 인이지는 AI가 공정 변수와 제어값을 실시간으로 조정하며 공정을 ‘운전’하는 단계까지 확장했다.\n\n시계열 예측, 설명가능 AI, 자동제어 기술을 하나의 통합 구조로 구성한 제조 파운데이션 모델(MFM)을 기반으로 구현된다.\n\n이 구조에서 AI는 공정 데이터를 단순히 해석하는 데 그치지 않고, 과거 패턴과 현재 상태를 동시에 비교·분석해 최적의 제어값을 도출하고 이를 실제 설비에 적용한다. 특히 설명가능 AI(XAI)는 이러한 제어 과정에서 중요한 역할을 한다.\n\nAI가 특정 제어값을 선택한 이유와 영향을 미치는 변수들을 정량적으로 제시함으로써, 현장 운영자가 AI의 판단을 과학적으로 검증해 결과를 이해하고 신뢰할 수 있는 기반을 제공한다.\n\n이처럼 예측-설명-제어가 하나의 흐름으로 연결되는 구조는 기존 제조 AI와의 가장 큰 차별점으로, 인이지는 이를 통해 ‘공정 자율운전’이라는 새로운 운영 패러다임을 제시하고 있다.\n\n*실증 기반 자율운전 성과… 현장 적용성 입증*\n\n인이지의 기술 경쟁력은 실제 산업 현장에서의 적용 성과를 통해 입증되고 있다. 2026년 기준 인이지는 시멘트 소성로, 정유 반응기, 철강 가열로 등 주요 연속 공정에서 약 1,167만톤의 누적 처리량과 6만 시간 이상의 AI 자율운전 가동 실적을 확보했다.\n\n이 과정에서 △철강 가열로 연료 절감 △시멘트 소성 공정 자동제어율 향상 △정유 공정 품질 예측 정확도 개선 등 다양한 성과를 기록하며, 공정 운영 효율과 에너지 비용 측면에서 실질적인 개선 효과를 확인했다.\n\n특히 기존 공정이 숙련 작업자의 경험과 직관에 의존해 운영되던 것과 달리, 인이지는 공정 원리를 반영한 피지컬 AI 모델을 통해 데이터 기반 자동운전 체계를 구현했다.\n\n인이지 관계자는 “실제 중대형 산업 현장 적용 과정에서 장기간 블라인드 테스트를 거치며 AI의 안정성과 신뢰성을 검증해왔다”며, “이러한 검증 프로세스가 현장 도입을 가능하게 한 핵심 요소로 작용했다”고 설명했다.\n\n실증 기반 접근으로 제조AI 기술이 단순한 분석 도구를 넘어 실제 운영 시스템으로 자리 잡게하는 데 중요한 전환점을 리드하고 있다.\n\n*LLM 기반 의사결정 확장… ‘인간-AI 협업’ 시너지 극대화*\n\n이번 AMWS 2026에서는 LLM 기반 시계열 유사사례 검색 서비스(Time-Series LLM Agent)도 함께 공개된다. 설명가능 AI(XAI)와 검색증강생성(RAG)을 결합해 공정 이상 발생 시 과거 유사 사례를 자동으로 탐색하고, 대응 방안을 자연어 형태로 제시하는 것이 특징이다.\n\n특히 기존 제조 환경에서 문제 대응이 작업자의 경험에 의존하거나 단순 데이터 조회에 머물렀던 것과 달리, 이 시스템은 시계열 데이터를 기반으로 의미 단위의 유사 패턴을 분석해 보다 정밀한 판단을 지원한다.\n\n인이지 관계자는 “LLM은 ‘제어를 대체하는 기술’이 아닌 현업 전문가의 판단을 돕는 ‘보조 지능’이자 파트너”라며, “실제 제조 환경에서는 안정성과 설명 가능성을 확보하는 것이 핵심”이라고 강조했다.\n\n*MFM 아키텍처 공개… 자율제조 ‘최종 단계’ 제시*\n\n인이지는 AMWS 2026에서 *자사의 제조 파운데이션 모델(MFM) 아키텍처*와 함께, *엣지(Edge) 디바이스에서 구현되는 자율제어 기술의 실제 구현 방식을 공개할 예정*이다. 단순한 솔루션 소개를 넘어 제조AI가 데이터 분석 단계 이상의 실제 설비 운영까지 확장되는 흐름을 보여주는 자리가 될 것으로 기대된다.\n\n인이지 관계자는 “인이지는 실제 공정 설비를 안전하고 정밀하게 움직이는 제조 피지컬AI 기술력을 통해 자율제조의 최종 단계(Last Mile)를 완성하고 있다”며, “*2026년 IPO를 발판 삼아* 제조 공정 단위 최적화를 넘어 전 밸류체인을 책임지는 ‘AI 자율제조 운영 체계’로 사업 영역을 확장하고 글로벌 기술 표준을 선점할 계획”이라고 밝혔다.",
+      "thread_ts": "1776991613.529809",
+      "reply_count": 1,
+      "reply_users": [
+        "U03NJDDPZPZ"
+      ],
+      "latest_reply": "1776991768.179159",
+      "reactions": [],
+      "edited": null,
+      "files": [
+        {
+          "id": "F0AUX2EKATY",
+          "name": "image.png",
+          "title": "image.png",
+          "mimetype": "image/png",
+          "filetype": "png",
+          "pretty_type": "PNG",
+          "size": 212656,
+          "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0AUX2EKATY/image.png",
+          "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0AUX2EKATY/image.png"
+        }
+      ],
+      "thread_replies": [
+        {
+          "ts": "1776991768.179159",
+          "type": "message",
+          "subtype": null,
+          "user": "U03NJDDPZPZ",
+          "text": "*경쟁사 인이지 근황*\n• 제조 파운데이션 모델(MFM) 개발 추진\n• 기존의 제조 부문뿐만 아니라, 물류-유지보수-수요예측/재고관리 분야까지 확장하여 제조기업의 비즈니스 운영 생태계 전반을 아우르는 솔루션으로 진화 로드맵을 추진\n• 지난 3월 AW 2026 전시회에서 부스 방문 결과, 수요예측 관련 온라인 서비스를 운영 중임을 확인\n　\ncc <!subteam^S0A8KJGN4DC> <@UBKL1FZ28> <@UBL1JVCSZ>",
+          "thread_ts": "1776991613.529809",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1776991797.716589",
+      "type": "message",
+      "subtype": null,
+      "user": "U03NJDDPZPZ",
+      "text": "<https://biz.chosun.com/it-science/ict/2026/04/23/N7ZW4XSHRFFHLE7IEYQOQNJPXE/>",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1776991879.575849",
+      "type": "message",
+      "subtype": null,
+      "user": "U03NJDDPZPZ",
+      "text": "*<https://www.chosun.com/economy/tech_it/2026/04/23/MNSDMMZVGU2WIYZZHE4DKM3FGM/|보안 취약점 잡는다던 미토스…유출·무단접근에 신뢰 흔들>*\n&gt; *WSJ \"앤트로픽 쌓아온 명성에 타격\"*\n강력한 보안 취약점 탐지 능력을 자랑하는 앤트로픽의 인공지능(AI) 모델 ‘클로드 미토스 프리뷰(이하 미토스)’가 공개 직후 무단 접근과 정보 유출 논란에 휘말리며, 정작 자체 보안 관리에서는 허점을 드러냈다는 지적이 나온다.\n\n23일 업계에 따르면 앤트로픽은 최근 무단 접근과 유출 사고로 곤혹을 치르고 있다. 지난 21일(현지 시각)에는 미토스에 대한 권한 없는 접근이 이뤄진 사실이 확인되면서 회사가 조사에 나섰다. 접근을 시도한 이들은 협력사 직원 계정과 공개 정보 탐색 도구 등을 활용한 것으로 알려졌다. 블룸버그 등에 따르면, 무단 접근은 앤트로픽이 미토스를 공개한 지난 7일 발생했다.\n\n미토스는 운영체제(OS)와 웹브라우저의 보안 취약점을 탐지하는 데 특화된 모델이다. 기업이 활용할 경우 취약점을 사전에 점검할 수 있다는 점에서 주목받았지만, 동시에 범죄 세력에 의해 공격에 악용될 수 있다는 우려도 제기돼 왔다. 이에 앤트로픽은 일반 공개 대신 ‘프로젝트 글라스윙’이라는 폐쇄형 프로그램을 통해 애플, 마이크로소프트 등 기업과 미국 국가안보국(NSA) 등 일부 기관에만 제한적으로 제공해왔다.\n\n그러나 잇따른 보안 사고로 앤트로픽의 보안 관리에 대한 신뢰가 흔들리고 있다는 평가가 나온다. 지난달 31일에는 앤트로픽의 클로드 AI 개발 도구 ‘클로드 코드’의 소스(설계도)가 직원 실수로 유출되는 사고가 발생했다. 클로드 코드는 클로드를 서비스에 적용할 때 사용하는 개발 도구다.\n\n사고는 당시 개발자들이 이용하는 소프트웨어 패키지 저장소인 NPM에 클로드 코드를 배포하는 과정에서 발생했다. 이때 암호화된 코드를 원래 형태로 복원할 수 있는 ‘맵(map)’ 파일이 함께 포함되면서, 내부 코드 구조가 외부에 노출됐다.\n\n노출된 코드 규모는 51만2000줄 이상, 파일 수는 1900여 개에 달한다. 해당 코드는 깃허브 등 코드 공유 플랫폼을 통해 확산돼, 업계에서는 핵심 기술이 외부에 사실상 공개됐다는 말까지 나왔다. 앤트로픽은 당시 성명을 통해 “이는 보안 침해 사고가 아니라 배포 과정에서 발생한 직원의 실수(human error)”라고 밝혔다.\n\n이 외에도 지난달 25일에는 콘텐츠 관리 시스템 설정 오류로 아직 공개되지 않은 미토스 관련 제원 일부가 외부에 노출되기도 했다.\n\n이 같은 연쇄 논란은 앤트로픽의 상장에도 영향을 미칠 수 있다는 전망이 나온다. 앤트로픽은 오는 10월 기업공개(IPO)를 추진 중인 것으로 알려졌다. 블룸버그에 따르면 앤트로픽은 최근 약 8000억달러(약 1200조원) 규모의 기업가치로 평가되는 투자 제안을 받은 것으로 전해졌다.\n\n월스트리트저널(WSJ)은 “클로드 코드 소스 유출은 앤트로픽에 큰 타격”이라며 “안전성 측면에서 쌓아온 명성에 치명적인 것은 물론, 기업 고객 유치 경쟁에서 중요한 영업 비밀까지 노출될 위험이 있다”고 했다.",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1776991974.422929",
+      "type": "message",
+      "subtype": null,
+      "user": "U03NJDDPZPZ",
+      "text": "*<https://www.chosun.com/economy/tech_it/2026/04/22/DYEZKSFFM5D5ZOPFZ7EXRQ4YUU/|\"엔비디아 잡는다\" 구글 8세대 TPU 공개...추론 중요성 커지며 학습·추론용 따로 출시>*\n\n구글이 새로운 자체 인공지능(AI) 칩 ‘8세대 텐서처리장치(TPU)’를 공개했다. 이번에는 AI 학습 전용과 추론 전용으로 분리해 처음으로 TPU 2개를 한꺼번에 내놨다. AI 에이전트(비서) 시대 본격화로 여러 단계로 작업을 나눠 복잡한 업무를 수행하는 ‘추론’ 작업이 중요해지자, 효율 극대화를 위한 맞춤형 칩 전략이다. 작년 11월 출시한 7세대 TPU로 AI 모델인 ‘제미나이3′ 성능을 크게 개선한 뒤 자신감을 얻은 구글이 5개월 만에 새로운 버전을 내놓으며 글로벌 AI 칩 시장을 장악한 엔비디아 독주를 끝내겠다는 의지다. 구글은 또 마이크로소프트(MS)나 아마존과 달리 자체 AI 모델(제미나이)을 가진 유일한 하이퍼스케일러(초대형 클라우드 인프라 회사)로서 자체 칩부터 모델·서비스·보안까지 ‘AI 풀스택(모든 역량을 갖춤)’을 통해 기업들의 AI 에이전트 환경을 구축해 가겠다고 밝혔다.\n\n*◇AI 에이전트 시대, 추론 칩 중요*\n\n22일(현지 시각) 구글 클라우드는 미국 라스베이거스에서 열리는 연례 콘퍼런스 ‘넥스트 2026′ 사전 행사에서 8세대 TPU인 AI 학습용 8t와 추론용 8i를 공개했다. AI 학습은 모델이 데이터에서 패턴을 배우는 과정이고, 추론은 배운 내용을 바탕으로 시험 문제를 푸는 과정이다. 구글이 이번 TPU를 학습용과 추론용 두 종류로 출시한 이유는 AI 반도체를 활용하는 목적에 따라 칩의 요구 사항이 완전히 달라졌기 때문이다. AI 에이전트 시대가 본격화되며 AI 기능을 고도화하는 ‘학습’ 보다 실제 업무에 AI를 투입해 복잡한 업무를 단계적으로 해결하도록 하는 ‘추론’ 업무의 중요성이 커진 것이다. 학습을 잘하려면 연산 처리량 자체를 높이는 것이 중요하지만, 추론을 잘하려면 지연이 적고 동시에 많은 일을 처리하는 것이 필요하다. 최근 반도체 업체들은 이러한 차이점에 주목하며 각각의 작업에 효율성을 극대화한 칩을 설계 중인데, 구글이 한발 앞서 TPU를 두 종류로 내며 치고 나가고 있다.\n\n*◇8세대 자체 AI 칩 TPU 공개*\n\n구글이 내놓은 AI 학습용 8t는 수조 개의 숫자를 빛과 같은 속도로 계산하고 주고받을 수 있도록 설계된 칩이다. 구글 클라우드는 전 세대 대비 연산 성능이 3배 증가했다고 밝혔다. AI 추론용 8i는 지연 시간이 낮아 AI 에이전트가 여러 작업을 한꺼번에 처리하는 데 특화돼 있다. 속도가 AI 에이전트의 지능 수준을 가른다. 구글클라우드는 “전 세대보다 성능이 80% 향상됐고, 특히 ‘온칩 집단 연산’ 지연은 최대 5배 감소했다”고 했다. 하나의 칩은 수만 명 직원이 일하는 거대 공장과 같은데, 특정 작업을 위해서는 직원들이 한곳에 모여 회의하거나, 결과물을 합치고, 역할에 맞는 데이터를 나눠 가지는 과정을 거친다. 온칩 집단 연산은 이 과정을 칩 내부 초고속 전용 통로를 통해 즉각적으로 처리하는 기술이다. 덕분에 AI 에이전트가 더 복잡한 문제를 더 적은 에너지를 쓰면서 더 빠른 속도로 해결할 수 있게 된다.\n\n구글은 2015년 자체 AI 칩인 1세대 TPU(v1)를 공개한 뒤 2~3년에 한 번꼴로 새 TPU를 내놨다. 2022년 말 오픈 AI의 챗GPT가 공개된 후에는 매년 신제품을 냈다. 구글 클라우드는 이번에 공개한 8세대 TPU를 연내 정식 출시할 계획이다. 현재 AI 인프라 투자 경쟁이 불붙으며 시장 1위 엔비디아의 그래픽 처리 장치(GPU) 공급이 부족한 상황인데, 구글은 기술 개발의 속도를 끌어올려 공급 부족의 ‘구멍’을 메우고, 엔비디아 제국에 균열을 내겠다는 목표다.\n\n구글은 이와 함께 TPU·GPU·중앙처리장치(CPU)를 함께 묶은 통합 인프라로 AI 에이전트 시대를 주도하겠다는 구상이다. 구글은 “AI 에이전트 시대를 위한 칩 두 개와 시스템 하나”라며 “기업이 단순 챗봇을 넘어, 스스로 인지·추론·행동하는 자율형 AI 에이전트를 업무 전반에 배치하는 단계로 나아가고 있다”고 했다.\n\n구글 클라우드는 또 넥스트 2026에서 AI 에이전트를 구축·관리·보안 통제까지 한 번에 하는 ‘제미나이 엔터프라이즈 에이전트 플랫폼’, 다른 플랫폼과 결합해 사이버 방어 능력을 높인 플랫폼 등 다양한 제품을 소개했다.\n\n*◇자체 AI 칩 시장 경쟁은 본격화*\n\nAI 칩 시장 경쟁은 한층 더 치열해질 것으로 예상된다. 빅테크들은 고성능 엔비디아 AI 가속기와 함께 자사가 제작한 AI 칩을 동시에 써 각각의 작업에서 최고의 효율을 얻는 ‘칩 다양화’ 전략을 설파하고 있다.\n\n올해 초 마이크로소프트(MS)는 ‘마이아 200’이란 자체 AI 칩을 내놨는데, 이 칩의 세일즈 포인트를 엔비디아 칩과 함께 쓰는 칩으로 잡았다. 제시카 호크 애저 마케팅 담당 부사장은 “고객들이 원하는 AI 업무나 가격, 성능이 모두 다르다”며 “엔비디아·AMD의 AI 칩과 함께 자체 칩을 활용해 고객에게 최적의 가격 대비 성능을 제공하려는 전략”이라고 했다. 메타도 MTIA 300 등 자체 AI 칩 4종을 동시에 공개했고, 엔비디아는 최근 인수한 ‘그록’의 언어처리장치(LPU)를 GPU와 함께 추론 작업에 활용하기로 했다. 테크 업계 관계자는 “앞으로 AI 작업에 맞춘 다양한 특화 칩을 선택해 극한의 효율을 추구하는 경향이 두드러질 것”이라고 했다.",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": [
+        {
+          "id": "F0AVC2CD0V7",
+          "name": "image.png",
+          "title": "image.png",
+          "mimetype": "image/png",
+          "filetype": "png",
+          "pretty_type": "PNG",
+          "size": 181865,
+          "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0AVC2CD0V7/image.png",
+          "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0AVC2CD0V7/image.png"
+        }
+      ]
+    },
+    {
+      "ts": "1776992196.145489",
+      "type": "message",
+      "subtype": null,
+      "user": "U03NJDDPZPZ",
+      "text": "*<https://www.aitimes.com/news/articleView.html?idxno=209640|구글, 기업용 에이전트 플랫폼 론칭...\"구축부터 최적화까지 지원\">*\n\n구글이 기업들의 업무 자동화를 지원하는 통합 AI 에이전트 플랫폼을 공개했다. 최근 심화하는 기업용 AI 에이전트 시장 경쟁에 본격적으로 나선 것이다.\n\n구글은 22일(현지시간) ‘구글 클라우드 넥스트(Google Cloud Next)’ 행사에서 *대규모 AI 에이전트를 구축·운영할 수 있는 통합 플랫폼 ‘제미나이 엔터프라이즈 에이전트 플랫폼(Gemini Enterprise Agent Platform)’을 공개*했다.\n\n이번 플랫폼은 기존 아마존웹서비스(AWS)의 '베드록 에이전트코어'나 마이크로소프트의 '파운드리'와 정면으로 경쟁하는 전략 제품이다. 다만, 기존 '버텍스 AI'의 이름을 바꾼 것으로, 일부 기능 추가를 제외하면 기본적인 인터페이스는 동일하다.\n\n하지만, 단순히 AI 모델을 제공하는 수준을 넘어, *기업이 AI 에이전트를 설계·배포·통제·최적화까지 전 주기에 걸쳐 관리할 수 있는 ‘운영 체계(OS)’를 지향한다는 점을 강조*했다.\n\n내부 사용자층에 따라 접근 방식도 이원화했다. IT나 개발 조직은 에이전트 플랫폼을 통해 복잡한 에이전트를 설계하고 오케스트레이션 할 수 있으며, 일반 업무 부서는 ‘제미나이 엔터프라이즈 앱(Gemini Enterprise Application)’을 활용해 기존 에이전트를 사용하거나 간단한 자동화 에이전트를 직접 생성할 수 있다.\n\n이를 통해 회의 일정 관리, 반복 업무 자동화, 문서 작성 등 일상 업무 흐름 전반에 AI를 자연스럽게 통합한다는 전략이다.\n\n기술적으로는 ‘모델 중립성’과 ‘멀티모달 통합’을 특징으로 꼽았다. 구글의 '제미나이' 시리즈뿐 아니라 이미지 모델 ‘나노 바나나 2’와 오디오 모델 ‘리리아 3’는 물론, 앤트로픽의 '클로드'까지 지원한다. 이를 통해 기업은 다양한 모델을 선택하고 조합해 에이전트를 구축할 수 있다.\n\n플랫폼은 ‘구축(Build)·확장(Scale)·관리(Govern)·최적화(Optimize)’ 네가지 축으로 구성된다.\n\n구축 단계에서는 그래프 기반 구조의 ADK(Agent Developer Kit)와 자연어 기반 로우코드 도구 ‘에이전트 스튜디오(Agent Studio)’를 통해 개발자와 비개발자 모두 에이전트를 쉽게 만들 수 있다. 에이전트 레지스트리(Agent Registry)는 조직 내 모든 에이전트와 도구를 중앙에서 관리하는 허브 역할을 한다.\n\n확장 단계에서는 대규모 운영을 위한 기능이 강화됐다. 에이전트 간 작업을 위임하는 ‘에이전트-투-에이전트 오케스트레이션’, 수초 내 실행이 가능한 고속 런타임, 장시간 자율적으로 작동하는 ‘롱러닝 에이전트’ 등이 핵심이다. 특히 보안 샌드박스 환경에서 코드 실행과 브라우저 자동화까지 가능하다.\n\n*핵심은 관리 단계*다. 각 에이전트에 고유 암호화 ID를 부여하는 ‘에이전트 아이덴티티(Agent Identity)’, 상호작용을 통제하는 ‘에이전트 게이트웨이(Agent Gateway)’, 이상 행동을 감지하는 ‘에이전트 이상 감지(Agent Anomaly Detection)’ 등을 통해 *기업 수준의 보안과 컴플라이언스를 확보*한다. 이는 AI 에이전트를 단순 도구가 아닌 핵심 시스템으로 다루겠다는 접근이다.\n\n최적화 단계에서는 실행 경로 추적과 성능 분석을 통해 지속적인 개선이 가능하다. 시뮬레이션 기반 테스트와 실시간 평가 기능을 통해 정확도와 비용 효율성을 동시에 관리할 수 있다.\n\n제미나이 엔터프라이즈 앱도 강화됐다. 직원들은 ‘에이전트 디자이너(Agent Designer)’를 통해 노코드 방식으로 에이전트를 만들고, ‘인박스(Inbox)’에서 실행 상태를 관리하며, ‘프로젝트(Projects)’를 통해 특정 데이터에 특화된 에이전트를 운영할 수 있다. 또 ‘캔버스(Canvas)’를 통해 문서와 프레젠테이션을 생성·편집하고, 마이크로소프트 365 형식으로 내보내는 기능도 제공된다.\n\n이처럼 이번 발표는 에이전트 제작을 넘어, 이를 *실제로 배포하고 운영하는 데 필요한 거버넌스에 초점을 맞춘 것이 특징*이다. 또 모델 성능 대신, *보안을 강조*했다.\n\n토마스 쿠리안 구글 클라우드 CEO는 \"파편화된 시스템들을 조합하는 대신, 모든 구성 요소가 공동 개발된 수직적으로 최적화된 스택을 제공한다\"라며 \"이러한 모든 혁신은 고객의 채택을 촉진, 구글 클라우드 고객의 75%가 비즈니스 운영을 위해 AI 제품을 사용하고 있다\"라고 강조했다.\n\n보쉬, 캡콤, 시티, NASA, 유니레버, 보다폰 등은 생산성 향상과 고객 서비스 혁신, 연구개발 가속화에 AI 에이전트를 활용 중이며, 일부 기업은 수백에서 수천개의 에이전트를 동시에 운영하고 있다고 소개했다.\n\n한편, 구글은 이날 1년간 7억5000만달러*(약 1조1000억원) 규모의 펀드를 조성*했다고 발표했다. *맥킨지앤드컴퍼니와 액센츄어, 딜로이트 등 컨설팅 기업들과 협력해 기업의 AI 도입을 지원한다는 내용*이다. 이 자금은 *엔지니어 교육, 에이전트 개발, 프로젝트 공동 투자 등에 활용*되며, *실제 비즈니스 성과 기반의 프로젝트 모델도 도입*된다.\n\n이 같은 움직임은 AI 도입의 현실적인 과제를 반영한다. 액센추어는 “AI는 실험은 쉽지만, 대규모 적용은 어렵다”고 지적하며, 파일럿을 넘어 반복 가능한 에이전트 기반 운영으로 전환하는 것이 핵심이라고 강조했다.",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": [
+        {
+          "id": "F0AUHMG3N6T",
+          "name": "image.png",
+          "title": "image.png",
+          "mimetype": "image/png",
+          "filetype": "png",
+          "pretty_type": "PNG",
+          "size": 399573,
+          "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0AUHMG3N6T/image.png",
+          "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0AUHMG3N6T/image.png"
+        }
+      ]
+    },
+    {
+      "ts": "1776992278.215009",
+      "type": "message",
+      "subtype": null,
+      "user": "U03NJDDPZPZ",
+      "text": "<https://www.fnnews.com/news/202604231020238004>",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1776992339.874229",
+      "type": "message",
+      "subtype": null,
+      "user": "U03NJDDPZPZ",
+      "text": "<https://www.edaily.co.kr/News/Read?newsId=04975766645419072>",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1776992370.364609",
+      "type": "message",
+      "subtype": null,
+      "user": "U03NJDDPZPZ",
+      "text": "<https://www.yna.co.kr/view/AKR20260423087000009>",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1776992482.690579",
+      "type": "message",
+      "subtype": null,
+      "user": "U03NJDDPZPZ",
+      "text": "<https://www.yna.co.kr/view/AKR20260423046400091>",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1776992928.710899",
+      "type": "message",
+      "subtype": null,
+      "user": "U03NJDDPZPZ",
+      "text": "<https://www.edaily.co.kr/News/Read?newsId=02076246645419072>",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1776993016.979979",
+      "type": "message",
+      "subtype": null,
+      "user": "U03NJDDPZPZ",
+      "text": "<https://biz.chosun.com/science-chosun/science/2026/04/23/3UCCVIQU7NBXJIYUN5WDITQ3BE/>",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1776995309.719819",
+      "type": "message",
+      "subtype": "bot_message",
+      "user": "B05EBG8R2MV",
+      "text": "<https://yozm.wishket.com/magazine/detail/slack/3726/?h=TBL1JAWKF&utm_source=slack&utm_medium=bot&utm_campaign=TBL1JAWKF|[릴리즈 노트] ‘더 적은 토큰으로 더 나은 결과를’ 내는 GPT 5.5 공개>\n지금까지 내놓은 모델 가운데 가장 똑똑하고 직관적으로 쓸 수 있는 GPT-5.5를 공개합니다. 이번 공개는 컴퓨터로 일하는 새로운 방식을 향한 다음 걸음이기도 합니다. GPT-5.5는 사용자가 무엇을 하려는지 더 빠르게 파악하고, 더 많은 일을 스스로 처리할 수 있습니다. 코드 작성과 디버깅, 온라인 조사, 데이터 분석, 문서와 스프레드시트 작성, 소프트웨어 조작은 물론, 작업이 끝날 때까지 여러 도구를 오가며 일하는 데에도 뛰어납니다. 또한, 같은 코덱스(Codex) 작업을 끝내는 데 쓰는 토큰의 양이 눈에 띄게 줄었기 때문에, 성능뿐 아니라 효율성 측면에서도 한 단계 올라섰습니다. [릴리즈 노트] ‘더 적은 토큰으로 더 나은 결과를’ 내는 GPT 5.5 공개",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1777007616.968569",
+      "type": "message",
+      "subtype": "bot_message",
+      "user": "B05EBG8R2MV",
+      "text": "<https://yozm.wishket.com/magazine/detail/slack/3725/?h=TBL1JAWKF&utm_source=slack&utm_medium=bot&utm_campaign=TBL1JAWKF|소버린 AI와 자체 생태계를 가진 IT 강대국, 러시아를 가다>\n모스크바의 4월은 계절의 경계가 무색할 만큼 가혹합니다. 저는 작년 이맘때쯤 모든 것이 막혀 있는 이곳 러시아에 주재원으로 처음 넘어왔습니다. 러시아에서는 인터넷이 잘 안되거나, 메신저가 막히는 경우가 참 많습니다. 그뿐만 아니라 우리가 당연하게 여기는 구글의 검색창, 유튜브의 알고리즘, 인스타그램의 피드는 이곳에서 접근할 수 없습니다. 하지만 그 빈자리에 들어선 것은 기술의 퇴보가 아닙니다. 오히려 외부의 간섭 없이 스스로 진화하기 시작한 기묘하고도 강력한 자생적 생태계가 자라나고 있었습니다. 그런 나라에서 개발자로 하루하루를 살아가며 경험한 다양한 것들을 공유하고자 펜을 들었습니다. 소버린 AI와 자체 생태계를 가진 IT 강대국, 러시아를 가다",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1777008552.724319",
+      "type": "message",
+      "subtype": null,
+      "user": "U03NJDDPZPZ",
+      "text": "<https://m.etnews.com/20260422000218|https://m.etnews.com/20260422000218>",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1777248808.547609",
+      "type": "message",
+      "subtype": "bot_message",
+      "user": "B05EBG8R2MV",
+      "text": "<https://yozm.wishket.com/magazine/detail/slack/3727/?h=TBL1JAWKF&utm_source=slack&utm_medium=bot&utm_campaign=TBL1JAWKF|10년 차 디자이너의 바이브 코딩 실험기>\n제품을 만들다 보면, 완성된 화면을 흐름으로 보고 싶다는 니즈는 생각보다 흔하다. 피그마에서 협업을 좀 해본 팀이라면 다들 한 번쯤은 느낀다. 화면은 잘 만들어졌는데, 그래서 이게 전체적으로 어떻게 이어지는데? 라는 질문이 꼭 나온다. 그래서 플로우차트가 필요해진다. 이건 새로운 욕망도 아니다. 이미 피그마 플러그인도 많고, 피그잼도 있다. 문제는 늘 그렇듯 된다와 쓸 만하다는 다르다는 데 있다. 그렇게 직접 만들기 시작한 게 피그마플로우였고, 지금은 약 2달 반 정도 작업한 끝에 베타 런칭을 준비하고 있다. 이번 글은 그 과정에 대해 소개하고자 한다. 10년 차 디자이너의 바이브 코딩 실험기",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1777259833.579739",
+      "type": "message",
+      "subtype": null,
+      "user": "U03NJDDPZPZ",
+      "text": "<https://www.aitimes.com/news/articleView.html?idxno=209751|https://www.aitimes.com/news/articleView.html?idxno=209751>",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1777260574.392439",
+      "type": "message",
+      "subtype": null,
+      "user": "U03NJDDPZPZ",
+      "text": "<https://www.sedaily.com/article/20037255|https://www.sedaily.com/article/20037255>",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1777265798.598429",
+      "type": "message",
+      "subtype": null,
+      "user": "U03NJDDPZPZ",
+      "text": "*<https://v.daum.net/v/20260427102101099|AI가 반도체 설계 돕는다…하이닉스의 조용한 실험>*\n\n대형언어모델 확산으로 메모리 반도체 성능과 개발 난도가 높아지는 가운데, SK하이닉스가 AI를 활용해 반도체 개발 방식 자체를 바꾸는 연구를 진행하고 있습니다.\n\n오늘(27일) 반도체 업계에 따르면 SK하이닉스는 *반도체를 실제로 만들어보기 전에 AI가 결과를 먼저 예측하도록 하는 기술을 연구*하고 있습니다. 기존에는 새로운 반도체를 개발할 때 물리 계산을 기반으로 시뮬레이션을 돌리고, 문제가 생기면 설계를 수정하는 과정을 반복해야 했습니다. 하지만 반도체 구조가 복잡해질수록 계산량은 늘고, 개발 과정에서 반복해야 하는 시행착오도 많아집니다. 특히 AI 서버에 들어가는 메모리는 성능과 전력 효율, 집적도를 동시에 끌어올려야 해 개발 단계에서 검토해야 할 변수도 늘고 있습니다.\n\nSK하이닉스가 *'TCAD 3.0'으로 정의한 방식은 기존 물리 계산 중심 시뮬레이션에 AI 예측을 더해 개발 과정을 바꾸려는 시도*입니다. TCAD는 *반도체 소자와 공정을 실제 제작 전에 가상으로 검증하는 기술*입니다. 여기에 AI 대리모델을 적용하면 복잡한 물리 계산을 모두 반복하지 않고도 결과를 빠르게 예측할 수 있습니다.\n\nSK하이닉스가 강조한 것은 AI가 기존 물리 시뮬레이션을 완전히 대체하는 방식이 아니라, *계산 부담이 큰 영역을 보완해 개발 효율을 높이는 방식*입니다. 쉽게 말해, 반도체를 여러 번 만들어보며 답을 찾는 대신 AI가 먼저 가능성을 걸러주는 구조입니다.\n\n반도체는 설계와 공정에서 얼마나 빠르게 실패를 줄이느냐가 핵심 경쟁력으로 꼽힙니다. AI를 활용하면 설계·공정·검증 과정에서 반복되는 시행착오를 줄일 수 있다는 게 SK하이닉스의 설명입니다. 엔비디아도 유사한 AI 물리모델을 적용했을 때 기존보다 최대 360배 속도 개선 효과를 확인했다고 밝힌 바 있습니다.\n\n다만 아직은 연구 단계입니다. 실제 양산 공정에 어느 수준까지 적용될지, 개발 기간 단축이나 수율 개선으로 이어질지는 추가 검증이 필요합니다. 업계에서는 AI 반도체 경쟁이 단순히 제품 성능이나 생산능력뿐 아니라, 개발 방식을 얼마나 빠르게 바꾸느냐의 싸움으로도 확장되고 있다고 보고 있습니다.",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": [
+        {
+          "id": "F0B00C8CM1Q",
+          "name": "image.png",
+          "title": "image.png",
+          "mimetype": "image/png",
+          "filetype": "png",
+          "pretty_type": "PNG",
+          "size": 408770,
+          "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0B00C8CM1Q/image.png",
+          "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0B00C8CM1Q/image.png"
+        }
+      ]
+    },
+    {
+      "ts": "1777266808.492359",
+      "type": "message",
+      "subtype": "bot_message",
+      "user": "B05EBG8R2MV",
+      "text": "<https://yozm.wishket.com/magazine/detail/slack/3728/?h=TBL1JAWKF&utm_source=slack&utm_medium=bot&utm_campaign=TBL1JAWKF|ChatGPT 이미지 2.0과 Claude Design의 등장>\n아마 다들 AI에게 “이런 이미지 만들어줘”라고 한 번쯤 시켜본 적이 있을 겁니다. 그런데 예전에는 “카페 메뉴판을 만들어줘”라고 하면 ‘아메리카노’는 ‘아메맄카노’가 되고, ‘딸기 라떼’는 ‘딿기 랃떼’되는 등 정체를 알 수 없는 글자로 뭉개지곤 했죠. 한국어 간판이나 포스터를 부탁해도 결과는 비슷했습니다. 결국 텍스트는 빼고 만들거나, 나중에 사람이 다시 얹어야 했습니다. 그런데 이제는 꽤 달라졌습니다. 같은 프롬프트를 넣어도, 카페에 바로 걸어둘 수 있을 만큼 자연스러운 한글 메뉴판이 나옵니다. 이번 글에서는 이 흐름을 살펴보고, 실무 관점에서 이야기해 보려고 합니다. ChatGPT 이미지 2.0과 Claude Design의 등장",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1777335214.030769",
+      "type": "message",
+      "subtype": "bot_message",
+      "user": "B05EBG8R2MV",
+      "text": "<https://yozm.wishket.com/magazine/detail/slack/3729/?h=TBL1JAWKF&utm_source=slack&utm_medium=bot&utm_campaign=TBL1JAWKF|열심히 공부하는 당신이 서류조차 못 넘는 이유>\n오늘도 퇴근하고 지친 몸으로 다시 모니터 앞에 앉았습니다. 하루가 다르게 쏟아지는 새로운 기술 사이에서 도태되지 않으려고 유명한 강의를 결제하고 주말까지 반납해 가며 스터디에 참여합니다. 이력서에 한 줄이라도 더 쓰고자 여러 활동을 기웃거리고 기술 블로그까지 운영하는 등 남들이 하는 건 다 해봅니다. 하지만 정작 가고 싶은 회사의 서류 전형 결과는 또다시 ‘불합격’입니다. 냉정하게 말해보자면, 서류 합격에 실패하는 이유가 성실함이 부족하기 때문만은 아닙니다. 오히려 그동안 쌓아온 다양한 지식이 회사의 가려운 곳에 단 한 번도 닿지 못했기 때문일지도 모릅니다. 열심히 공부하는 당신이 서류조차 못 넘는 이유",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1777340008.675019",
+      "type": "message",
+      "subtype": null,
+      "user": "U03NJDDPZPZ",
+      "text": "*<https://www.aitimes.com/news/articleView.html?idxno=209796|코오롱베니트-뉴로클, 산업 현장 품질검사 AI 솔루션 출시>*\n\n코오롱베니트는 뉴로클과 협업해 오토딥러닝 비전 기술 바탕의 *품질검사 프리패키지 ‘프롬튼팩 인스펙션(PromptON Pak.Inspection)’을 출시*한다고 27일 밝혔다.\n\n딥러닝 비전 AI 전문 뉴로클은 최근 국내 최대 규모 AI 사업 협력체인 *코오롱베니트 AI 얼라이언스에 신규 참여*했다. 양사는 이번 협업을 통해 제조 현장에 빠르게 적용 가능한 비전 AI 모델 확산에 나선다. 이에, 검증된 소프트웨어와 하드웨어를 결합한 프리패키지 형태의 품질검사 솔루션을 선보이게 됐다.\n\n이번에 선보인 ‘프롬튼팩 인스펙션’은 뉴로클의 학습 소프트웨어 *‘뉴로티(Neuro-T)’와 런타임 라이브러리 ‘뉴로알(Neuro-R)’을 바탕*으로 한다. 그래픽 사용자 인터페이스(GUI) 바탕의 노코드 환경에서 이미지 전처리, 레이블링, 모델 학습, 성능 평가까지 전 과정을 지원하는 것이 핵심이다.\n\n자동 모델 최적화 기능을 통해 AI 전문 인력 없이도 고성능 검사 모델을 구현할 수 있다는 설명이다. 학습을 마친 모델은 기존 검사 설비 및 시스템과 연동돼 현장 이미지와 영상을 실시간으로 판독할 수 있다.\n\n코오롱베니트는 이를 *델 테크놀로지스 서버·워크스테이션*은 물론 *어드밴텍 하드웨어와도 결합할 수 있도록 구성*해 기업 선택지의 폭을 넓혔다고 전했다. 또, 기업 환경과 요구사항을 반영, 솔루션 라인업을 *하이엔드와 로우엔드 2개 라인업으로 출시*해 다양한 제조 현장에 유연하게 대응할 수 있도록 했다.\n\n코오롱베니트는 프롬튼팩 인스펙션을 통해 AI 비전검사 시스템 구축 기간을 단축하고, 초기 도입과 운영 부담을 낮춰 제조 현장의 AX 속도를 높일 수 있을 것으로 기대하고 있다. 품질검사를 시작으로 안전 관제, 설비 예지보전 등으로 패키지 포트폴리오를 확대해 나갈 계획이다.\n\n코오롱베니트 AI 얼라이언스를 이끄는 강재훈 AX커머스팀장은 “제조 AX의 핵심은 AI 기술을 현장에 얼마나 빠르게 적용하고 실제 운영 성과로 연결하느냐에 있다”라며 “제조 품질을 위한 비전검사 영역에서, 기업이 AX 효과를 빠르게 체감할 수 있도록 기획한 실행형 패키지”라고 말했다.",
+      "thread_ts": "1777340008.675019",
+      "reply_count": 2,
+      "reply_users": [
+        "U03NJDDPZPZ"
+      ],
+      "latest_reply": "1777340272.601929",
+      "reactions": [],
+      "edited": null,
+      "files": [
+        {
+          "id": "F0B0M9GE9MX",
+          "name": "image.png",
+          "title": "image.png",
+          "mimetype": "image/png",
+          "filetype": "png",
+          "pretty_type": "PNG",
+          "size": 128805,
+          "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0B0M9GE9MX/image.png",
+          "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0B0M9GE9MX/image.png"
+        }
+      ],
+      "thread_replies": [
+        {
+          "ts": "1777340114.454159",
+          "type": "message",
+          "subtype": null,
+          "user": "U03NJDDPZPZ",
+          "text": "비즈니스 협력 얼라이언스 기반 비전 AI 도입 패키지(SW+HW) 상품화 사례\ncc <!subteam^S0A8KJGN4DC> <@UBKL1FZ28>",
+          "thread_ts": "1777340008.675019",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1777340272.601929",
+          "type": "message",
+          "subtype": null,
+          "user": "U03NJDDPZPZ",
+          "text": "*<https://ai.kolonbenit.com/ai-company|코오롱베니트 AI 얼라이언스 참여사 명단>*\n뉴로클, 인터엑스 포함",
+          "thread_ts": "1777340008.675019",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1777341911.063699",
+      "type": "message",
+      "subtype": null,
+      "user": "U03NJDDPZPZ",
+      "text": "<https://www.aitimes.com/news/articleView.html?idxno=209792>",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1777342117.087739",
+      "type": "message",
+      "subtype": null,
+      "user": "U03NJDDPZPZ",
+      "text": "<https://www.edaily.co.kr/News/Read?newsId=01246406645420712>",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1777342329.607469",
+      "type": "message",
+      "subtype": null,
+      "user": "U03NJDDPZPZ",
+      "text": "<https://www.yna.co.kr/view/AKR20260427052051009>",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1777353213.022839",
+      "type": "message",
+      "subtype": "bot_message",
+      "user": "B05EBG8R2MV",
+      "text": "<https://yozm.wishket.com/magazine/detail/slack/3730/?h=TBL1JAWKF&utm_source=slack&utm_medium=bot&utm_campaign=TBL1JAWKF|클로드 코드 소스 유출에서 배우는 에이전트 구조>\n쏟아지는 AI 정보 속에서 자칫 겉핥기식으로만 따라가게 되는 요즘, 오히려 더 중요해지는 것은 정의와 본질인 것 같습니다. 특히 에이전트 경쟁은 이제 더 이상 ‘누가 더 똑똑한 모델을 붙였는가’만으로 설명되지 않습니다. 지난 3월 31일, 앤트로픽의 AI 코딩 도구 클로드 코드에서 소스맵 파일이 함께 배포되는 사고가 있었는데요. 이로 인해 외부에 드러난 클로드 코드의 내부 구조는, 오히려 에이전트의 완성도와 디테일이 어디에서 갈리는지를 꽤 선명하게 보여줍니다. 결국 에이전트는 모델을 단순히 소비하거나 활용하는 데서 끝나는 개념이 아니라, 모델이 실제로 일을 수행하도록 만드는 실행 구조에 가깝습니다. 이번 글에서는 클로드 코드 소스 유출 사례를 통해, 에이전트 구조가 어떻게 설계되어 있는지 살펴보겠습니다. 클로드 코드 소스 유출에서 배우는 에이전트 구조",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1777421614.235669",
+      "type": "message",
+      "subtype": "bot_message",
+      "user": "B05EBG8R2MV",
+      "text": "<https://yozm.wishket.com/magazine/detail/slack/3731/?h=TBL1JAWKF&utm_source=slack&utm_medium=bot&utm_campaign=TBL1JAWKF|당신의 사고까지 AI에 외주화하지 마라>\n인공지능(AI)의 시대, 엔비디아의 젠슨 황 CEO는 AI가 그 소프트웨어마저 집어삼키고 있다고 선언했다. 실제로 AI 기술은 과거 인터넷 보급 시기보다 7배나 빠른 속도로 확산하며 인류 역사상 가장 가파른 변화를 이끌고 있다. 이제 AI는 복잡한 판단을 넘어 인간의 고유 영역이라 믿었던 창의성마저 대체하기 시작했다. 데카르트는 “나는 생각한다, 고로 존재한다”라고 말했다. 깊은 사유 없이 말 한마디로 결과물을 ‘딸깍’ 만들어내는 이 시대에, 당신의 생각은 과연 안녕(安寧)한가? 당신의 사고까지 AI에 외주화하지 마라",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1777431516.823479",
+      "type": "message",
+      "subtype": null,
+      "user": "U03NJDDPZPZ",
+      "text": "<https://www.chosun.com/economy/tech_it/2026/04/28/U5APO6QT2RG6VNACLHJQGAUB6M/|https://www.chosun.com/economy/tech_it/2026/04/28/U5APO6QT2RG6VNACLHJQGAUB6M/>",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1777431591.835829",
+      "type": "message",
+      "subtype": null,
+      "user": "U03NJDDPZPZ",
+      "text": "<https://www.fnnews.com/news/202604281500180962|https://www.fnnews.com/news/202604281500180962>",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1777431798.257019",
+      "type": "message",
+      "subtype": null,
+      "user": "U03NJDDPZPZ",
+      "text": "<https://www.aitimes.com/news/articleView.html?idxno=209856|https://www.aitimes.com/news/articleView.html?idxno=209856>",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1777431929.799889",
+      "type": "message",
+      "subtype": null,
+      "user": "U03NJDDPZPZ",
+      "text": "<https://www.aitimes.com/news/articleView.html?idxno=209837|https://www.aitimes.com/news/articleView.html?idxno=209837>",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1777432576.490009",
+      "type": "message",
+      "subtype": null,
+      "user": "U03NJDDPZPZ",
+      "text": "<https://www.yna.co.kr/view/AKR20260428114100009|https://www.yna.co.kr/view/AKR20260428114100009>",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1777439614.099989",
+      "type": "message",
+      "subtype": "bot_message",
+      "user": "B05EBG8R2MV",
+      "text": "<https://yozm.wishket.com/magazine/detail/slack/3732/?h=TBL1JAWKF&utm_source=slack&utm_medium=bot&utm_campaign=TBL1JAWKF|개발자의 커서 3 후기, 그들은 왜 따라가기 바쁠까?>\n저는 커서를 약 2년 동안 사용해 왔습니다. 개인 비용으로 결제해 쓸 만큼, 커서를 좋아하는 편입니다. 특히 커서의 Tab 자동완성 기능을 인상 깊게 사용했는데요. 제가 작성하려던 코드의 흐름을 자연스럽게 이어주기도 하고, 때로는 미처 생각하지 못한 로직이나 수정이 필요한 지점을 먼저 짚어주기도 했습니다. 커서가 해당 라인으로 이동해 Tab 입력을 기다리고 있을 때면, 매번 감탄하며 즐겁게 코딩하곤 했습니다. 이처럼 기대와 믿음을 주던 커서가 이번에 커서 3를 출시했습니다. 개인적으로는 커서가 다른 도구와 무엇으로 경쟁할지, 어떤 차별점을 내세울지 궁금했습니다. 그래서 2주가량 클로드 코드를 잠시 내려놓고, 커서 3만 사용해 사이드 프로젝트를 구현해 보았습니다. 개발자의 커서 3 후기, 그들은 왜 따라가기 바쁠까?",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1777442023.628769",
+      "type": "message",
+      "subtype": null,
+      "user": "U0354SL90UV",
+      "text": "\"클로드 기반 코딩 에이전트 오작동으로 회사 DB 전체 날아가\" &lt; 산업일반 &lt; AI산업 &lt; 기사본문 - AI타임스 <https://share.google/gy904suQLSZv0WltQ|https://share.google/gy904suQLSZv0WltQ>\n\n설마 싶던게 진짜로 뉴스에 나오기도하네요",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [
+        {
+          "name": "eyes",
+          "users": [
+            "U03NJDDPZPZ",
+            "U02MA1AEU8K",
+            "U033Z97MZ3N",
+            "U04FRP4PQF5"
+          ],
+          "count": 4
+        },
+        {
+          "name": "우씽",
+          "users": [
+            "U033Z97MZ3N",
+            "U04FRP4PQF5",
+            "U05AWGZ1TRD"
+          ],
+          "count": 3
+        }
+      ],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1777507735.754379",
+      "type": "message",
+      "subtype": null,
+      "user": "U03NJDDPZPZ",
+      "text": "*<https://www.aitimes.com/news/articleView.html?idxno=209929|앤트로픽, '클로드 코드' 비용 추정치 두배로 올려…종량제 전환 예고>*\n\n앤트로픽이 *'클로드 코드'의 예상 사용 비용을 최근 대폭 상향 조정, 현재의 월 정액제 모델을 종료하고 사용량 기반 과금(종량제)으로의 전환을 사실상 예고*했다.\n\n앤트로픽은 27일(현지시간) 기업 개발자 기준 *클로드 코드의 평균 비용이 하루 활성 사용자당 약 13달러로 집계*됐다고 밝혔다.\n\n이는 불과 몇주 전까지 제시했던 *하루 6달러 수준에서 두배 이상 오른 수치*다. *월 기준으로는 개발자 1인당 약 150~250달러가 소요되는 것*으로 나타났다.\n\n이 말은 현재의 *월 20달러 정액제로는 사용자 요청을 감당할 수 있는 수준을 이미 넘어섰다는 내용*이다. 당초 제시했던 하루 6달러 추정치조차 한달로 계산하면 132달러에 달했지만, 그동안은 구독자 중 일부만 이 기능을 사용하고 대다수는 사용하지 않아 전체 수지타산을 맞춰왔다.\n\n그러나 최근 개발자들이 클로드 코드를 업무 전반에 깊숙이 투입하자, 더 이상 버티기 어려운 임계점에 도달했다고 밝힌 셈이다.\n\n결국 이번 비용 추정치 발표는 월 20달러의 구독제 모델을 정리하고, *쓴 만큼 비용을 지불하는 사용량 기반 과금으로 전면적인 체계 개편이 임박했음을 예고*한 셈이다.\n\n다만 앤트로픽은 *전체 사용자의 90%는 하루 30달러 이하 비용 범위에 머물고 있다*고 설명했다.\n\n앤트로픽 내부에서도 변화가 감지되고 있다. 아몰 아바사레 성장 책임자는 “*사용자당 이용량이 크게 증가했으며, 기존 구독 모델은 이러한 사용 패턴을 고려해 설계되지 않았다*”라고 밝혔다. 그는 이미 주간 사용 제한 강화나 피크 시간대 제한 등 소규모 조정을 진행해 왔다고 설명했다.\n\n이 같은 변화는 AI 서비스의 핵심 비용 구조인 ‘토큰(token)’ 사용량 증가와 직결된다. 토큰은 대형언어모델(LLM)이 텍스트를 처리하는 최소 단위로, AI가 입력과 출력을 수행할 때마다 비용이 발생한다. 특히 코드 생성과 같은 고난도 작업은 더 많은 토큰을 요구하기 때문에 비용 상승 압력이 크다.\n\n이번 비용 조정은 단순한 가격 변경을 넘어, AI 산업 전반의 구조적 문제를 드러내는 사례로 평가된다. 최근 AI 에이전트 활용이 급증하면서 연산 자원 수요가 폭발적으로 증가했고, 이에 따라 모델 제공 기업들과 클라우드 인프라 기업들이 모두 부담을 느끼고 있다는 분석이다.\n\n이와 맞물려 최근 일부 사용자들 사이에서는 클로드 코드가 유료 ‘프로(Pro)’ 요금제에서 제외된 것 아니냐는 논란도 일었다. 앤트로픽은 이에 대해 “약 2%의 신규 사용자 대상으로 제한적 실험을 진행한 것”이라고 해명했지만, 사용자 반발은 적지 않았다.\n\n업계에서는 이번 사례가 *AI 서비스의 수익 모델 전환을 가속할 가능성에 주목*하고 있다. *단순 구독 방식만으로는 급증하는 연산 비용을 감당하기 어려워*지면서, *사용량 기반 과금이나 작업 단위 과금 등 정교한 가격 체계가 필요하다는 것*이다.",
+      "thread_ts": "1777507735.754379",
+      "reply_count": 2,
+      "reply_users": [
+        "U03NJDDPZPZ",
+        "U02MA1AEU8K"
+      ],
+      "latest_reply": "1777510537.867119",
+      "reactions": [
+        {
+          "name": "우씽",
+          "users": [
+            "U02MA1AEU8K"
+          ],
+          "count": 1
+        }
+      ],
+      "edited": null,
+      "files": [
+        {
+          "id": "F0B0VEYP8N8",
+          "name": "image.png",
+          "title": "image.png",
+          "mimetype": "image/png",
+          "filetype": "png",
+          "pretty_type": "PNG",
+          "size": 515278,
+          "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0B0VEYP8N8/image.png",
+          "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0B0VEYP8N8/image.png"
+        }
+      ],
+      "thread_replies": [
+        {
+          "ts": "1777507762.948769",
+          "type": "message",
+          "subtype": null,
+          "user": "U03NJDDPZPZ",
+          "text": "대비가 필요한 사안입니다.\ncc <!subteam^S08ERG3PMT6>",
+          "thread_ts": "1777507735.754379",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [
+            {
+              "name": "eyes",
+              "users": [
+                "UBKL1FZ28",
+                "U04C3UYFY1F"
+              ],
+              "count": 2
+            }
+          ],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1777510537.867119",
+          "type": "message",
+          "subtype": null,
+          "user": "U02MA1AEU8K",
+          "text": "이건 좀 크네요.\n\n클로드코드 종량제로 하면 비용이 너무 비싸집니다. 실제로 최근에 앤트로픽에서 사용자 요금제만큼 크레딧을 줬었는데,\n\n제 기준 200달러 크레딧이 약 5시간 사용량 두번 정도 채우니까 없어졌습니다. (2-3일 정도안에 사용)\n\n앤트로픽 의존도를 낮춰야한다는 생각까지 드네요...",
+          "thread_ts": "1777507735.754379",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1777508013.957349",
+      "type": "message",
+      "subtype": "bot_message",
+      "user": "B05EBG8R2MV",
+      "text": "<https://yozm.wishket.com/magazine/detail/slack/3733/?h=TBL1JAWKF&utm_source=slack&utm_medium=bot&utm_campaign=TBL1JAWKF|하네스 엔지니어링으로 AI 에이전트를 길들여봤습니다>\n나는 AI 에이전트를 실제 프로젝트에 붙여 쓰는 과정을 반복하면서, 프롬프트가 아니라 워크플로우를 설계해야 한다는 인사이트를 얻었다. 그래서 14개 에이전트, 6단계 사고 모델, /start → /done 워크플로우까지 만들어 실제 프로젝트에서 돌렸다. 분명 잘 돌아갔는데, 문제가 있었다. 프롬프트에 굵은 글씨로 절대 하지 말라고 적어놔도, 에이전트는 가끔 그냥 한다. 이게 프롬프트 엔지니어링의 한계다. 아무리 정교하게 써도, 결국 “부탁”일 뿐이다. 그래서 나는 부탁하는 걸 그만뒀다. 대신 에이전트가 실행되는 환경 자체를 설계하기 시작했다. 프롬프트가 아니라 시스템으로 통제하는 거다. 나중에 보니 업계에서는 이를 ‘하네스 엔지니어링’이라고 부르고 있었다. 이 글은 그 여정에 대한 기록이다. 하네스 엔지니어링으로 AI 에이전트를 길들여봤습니다",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1777508381.019129",
+      "type": "message",
+      "subtype": null,
+      "user": "U03NJDDPZPZ",
+      "text": "*<https://www.aitimes.com/news/articleView.html?idxno=209921|미스트랄, 기업용 AI 운영 인프라 '워크플로우' 공개...\"에이전트 실패율 낮춰\">*\n\n미스트랄 AI가 *실제 업무 프로세스에 AI를 안정적으로 적용하기 위한 운영 시스템*을 선보였다.\n\n미스트랄은 28일(현지시간) 기업의 업무 과정을 *여러 단계의 AI 작업으로 나누어 연결하고 이를 관리·실행할 수 있도록 돕는 운영 인프라 <https://www.youtube.com/watch?v=9tXQBnpvVsU|‘워크플로우(Workflows)’를 공개>*했다.\n\n워크플로우는 *대형언어모델(LLM) 호출, 외부 API 연동, 도구 활용, 그리고 사람의 승인*까지 포함하는 *다단계 AI 프로세스를 설계·실행·관리할 수 있는 플랫폼*이다. 특히 작업 도중 시스템 장애나 재시작이 발생해도 *이전 단계부터 다시 이어서 실행할 수 있도록 설계*돼, *장시간에 걸친 복잡한 업무에도 안정적으로 대응*한다.\n\n기존에는 이러한 시스템을 구축하기 위해 개발자가 직접 재시도 로직이나 상태 관리, 복구 기능을 구현해야 했지만, 워크플로우는 이를 플랫폼 차원에서 제공한다. *각 단계는 이벤트 기록으로 저장돼 장애 발생 시에도 작업이 유실되지 않으며, 재시도 정책과 스케줄링, 실시간 모니터링, 로그 추적 등도 기본 기능으로 지원*된다.\n\n미스트랄은 기업들이 AI 도입 과정에서 겪는 가장 큰 어려움이 모델 성능이 아니라 운영 인프라에 있다고 보고 있다. 엘리사 살라망카 제품 총괄은 “많은 기업이 개별 실험을 넘어서지 못하는 이유는 기술이 아니라 운영 문제”라며 *“워크플로우는 핵심 비즈니스 과정에서 AI를 안정적으로 실행하기 위한 기반”*이라고 설명했다.\n\n실제로 AI 에이전트 시장은 빠르게 성장하고 있지만, 높은 비용과 복잡성으로 인해 상당수 프로젝트가 중단될 것으로 예상된다. 미스트랄은 워크플로우를 통해 이러한 실패율을 낮추겠다는 전략이다.\n\n워크플로우의 핵심은 크게 3가지다. 먼저 *파이썬 기반 개발 키트를 통해 적은 코드로도 복잡한 AI 오케스트레이션을 구현*할 수 있다.\n\n이어, *실행과 제어를 분리한 구조*를 통해 *데이터는 기업 내부에 유지하면서도 클라우드 등 다양한 환경에서 제어가 가능*하도록 했다. 즉, *미스트랄 서버는 실행 신호만 보낼 뿐, 민감한 데이터나 비즈니스 로직 코드가 전송되지 않는다.* 이는 금융·의료 등 규제 산업에서 중요한 *데이터 주권을 보장하는 설계*다.\n\n마지막으로 *모든 작업 흐름과 의사결정, 오류 발생 지점을 추적할 수 있는 가시성을 제공*해 AI 시스템의 *신뢰성과 관리 효율성*을 높였다.\n\n즉, *워크플로우가 실행되는 동안 각 단계에서 LLM이 어떤 답변을 했고, 어떤 도구를 호출했는지 실시간으로 확인할 수 있는 콘솔 대시보드가 지원*된다. *사고 발생 시 AI가 왜 이런 판단을 했는지를 추적*할 수 있다.\n\n물류, 금융, 고객지원 등 다양한 분야에서 이미 활용되고 있다. 예를 들어, *물류 분야의 화물 통관 과정에서는 서류 검토부터 규정 확인, 승인 요청, 출고까지 이어지는 전 과정을 AI가 자동으로 처리하고, 사람은 최종 승인만 담당하는 방식으로 운영*된다.\n\n금융 분야의 KYC 심사에서는 고객 정보를 분석하고 규정을 확인한 뒤 위험도를 평가하는 과정을 거치는데, 기존에는 몇 시간이 걸리던 업무가 몇분으로 크게 단축된다.\n\n또 고객센터에서는 들어온 문의를 분석해 긴급도를 판단하고, 적절한 담당 팀으로 배정하는 과정이 자동화된다. 이를 통해 문의가 자동으로 분류되고 효율적으로 전달된다.\n\n기술적으로는 장애 허용 워크플로우 엔진인 '템포럴(Temporal)'을 기반으로 한다. 미스트랄은 여기에 AI 특화 기능을 추가해 장기 실행, 상태 유지, 재시도, 스트리밍 등을 지원하도록 확장했다.\n\n또 드래그앤드롭 방식 대신 *개발자 중심 접근을 채택*했다. 미스트랄은 물류 처리, 금융 거래, 규제 준수와 같은 *핵심 업무에서는 코드 기반의 정밀한 제어가 필수적이라고 판단*했다. *개발자가 파이썬으로 작성한 워크플로우는 API나 UI, 또는 챗봇 형태로 조직 내에서 쉽게 실행*할 수 있다.\n\n단독 제품이 아니라 미스트랄이 구축 중인 *‘풀스택 AI 플랫폼’의 일부*다. 맞춤형 모델을 만드는 ‘포지(Forge)’, 사용자 인터페이스를 담당하는 ‘바이브(Vibe)’와 함께, 모델 개발부터 실행, 활용까지 전 과정을 아우르는 구조를 완성해 가고 있다.\n\n살라망카 총괄은 \"워크플로우는 기업용 AI를 위한 오케스트레이션 계층\"이라며 \"AI 기반 프로세스를 개념 증명에서 실제 서비스 단계로 안정적으로 이동시키는 데 필요한 내구성과 가시성을 제공한다\"라고 강조했다.",
+      "thread_ts": "1777508381.019129",
+      "reply_count": 1,
+      "reply_users": [
+        "U03NJDDPZPZ"
+      ],
+      "latest_reply": "1777508391.044389",
+      "reactions": [],
+      "edited": null,
+      "files": [
+        {
+          "id": "F0B0RU8FHPC",
+          "name": "image.png",
+          "title": "image.png",
+          "mimetype": "image/png",
+          "filetype": "png",
+          "pretty_type": "PNG",
+          "size": 38960,
+          "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0B0RU8FHPC/image.png",
+          "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0B0RU8FHPC/image.png"
+        }
+      ],
+      "thread_replies": [
+        {
+          "ts": "1777508391.044389",
+          "type": "message",
+          "subtype": null,
+          "user": "U03NJDDPZPZ",
+          "text": "cc <!subteam^S08ERG3PMT6>",
+          "thread_ts": "1777508381.019129",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1777508951.610369",
+      "type": "message",
+      "subtype": null,
+      "user": "U03NJDDPZPZ",
+      "text": "<https://www.chosun.com/economy/tech_it/2026/04/29/GQ4DGOJRMM2WKNRXMYZTMOJUGE/>",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1777509090.454149",
+      "type": "message",
+      "subtype": null,
+      "user": "U03NJDDPZPZ",
+      "text": "<https://www.ddaily.co.kr/page/view/2026042914072688744>",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1777509184.322009",
+      "type": "message",
+      "subtype": null,
+      "user": "U03NJDDPZPZ",
+      "text": "<https://biz.heraldcorp.com/article/10728492>",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1777509244.338549",
+      "type": "message",
+      "subtype": null,
+      "user": "U03NJDDPZPZ",
+      "text": "<https://www.yna.co.kr/view/AKR20260429171000009>",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1777509376.037659",
+      "type": "message",
+      "subtype": null,
+      "user": "U03NJDDPZPZ",
+      "text": "<https://www.mt.co.kr/future/2026/04/29/2026042916341859752>",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1777510283.080569",
+      "type": "message",
+      "subtype": null,
+      "user": "U03NJDDPZPZ",
+      "text": "<https://www.aitimes.com/news/articleView.html?idxno=209904>",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1777510322.999689",
+      "type": "message",
+      "subtype": null,
+      "user": "U03NJDDPZPZ",
+      "text": "*<https://www.mt.co.kr/future/2026/04/29/2026042912525134312|\"국방 분야 AI 전환 표준 만든다\"…엘리스그룹-마키나락스 맞손>*\n\nAI(인공지능) 인프라 기업 엘리스그룹이 피지컬 AI 기업 마키나락스와 국방·산업 분야의 AX(인공지능 전환) 사업을 위한 업무협약(MOU)을 체결했다.\n\n양측은 높은 보안 수준이 요구되는 국방 분야의 AI 전환을 선도하고 이를 제조·에너지·금융 등 산업 전반으로 확산한다는 목표다. 엘리스그룹의 클라우드 소프트웨어와 AI PMDC(이동식 모듈형 데이터센터)를 마키나락스의 산업 특화형 AI 기술과 결합해 시너지를 낼 계획이다.\n\n엘리스그룹의 클라우드 소프트웨어 'ECI'는 대규모 GPU(그래픽처리장치) 자원을 유연하게 관리하면서도 데이터를 안전하게 보호하는 고보안 환경을 제공한다. 이를 기반으로 보안이 필수적인 국방 현장에 적용 가능한 고성능 AI 솔루션을 공급할 예정이다.\n\n양측은 온프레미스 및 엣지 컴퓨팅 환경에서도 AI 모델을 효율적으로 배포·운영할 수 있는 기술 고도화를 추진하고 기술 인력 교류와 공동 세미나 개최 등 다각적인 협력을 이어갈 계획이다.\n\n김재원 엘리스그룹 대표는 \"마키나락스의 버티컬 AI 기술과 엘리스그룹의 ECI 및 AI PMDC가 결합한 AI 풀스택 인프라를 통해 국방 AX의 새로운 표준을 만들 것\"이라며 \"고객이 보안 우려 없이 AI 기술을 도입할 수 있도록 최적화된 인프라와 솔루션을 제공하겠다\"고 했다.",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": [
+        {
+          "id": "F0B15082333",
+          "name": "image.png",
+          "title": "image.png",
+          "mimetype": "image/png",
+          "filetype": "png",
+          "pretty_type": "PNG",
+          "size": 943737,
+          "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0B15082333/image.png",
+          "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0B15082333/image.png"
+        }
+      ]
+    },
+    {
+      "ts": "1777511359.872779",
+      "type": "message",
+      "subtype": null,
+      "user": "U03NJDDPZPZ",
+      "text": "*<https://www.industrynews.co.kr/news/articleView.html?idxno=80583|아이벡스 성민수 대표, “AI, 이제 ‘판단’ 넘어 ‘행동’ 단계”>*\n&gt; *비전·로봇·데이터 통합한 Physical AI 전략 선보여*\n&gt; *“공장은 스스로 움직이는 시스템으로 진화”*\n*아이벡스의 현재 주력 사업과 핵심 경쟁력은?*\n아이벡스는 초기에는 AI 비전 기반 외관검사 중심으로 사업을 시작했다. 자동차, 이차전지, 방산 등 제조 현장에서 실제로 적용되는 검사 솔루션을 구축하면서 레퍼런스를 쌓아왔다. 하지만 지금은 그 범위를 많이 확장했다. 비전 검사만 하는 것이 아니라, *로봇 자동화, 데이터 플랫폼, 그리고 AI 모델 운영까지 포함한 구조로 사업을 확대*했다. 사명을 아이브(AiV)에서 아이벡스(AIVEX)로 변경한 것도 이러한 확장을 반영한 것이다. 핵심 경쟁력은 이 모든 영역을 통합해서 제공할 수 있다는 점이다. 대부분의 기업들은 비전, 로봇, 데이터 각각을 따로 구축하는데, 아이벡스는 하나의 시스템으로 묶어서 턴키 형태로 제공할 수 있다. 특히 공장에서는 단일 공정이 아니라 전체 흐름이 중요하기 때문에, 이 통합 능력이 가장 큰 차별화 요소라고 본다.\n\n*경쟁사들과 비교해 아이벡스만의 차별화 포인트가 있다면?*\n가장 큰 차이는 검사와 로봇을 동시에 구현할 수 있다는 점이다. 제조 공정은 결국 생산, 검사, 물류가 하나의 사이클로 돌아간다. 그런데 시장에서는 이 세 가지를 각각 다른 업체가 맡는 경우가 많다. 그러면 공정 간 연결이 끊기고 문제가 발생한다. 아이벡스는 전체를 하나의 구조로 통합한다. 검사 결과가 바로 로봇 제어로 이어지고, 물류까지 연결되는 구조를 만들 수 있다. 공장은 ‘심리스하게’ 돌아가야 하기 때문에 이 통합 구조가 굉장히 중요하다. 또 하나는 운영 관점이다. 단순히 시스템을 구축하는 것이 아니라, 5년, 10년 동안 안정적으로 돌아가야 하기 때문에 초기 설계부터 운영까지 고려해서 접근한다는 점이 차별화 포인트다.",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1777511621.829059",
+      "type": "message",
+      "subtype": null,
+      "user": "U03NJDDPZPZ",
+      "text": "*<https://www.industrynews.co.kr/news/articleView.html?idxno=80530|중기부, 소공인 스마트제조지원 보조금 부정수급 손 본다>*\n&gt; *페이백·이면계약 등 적발… 사업 구조 전면 개편으로 재발 차단 나서*\n중소벤처기업부(장관 한성숙)가 ‘소공인 스마트제조지원 사업’에서 드러난 *보조금 부정수급 사례*에 대해 *수사의뢰와 보조금 환수 등 강력한 제재를 추진*하는 동시에, *사업 구조 전반을 개편*해 *부정수급을 원천 차단*한다고 밝혔다.\n\n소공인 스마트제조지원 사업은 소공인의 제조 공정에 스마트 장비와 소프트웨어를 도입해 생산성을 높이고자 2020년 시작됐다. 소공인은 소상공인 중 제조업에 속한 근로자 10인 미만의 소규모 사업자를 뜻한다.\n\n사업 경쟁률은 2021년 1.80:1에서 2025년 5.57:1로 꾸준히 상승했고, 중기부의 성과 분석에서도 참여 소공인의 매출과 고용 지표는 개선됐다. 지원 규모 역시 2020년 30억 원에서 2024년 882억 원으로 급격히 확대됐다.\n\n그러나 지원 규모가 빠르게 커지면서 관리 허점도 함께 드러났다. 중기부는 2025년 11월 관계부처 합동 점검에서 다수의 부정수급 정황을 포착했고, 이후 *약 5개월간의 집중 점검*을 거쳐 *2024년 지원기업 1887개사 중 112개사(약 6%)에서 부정수급을 확인*했다.\n\n특히 *일부 공급기업이 사업 전반을 주도하며 부정행위를 유도한 사례가 다수 적발*됐다.\n　\n*페이백·이면계약·허위 데이터 전송까지 적발*\n\n이번 점검에서 확인된 부정수급 유형은 크게 세 가지다.\n\n첫째는 공급기업 주도의 ‘가격 부풀리기 및 페이백’ 수법이다. 사업 내용에 익숙하지 않은 소공인을 대상으로 신청서 작성, 계약 체결, 정산까지 전 과정을 사실상 대신 수행하면서 장비 및 소프트웨어 가격을 실제보다 부풀린 뒤 그 차액 일부를 현금으로 되돌려주는 방식이다. 중기부는 이와 관련해 공급기업 17개사에 대해 수사의뢰 조치를 했다.\n\n둘째는 ‘임차’를 가장한 ‘구매’ 방식의 이면계약이다. 이 사업은 장비 임차 방식만을 지원하지만, 일부 공급기업과 소공인이 공모해 실제로는 장비를 구매하면서 임차 계약으로 위장한 사례가 적발됐다.\n\n사업 선정 이전에 장비를 미리 구매해 두고 이후 임대차계약서를 새로 작성해 보조금을 신청한 경우도 확인됐다. 관련 공급기업 4개사와 소공인 9개사에 대해 수사의뢰 조치가 이뤄졌다.\n\n셋째는 장비 가동 데이터의 허위 전송이다. 장비와 소프트웨어의 가동 여부 및 생산 데이터를 공급기업이 사업 전담기관에 허위로 전송한 사례가 다수 적발됐으며, 이미 폐업한 사업장에 설치된 장비가 정상 가동되는 것처럼 데이터를 조작한 경우도 확인됐다.\n\n이는 사업의 사후관리 시스템 자체를 무력화하는 행위로, 중기부는 관련 공급기업 16개사에 대해 수사의뢰 조치를 했다.\n　\n*최대 5배 제재부가금, 5년간 지원사업 참여 제한*\n\n중기부는 *부정수급 행위에 대해 무관용 원칙을 적용*하겠다는 입장이다. 부정수급이 확인된 112개사에 대해 *보조금 환수와 함께 정부 지원사업 참여 제한 등 행정제재 절차를 개시*했다.\n\n위반 업체에 대해서는 *최대 5년간 중기부 지원사업 참여를 제한*하고, *부정수급액 전액 환수는 물론 최대 5배까지 제재부가금을 부과해 부당이득을 철저히 환수*할 방침이다.\n\n특히 범죄 혐의가 중대한 공급기업 17개사와 소공인 9개사에 대해서는 *형법상 사기 및 보조금법 위반 혐의로 형사고발 조치*를 했으며, *향후 검찰·경찰 수사에도 최대한 협조할 계획*이다. 위반 업체의 부정수급 관련 사업 내용과 경위는 전 부처에 통보될 예정이다.\n\n*2025년 지원기업에 대한 점검도 이미 시작*됐다. 현재 예산당국과 함께 *1530개사에 대한 정밀 조사가 진행 중*이며, 조사 완료 후 *동일한 기준으로 엄정 대응할 계획*이다.\n　\n*임차 방식 폐지·IoT 실시간 점검 등 사업 구조 전면 개편*\n\n중기부는 이번 사태를 계기로 사업 구조 자체를 근본적으로 바꾼다. 개편안은 *공급기업 관리 강화, 소공인 참여 요건 조정, 선정 방식 개편, 가격 검증 강화, 사후관리 체계 개선, 전담 코디네이터 도입* 등 여섯 가지 방향으로 구성됐다.\n\n우선 *공급기업에 대해 역량 진단을 의무화*해 *기술력과 수행 능력을 검증받은 기업만 사업에 참여*할 수 있도록 하고, *참여 이력과 사후관리 수준 등을 종합 평가*해 *우수 업체와 제재 이력 업체를 사업관리시스템에 공개할 계획*이다. 이를 통해 소공인이 검증된 공급기업을 선택할 수 있는 환경을 조성한다.\n\n소공인 참여 요건도 강화된다. 최근 3년 평균 연매출 2억 원 이상인 소공인에게만 신청 자격을 부여하고, 자부담 비율도 기존 30%에서 40%로 높인다. 사업 참여에 대한 소공인의 책임감을 높이고 실질적인 운영 의지를 담보하기 위한 조치다.\n\n지원대상 선정 방식도 기존 서류 중심에서 영상·인터뷰 기반으로 전환된다. 신청 소공인이 직접 공정 현장을 촬영한 영상을 제출하고 인터뷰 및 발표를 통해 사업 필요성을 증명하도록 하며, AI 기반 사업계획서 유사도 분석과 동일 IP 주소 다중 신청 탐지 시스템을 도입해 대리 신청을 원천 차단한다.\n\n가격 적정성 검증도 강화된다. 부정수급의 주요 통로였던 기존 임차 방식을 폐지하고 장비 지원 방식을 구매 방식으로 전환한다. 구매 장비는 보조금법에 따라 중요재산으로 등재하며, 사후관리 기간도 기존 2년에서 5년으로 연장된다.\n\n사업 신청 단계에서 원가산정 자료 제출을 의무화하고, 민간 원가산정기관을 통한 가격 적정성 검증과 회계감독기관의 사전 검토를 통해 이중 확인 체계를 구축할 계획이다.\n\n사후관리 체계도 대폭 강화된다. IoT 기반 데이터 수집 체계를 도입해 장비 가동 여부를 실시간으로 점검하고, 전담기관이 제공하는 IoT 장비를 통해 가동시간·전력사용량 등을 직접 수집함으로써 데이터 조작 가능성을 차단한다. 매분기 데이터 제출 의무화와 불시 현장 점검을 병행해 실제 운영 여부를 교차 검증하는 방식도 적용된다.\n\n마지막으로 사업 전 과정에 전담 코디네이터를 배치해 소공인의 공급기업 의존도를 낮춘다. 코디네이터는 소공인의 공정 특성과 작업환경을 분석해 적합한 기술과 장비를 제안하고, 사업계획 수립부터 운영·성과관리까지 밀착 지원하는 역할을 맡는다.\n\n이를 위해 스마트공장 지원사업 전담기관인 중소기업기술정보진흥원의 제조DX멘토단 약 300명을 활용할 계획이며, 멘토단은 올해 상반기 중 소공인 특화 교육과정을 통해 양성한 뒤 하반기부터 운영한다.\n\n중기부는 개편된 사업계획에 따라 오는 30일 사업을 공고할 예정이다.",
+      "thread_ts": "1777511621.829059",
+      "reply_count": 1,
+      "reply_users": [
+        "U03NJDDPZPZ"
+      ],
+      "latest_reply": "1777511633.898949",
+      "reactions": [],
+      "edited": null,
+      "files": [
+        {
+          "id": "F0B152V9S0Z",
+          "name": "image.png",
+          "title": "image.png",
+          "mimetype": "image/png",
+          "filetype": "png",
+          "pretty_type": "PNG",
+          "size": 230773,
+          "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0B152V9S0Z/image.png",
+          "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0B152V9S0Z/image.png"
+        }
+      ],
+      "thread_replies": [
+        {
+          "ts": "1777511633.898949",
+          "type": "message",
+          "subtype": null,
+          "user": "U03NJDDPZPZ",
+          "text": "cc <!subteam^S0A8KJGN4DC>",
+          "thread_ts": "1777511621.829059",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1777511876.050679",
+      "type": "message",
+      "subtype": null,
+      "user": "U03NJDDPZPZ",
+      "text": "*<https://www.news2day.co.kr/article/20260428500145|[IPO 돋보기] 피지컬AI 기대주 마키나락스, IPO 흥행 기대감 높일까>*\n&gt; *공장·전장 지배할 피지컬 AI로 주목*\n&gt; *영업손실 80억...흑자 턴어라운드 필요*\n(선략)\n\n다만 마키나락스의 펀더멘털은 서늘하다. 금융감독원 전자공시시스템에 따르면 회사의 2025년 매출은 115억원으로 매년 가파른 성장을 보이고 있지만, 고도화된 R&amp;D 인력 유지와 플랫폼 개발비(OPEX) 증가로 인해 여전히 80억원의 영업손실을 기록 중이다.\n\n이에 따라 마키나락스는 수익성 미달을 기술력으로 덮는 ‘기술특례상장’ 트랙을 밟고 있다.\n\n최근 공모주 시장이 철저하게 실적(Cash Flow) 중심으로 재편되고 있는 만큼 상장 주관사가 제시한 미래 추정 실적만으로는 기관의 투심을 1만5000원으로 끌어올리기에 벅찰 수 있다.\n\n이런 상황에 IB업계는 마키나락스가 향후 국내 AI 기업 상장의 바로미터(지표)가 될 것으로 평가하면서도 회사의 적절한 밸류에이션은 플랫폼 마진율에 있다고 지적한다.\n\nIB업계 관계자는 &lt;뉴스투데이&gt;에 “대기업들의 전략적 투자(SI) 유치는 유의미한 초기 생존 마일스톤이지만, 자칫 ‘계열사 하청’ 구조로 매출처가 한정될 리스크도 존재한다”며 “마키나락스가 밴드 상단에서 공모를 흥행시키려면, 특정 대기업을 위한 맞춤형 컨설팅(SI) 용역 매출 비중을 줄이고 런웨이(Runway) 라이선스 판매로 폭발적인 사스(SaaS) 구독 매출(ARR) 상승 곡선을 숫자로 증명해 내야만 한다”고 말했다.\n\n이어 그는 “기술특례상장 기업에 기관이 요구하는 것은 화려한 AI 수식어가 아니라, 결국 1~2년 내 흑자 전환이 가능하다는 재무적 확신”이라고 강조했다.\n\n무엇보다 마키나락스는 기술특례상장 특유의 미래 실적 당겨오기로 산정된 밸류에이션에 대한 시장의 의구심을 실적으로 증명해야 한다. 또 상장 직후 전략적 투자자(SI)와 재무적 투자자(FI)들의 오버행 이슈도 넘어야 한다.\n\n실제 윤성호 대표를 포함한 최대주주의 우호 지분은 공모 후 31.20%(547만7016주)에 불과하기 때문이다.\n\n벤처투자업계 관계자는 “마키나락스가 제조 강국 대한민국의 심장부에 피지컬 AI라는 강력한 소프트웨어를 이식하고 있다는 점은 국가 산업 차원에서 강력한 경쟁력”이라며 “다만 코스닥 시장은 철저히 자본의 논리로 굴러간다. 수요예측 테이블에 앉은 기관투자자들을 설득하려면, 대기업 후광 효과를 벗어나 런웨이 플랫폼을 기반한 압도적인 흑자 전환 로드맵을 수치로 증명해 내야 할 것”이라고 말했다.",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1777512034.896639",
+      "type": "message",
+      "subtype": null,
+      "user": "U03NJDDPZPZ",
+      "text": "*<https://www.mk.co.kr/news/stock/12028414|코스닥 상장 앞둔 마키나락스 “수익 내는 AI 유니콘 되겠다”>*\n\n증권신고서에 따르면 *회사는 내년 매출 373억원, 영업이익 48억원으로 흑자 전환할 것으로 예상*하고 있다.\n\n윤 대표는 “높은 대기업 비중은 안정적인 매출처를 확보했다는 의미”라며 “대기업 매출이 연평균 81% 성장하고 있으며 재구매가 이어지고 있어 향후 매출 규모도 폭발적으로 성장할 것”이라고 말했다.\n\n마키나락스는 대기업과의 강력한 ‘동맹’도 구축했다. SK텔레콤, 네이버, 어플라이드 머티리얼즈, LG CNS, GS, 한화세미텍 등이 주요 주주로 참여하고 있기 때문이다.\n\n윤 대표는 “미국 사업 철수로 시너지가 줄어든 현지 투자기업을 제외하고는 모든 전략적투자자(SI)가 6개월 보호예수를 확약했으며 대부분 장기 투자를 염두에 둔 것으로 알고 있다”고 전했다.\n\n회사는 *공모로 확보한 자금을 AI OS 고도화에 집중 투입할 방침*이다. *다크팩토리 OS·디펜스 OS(이상 가칭)와 같은 산업 특화 OS 개발을 준비하고 있다.*\n\n*해외 시장 공략에도 속도를 낼 예정*이다. *지난해 4월 진출한 일본*에서는 지사 설립 이후 *로봇, 전기전자, 자동차 판매 분야 현지 주요 대기업과 4건의 계약을 체결*했다.\n\n*유럽 시장에도 진출한 상태*다. 직접 지사를 설립하진 않았지만 세계적인 자동화 기업 쿠카 자회사인 디바이스 인사이트와 협력해 지난해 *현지 반도체 장비, 풍력장비 기업과 계약을 맺는 데 성공했다.*",
+      "thread_ts": "1777512034.896639",
+      "reply_count": 1,
+      "reply_users": [
+        "U03NJDDPZPZ"
+      ],
+      "latest_reply": "1777513815.421219",
+      "reactions": [],
+      "edited": null,
+      "files": [],
+      "thread_replies": [
+        {
+          "ts": "1777513815.421219",
+          "type": "message",
+          "subtype": null,
+          "user": "U03NJDDPZPZ",
+          "text": "*마키나락스 증권신고서 내용 중 추정 손익계산서 부문*",
+          "thread_ts": "1777512034.896639",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": [
+            {
+              "id": "F0B0SB6UZR8",
+              "name": "image.png",
+              "title": "image.png",
+              "mimetype": "image/png",
+              "filetype": "png",
+              "pretty_type": "PNG",
+              "size": 18418,
+              "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0B0SB6UZR8/image.png",
+              "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0B0SB6UZR8/image.png"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "ts": "1777513163.595389",
+      "type": "message",
+      "subtype": null,
+      "user": "U03NJDDPZPZ",
+      "text": "*<https://news.einfomax.co.kr/news/articleView.html?idxno=4412324|제조 현장에 AI 입힌다…산업부, 527억 선도사업 추진>*\n\n산업통상부가 반도체와 자동차 등 주력 산업 현장에 인공지능(AI)을 도입해 제조 경쟁력을 대폭 강화한다.\n\n산업부는 *527억5천만원 규모의 올해 'AI 팩토리 선도사업' 신규 과제 32개를 공고*한다고 29일 밝혔다. 제조 현장의 생산성을 높이고 불량률을 낮추는 등 산업 기초체력을 키우기 위한 목적이다. 사업 공고는 내달 30일까지 진행된다.\n\n올해 신규 과제는 '제조 AI 대전환(M.AX) 얼라이언스' 소속 400여개 기업과 기관의 수요를 바탕으로 기획됐다. 산업부는 시급성과 파급 효과가 큰 업종을 선별해 지원할 방침이다.\n\n이번 사업부터는 연구개발 과정에서 발생하는 제조데이터를 체계적으로 수집한다. 참여 기업은 제조데이터 제출 동의서를 체결해야 한다. 확보한 데이터는 유사 공정에 적용 가능한 AI 모델 고도화 등 공공 목적의 후속 연구에 활용될 예정이다.\n\n지원 유형은 *대·중·소 협력형, 제조공정 지능화형, 선도기업 지원형 등 5가지로 다양화*했다. 공급망 내 기업들이 데이터를 공유하거나 국산 AI 솔루션의 현장 실증을 지원하는 방식이다. 전 공정을 AI로 운용하는 '풀스택 AI 팩토리' 구현을 위한 기술 검증도 포함됐다.\n\n산업부는 제조 기반이 지역에 집중된 점을 고려해 지방비 매칭을 전제로 최대 5점의 가점을 부여한다. 지역 제조 기업의 AI 도입 문턱을 낮추기 위한 조치다.\n\n산업부는 2030년 M.AX(제조업 인공지능 전환) 최강국 도약을 위해 AI 팩토리 선도사업을 차질 없이 추진해나가겠다고 전했다.",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": [
+        {
+          "id": "F0B156HUUJD",
+          "name": "image.png",
+          "title": "image.png",
+          "mimetype": "image/png",
+          "filetype": "png",
+          "pretty_type": "PNG",
+          "size": 157194,
+          "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0B156HUUJD/image.png",
+          "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0B156HUUJD/image.png"
+        }
+      ]
+    },
+    {
+      "ts": "1777513592.463299",
+      "type": "message",
+      "subtype": null,
+      "user": "U03NJDDPZPZ",
+      "text": "<https://www.newspim.com/news/view/20260430000334>",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    }
+  ],
+  "routed_messages": [
+    {
+      "ts": "1776658133.955249",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "<https://www.aitimes.com/news/articleView.html?idxno=209446|https://www.aitimes.com/news/articleView.html?idxno=209446>"
+    },
+    {
+      "ts": "1776662015.154209",
+      "bucket": "project",
+      "reason": "project_keywords",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Project_Intake",
+      "text": "<https://yozm.wishket.com/magazine/detail/slack/3716/?h=TBL1JAWKF&utm_source=slack&utm_medium=bot&utm_campaign=TBL1JAWKF|엔비디아가 25년째 놓지 않는 이 기업의 생존법>\n다쏘시스템은 제조업을 겨냥해 3차원(3D) 소프트웨어를 공급하는 글로벌 기업이다. 제품이 생산되기 전 단계에서 가상 환경을 통해 설계, 검증, 최적화를 수행하는 솔루션을 다룬다. 유럽에 본사를 둔 제조업 특화 기업이라는 점 때문에 국내 주목도는 상대적으로 낮은 편이다. 그러나 흥미롭게도 이 기업의 행보는 체질 개선에 어려움을 겪는 국내 SI 산업에 의미 있는 시사점을 던진다. 엔터프라이즈 대상의 반복 매출이라는 안정적인 캐시카우를 지키면서도, 중견·중소기업과 스타트업으로 고객층을 넓혔기 때문이다. 동시에 SaaS와 플랫폼으로의 전환을 이뤄냈고, AI 비즈니스 모델까지 성공적으로 일구고 있다. 엔비디아가 25년째 놓지 않는 이 기업의 생존법"
+    },
+    {
+      "ts": "1776730416.486179",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "<https://yozm.wishket.com/magazine/detail/slack/3717/?h=TBL1JAWKF&utm_source=slack&utm_medium=bot&utm_campaign=TBL1JAWKF|‘사고 근육’을 지켜주는 AI 글쓰기 방법 5가지>\nAI로 작성한 글을 사람의 글처럼 바꾸는 프롬프트나 방법론이 등장하고 있다. 어떻게든 AI로 편하게 글을 쓰려는 쪽과 이를 걸러내려는 쪽의 대립이 마치 창과 방패의 싸움과 같다. 하지만 이로 인해 생겨날 수 있는 문제들은 단순히 AI 특유의 문체를 자연스럽게 고치거나 탐지를 피하는 방식으로 해결될 종류의 것이 아니다. 더 중요한 점은 AI로 글을 쓰는 과정에서 인간의 사고력과 인지 능력이 저하될 수 있다는 점이다. 마치 운동을 하지 않으면 근력이 저하되듯, 생각하지 않으면 사고력과 인지 능력 역시 약해질 수 있다. ‘사고 근육’을 지켜주는 AI 글쓰기 방법 5가지"
+    },
+    {
+      "ts": "1776731678.465369",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "<https://www.fnnews.com/news/202604201509547345|https://www.fnnews.com/news/202604201509547345>"
+    },
+    {
+      "ts": "1776731867.172019",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "<https://www.joongang.co.kr/article/25421802|https://www.joongang.co.kr/article/25421802>"
+    },
+    {
+      "ts": "1776738961.610159",
+      "bucket": "project",
+      "reason": "project_keywords",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Project_Intake",
+      "text": ":bar_chart: *[a16z 리포트] 엔터프라이즈 AI 도입, 실제로 어디까지 왔나?*\n출처: Andreessen Horowitz | 작성: Kimberly Tan | 2026.04.08\n:link: <https://a16z.com/where-enterprises-are-actually-adopting-ai/|https://a16z.com/where-enterprises-are-actually-adopting-ai/>\n\n━━━━━━━━━━━━━━━━━━━\n\n*:dart: 핵심 한 줄*\n\"MIT '95% 파일럿 실패' 주장은 틀렸다 — Fortune 500의 29%가 이미 AI를 실전 도입했다\"\n\n━━━━━━━━━━━━━━━━━━━\n\n*:chart_with_upwards_trend: 도입 현황 (실제 계약 기준)*\n• Fortune 500 → *29%* 가 AI 스타트업과 정식 계약 체결 및 실운영 중\n• Global 2000 → *19%* 동일 기준 충족\n• (파일럿 전환 실패 아닌, 실제 go-live 기준 집계)\n\n━━━━━━━━━━━━━━━━━━━\n\n*:moneybag: 돈이 몰리는 3대 유즈케이스*\n\n*1. 코딩 (압도적 1위, 타 유즈케이스 대비 ~10배)*\n• Cursor, Claude Code, Codex 등 폭발적 성장\n• 엔지니어 생산성 *10~20배* 향상 사례 다수\n• 이유: 데이터 풍부 / 결과 검증 용이 / 단독 작업 특성 / 부분 자동화도 즉시 ROI\n• 시사점: 코드는 모든 소프트웨어의 upstream → AI 코딩 가속이 전 산업 가속으로 연결\n*2. 고객 지원 (Support)*\n• Decagon, Sierra, Salient, HappyRobot 등 빠른 성장\n• 이유: SOP 명확 / 지표 정량화(티켓수·CSAT·해결율) / 이미 BPO 아웃소싱 → 체인지 매니지먼트 부담 낮음\n• 100% 자동화 불필요 → 에스컬레이션 구조로 리스크 관리 용이\n*3. 검색 (Search / Knowledge Retrieval)*\n• 사내 분산 정보 통합 검색: Glean\n• 법률 특화: Harvey\n• 의료 특화: OpenEvidence\n• ChatGPT 사용량의 핵심이 사실상 '서치'이므로 실제 규모는 더 큼\n━━━━━━━━━━━━━━━━━━━\n\n*:factory: AI 도입 속도 빠른 3대 산업*\n\n*Tech (1위, 예상된 결과)*\n• ChatGPT 기업 사용자의 27%가 테크 업종\n*Legal (의외의 얼리어답터)*\n• 기존엔 소프트웨어 도입 가장 느렸던 업종\n• AI가 텍스트 파싱·요약·드래프팅에서 명확한 가치 입증\n• Harvey: 창업 3년 내 ARR ~$200M / $11B 밸류에이션\n• Eve (원고 전문): 고객 450개사 / $1B 밸류\n*Healthcare*\n• Abridge(의료 스크라이빙), OpenEvidence, Tennr 등 급성장\n• 기존 EHR(Epic 등) 교체 없이 그 위에 레이어로 작동 → 도입 마찰 최소화\n━━━━━━━━━━━━━━━━━━━\n\n*:crystal_ball: 모델 능력 개선 속도 (GDPval 벤치마크 기준)*\n• 최근 4개월간 회계·감사 분야: *+20%p* 점프\n• 경찰·수사 분야: *+30%p* 점프\n• → 아직 시장 돌파구 없는 영역에서 곧 빠른 제품화 예상\n━━━━━━━━━━━━━━━━━━━\n\n*:warning: 도입이 느린 영역의 공통점*\n물리 세계 연계 / 대인관계 의존 / 다수 이해관계자 조율 필요 / 강한 규제 / 결과 검증 어려움\n\n━━━━━━━━━━━━━━━━━━━\n\n*:hammer_and_wrench: 빌더를 위한 시사점*\n1. Tech·Legal·Healthcare는 지금 당장 fertile ground — 단, 카테고리 내 세분 영역 공략 필요\n2. 모델 역량은 올라왔는데 아직 breakout 기업 없는 영역 = 지금이 진입 타이밍\n3. 랩들이 집중하는 곳 주목: long-horizon agent / computer use / 스프레드시트·비정형 워크플로우\n━━━━━━━━━━━━━━━━━━\n_요약 by Claude | 원문 전문 읽기 → 위 링크_"
+    },
+    {
+      "ts": "1776739220.222129",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "iOS 이미지 iOS 이미지 iOS 이미지 iOS 이미지 iOS 이미지"
+    },
+    {
+      "ts": "1776739626.413529",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "<https://aimatters.co.kr/news-report/40741/|https://aimatters.co.kr/news-report/40741/>"
+    },
+    {
+      "ts": "1776739772.472099",
+      "bucket": "project",
+      "reason": "project_keywords",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Project_Intake",
+      "text": "*앤트로픽, 매출에서 오픈AI 추월 — 연간 환산 매출 300억 달러 돌파*\n\n주요 AI 기업 간 경쟁에서 주목할 만한 변화가 일어났다. AI 어시스턴트 클로드를 개발한 앤트로픽이 오픈AI를 제치고 연간 환산 매출(ARR) 1위에 올랐다. 앤트로픽의 ARR은 300억 달러를 돌파한 반면, 오픈AI는 연간 약 240~250억 달러(월 20억 달러) 수준이다. 이 격차의 핵심은 전략적 방향의 차이에 있다. 앤트로픽은 일관되게 기업 고객(B2B) 시장을 공략해온 반면, 오픈AI는 전통적으로 ChatGPT를 통한 일반 소비자 시장에 집중해왔다.\n\n*앤트로픽: 기업 고객에서 폭발적 성장*\n\n앤트로픽이 공개한 수치는 인상적이다. 2025년 말 기준 ARR은 약 90억 달러였으나, 그 이후 세 배 이상으로 뛰었다. 특히 주목할 부분은 대형 고객 세그먼트의 성장이다. 2026년 2월 시리즈 G 펀딩 라운드 발표 당시, 앤트로픽의 연간 지출 100만 달러 이상 기업 고객 수는 500개를 넘었다. 현재는 이미 1,000개 이상으로 불어났다 — 두 달도 채 안 되어 두 배가 된 것이다.\n\n*오픈AI: 기록적 성장, 그러나 다른 모델*\n\n오픈AI 역시 인상적인 성장세를 보이고 있다. 기술 플랫폼으로서 1,000만 명, 이후 1억 명의 사용자를 그 어떤 기업보다 빠르게 확보했다. ChatGPT 출시 후 1년 만에 연매출 10억 달러를 달성했고, 2024년 말에는 분기 매출 10억 달러를 기록했다. 현재 월 매출은 20억 달러에 달한다. 오픈AI는 알파벳, 메타 등 인터넷·모바일 시대를 정의한 기업들보다 4배 빠른 속도로 매출이 성장하고 있다고 주장한다.\n\n그러나 핵심적인 차이는 고객 구조에 있다. 오픈AI의 성장은 소비자 대상의 대중적 제품인 ChatGPT에 크게 의존하고 있다. 반면 앤트로픽은 처음부터 기업 고객과 API 활용, 즉 클로드를 자사 제품과 프로세스에 통합하는 기업들에 집중해왔다.\n\n*성장의 토대: 인프라 투자*\n\n추가 성장을 확보하기 위해 앤트로픽은 구글·브로드컴과 수 기가와트 규모의 차세대 연산 용량을 확보하는 광범위한 인프라 협약을 체결했다. 새로운 TPU 용량은 2027년부터 단계적으로 가동될 예정이며, 대부분 미국 내에 위치한다. 이는 2025년 11월 발표된 미국 AI 인프라 500억 달러 투자 약속의 연장선이다.\n\n앤트로픽은 AWS Trainium, 구글 TPU, 엔비디아 GPU를 포함한 폭넓은 하드웨어 기반 위에서 모델을 운용하고 있다. 아마존은 여전히 주요 클라우드 파트너이자 학습 파트너로 남아 있다. 클로드는 또한 세 개의 주요 클라우드 플랫폼 — AWS(Bedrock), 구글 클라우드(Vertex AI), 마이크로소프트 애저(Foundry) — 모두에서 이용 가능한 유일한 프런티어 AI 모델이기도 하다.\n\n앤트로픽이 매출에서 오픈AI를 추월할 것이라는 예측은 이미 2026년 2월 Epoch AI에 의해 제시된 바 있었으며, 예상 시점은 2026년 중반이었다. 그런데 실제로는 그보다 훨씬 일찍 실현됐다.​​​​​​​​​​​​​​​​"
+    },
+    {
+      "ts": "1776740183.816419",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "<https://www.aitimes.com/news/articleView.html?idxno=209507|https://www.aitimes.com/news/articleView.html?idxno=209507>"
+    },
+    {
+      "ts": "1776740727.244549",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "<https://www.aitimes.com/news/articleView.html?idxno=209496|https://www.aitimes.com/news/articleView.html?idxno=209496>"
+    },
+    {
+      "ts": "1776740880.476179",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "<https://www.yna.co.kr/view/AKR20260421005300091|https://www.yna.co.kr/view/AKR20260421005300091>"
+    },
+    {
+      "ts": "1776741167.854209",
+      "bucket": "project",
+      "reason": "project_keywords",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Project_Intake",
+      "text": "*中 애지봇 휴머노이드 로봇, 태블릿PC 생산라인 투입*\n> '징링 G2' 투입된 생산 현장 8시간 라이브로 공개\n중국에서 전자제품 실제 제조 과정에 휴머노이드 로봇이 투입돼 성공적으로 임무를 완수했다. \n\n15일 중국 지역 언론 상하이옵저버에 따르면 중국 전자제품 ODM 기업 룽치어(Longcheer, 龙旗科技)의 난창(南昌) 소재 태블릿PC 제조 공장에서 애지봇(AgiBot, 智元机器人)의 휴머노이드 로봇 '징링(精灵) G2'가 생산라인에서 근무하는 장면이 공개됐다. \n\n7시간 라이브로 공개된 태블릿PC 생산라인 현장에서 두 대의 *징링 G2 휴머노이드 로봇이 직원처럼 8시간 연속 작업을 했다*. \n\n*시간당 310건 물품 작업을 완수해 성공률 100%, 고장율 0%를 기록*했다고 매체는 전했다. \n\n로봇은 생산라인에서 태블릿PC를 검측 장비 안에 집어넣었다. 검측이 완료된 이후엔 합격품을 생산라인 다음 단계에 옮겨놨으며, 불량품이 발견되문 회수 라인으로 옮겼다. \n\n징링 G2는 태블릿PC의 MMIT(다매체통합테스트) 작업 공간에서 자재 운반을 맡은 것이다. \n\n룽치어에 따르면 이 임무는 복잡하지 않아도 정밀한 조작이 요구된다. 기존 로봇팔은 고정된 좌표에 의존했지만 태블릿PC가 비뚤어지게 놓이면 오류로 보고됐다. 하지만 *징링 G2는 토크 센서와 비전 감지에 기반해 물품의 위치가 정확하게 놓인지 감지하고, 사람처럼 유연하게 조정*한다. 제품을 집어들기 전에 똑바로 세우거나 비스듬히 집어든 다음 똑바로 세울 수 있다. \n\n이처럼 생산라인에서 작동하기 위해 로봇은 4개월 이상의 훈련을 거쳤다. 생산라인의 1:1 디지털 트윈 복제본을 이용해 연구개발 테스트의 90%를 완수했다. 이어 공장의 보조 생산라인에서 실제 조명 및 신호 환경에 적응하도록 디버깅 작업을 진행했다. 생산라인에 투입되기 전에는 메인 생산라인의 가동 중단 시간 동안 일주일간 스트레스 테스트를 거쳤다. 생산라인에 적용되기 전까지 최소 8시간 연속 작업이 가능해야 했다. \n\n로봇 때문에 생산라인이 중단될 수 없기 때문에 룽치어는 '실패없이, 7일 연속, 가동 중단 없는 운영'이라는 요구 조건을 제시했다. 이에 애지봇 측은 지난해 9월 양사 공동 태스크포스 구성 이래 로봇을 개선해왔다. *초기 로봇 작업 완수에 100초 이상이 걸렸지만 4개월 간의 반복적 개선끝에 최근 약 20초 만에 작업을 완료하고 24시간 연속 가동도 가능하다.* \n\n두 대의 징링 G2 로봇이 8시간 연속 가동하면서 2283건의 정밀 운반 작업을 수행하고 시간당 310개의 제품을 만들어낸 것이다. \n\n옆쪽 수동 검사 라인에서는, 작업자들이 10m가 넘는 생산라인을 오가며 태블릿PC를 옮기고 있었다. 수없이 반복되는 작업을 위해 하루에 몇 만보를 걸어야 하는 환경이다. 작업자들의 노고 외에 관리상 어려움도 있다. 사람은 실수를 하는 데다 감정과 체력의 영향을 받고, 생산량도 변동된다. 젊은 직원들의 퇴사율도 높고 신입 직원의 재교육이 필요하다는 점도 인건비 부담으로 작용한다. \n\n로봇팔을 대신하는 휴머노이드 로봇의 장점은 넓은 작업 범위를 요구하는 상황, 배치 동작과 제품 모델 변경 등에 유연하게 대처할 수 있다는 점이다. 징링 G2는 전방향 섀시, 접이식 및 높이 조절 가능한 하체, 3방향 회전 허리, 듀얼 암 협업 기능 등을 통해 비표준 작업 환경을 커버할 수 있다. 스마트폰이나 태블릿PC 등 제품은 교체 주기가 빠르다는 점에서 맞춤형 생산라인 조성에도 유리하다. \n\n*올해 3분기 애지봇은 공장 내부에 100대의 로봇을 설치하고 자동차 제조, 반도체, 신재생 에너지 등 분야에 광범위하게 적용할 계획이다.*\n\n<https://www.irobotnews.com/news/articleView.html?idxno=45904|https://www.irobotnews.com/news/articleView.html?idxno=45904>"
+    },
+    {
+      "ts": "1776741596.838749",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "*로봇 성능이 발전할수록 AI 솔루션(*이 필요한*) 영역이 줄어들 수 있으므로 주의깊게 살펴봐야 하는 시장 영역*\n\n<https://youtu.be/aGZ9qTgXJcA?si=0oB9AD7QX_xtoHXq|https://youtu.be/aGZ9qTgXJcA?si=0oB9AD7QX_xtoHXq>"
+    },
+    {
+      "ts": "1776748430.220299",
+      "bucket": "project",
+      "reason": "project_keywords",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Project_Intake",
+      "text": "<https://yozm.wishket.com/magazine/detail/slack/3718/?h=TBL1JAWKF&utm_source=slack&utm_medium=bot&utm_campaign=TBL1JAWKF|에이전트 하네스 완전 해부>\n이 글은 AI 에이전트 시스템에서 모델을 감싸는 인프라, 즉 '하네스(Harness)'의 개념을 정의하고, 파일시스템·샌드박스·메모리·컨텍스트 관리 등 핵심 구성 요소를 모델의 한계에서 역추적하여 도출하는 과정을 담고 있습니다. LangChain이 자사 코딩 에이전트의 하네스만 변경하여 Terminal Bench 2.0에서 Top 30에서 Top 5로 끌어올린 사례를 포함해, 하네스 엔지니어링의 현재와 미래를 구체적으로 소개합니다. 에이전트 하네스 완전 해부"
+    },
+    {
+      "ts": "1776750678.653789",
+      "bucket": "project",
+      "reason": "project_keywords",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Project_Intake",
+      "text": "Qwen3.6 Local + Claude Code Game making test.\n유료 비싼 API 쓰지 않고 무료 오프소스 Qwen3.6 Local PC에서 Claude Code 를 통해 심플 웹기반 방탈출 3D 게임 만들어 보았습니다. \n\n오프소스 Qwen3.6 를 로컬에서 활용가능한지 알아보고자 했는데, 한글도 잘 인식하고 코딩도 꽤 잘 하는 것 같습니다. 물론 유료 API만큼은 속도나 성능은 좀 떨어지기는 한 것 같지만 비용 대체 생각하거나 외부로 나가면 안되는 보안 데이터 사용 가능 차원에서는 고려 가능 할 듯 합니다.  \n\ngemma4로도 시도해 보았는데 이것은 좀 잘 안되네요. 좀더 잘 해보면 될지도 모르겠지만 일단 간단하게 시켜본 바로는 진행이 되지 못했습니다.   \n\n\"Three.js를 사용한 심플 탈출 게임\"을 만들 계획서(PRD)를 만든후 게임을 만들어줘. 지시를 통해 만들었습니다. \n\n테스트 환경 : 3090 GPU, Claude Code, Ollama, Qwen 3.6, Linux PC\n\n#Qwen36 #ClaudeCode #wonwizard"
+    },
+    {
+      "ts": "1776755347.820719",
+      "bucket": "project",
+      "reason": "project_keywords",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Project_Intake",
+      "text": "*<https://zdnet.co.kr/view/?no=20260420152039|\"AI, 이제 현장 성과로\"…코오롱베니트, 제조 AX 판 키운다>*\n&gt; *광주·대구·천안 지역 로드쇼 개최…AI 얼라이언스 기반 지원 체계 공개*\n코오롱베니트가 *제조 현장 중심 인공지능 전환(AX) 전략을 앞세워 산업계 공략*에 나섰다. 품질·설비·안전 등 핵심 생산 영역을 아우르는 실행형 AX 모델을 통해 제조업의 실질적인 성과 창출을 지원한다는 전략이다.\n\n코오롱베니트는 *광주·대구·천안 등 3개 지역에서 '성공사례로 보는 AX 도입 전략 로드쇼'를 개최*했다고 20일 밝혔다.\n\n이번 행사에는 50여 개 기업 소속 약 90명의 제조업 관계자가 참석해 *현장 중심 AX 적용 전략과 실제 도입 사례에 높은 관심*을 보였다. 코오롱베니트는 AI 도입을 넘어 실제 현장 성과로 연결하는 실행 방안을 공유했다.\n\n최근 제조업에선 AI 기반 스마트공장 도입이 확산되면서 단순 구축을 넘어 운영과 성능 개선, 보안, 현장 확산까지 이어지는 전주기 실행 역량이 중요해지고 있다. 코오롱베니트는 AX가 개념검증(PoC)에 머무르지 않기 위해서는 문제 정의부터 구축·운영·확산까지 함께할 수 있는 신뢰할 수 있는 파트너로 자리매김한다는 방침이다.\n\n회사는 제조기업의 주요 고민인 '무엇부터 시작할 것인가'와 'PoC 이후 어떻게 현장에 적용·확산할 것인가'를 중심으로 이번 로드쇼를 구성했다. 품질·설비·안전 분야 AX와 생성형 AI, 데이터 인프라를 하나의 실행 로드맵으로 연결해 제시한 것이 특징이다.\n\n특히 코오롱베니트는 *AI 얼라이언스를 기반으로 한 통합 AX 모델을 강조*했다. *뉴로클, 비스텔리전스, 아시아나IDT 등 파트너사*와 협력해 개별 솔루션이 아닌 제조 현장의 과제 중심으로 기술을 결합한 점을 내세웠다.\n\n또 '문제 정의부터 구축·운영까지 지속 가능한 AX 지원 체계' 세션을 통해 데이터 분산과 확장성 부족으로 인해 AX가 PoC 단계에 머무르는 한계를 짚고 진단부터 구축·운영·확산까지 이어지는 엔드투엔드 지원 체계를 공유했다. 비전 AI 기반 품질 검사, 설비 예지보전, 비전언어모델(VLM) 기반 영상 관제 등 주요 제조 영역별 AX 패키지를 통해 빠른 현장 적용 방안도 제시했다.\n\n데이터 인프라 중요성도 강조됐다. 코오롱베니트는 데이터 수집·연결·분석으로 이어지는 3단계 실행 체계를 통해 통합 데이터 기반이 AX 성과를 좌우하는 핵심 요소라고 설명했다. 이를 통해 불량 분석, 설비 관리, 안전 관제, 공정 최적화 등 제조 현장의 실제 문제를 해결할 수 있다는 점을 부각했다.\n\n코오롱베니트는 향후 AI 얼라이언스와 AX 솔루션 패키지를 기반으로 제조기업의 디지털 전환을 넘어 실질적인 성과 창출까지 지원하는 역할을 강화할 계획이다.\n\n강재훈 코오롱베니트 AX커머스팀장은 \"AX는 이제 도입 여부가 아니라 현장 문제를 어떻게 성과로 연결하고 이후 어떻게 확산할 것인가로 전환되고 있다\"며 \"AI 얼라이언스와 현장 적용이 가능한 AX 솔루션 패키지를 기반으로 고객 비즈니스에 실질적인 성과를 만들어 나가겠다\"고 밝혔다. image.png"
+    },
+    {
+      "ts": "1776816817.449199",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "<https://yozm.wishket.com/magazine/detail/slack/3719/?h=TBL1JAWKF&utm_source=slack&utm_medium=bot&utm_campaign=TBL1JAWKF|유니온 타입에서 막히는 순간, 타입 좁히기가 필요하다>\n타입스크립트를 쓰다 보면 하나의 변수가 여러 타입을 가질 수 있는 상황을 자주 만나게 됩니다. 함수의 매개변수가 string일 수도, number일 수도 있고, API 응답이 성공 데이터일 수도, 에러 객체일 수도 있습니다. 이처럼 다양한 가능성을 안고 있는 변수를 다룰 때, 타입스크립트는 꽤 보수적으로 반응합니다. 해당 변수가 “어떤 타입인지 아직 모르겠으니” 특정 타입 전용 메서드를 사용하지 못하도록 막아버리는 것입니다. 이 문제를 해결하는 방법이 바로 타입 좁히기(Type Narrowing)입니다. 타입 좁히기란 조건문 등을 활용해 넓은 타입을 더 구체적인 타입으로 확정해가는 과정을 말합니다. 유니온 타입에서 막히는 순간, 타입 좁히기가 필요하다"
+    },
+    {
+      "ts": "1776817338.851389",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "<https://www.mt.co.kr/future/2026/04/21/2026042115301238206|https://www.mt.co.kr/future/2026/04/21/2026042115301238206>"
+    },
+    {
+      "ts": "1776819152.685819",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "<https://www.unicornfactory.co.kr/article/2026042113540847619|https://www.unicornfactory.co.kr/article/2026042113540847619>"
+    },
+    {
+      "ts": "1776820014.132749",
+      "bucket": "project",
+      "reason": "project_keywords",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Project_Intake",
+      "text": "*<https://www.ddaily.co.kr/page/view/2026042110490928042|중기부, 중기·스타트업에 GPU 264장 공급…\"AX 본격 지원\">*\n\n중소벤처기업부는 제6회 과학기술관계장관회의를 통해 심의·의결된 ‘국가 AI(인공지능) 프로젝트'에 따라 확보한 첨단 그래픽처리장치(GPU) 264장을 중소기업 제조현장과 창업기업 혁신에 지원한다고 21일 밝혔다.\n\n이번 국가 프로젝트로 배분된 GPU 자원은 *전량 중소·벤처기업과 창업기업에 지원될 예정*이며 AI 인프라 부족으로 어려움을 겪는 기업의 기술 개발과 사업화에 활용된다.\n\n중기부가 *시행 예정인 2개 과제는 공모 및 선정평가(4~5월)를 거쳐 올해 6월부터 지원*한다. 과제에 *선정된 기업들은 민간 데이터센터(NHN클라우드)와 연계*해 *센터가 보유한 GPU를 원격으로 이용하는 서비스(클라우드 방식)를 연말까지 무상으로 지원*받을 수 있다.\n\n국가 AI 프로젝트에 중기부는 *'중소제조 특화 멀티 AI 에이전트 개발(R&amp;D) 사업(AI 에이전트)'*과 *'혁신 AI 스타트업 전략 기술 상용화 및 인공지능 전환(AX) 가속 프로젝트(초격자 스타트업)'* 등 2개 과제를 신청해 모두 선정됐다.\n\n이에 따라 중기부는 'AI 에이전트'와 '초격차 스타트업' 과제 각각 64장과 200장 등 총 264장의 GPU(B200)를 확보했다. 특히 초격차 창업기업 과제는 국가 AI 프로젝트의 GPU 기반 혁신 AI 창업기업의 성장 촉진을 위한 주요 과제로 채택됐다.\n\n세부 추진내용을 보면 먼저 'AI 에이전트' 과제는 기술기업-제조기업 컨소시엄을 대상으로 중소제조 현장의 공정·품질 최적화를 위한 기술개발부터 현장적용까지 전주기를 지원한다.\n\n해당 과제를 통해 기술기업-제조기업 컨소시엄은 제조 공정에 대한 AI 학습, 데이터 확보 및 기술 실증화를 포함한 AI 에이전트 기술개발에 GPU를 활용할 수 있다.\n\n200장을 배정받은 초격차 스타트업(창업기업) 과제는 창업기업을 대상으로 대학·출연연의 전문역량과 창업기업 기술을 합친 '전략 AI' 개발에 85장을 지원한다. 기업 간 협업을 통해 특정 산업 분야에 특화된 맞춤형 AI 솔루션 개발도 85장을 분배한다.\n\n박용순 중기부 중소기업정책실장은 \"이번 국가 AI 프로젝트 참여를 통해 확보한 GPU는 제조현장의 인공지능 전환과 AI 기반 사업모델을 추진하는 창업기업에게 실질적인 도움이 될 것\"이라며 \"중기부는 제조현장과 창업 생태계 전반에 AI 활용을 확산해 기업의 성장 기반을 강화해 나겠다\"고 말했다. image.png"
+    },
+    {
+      "ts": "1776823305.418319",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "<https://www.fnnews.com/news/202604211532120521|https://www.fnnews.com/news/202604211532120521>"
+    },
+    {
+      "ts": "1776823370.325729",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "<https://www.aitimes.com/news/articleView.html?idxno=209553|https://www.aitimes.com/news/articleView.html?idxno=209553>"
+    },
+    {
+      "ts": "1776824002.135349",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "<https://www.aitimes.com/news/articleView.html?idxno=209522|https://www.aitimes.com/news/articleView.html?idxno=209522>"
+    },
+    {
+      "ts": "1776824122.389019",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "<https://www.mt.co.kr/tech/2026/04/22/2026041616203743418|https://www.mt.co.kr/tech/2026/04/22/2026041616203743418>"
+    },
+    {
+      "ts": "1776824155.055239",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "<https://www.aitimes.com/news/articleView.html?idxno=209526|https://www.aitimes.com/news/articleView.html?idxno=209526>"
+    },
+    {
+      "ts": "1776824573.590139",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "<https://biz.heraldcorp.com/article/10722281|https://biz.heraldcorp.com/article/10722281>"
+    },
+    {
+      "ts": "1776824773.194459",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "<https://www.mk.co.kr/news/it/12023082|https://www.mk.co.kr/news/it/12023082>"
+    },
+    {
+      "ts": "1776828417.352149",
+      "bucket": "project",
+      "reason": "project_keywords",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Project_Intake",
+      "text": "*<https://news.einfomax.co.kr/news/articleView.html?idxno=4410940|스페이스X, AI 코딩 기업 '커서'와 맞손…600억 달러 인수 옵션>*\n\n일론 머스크의 우주 탐사 기업 스페이스X가 인공지능(AI) 코딩 기업 *'커서(Cursor)'와 전략적 파트너십을 체결*했다. 이번 계약에는 *연말까지 600억 달러(약 88조 9천억원) 규모로 회사를 인수할 수 있는 권리도 포함*됐다.\n\n21일(현지시간) 스페이스X는 자사의 X(옛 트위터)를 통해 \"커서와 협력해 세계 최고 수준의 코딩 및 지식 노동용 AI를 구축할 것\"이라고 발표했다.\n\n양사 간의 계약에는 파격적인 인수 옵션도 포함됐다. 커서는 올해 말 스페이스X에 600억 달러 규모로 회사를 매각할 수 있는 권리를 부여했다. 만약 인수가 무산되더라도 스페이스X는 그간의 협업 대가로 100억 달러를 지불하는 조건이다.\n\n이번 파트너십의 핵심은 커서의 제품 경쟁력과 스페이스X의 압도적인 컴퓨팅 자원을 결합하는 데 있다. 스페이스X는 엔비디아의 H100 GPU 100만 개에 달하는 성능을 갖춘 초거대 AI 슈퍼컴퓨터 '콜로서스(Colossus)'를 훈련에 투입할 계획이다.\n\n한편, 스페이스X는 오는 6월 기업공개(IPO)를 목표로 하고 있다."
+    },
+    {
+      "ts": "1776830464.065829",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "<https://openai.com/index/introducing-chatgpt-images-2-0/?fbclid=IwZnRzaARVJ0ZleHRuA2FlbQIxMQBzcnRjBmFwcF9pZAo2NjI4NTY4Mzc5AAEeMWWyA2r0FLne5_bIJefxzX8KPBER_E41u4hWQIW4pcGLvcHHfbvT-iDnMVQ_aem_zFPzz15koyTvlFcddK3bdQ|https://openai.com/index/introducing-chatgpt-images-2-0/?fbclid=IwZnRzaARVJ0ZleHRuA2FlbQIxMQBzcnRjBmFwcF9pZAo2NjI4NTY4Mzc5AAEeMWWyA2r0FLne5_bIJefxzX8KPBER_E41u4hWQIW4pcGLvcHHfbvT-iDnMVQ_aem_zFPzz15koyTvlFcddK3bdQ>"
+    },
+    {
+      "ts": "1776834816.286199",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "<https://yozm.wishket.com/magazine/detail/slack/3720/?h=TBL1JAWKF&utm_source=slack&utm_medium=bot&utm_campaign=TBL1JAWKF|2개의 스쿼드를 AI와 함께 이끌어봤습니다>\n올해 들어 제품 내에서 살펴야 할 피처의 넓이와 깊이가 모두 깊어졌고, 인수한 제품의 특성상 우리가 아직 모르는 동작도 훨씬 많아졌습니다. 그 와중에 2개의 스쿼드의 PO 역할을 담당하려다 보니, 물리적으로 혼자 감당할 수 있는 범위를 이미 넘어선 상황이었죠. 그래서 두 주니어 AI를 통해 빈자리를 단단하게 채워보려고 했습니다. 그 과정을 지금부터 소개하겠습니다. 2개의 스쿼드를 AI와 함께 이끌어봤습니다"
+    },
+    {
+      "ts": "1776899312.172949",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "<https://wowtale.net/2026/04/23/257527/?fbclid=IwZnRzaARWNCZleHRuA2FlbQIxMQBzcnRjBmFwcF9pZAo2NjI4NTY4Mzc5AAEekF_3cZfibojqGJJ6UDk_P_OBvcKhFhgEcEdkwSnT3UMsKbioHx3xZuJkT8w_aem_l7hOkyv-JUBcQ_3hQFK5Qg|https://wowtale.net/2026/04/23/257527/?fbclid=IwZnRzaARWNCZleHRuA2FlbQIxMQBzcnRjBmFwcF9pZAo2NjI4NTY4Mzc5AAEekF_3cZfibojqGJJ6UDk_P_OBvcKhFhgEcEdkwSnT3UMsKbioHx3xZuJkT8w_aem_l7hOkyv-JUBcQ_3hQFK5Qg>"
+    },
+    {
+      "ts": "1776903218.728869",
+      "bucket": "project",
+      "reason": "project_keywords",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Project_Intake",
+      "text": "<https://yozm.wishket.com/magazine/detail/slack/3721/?h=TBL1JAWKF&utm_source=slack&utm_medium=bot&utm_campaign=TBL1JAWKF|막힐 때마다 직접 만들었더니, AI 풀스택 기업이 된 사연>\n최근 AI 시장에서 일어나고 있는 변화가 있습니다. 바로 경쟁의 축이 '모델'에서 '인프라'로 이동하고 있다는 겁니다. 여기서 핵심은 ‘AI 에이전트’입니다. 문제는 이 과정에서 토큰 소비량이 기하급수적으로 증가한다는 건데요. 요즘IT는 이 흐름을 가장 가까이서 지켜본 팀을 만나보기로 했습니다. 바로 GPU 클라우드를 직접 구축하고 운영해 온 AI 풀스택 기업, 엘리스입니다. 이들이 직접 겪어온 이야기를 듣기 위해, 엘리스 박정국 CTO와 김시완 클라우드 전략이사를 만나 인터뷰를 진행했습니다. 그리고 실전에서 기업들의 AX 전환이 막히는 이유와 체크리스트도 함께 정리해 봤습니다. 막힐 때마다 직접 만들었더니, AI 풀스택 기업이 된 사연"
+    },
+    {
+      "ts": "1776904274.850879",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "<https://m.sedaily.com/article/20035815|https://m.sedaily.com/article/20035815>"
+    },
+    {
+      "ts": "1776904479.581929",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "<http://www.itdaily.kr/news/articleView.html?idxno=239007|http://www.itdaily.kr/news/articleView.html?idxno=239007>"
+    },
+    {
+      "ts": "1776904641.425009",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "<https://www.fnnews.com/news/202604221519494988|https://www.fnnews.com/news/202604221519494988>"
+    },
+    {
+      "ts": "1776904832.200769",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "<https://www.donga.com/news/It/article/all/20260422/133792736/1|https://www.donga.com/news/It/article/all/20260422/133792736/1>"
+    },
+    {
+      "ts": "1776904971.531929",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "<https://www.aitimes.com/news/articleView.html?idxno=209602|https://www.aitimes.com/news/articleView.html?idxno=209602>"
+    },
+    {
+      "ts": "1776905076.772129",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "<https://www.fnnews.com/news/202604221642184772|https://www.fnnews.com/news/202604221642184772>"
+    },
+    {
+      "ts": "1776910058.604249",
+      "bucket": "project",
+      "reason": "project_keywords",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Project_Intake",
+      "text": "*<https://www.aitimes.com/news/articleView.html?idxno=209589|오픈AI, '코덱스' 주간 사용자 400만 돌파...기업 확장 위해 ‘코덱스 랩스’ 출범>*\n\n오픈AI의 개발자 AI 도구 ‘코덱스’가 2주 만에 주간 활성 사용자(WAU) 100만명을 추가했다. 이런 빠른 확산세를 바탕으로, 컨설팅 프로그램 ‘코덱스 랩스(Codex Labs)’를 출범하고 글로벌 컨설팅 업체들과 협력해 대규모 기업 고객 확보에 나섰다.\n\n오픈AI는 21일(현지시간) 4월 초 기준 주간 활성 사용자 수가 300만명이던 코덱스가 불과 2주 만에 400만명을 돌파했다고 밝혔다.\n\n또 지난달 200만명 수준이었던 것과 비교하면 매우 가파른 성장세를 보이고 있다. 개인 개발자뿐 아니라 기업 현장에서도 실제 업무에 빠르게 도입되고 있다는 분석이다.\n\n실제로 다양한 기업들이 소프트웨어 개발 전 과정에 코덱스를 활용하고 있다. 버진 애틀랜틱은 테스트 커버리지 확대와 개발 속도 개선에 활용하고 있으며, 램프는 코드 리뷰를 자동화하고 있다. 노션은 신규 기능 개발에, 시스코는 대규모 코드 저장소 분석에 활용 중이다. 라쿠텐은 장애 대응 등 운영 영역에서 코덱스를 적용하고 있다.\n\n*코덱스는 이제 단순 코딩을 넘어 브라우저 작업, 이미지 생성, 메모리 기능, 다양한 앱 연동까지 지원*하며 ‘지식 노동 전반’을 아우르는 도구로 확장되고 있다. 마케팅, 재무, 영업 등 비개발 부서에서도 정보를 통합·분석해 보고서, 계획서, 체크리스트 등을 생성하고 실행까지 이어지는 사례가 늘고 있다. 이는 앤트로픽의 '클로드 코워크'와 흡사한 모습이다.\n\n이 같은 흐름 속에서 오픈AI는 기업의 도입 장벽을 낮추기 위해 *‘코덱스 랩스’를 출범*했다. *오픈AI 전문가들이 직접 기업에 참여해 워크숍과 실습 세션을 제공*하고, *실제 업무에 코덱스를 적용하는 방법을 지원*한다.\n\n초기 테스트 단계를 넘어 *반복 가능한 배포 체계를 구축하도록 돕는 것이 목표*다. 이들은 '전방 배치 엔지니어(FDE)' 역할을 하게 된다.\n\n다만 기업들의 수요가 급증하면서 오픈AI 단독으로는 대응이 어려운 상황이다. 이에 따라 *액센츄어, 캡제미니, 코그니전트, 인포시스, PwC, 타타 컨설턴시 서비스, CGI 등 글로벌 기술 컨설팅 기업들과 협력*하고 있다. 이들은 기업 *내부 시스템 통합, 조직 변화 관리, 파일럿 프로젝트의 상용화 전환 등을 지원*한다.\n\n데니스 드레서 오픈AI 최고 매출책임자(CRO)는 “기업들이 AI를 실제 업무에 적용하고 확장하는 과정에서 겪는 간극을 줄이는 것이 중요하다”며 “이번 파트너십을 통해 전 세계 기업으로 확산 속도를 높일 수 있을 것”이라고 밝혔다.\n\n여기에 구글 클라우드 출신 콜린 카파세를 글로벌 파트너십 총괄 부사장으로 영입, 생태계 확장에 힘을 싣고 있다.\n\n이번 전략은 경쟁사 앤트로픽과의 기업 시장 경쟁이 치열해지는 가운데 나온 행보다. 앤트로픽은 코딩과 에이전트 중심 제품을 앞세워 기업 고객을 빠르게 늘리고 있으며, 오픈AI도 코덱스와 ‘프론티어(Frontier)’ 플랫폼을 통해 전사 업무 자동화를 겨냥하고 있다.\n\n오픈AI는 앞으로 코덱스를 모든 업무 라인에 적용 가능한 AI 도구로 발전시킨다는 계획이다.\n\n드레서 CRO는 “코덱스로 구축한 개인용 AI 에이전트가 회의 요약, 문서 작성, CRM 업데이트 등을 수행하고 있다”라고 소개하며, 코덱스가 단순 개발 도구를 넘어 기업 운영 전반을 재편하는 핵심 인프라로 자리 잡을 것이라고 강조했다. image.png"
+    },
+    {
+      "ts": "1776910165.014539",
+      "bucket": "project",
+      "reason": "project_keywords",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Project_Intake",
+      "text": "*<https://m.etnews.com/20260421000334|“로봇이 SI를 집어삼킨다”…스마트팩토리 주도권 교체>*\n&gt; *피지컬AI가 제어·연동*\n&gt; *시스템통합 비용 절반↓*\n&gt; *프로세스 단순화 이끌어*\n로봇 자동화 기업 뉴로메카는 휴머노이드 '에이르'를 활용해 스마트팩토리 구축에 드는 고객사의 시스템통합(SI) 비용을 줄여준다. 기존 자동화 라인에서는 로봇 도입 후 지그(보조기구) 설계, 공정 연동, 제어 최적화 등 SI 작업에 하드웨어(HW) 비용 못지않은 추가 비용이 발생했다. 로봇 에이르는 양팔로 사람과 유사한 동작을 수행하면서 별도 지그나 설비 변경 없이 기존 공정에 투입할 수 있어 고객사의 SI 비용 부담을 절반 수준으로 낮춘다는 게 회사 측 설명이다.\n\n*스마트팩토리 시장 주도권이 기존 SI에서 로봇으로 넘어가고 있다.* 인공지능(AI) 기술 발달과 함께 판단·제어 기능이 로봇 내부로 들어오면서 *공정별 SI 기업이 하던 일까지 로봇으로 흡수*되면서다. *고성능 AI 로봇이 SI 비용 부담을 줄이고 구조 단순화 등을 이루면서 스마트팩토리 시장의 새로운 열쇠*로 떠올랐다.\n\n21일 업계에 따르면 로봇 기업이 피지컬AI 기술을 활용해 단순 HW 공급을 넘어 공정 적용, 운영, 소프트웨어(SW)까지 아우르는 형태로 사업 영역을 넓히고 있다. 다양한 산업 현장에서 실증과 적용 작업이 진행 중이다.\n\n전통적 스마트팩토리는 장비·자동화, SI, 로봇, SW 기업이 각기 역할을 나눠 구축하고 업무를 수행하는 구조(장비-연동-로봇-데이터)다. 설비 구축 이후 제어 시스템을 연동하고, 공정에 맞춰 로봇을 적용한 뒤 상위 SW로 데이터를 관리하는 방식이다. 공정별 환경 차이가 커 맞춤형 설계와 연동이 중요하다. 이 때문에 전체 과정에서 SI 기업이 핵심 역할을 담당해왔다.\n\n최근 이같은 흐름에 변화가 생겼다. *피지컬AI 확산으로 로봇이 시스템 제어, 연동 등 SI 기업이 하던 일을 대체하기 시작*했다. *공정별 SI 개입 범위가 점차 줄어들고 있다*는 의미다.\n\n티로보틱스는 반도체·디스플레이 공장을 대상으로 자율이동로봇(AMR)에 로봇 팔(매니퓰레이터)을 결합한 통합 자동화 솔루션 공급을 추진 중이다. 물류 이동과 작업 공정을 별도로 구축하던 방식을 하나의 로봇 시스템으로 통합, 공정 연동 범위를 줄인다. 회사는 레인보우로보틱스, 일본 화낙 등과 협력해 국내 반도체·디스플레이 대기업 대상 개념검증(PoC)을 하고 있다.\n\n자이스웍스는 로봇용 소프트웨어(SW)로 SI 영역 일부를 대체하는 접근을 시도한다. 공정 영상을 업로드하면 작업자 동작을 분석해 로봇 제어 모델을 생성하고, 이를 디지털 트윈 환경에서 시뮬레이션해 적용하는 방식이다. 기존 12단계 엔지니어링과 4억원 이상이 필요했던 공정 자동화 비용을 1억~2억원 수준으로 낮출 수 있다. 자이스웍스는 원전 연료봉 교체 용접 공정을 위한 실증 작업을 하고 있다. .\n\n과거 스마트팩토리는 로봇 가격 대비 비싼 공정 연동 비용이 확산의 제약 요인으로 지목돼왔다. 로봇을 통해 장비-연동-로봇-데이터로 나뉜 기존 분업형 모델의 공정 설계와 운영 기능을 통합하면 비용 절감은 물론 프로세스 단순화가 가능해진다. 로봇을 얼마나 빠르게 현장에 적용하고 안정적으로 운영하느냐가 스마트팩토리의 성공 기준이 될 것이라는 게 업계 중론이다.\n\n로봇업계 관계자는 “스마트팩토리에서 기존 SI의 역할이 완전히 사라지지는 않겠지만 성격이 달라질 것”이라며 “로봇을 얼마나 잘 적용하고 유지하느냐를 중심으로 스마트팩토리 시장이 재편될 것”이라고 말했다. image.png"
+    },
+    {
+      "ts": "1776914005.943829",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "<https://www.donga.com/news/Economy/article/all/20260422/133789564/2|https://www.donga.com/news/Economy/article/all/20260422/133789564/2>"
+    },
+    {
+      "ts": "1776921218.513789",
+      "bucket": "project",
+      "reason": "project_keywords",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Project_Intake",
+      "text": "<https://yozm.wishket.com/magazine/detail/slack/3722/?h=TBL1JAWKF&utm_source=slack&utm_medium=bot&utm_campaign=TBL1JAWKF|한국에서 인기 있는 앱이 왜 영국에선 통하지 않을까?>\n현재 영국에 지내다 보니 국가에 따라 앱 서비스 사용하는 상황에 차이가 있다는 걸 알게 됐다. 그 예시로 스타벅스 사이렌 오더가 주문이 익숙한 한국과 달리, 영국은 매장에서 직접 주문하는 경우가 많다. 오히려 앱 주문을 어색해하고 앱 사용에 어려움을 겪는 것이다. 서비스 측에서도 앱 사용을 이끌기 위한 프로모션을 시행하는 것도 드물었다. 이처럼 같은 서비스여도 나라마다 앱 사용률의 차이를 체감하니, 타 국가에 서비스를 안착시키기 위해선 어떤 접근 방식을 따를지 고민하게 된다. 이번 글에서는 Customer Journey Shadowing 방법을 활용하여, 고객을 이해하고 보다 유의미한 가설을 세우는 접근 방식에 관해 이야기하고자 한다. 한국에서 인기 있는 앱이 왜 영국에선 통하지 않을까?"
+    },
+    {
+      "ts": "1776932021.864909",
+      "bucket": "project",
+      "reason": "project_keywords",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Project_Intake",
+      "text": "<https://yozm.wishket.com/magazine/detail/slack/3723/?h=TBL1JAWKF&utm_source=slack&utm_medium=bot&utm_campaign=TBL1JAWKF|왜 지금 다시 클로드 코드인가: 클코나잇 시즌 2>\n클로드 코드가 처음 등장했을 때를 기억하시나요? “이게 진짜 되네?” 하고 놀라워하던 순간이 있었죠. 이제는 개발자뿐만 아니라, PM, 기획자, 마케터까지 클로드 코드를 활용해 문제를 직접 해결하고 있습니다. 팀 단위로 도입하거나, 조직 전체의 워크플로우를 바꾼 사례도 하나둘 늘어나고 있고요. 그 흐름을 보며 자연스럽게 한 가지 질문이 떠올랐습니다. “현업에서 이 도구를 매일 써온 사람들은, 실제로 어떻게 활용하고 있을까?” 그래서 요즘IT는 ‘클로드 코드 나잇(일명 클코나잇)’을 기획했고, 시즌 1을 통해 그 이야기들을 직접 들어 볼 수 있었습니다. 그리고 2026년 클코나잇 시즌 2를 준비하며, 이번 여정을 함께 만들어갈 발표자분들을 찾고 있습니다. 왜 지금 다시 클로드 코드인가: 클코나잇 시즌 2"
+    },
+    {
+      "ts": "1776933586.538249",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "<https://www.dailysecu.com/news/articleView.html?idxno=206410>\n\nPE Agent 기사화 되었습니다! (<@UBKL1FZ28> <@U07M5E33KDW>)"
+    },
+    {
+      "ts": "1776989617.273439",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "<https://yozm.wishket.com/magazine/detail/slack/3724/?h=TBL1JAWKF&utm_source=slack&utm_medium=bot&utm_campaign=TBL1JAWKF|전 메타·구글 임원이 말하는, PM 절반이 어려워지는 이유>\n코딩 성능은 올랐는데 토큰 소모와 범용 품질 논란이 함께 온 Claude Opus 4.7, 너무 위험해서 공개하지 않겠다던 Mythos가 공개 첫날 뚫린 사건, 그리고 전 메타·구글 임원 Nikhyl Singhal이 말하는 PM 절반이 위기에 처한 이유까지. 이번 주 프로덕트 메이커가 주목할 세 가지를 정리했습니다. 전 메타·구글 임원이 말하는, PM 절반이 어려워지는 이유"
+    },
+    {
+      "ts": "1776990680.721709",
+      "bucket": "project",
+      "reason": "project_keywords",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Project_Intake",
+      "text": "*<https://www.investchosun.com/site/data/html_dir/2026/04/23/2026042380181.html|AI 상장 1호 마키나락스, '흥행여부'보다 '심사기조'가 더 관심?>*\n&gt; *파두 사태 이후 엄격해진 심사 기조…AI 등 신산업도 \"예외 없다\"*\n&gt; *기술특례 문턱 낮춘다지만…공시·지배구조 검증은 오히려 강화*\n&gt; *\"마키나락스가 가늠할 'AI IPO 기준선'…후속 딜까지 영향 불가피\"*\n마키나락스가 올해 인공지능(AI) 기업 기업공개(IPO) 시장의 '바로미터'로 평가받고 있다. 단순히 AI 기술기업의 첫 상장 도전이라는 의미를 넘어, 달라진 당국의 심사 기조가 처음 명확하게 적용되는 사례로 거론되기 때문이다. 관심의 초점도 흥행 여부보다 어떤 검증을 거쳐 상장에 이르느냐에 맞춰져 있다.\n\n마키나락스는 지난달 증권신고서를 제출하며 코스닥 상장 절차에 들어갔다. 총 263만5000주를 공모하며 희망 공모가는 1만2500원~1만5000원, 공모 규모는 약 329억~395억원이다. 일반청약은 다음달 11~12일로 예정돼 있다. 예정대로 일정이 진행 중인 가운데, 이번 딜은 단순한 'AI 상장 1호'가 아닌 기술기업 심사 기준의 시험대로 받아들여지는 분위기다.\n\n거래소와 금융당국은 이번 딜을 예년보다 더 촘촘하게 들여다보고 있는 것으로 전해진다. 마키나락스는 최근 몇 년간 매출 외형을 키우며 기술기업 심사에서 중요하게 보는 재무 실적 측면에서 일정 부분 성과를 냈다. 초기 1억원대에 불과하던 매출은 100억원대로 확대됐고, 지난해 수주 규모도 200억원 수준까지 늘었다.\n\n파두 사태 이후 기술특례 기업 전반에 대한 신뢰도가 흔들리면서, AI 등 기술기업에 대한 평가 기준 자체가 한층 보수적으로 바뀌었다는 게 업계의 시각이다. 실적의 절대 규모와 수익성, 향후 매출의 지속 가능성은 물론 프로젝트 기반 매출 구조에서 비롯되는 변동성까지 점검 대상에 올라 있다는 것이다. 업계에 따르면 마키나락스 역시 증권신고서 제출 이후 업황과 사업 구조 전반에 대해 추가 설명을 요구받은 것으로 알려졌다.\n\n여기에 더해 지배구조에 대한 점검도 강화되는 분위기다. 최근 한국거래소의 코스닥 상장 심사 과정에서는 최대주주와 경영진의 상장 이후 잔류 의지, 이른바 '오너 리텐션(retention)' 여부를 명확히 하도록 요구하는 사례가 늘고 있는 것으로 전해진다. 오너의 단기 엑시트 우려를 줄이고 상장 이후 경영 책임을 유지하도록 유도하기 위한 조치로 풀이된다.\n\n이 같은 흐름은 지난해 말 세미파이브 사례에서 이미 확인됐다. 세미파이브는 증권신고서 효력 발생 이후에도 향후 실적과 관련한 추가 보완 공시를 요구받았다. 통상 효력 발생은 심사가 사실상 마무리된 단계로 받아들여졌지만, 해당 사례를 계기로 마지막 단계까지도 검증이 이어질 수 있다는 인식이 확산됐다.\n\n최근 IPO 심사는 기술특례 여부와 무관하게 공시와 실적, 지배구조를 전방위적으로 점검하는 방향으로 강화되고 있다는 평가다. 과거처럼 산업 성장성과 기술력만으로는 설명이 충분하지 않다는 의미다. 특히 AI 기업은 성장 가정과 기술 확장성에 대한 의존도가 높은 만큼, 이를 얼마나 현실적인 숫자로 뒷받침할 수 있는지가 핵심 변수로 떠오르고 있다.\n\n업계에선 이번 딜을 통해 설정되는 검증 수준이 향후 AI 기업 IPO 전반의 기준선으로 작용할 가능성이 크다고 보고 있다. 조 단위 몸값이 거론되는 업스테이지 등 후속 딜 역시 같은 잣대 위에서 평가될 수밖에 없다는 의미다.\n\n이 지점에서 정책과 심사 간 괴리도 드러난다. 정부와 거래소는 AI를 포함한 첨단산업 육성을 위해 기술특례상장 제도 확대를 추진하고 있다. 인공지능·항공우주·반도체·자동차·방산 등을 포함한 'ABCD 육성 방안'을 통해 재무 요건이 다소 부족하더라도 기술력과 성장성이 있는 기업의 상장 문턱을 낮추는 방향의 제도 정비가 논의되고 있다.\n\n기술특례상장은 최소 재무요건만으로 상장예비심사 신청을 허용하는 제도로, 그동안 바이오 기업 중심으로 활용돼 왔다. 거래소는 이를 AI 등으로 확장해 산업 다변화를 유도하겠다는 입장이다.\n\n하지만 자본시장에서의 판단 기준은 별도로 작동하고 있다. 금융당국은 상장 예정 기업에 대한 재무 검증과 공시 책임을 강화하는 방향으로 움직이고 있다. 산업 정책은 ‘육성’을 전제로 하지만, 자본시장 규율은 ‘검증’을 우선하는 구조다.\n\n결과적으로 AI를 둘러싼 메시지는 이중적으로 전달되고 있다. 상장 문턱을 낮추겠다는 정책과 달리, 실제 심사 기준은 더 높아지고 있다는 인식이다. 이런 맥락에서 마키나락스 상장은 현 IPO 시장의 심사 기조를 가늠할 수 있는 사례로 받아들여진다. 기술이나 성장 서사가 아니라, 그것을 어떻게 설명하고 입증하느냐가 상장의 관건이 되는 흐름이다.\n\n한 대형사 ECM 관계자는 \"정부가 신산업 기업 육성을 강조하고 있지만, 상장 심사 기조는 오히려 더 강화됐다고 보는 분위기\"라며 \"마키나락스를 계기로 AI 기업 상장에 요구되는 기준이 한 단계 높아질 가능성이 크다\"고 말했다. image.png"
+    },
+    {
+      "ts": "1776990731.395759",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "<https://www.consumernews.co.kr/news/articleView.html?idxno=754647>"
+    },
+    {
+      "ts": "1776990984.076209",
+      "bucket": "project",
+      "reason": "project_keywords",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Project_Intake",
+      "text": "*<https://news.mtn.co.kr/news-detail/2026042309433679632|마키나락스-현대차, 글로벌 생산 거점 1400여 로봇에 특화 AI 솔루션 적용 (26.04.23)>*\n\n마키나락스는 현대자동차 *아산공장을 시작*으로 *국내외 주요 생산 거점*에 *산업용 로봇 특화 예지보전 솔루션(PHM)을 확대 중*이라고 23일 밝혔다.\n\n양사는 로봇 동작 데이터를 기반으로 딥러닝 알고리즘을 적용해 *고장을 5일 전, 90% 이상의 정확도로 예측하는 예지 보전 시스템을 구축*하며 다운타임을 획기적으로 줄였다.\n\n마키나락스가 현대자동차와 함께 만든 로봇 특화 예지보전 솔루션은 *△구동부 상태 진단 △셋업 이상 탐지 △상태 변동점 알림을 수행*하며, 진단 가능 항목을 지속 확대해 생산라인의 예기치 못한 다운타임을 최소화한다.\n\n해당 솔루션은 아산 공장을 기점으로 *울산, 인도, 전주 등 국내외 주요 생산 거점에 빠르게 확장*되고 있다.\n\n최근에는 *울산EV공장, 화성기아EV공장 등 전기차 생산 라인에도 확대 적용 중*이며, *올해 안에 총 1400여대의 로봇에 적용될 예정*이다. 양사는 RPMS 솔루션의 향후 적용 거점을 지속적으로 확대하고, 안정적인 운영과 고도화를 위해 인력·조직 체계도 함께 강화해 나갈 방침이다.\n\n마키나락스는 지난 2018년 현대자동차그룹의 오픈 이노베이션 플랫폼 제로원(ZER01NE)에서 투자한 스타트업으로 선정되며 현대자동차와 인연을 맺었다. 현대자동차는 당시 마키나락스의 기술력을 높이 평가해 지분 투자를 단행하며 전략적 투자자(SI)로서 긴밀한 협력을 이어왔다.\n\n현대자동차 관계자는 \"현대자동차는 SDF로의 전환을 가속하며 완성차 시장에서의 압도적인 경쟁력을 확보해나가고 있다\"며 \"마키나락스와 오랜 기간 검증한 AI 기반 예지보전 기술을 글로벌 생산 거점에 표준화 함으로써 제조 공정의 유연성과 무결점 품질을 확보해 초생산성을 실현해 나갈 것\"이라고 전했다.\n\n윤성호 마키나락스 대표는 \"현대자동차는 창업 초기 우리의 성장을 이끌어준 중요한 전략적 투자자였고, 이제는 제조 현장에서 지능화를 함께 실현하고 있는 핵심 고객\"이라며 \"제조 현장의 복잡성을 극복해 현대자동차가 그리는 SDF를 함께 실현할 수 있는 신뢰받는 파트너로서 협력을 지속적으로 강화해 나갈 것\"이라고 말했다. image.png"
+    },
+    {
+      "ts": "1776991613.529809",
+      "bucket": "project",
+      "reason": "project_keywords",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Project_Intake",
+      "text": "*<https://www.fajournal.com/news/articleView.html?idxno=20881|[AMWS 2026 프리뷰] 인이지, 제조 피지컬AI 기반 ‘공정 자율제어’ 기술 공개>*\n&gt; *[참관포인트] 누적 자율운전 6만 시간·처리량 1,000만톤 돌파 성과*\n&gt; ‘2026 자율제조AI 월드쇼 : AMWS 2026’가 오는 4월 27일(월) 서울 코엑스(COEX) 1층 그랜드볼룸에서 개최된다. AMWS 2026는 △인공지능 △지능형 센서 △디지털트윈 △스마트 머신비전 △지능형 로봇 △스마트팩토리 제조 솔루션 등 미래 자율제조 공장을 구축을 위한 다양한 인사이트를 공유한다.\n(선략)\n\nAMWS 2026에서는 피지컬AI(PhysicalAI) 기반 제조 파운데이션 모델(Manufacturing Foundation Model, MFM)과 LLM 기반 의사결정 지원 기술을 새롭게 공개하며 단순 분석을 넘어 ‘공정 자율제어’를 구현하는 제조AI 기술을 선보인다는 계획이다.\n\n*“예측 넘어 제어”… 제조AI 패러다임 전환 이끄는 MFM 구조*\n\n인이지 기술의 핵심은 데이터를 분석하는 수준을 넘어, AI가 실제 공정 설비를 직접 제어하는 ‘피지컬AI’에 있다.\n\n기존 제조AI가 센서 데이터를 기반으로 이상을 예측하거나 운영자에게 판단을 보조하는 역할에 머물렀다면, 인이지는 AI가 공정 변수와 제어값을 실시간으로 조정하며 공정을 ‘운전’하는 단계까지 확장했다.\n\n시계열 예측, 설명가능 AI, 자동제어 기술을 하나의 통합 구조로 구성한 제조 파운데이션 모델(MFM)을 기반으로 구현된다.\n\n이 구조에서 AI는 공정 데이터를 단순히 해석하는 데 그치지 않고, 과거 패턴과 현재 상태를 동시에 비교·분석해 최적의 제어값을 도출하고 이를 실제 설비에 적용한다. 특히 설명가능 AI(XAI)는 이러한 제어 과정에서 중요한 역할을 한다.\n\nAI가 특정 제어값을 선택한 이유와 영향을 미치는 변수들을 정량적으로 제시함으로써, 현장 운영자가 AI의 판단을 과학적으로 검증해 결과를 이해하고 신뢰할 수 있는 기반을 제공한다.\n\n이처럼 예측-설명-제어가 하나의 흐름으로 연결되는 구조는 기존 제조 AI와의 가장 큰 차별점으로, 인이지는 이를 통해 ‘공정 자율운전’이라는 새로운 운영 패러다임을 제시하고 있다.\n\n*실증 기반 자율운전 성과… 현장 적용성 입증*\n\n인이지의 기술 경쟁력은 실제 산업 현장에서의 적용 성과를 통해 입증되고 있다. 2026년 기준 인이지는 시멘트 소성로, 정유 반응기, 철강 가열로 등 주요 연속 공정에서 약 1,167만톤의 누적 처리량과 6만 시간 이상의 AI 자율운전 가동 실적을 확보했다.\n\n이 과정에서 △철강 가열로 연료 절감 △시멘트 소성 공정 자동제어율 향상 △정유 공정 품질 예측 정확도 개선 등 다양한 성과를 기록하며, 공정 운영 효율과 에너지 비용 측면에서 실질적인 개선 효과를 확인했다.\n\n특히 기존 공정이 숙련 작업자의 경험과 직관에 의존해 운영되던 것과 달리, 인이지는 공정 원리를 반영한 피지컬 AI 모델을 통해 데이터 기반 자동운전 체계를 구현했다.\n\n인이지 관계자는 “실제 중대형 산업 현장 적용 과정에서 장기간 블라인드 테스트를 거치며 AI의 안정성과 신뢰성을 검증해왔다”며, “이러한 검증 프로세스가 현장 도입을 가능하게 한 핵심 요소로 작용했다”고 설명했다.\n\n실증 기반 접근으로 제조AI 기술이 단순한 분석 도구를 넘어 실제 운영 시스템으로 자리 잡게하는 데 중요한 전환점을 리드하고 있다.\n\n*LLM 기반 의사결정 확장… ‘인간-AI 협업’ 시너지 극대화*\n\n이번 AMWS 2026에서는 LLM 기반 시계열 유사사례 검색 서비스(Time-Series LLM Agent)도 함께 공개된다. 설명가능 AI(XAI)와 검색증강생성(RAG)을 결합해 공정 이상 발생 시 과거 유사 사례를 자동으로 탐색하고, 대응 방안을 자연어 형태로 제시하는 것이 특징이다.\n\n특히 기존 제조 환경에서 문제 대응이 작업자의 경험에 의존하거나 단순 데이터 조회에 머물렀던 것과 달리, 이 시스템은 시계열 데이터를 기반으로 의미 단위의 유사 패턴을 분석해 보다 정밀한 판단을 지원한다.\n\n인이지 관계자는 “LLM은 ‘제어를 대체하는 기술’이 아닌 현업 전문가의 판단을 돕는 ‘보조 지능’이자 파트너”라며, “실제 제조 환경에서는 안정성과 설명 가능성을 확보하는 것이 핵심”이라고 강조했다.\n\n*MFM 아키텍처 공개… 자율제조 ‘최종 단계’ 제시*\n\n인이지는 AMWS 2026에서 *자사의 제조 파운데이션 모델(MFM) 아키텍처*와 함께, *엣지(Edge) 디바이스에서 구현되는 자율제어 기술의 실제 구현 방식을 공개할 예정*이다. 단순한 솔루션 소개를 넘어 제조AI가 데이터 분석 단계 이상의 실제 설비 운영까지 확장되는 흐름을 보여주는 자리가 될 것으로 기대된다.\n\n인이지 관계자는 “인이지는 실제 공정 설비를 안전하고 정밀하게 움직이는 제조 피지컬AI 기술력을 통해 자율제조의 최종 단계(Last Mile)를 완성하고 있다”며, “*2026년 IPO를 발판 삼아* 제조 공정 단위 최적화를 넘어 전 밸류체인을 책임지는 ‘AI 자율제조 운영 체계’로 사업 영역을 확장하고 글로벌 기술 표준을 선점할 계획”이라고 밝혔다. image.png"
+    },
+    {
+      "ts": "1776991797.716589",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "<https://biz.chosun.com/it-science/ict/2026/04/23/N7ZW4XSHRFFHLE7IEYQOQNJPXE/>"
+    },
+    {
+      "ts": "1776991879.575849",
+      "bucket": "project",
+      "reason": "project_keywords",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Project_Intake",
+      "text": "*<https://www.chosun.com/economy/tech_it/2026/04/23/MNSDMMZVGU2WIYZZHE4DKM3FGM/|보안 취약점 잡는다던 미토스…유출·무단접근에 신뢰 흔들>*\n&gt; *WSJ \"앤트로픽 쌓아온 명성에 타격\"*\n강력한 보안 취약점 탐지 능력을 자랑하는 앤트로픽의 인공지능(AI) 모델 ‘클로드 미토스 프리뷰(이하 미토스)’가 공개 직후 무단 접근과 정보 유출 논란에 휘말리며, 정작 자체 보안 관리에서는 허점을 드러냈다는 지적이 나온다.\n\n23일 업계에 따르면 앤트로픽은 최근 무단 접근과 유출 사고로 곤혹을 치르고 있다. 지난 21일(현지 시각)에는 미토스에 대한 권한 없는 접근이 이뤄진 사실이 확인되면서 회사가 조사에 나섰다. 접근을 시도한 이들은 협력사 직원 계정과 공개 정보 탐색 도구 등을 활용한 것으로 알려졌다. 블룸버그 등에 따르면, 무단 접근은 앤트로픽이 미토스를 공개한 지난 7일 발생했다.\n\n미토스는 운영체제(OS)와 웹브라우저의 보안 취약점을 탐지하는 데 특화된 모델이다. 기업이 활용할 경우 취약점을 사전에 점검할 수 있다는 점에서 주목받았지만, 동시에 범죄 세력에 의해 공격에 악용될 수 있다는 우려도 제기돼 왔다. 이에 앤트로픽은 일반 공개 대신 ‘프로젝트 글라스윙’이라는 폐쇄형 프로그램을 통해 애플, 마이크로소프트 등 기업과 미국 국가안보국(NSA) 등 일부 기관에만 제한적으로 제공해왔다.\n\n그러나 잇따른 보안 사고로 앤트로픽의 보안 관리에 대한 신뢰가 흔들리고 있다는 평가가 나온다. 지난달 31일에는 앤트로픽의 클로드 AI 개발 도구 ‘클로드 코드’의 소스(설계도)가 직원 실수로 유출되는 사고가 발생했다. 클로드 코드는 클로드를 서비스에 적용할 때 사용하는 개발 도구다.\n\n사고는 당시 개발자들이 이용하는 소프트웨어 패키지 저장소인 NPM에 클로드 코드를 배포하는 과정에서 발생했다. 이때 암호화된 코드를 원래 형태로 복원할 수 있는 ‘맵(map)’ 파일이 함께 포함되면서, 내부 코드 구조가 외부에 노출됐다.\n\n노출된 코드 규모는 51만2000줄 이상, 파일 수는 1900여 개에 달한다. 해당 코드는 깃허브 등 코드 공유 플랫폼을 통해 확산돼, 업계에서는 핵심 기술이 외부에 사실상 공개됐다는 말까지 나왔다. 앤트로픽은 당시 성명을 통해 “이는 보안 침해 사고가 아니라 배포 과정에서 발생한 직원의 실수(human error)”라고 밝혔다.\n\n이 외에도 지난달 25일에는 콘텐츠 관리 시스템 설정 오류로 아직 공개되지 않은 미토스 관련 제원 일부가 외부에 노출되기도 했다.\n\n이 같은 연쇄 논란은 앤트로픽의 상장에도 영향을 미칠 수 있다는 전망이 나온다. 앤트로픽은 오는 10월 기업공개(IPO)를 추진 중인 것으로 알려졌다. 블룸버그에 따르면 앤트로픽은 최근 약 8000억달러(약 1200조원) 규모의 기업가치로 평가되는 투자 제안을 받은 것으로 전해졌다.\n\n월스트리트저널(WSJ)은 “클로드 코드 소스 유출은 앤트로픽에 큰 타격”이라며 “안전성 측면에서 쌓아온 명성에 치명적인 것은 물론, 기업 고객 유치 경쟁에서 중요한 영업 비밀까지 노출될 위험이 있다”고 했다."
+    },
+    {
+      "ts": "1776991974.422929",
+      "bucket": "project",
+      "reason": "project_keywords",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Project_Intake",
+      "text": "*<https://www.chosun.com/economy/tech_it/2026/04/22/DYEZKSFFM5D5ZOPFZ7EXRQ4YUU/|\"엔비디아 잡는다\" 구글 8세대 TPU 공개...추론 중요성 커지며 학습·추론용 따로 출시>*\n\n구글이 새로운 자체 인공지능(AI) 칩 ‘8세대 텐서처리장치(TPU)’를 공개했다. 이번에는 AI 학습 전용과 추론 전용으로 분리해 처음으로 TPU 2개를 한꺼번에 내놨다. AI 에이전트(비서) 시대 본격화로 여러 단계로 작업을 나눠 복잡한 업무를 수행하는 ‘추론’ 작업이 중요해지자, 효율 극대화를 위한 맞춤형 칩 전략이다. 작년 11월 출시한 7세대 TPU로 AI 모델인 ‘제미나이3′ 성능을 크게 개선한 뒤 자신감을 얻은 구글이 5개월 만에 새로운 버전을 내놓으며 글로벌 AI 칩 시장을 장악한 엔비디아 독주를 끝내겠다는 의지다. 구글은 또 마이크로소프트(MS)나 아마존과 달리 자체 AI 모델(제미나이)을 가진 유일한 하이퍼스케일러(초대형 클라우드 인프라 회사)로서 자체 칩부터 모델·서비스·보안까지 ‘AI 풀스택(모든 역량을 갖춤)’을 통해 기업들의 AI 에이전트 환경을 구축해 가겠다고 밝혔다.\n\n*◇AI 에이전트 시대, 추론 칩 중요*\n\n22일(현지 시각) 구글 클라우드는 미국 라스베이거스에서 열리는 연례 콘퍼런스 ‘넥스트 2026′ 사전 행사에서 8세대 TPU인 AI 학습용 8t와 추론용 8i를 공개했다. AI 학습은 모델이 데이터에서 패턴을 배우는 과정이고, 추론은 배운 내용을 바탕으로 시험 문제를 푸는 과정이다. 구글이 이번 TPU를 학습용과 추론용 두 종류로 출시한 이유는 AI 반도체를 활용하는 목적에 따라 칩의 요구 사항이 완전히 달라졌기 때문이다. AI 에이전트 시대가 본격화되며 AI 기능을 고도화하는 ‘학습’ 보다 실제 업무에 AI를 투입해 복잡한 업무를 단계적으로 해결하도록 하는 ‘추론’ 업무의 중요성이 커진 것이다. 학습을 잘하려면 연산 처리량 자체를 높이는 것이 중요하지만, 추론을 잘하려면 지연이 적고 동시에 많은 일을 처리하는 것이 필요하다. 최근 반도체 업체들은 이러한 차이점에 주목하며 각각의 작업에 효율성을 극대화한 칩을 설계 중인데, 구글이 한발 앞서 TPU를 두 종류로 내며 치고 나가고 있다.\n\n*◇8세대 자체 AI 칩 TPU 공개*\n\n구글이 내놓은 AI 학습용 8t는 수조 개의 숫자를 빛과 같은 속도로 계산하고 주고받을 수 있도록 설계된 칩이다. 구글 클라우드는 전 세대 대비 연산 성능이 3배 증가했다고 밝혔다. AI 추론용 8i는 지연 시간이 낮아 AI 에이전트가 여러 작업을 한꺼번에 처리하는 데 특화돼 있다. 속도가 AI 에이전트의 지능 수준을 가른다. 구글클라우드는 “전 세대보다 성능이 80% 향상됐고, 특히 ‘온칩 집단 연산’ 지연은 최대 5배 감소했다”고 했다. 하나의 칩은 수만 명 직원이 일하는 거대 공장과 같은데, 특정 작업을 위해서는 직원들이 한곳에 모여 회의하거나, 결과물을 합치고, 역할에 맞는 데이터를 나눠 가지는 과정을 거친다. 온칩 집단 연산은 이 과정을 칩 내부 초고속 전용 통로를 통해 즉각적으로 처리하는 기술이다. 덕분에 AI 에이전트가 더 복잡한 문제를 더 적은 에너지를 쓰면서 더 빠른 속도로 해결할 수 있게 된다.\n\n구글은 2015년 자체 AI 칩인 1세대 TPU(v1)를 공개한 뒤 2~3년에 한 번꼴로 새 TPU를 내놨다. 2022년 말 오픈 AI의 챗GPT가 공개된 후에는 매년 신제품을 냈다. 구글 클라우드는 이번에 공개한 8세대 TPU를 연내 정식 출시할 계획이다. 현재 AI 인프라 투자 경쟁이 불붙으며 시장 1위 엔비디아의 그래픽 처리 장치(GPU) 공급이 부족한 상황인데, 구글은 기술 개발의 속도를 끌어올려 공급 부족의 ‘구멍’을 메우고, 엔비디아 제국에 균열을 내겠다는 목표다.\n\n구글은 이와 함께 TPU·GPU·중앙처리장치(CPU)를 함께 묶은 통합 인프라로 AI 에이전트 시대를 주도하겠다는 구상이다. 구글은 “AI 에이전트 시대를 위한 칩 두 개와 시스템 하나”라며 “기업이 단순 챗봇을 넘어, 스스로 인지·추론·행동하는 자율형 AI 에이전트를 업무 전반에 배치하는 단계로 나아가고 있다”고 했다.\n\n구글 클라우드는 또 넥스트 2026에서 AI 에이전트를 구축·관리·보안 통제까지 한 번에 하는 ‘제미나이 엔터프라이즈 에이전트 플랫폼’, 다른 플랫폼과 결합해 사이버 방어 능력을 높인 플랫폼 등 다양한 제품을 소개했다.\n\n*◇자체 AI 칩 시장 경쟁은 본격화*\n\nAI 칩 시장 경쟁은 한층 더 치열해질 것으로 예상된다. 빅테크들은 고성능 엔비디아 AI 가속기와 함께 자사가 제작한 AI 칩을 동시에 써 각각의 작업에서 최고의 효율을 얻는 ‘칩 다양화’ 전략을 설파하고 있다.\n\n올해 초 마이크로소프트(MS)는 ‘마이아 200’이란 자체 AI 칩을 내놨는데, 이 칩의 세일즈 포인트를 엔비디아 칩과 함께 쓰는 칩으로 잡았다. 제시카 호크 애저 마케팅 담당 부사장은 “고객들이 원하는 AI 업무나 가격, 성능이 모두 다르다”며 “엔비디아·AMD의 AI 칩과 함께 자체 칩을 활용해 고객에게 최적의 가격 대비 성능을 제공하려는 전략”이라고 했다. 메타도 MTIA 300 등 자체 AI 칩 4종을 동시에 공개했고, 엔비디아는 최근 인수한 ‘그록’의 언어처리장치(LPU)를 GPU와 함께 추론 작업에 활용하기로 했다. 테크 업계 관계자는 “앞으로 AI 작업에 맞춘 다양한 특화 칩을 선택해 극한의 효율을 추구하는 경향이 두드러질 것”이라고 했다. image.png"
+    },
+    {
+      "ts": "1776992196.145489",
+      "bucket": "project",
+      "reason": "project_keywords",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Project_Intake",
+      "text": "*<https://www.aitimes.com/news/articleView.html?idxno=209640|구글, 기업용 에이전트 플랫폼 론칭...\"구축부터 최적화까지 지원\">*\n\n구글이 기업들의 업무 자동화를 지원하는 통합 AI 에이전트 플랫폼을 공개했다. 최근 심화하는 기업용 AI 에이전트 시장 경쟁에 본격적으로 나선 것이다.\n\n구글은 22일(현지시간) ‘구글 클라우드 넥스트(Google Cloud Next)’ 행사에서 *대규모 AI 에이전트를 구축·운영할 수 있는 통합 플랫폼 ‘제미나이 엔터프라이즈 에이전트 플랫폼(Gemini Enterprise Agent Platform)’을 공개*했다.\n\n이번 플랫폼은 기존 아마존웹서비스(AWS)의 '베드록 에이전트코어'나 마이크로소프트의 '파운드리'와 정면으로 경쟁하는 전략 제품이다. 다만, 기존 '버텍스 AI'의 이름을 바꾼 것으로, 일부 기능 추가를 제외하면 기본적인 인터페이스는 동일하다.\n\n하지만, 단순히 AI 모델을 제공하는 수준을 넘어, *기업이 AI 에이전트를 설계·배포·통제·최적화까지 전 주기에 걸쳐 관리할 수 있는 ‘운영 체계(OS)’를 지향한다는 점을 강조*했다.\n\n내부 사용자층에 따라 접근 방식도 이원화했다. IT나 개발 조직은 에이전트 플랫폼을 통해 복잡한 에이전트를 설계하고 오케스트레이션 할 수 있으며, 일반 업무 부서는 ‘제미나이 엔터프라이즈 앱(Gemini Enterprise Application)’을 활용해 기존 에이전트를 사용하거나 간단한 자동화 에이전트를 직접 생성할 수 있다.\n\n이를 통해 회의 일정 관리, 반복 업무 자동화, 문서 작성 등 일상 업무 흐름 전반에 AI를 자연스럽게 통합한다는 전략이다.\n\n기술적으로는 ‘모델 중립성’과 ‘멀티모달 통합’을 특징으로 꼽았다. 구글의 '제미나이' 시리즈뿐 아니라 이미지 모델 ‘나노 바나나 2’와 오디오 모델 ‘리리아 3’는 물론, 앤트로픽의 '클로드'까지 지원한다. 이를 통해 기업은 다양한 모델을 선택하고 조합해 에이전트를 구축할 수 있다.\n\n플랫폼은 ‘구축(Build)·확장(Scale)·관리(Govern)·최적화(Optimize)’ 네가지 축으로 구성된다.\n\n구축 단계에서는 그래프 기반 구조의 ADK(Agent Developer Kit)와 자연어 기반 로우코드 도구 ‘에이전트 스튜디오(Agent Studio)’를 통해 개발자와 비개발자 모두 에이전트를 쉽게 만들 수 있다. 에이전트 레지스트리(Agent Registry)는 조직 내 모든 에이전트와 도구를 중앙에서 관리하는 허브 역할을 한다.\n\n확장 단계에서는 대규모 운영을 위한 기능이 강화됐다. 에이전트 간 작업을 위임하는 ‘에이전트-투-에이전트 오케스트레이션’, 수초 내 실행이 가능한 고속 런타임, 장시간 자율적으로 작동하는 ‘롱러닝 에이전트’ 등이 핵심이다. 특히 보안 샌드박스 환경에서 코드 실행과 브라우저 자동화까지 가능하다.\n\n*핵심은 관리 단계*다. 각 에이전트에 고유 암호화 ID를 부여하는 ‘에이전트 아이덴티티(Agent Identity)’, 상호작용을 통제하는 ‘에이전트 게이트웨이(Agent Gateway)’, 이상 행동을 감지하는 ‘에이전트 이상 감지(Agent Anomaly Detection)’ 등을 통해 *기업 수준의 보안과 컴플라이언스를 확보*한다. 이는 AI 에이전트를 단순 도구가 아닌 핵심 시스템으로 다루겠다는 접근이다.\n\n최적화 단계에서는 실행 경로 추적과 성능 분석을 통해 지속적인 개선이 가능하다. 시뮬레이션 기반 테스트와 실시간 평가 기능을 통해 정확도와 비용 효율성을 동시에 관리할 수 있다.\n\n제미나이 엔터프라이즈 앱도 강화됐다. 직원들은 ‘에이전트 디자이너(Agent Designer)’를 통해 노코드 방식으로 에이전트를 만들고, ‘인박스(Inbox)’에서 실행 상태를 관리하며, ‘프로젝트(Projects)’를 통해 특정 데이터에 특화된 에이전트를 운영할 수 있다. 또 ‘캔버스(Canvas)’를 통해 문서와 프레젠테이션을 생성·편집하고, 마이크로소프트 365 형식으로 내보내는 기능도 제공된다.\n\n이처럼 이번 발표는 에이전트 제작을 넘어, 이를 *실제로 배포하고 운영하는 데 필요한 거버넌스에 초점을 맞춘 것이 특징*이다. 또 모델 성능 대신, *보안을 강조*했다.\n\n토마스 쿠리안 구글 클라우드 CEO는 \"파편화된 시스템들을 조합하는 대신, 모든 구성 요소가 공동 개발된 수직적으로 최적화된 스택을 제공한다\"라며 \"이러한 모든 혁신은 고객의 채택을 촉진, 구글 클라우드 고객의 75%가 비즈니스 운영을 위해 AI 제품을 사용하고 있다\"라고 강조했다.\n\n보쉬, 캡콤, 시티, NASA, 유니레버, 보다폰 등은 생산성 향상과 고객 서비스 혁신, 연구개발 가속화에 AI 에이전트를 활용 중이며, 일부 기업은 수백에서 수천개의 에이전트를 동시에 운영하고 있다고 소개했다.\n\n한편, 구글은 이날 1년간 7억5000만달러*(약 1조1000억원) 규모의 펀드를 조성*했다고 발표했다. *맥킨지앤드컴퍼니와 액센츄어, 딜로이트 등 컨설팅 기업들과 협력해 기업의 AI 도입을 지원한다는 내용*이다. 이 자금은 *엔지니어 교육, 에이전트 개발, 프로젝트 공동 투자 등에 활용*되며, *실제 비즈니스 성과 기반의 프로젝트 모델도 도입*된다.\n\n이 같은 움직임은 AI 도입의 현실적인 과제를 반영한다. 액센추어는 “AI는 실험은 쉽지만, 대규모 적용은 어렵다”고 지적하며, 파일럿을 넘어 반복 가능한 에이전트 기반 운영으로 전환하는 것이 핵심이라고 강조했다. image.png"
+    },
+    {
+      "ts": "1776992278.215009",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "<https://www.fnnews.com/news/202604231020238004>"
+    },
+    {
+      "ts": "1776992339.874229",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "<https://www.edaily.co.kr/News/Read?newsId=04975766645419072>"
+    },
+    {
+      "ts": "1776992370.364609",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "<https://www.yna.co.kr/view/AKR20260423087000009>"
+    },
+    {
+      "ts": "1776992482.690579",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "<https://www.yna.co.kr/view/AKR20260423046400091>"
+    },
+    {
+      "ts": "1776992928.710899",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "<https://www.edaily.co.kr/News/Read?newsId=02076246645419072>"
+    },
+    {
+      "ts": "1776993016.979979",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "<https://biz.chosun.com/science-chosun/science/2026/04/23/3UCCVIQU7NBXJIYUN5WDITQ3BE/>"
+    },
+    {
+      "ts": "1776995309.719819",
+      "bucket": "project",
+      "reason": "project_keywords",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Project_Intake",
+      "text": "<https://yozm.wishket.com/magazine/detail/slack/3726/?h=TBL1JAWKF&utm_source=slack&utm_medium=bot&utm_campaign=TBL1JAWKF|[릴리즈 노트] ‘더 적은 토큰으로 더 나은 결과를’ 내는 GPT 5.5 공개>\n지금까지 내놓은 모델 가운데 가장 똑똑하고 직관적으로 쓸 수 있는 GPT-5.5를 공개합니다. 이번 공개는 컴퓨터로 일하는 새로운 방식을 향한 다음 걸음이기도 합니다. GPT-5.5는 사용자가 무엇을 하려는지 더 빠르게 파악하고, 더 많은 일을 스스로 처리할 수 있습니다. 코드 작성과 디버깅, 온라인 조사, 데이터 분석, 문서와 스프레드시트 작성, 소프트웨어 조작은 물론, 작업이 끝날 때까지 여러 도구를 오가며 일하는 데에도 뛰어납니다. 또한, 같은 코덱스(Codex) 작업을 끝내는 데 쓰는 토큰의 양이 눈에 띄게 줄었기 때문에, 성능뿐 아니라 효율성 측면에서도 한 단계 올라섰습니다. [릴리즈 노트] ‘더 적은 토큰으로 더 나은 결과를’ 내는 GPT 5.5 공개"
+    },
+    {
+      "ts": "1777007616.968569",
+      "bucket": "project",
+      "reason": "project_keywords",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Project_Intake",
+      "text": "<https://yozm.wishket.com/magazine/detail/slack/3725/?h=TBL1JAWKF&utm_source=slack&utm_medium=bot&utm_campaign=TBL1JAWKF|소버린 AI와 자체 생태계를 가진 IT 강대국, 러시아를 가다>\n모스크바의 4월은 계절의 경계가 무색할 만큼 가혹합니다. 저는 작년 이맘때쯤 모든 것이 막혀 있는 이곳 러시아에 주재원으로 처음 넘어왔습니다. 러시아에서는 인터넷이 잘 안되거나, 메신저가 막히는 경우가 참 많습니다. 그뿐만 아니라 우리가 당연하게 여기는 구글의 검색창, 유튜브의 알고리즘, 인스타그램의 피드는 이곳에서 접근할 수 없습니다. 하지만 그 빈자리에 들어선 것은 기술의 퇴보가 아닙니다. 오히려 외부의 간섭 없이 스스로 진화하기 시작한 기묘하고도 강력한 자생적 생태계가 자라나고 있었습니다. 그런 나라에서 개발자로 하루하루를 살아가며 경험한 다양한 것들을 공유하고자 펜을 들었습니다. 소버린 AI와 자체 생태계를 가진 IT 강대국, 러시아를 가다"
+    },
+    {
+      "ts": "1777008552.724319",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "<https://m.etnews.com/20260422000218|https://m.etnews.com/20260422000218>"
+    },
+    {
+      "ts": "1777248808.547609",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "<https://yozm.wishket.com/magazine/detail/slack/3727/?h=TBL1JAWKF&utm_source=slack&utm_medium=bot&utm_campaign=TBL1JAWKF|10년 차 디자이너의 바이브 코딩 실험기>\n제품을 만들다 보면, 완성된 화면을 흐름으로 보고 싶다는 니즈는 생각보다 흔하다. 피그마에서 협업을 좀 해본 팀이라면 다들 한 번쯤은 느낀다. 화면은 잘 만들어졌는데, 그래서 이게 전체적으로 어떻게 이어지는데? 라는 질문이 꼭 나온다. 그래서 플로우차트가 필요해진다. 이건 새로운 욕망도 아니다. 이미 피그마 플러그인도 많고, 피그잼도 있다. 문제는 늘 그렇듯 된다와 쓸 만하다는 다르다는 데 있다. 그렇게 직접 만들기 시작한 게 피그마플로우였고, 지금은 약 2달 반 정도 작업한 끝에 베타 런칭을 준비하고 있다. 이번 글은 그 과정에 대해 소개하고자 한다. 10년 차 디자이너의 바이브 코딩 실험기"
+    },
+    {
+      "ts": "1777259833.579739",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "<https://www.aitimes.com/news/articleView.html?idxno=209751|https://www.aitimes.com/news/articleView.html?idxno=209751>"
+    },
+    {
+      "ts": "1777260574.392439",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "<https://www.sedaily.com/article/20037255|https://www.sedaily.com/article/20037255>"
+    },
+    {
+      "ts": "1777265798.598429",
+      "bucket": "project",
+      "reason": "project_keywords",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Project_Intake",
+      "text": "*<https://v.daum.net/v/20260427102101099|AI가 반도체 설계 돕는다…하이닉스의 조용한 실험>*\n\n대형언어모델 확산으로 메모리 반도체 성능과 개발 난도가 높아지는 가운데, SK하이닉스가 AI를 활용해 반도체 개발 방식 자체를 바꾸는 연구를 진행하고 있습니다.\n\n오늘(27일) 반도체 업계에 따르면 SK하이닉스는 *반도체를 실제로 만들어보기 전에 AI가 결과를 먼저 예측하도록 하는 기술을 연구*하고 있습니다. 기존에는 새로운 반도체를 개발할 때 물리 계산을 기반으로 시뮬레이션을 돌리고, 문제가 생기면 설계를 수정하는 과정을 반복해야 했습니다. 하지만 반도체 구조가 복잡해질수록 계산량은 늘고, 개발 과정에서 반복해야 하는 시행착오도 많아집니다. 특히 AI 서버에 들어가는 메모리는 성능과 전력 효율, 집적도를 동시에 끌어올려야 해 개발 단계에서 검토해야 할 변수도 늘고 있습니다.\n\nSK하이닉스가 *'TCAD 3.0'으로 정의한 방식은 기존 물리 계산 중심 시뮬레이션에 AI 예측을 더해 개발 과정을 바꾸려는 시도*입니다. TCAD는 *반도체 소자와 공정을 실제 제작 전에 가상으로 검증하는 기술*입니다. 여기에 AI 대리모델을 적용하면 복잡한 물리 계산을 모두 반복하지 않고도 결과를 빠르게 예측할 수 있습니다.\n\nSK하이닉스가 강조한 것은 AI가 기존 물리 시뮬레이션을 완전히 대체하는 방식이 아니라, *계산 부담이 큰 영역을 보완해 개발 효율을 높이는 방식*입니다. 쉽게 말해, 반도체를 여러 번 만들어보며 답을 찾는 대신 AI가 먼저 가능성을 걸러주는 구조입니다.\n\n반도체는 설계와 공정에서 얼마나 빠르게 실패를 줄이느냐가 핵심 경쟁력으로 꼽힙니다. AI를 활용하면 설계·공정·검증 과정에서 반복되는 시행착오를 줄일 수 있다는 게 SK하이닉스의 설명입니다. 엔비디아도 유사한 AI 물리모델을 적용했을 때 기존보다 최대 360배 속도 개선 효과를 확인했다고 밝힌 바 있습니다.\n\n다만 아직은 연구 단계입니다. 실제 양산 공정에 어느 수준까지 적용될지, 개발 기간 단축이나 수율 개선으로 이어질지는 추가 검증이 필요합니다. 업계에서는 AI 반도체 경쟁이 단순히 제품 성능이나 생산능력뿐 아니라, 개발 방식을 얼마나 빠르게 바꾸느냐의 싸움으로도 확장되고 있다고 보고 있습니다. image.png"
+    },
+    {
+      "ts": "1777266808.492359",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "<https://yozm.wishket.com/magazine/detail/slack/3728/?h=TBL1JAWKF&utm_source=slack&utm_medium=bot&utm_campaign=TBL1JAWKF|ChatGPT 이미지 2.0과 Claude Design의 등장>\n아마 다들 AI에게 “이런 이미지 만들어줘”라고 한 번쯤 시켜본 적이 있을 겁니다. 그런데 예전에는 “카페 메뉴판을 만들어줘”라고 하면 ‘아메리카노’는 ‘아메맄카노’가 되고, ‘딸기 라떼’는 ‘딿기 랃떼’되는 등 정체를 알 수 없는 글자로 뭉개지곤 했죠. 한국어 간판이나 포스터를 부탁해도 결과는 비슷했습니다. 결국 텍스트는 빼고 만들거나, 나중에 사람이 다시 얹어야 했습니다. 그런데 이제는 꽤 달라졌습니다. 같은 프롬프트를 넣어도, 카페에 바로 걸어둘 수 있을 만큼 자연스러운 한글 메뉴판이 나옵니다. 이번 글에서는 이 흐름을 살펴보고, 실무 관점에서 이야기해 보려고 합니다. ChatGPT 이미지 2.0과 Claude Design의 등장"
+    },
+    {
+      "ts": "1777335214.030769",
+      "bucket": "company_news",
+      "reason": "company_keywords",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "<https://yozm.wishket.com/magazine/detail/slack/3729/?h=TBL1JAWKF&utm_source=slack&utm_medium=bot&utm_campaign=TBL1JAWKF|열심히 공부하는 당신이 서류조차 못 넘는 이유>\n오늘도 퇴근하고 지친 몸으로 다시 모니터 앞에 앉았습니다. 하루가 다르게 쏟아지는 새로운 기술 사이에서 도태되지 않으려고 유명한 강의를 결제하고 주말까지 반납해 가며 스터디에 참여합니다. 이력서에 한 줄이라도 더 쓰고자 여러 활동을 기웃거리고 기술 블로그까지 운영하는 등 남들이 하는 건 다 해봅니다. 하지만 정작 가고 싶은 회사의 서류 전형 결과는 또다시 ‘불합격’입니다. 냉정하게 말해보자면, 서류 합격에 실패하는 이유가 성실함이 부족하기 때문만은 아닙니다. 오히려 그동안 쌓아온 다양한 지식이 회사의 가려운 곳에 단 한 번도 닿지 못했기 때문일지도 모릅니다. 열심히 공부하는 당신이 서류조차 못 넘는 이유"
+    },
+    {
+      "ts": "1777340008.675019",
+      "bucket": "project",
+      "reason": "project_keywords",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Project_Intake",
+      "text": "*<https://www.aitimes.com/news/articleView.html?idxno=209796|코오롱베니트-뉴로클, 산업 현장 품질검사 AI 솔루션 출시>*\n\n코오롱베니트는 뉴로클과 협업해 오토딥러닝 비전 기술 바탕의 *품질검사 프리패키지 ‘프롬튼팩 인스펙션(PromptON Pak.Inspection)’을 출시*한다고 27일 밝혔다.\n\n딥러닝 비전 AI 전문 뉴로클은 최근 국내 최대 규모 AI 사업 협력체인 *코오롱베니트 AI 얼라이언스에 신규 참여*했다. 양사는 이번 협업을 통해 제조 현장에 빠르게 적용 가능한 비전 AI 모델 확산에 나선다. 이에, 검증된 소프트웨어와 하드웨어를 결합한 프리패키지 형태의 품질검사 솔루션을 선보이게 됐다.\n\n이번에 선보인 ‘프롬튼팩 인스펙션’은 뉴로클의 학습 소프트웨어 *‘뉴로티(Neuro-T)’와 런타임 라이브러리 ‘뉴로알(Neuro-R)’을 바탕*으로 한다. 그래픽 사용자 인터페이스(GUI) 바탕의 노코드 환경에서 이미지 전처리, 레이블링, 모델 학습, 성능 평가까지 전 과정을 지원하는 것이 핵심이다.\n\n자동 모델 최적화 기능을 통해 AI 전문 인력 없이도 고성능 검사 모델을 구현할 수 있다는 설명이다. 학습을 마친 모델은 기존 검사 설비 및 시스템과 연동돼 현장 이미지와 영상을 실시간으로 판독할 수 있다.\n\n코오롱베니트는 이를 *델 테크놀로지스 서버·워크스테이션*은 물론 *어드밴텍 하드웨어와도 결합할 수 있도록 구성*해 기업 선택지의 폭을 넓혔다고 전했다. 또, 기업 환경과 요구사항을 반영, 솔루션 라인업을 *하이엔드와 로우엔드 2개 라인업으로 출시*해 다양한 제조 현장에 유연하게 대응할 수 있도록 했다.\n\n코오롱베니트는 프롬튼팩 인스펙션을 통해 AI 비전검사 시스템 구축 기간을 단축하고, 초기 도입과 운영 부담을 낮춰 제조 현장의 AX 속도를 높일 수 있을 것으로 기대하고 있다. 품질검사를 시작으로 안전 관제, 설비 예지보전 등으로 패키지 포트폴리오를 확대해 나갈 계획이다.\n\n코오롱베니트 AI 얼라이언스를 이끄는 강재훈 AX커머스팀장은 “제조 AX의 핵심은 AI 기술을 현장에 얼마나 빠르게 적용하고 실제 운영 성과로 연결하느냐에 있다”라며 “제조 품질을 위한 비전검사 영역에서, 기업이 AX 효과를 빠르게 체감할 수 있도록 기획한 실행형 패키지”라고 말했다. image.png"
+    },
+    {
+      "ts": "1777341911.063699",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "<https://www.aitimes.com/news/articleView.html?idxno=209792>"
+    },
+    {
+      "ts": "1777342117.087739",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "<https://www.edaily.co.kr/News/Read?newsId=01246406645420712>"
+    },
+    {
+      "ts": "1777342329.607469",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "<https://www.yna.co.kr/view/AKR20260427052051009>"
+    },
+    {
+      "ts": "1777353213.022839",
+      "bucket": "project",
+      "reason": "project_keywords",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Project_Intake",
+      "text": "<https://yozm.wishket.com/magazine/detail/slack/3730/?h=TBL1JAWKF&utm_source=slack&utm_medium=bot&utm_campaign=TBL1JAWKF|클로드 코드 소스 유출에서 배우는 에이전트 구조>\n쏟아지는 AI 정보 속에서 자칫 겉핥기식으로만 따라가게 되는 요즘, 오히려 더 중요해지는 것은 정의와 본질인 것 같습니다. 특히 에이전트 경쟁은 이제 더 이상 ‘누가 더 똑똑한 모델을 붙였는가’만으로 설명되지 않습니다. 지난 3월 31일, 앤트로픽의 AI 코딩 도구 클로드 코드에서 소스맵 파일이 함께 배포되는 사고가 있었는데요. 이로 인해 외부에 드러난 클로드 코드의 내부 구조는, 오히려 에이전트의 완성도와 디테일이 어디에서 갈리는지를 꽤 선명하게 보여줍니다. 결국 에이전트는 모델을 단순히 소비하거나 활용하는 데서 끝나는 개념이 아니라, 모델이 실제로 일을 수행하도록 만드는 실행 구조에 가깝습니다. 이번 글에서는 클로드 코드 소스 유출 사례를 통해, 에이전트 구조가 어떻게 설계되어 있는지 살펴보겠습니다. 클로드 코드 소스 유출에서 배우는 에이전트 구조"
+    },
+    {
+      "ts": "1777421614.235669",
+      "bucket": "company_news",
+      "reason": "company_keywords",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "<https://yozm.wishket.com/magazine/detail/slack/3731/?h=TBL1JAWKF&utm_source=slack&utm_medium=bot&utm_campaign=TBL1JAWKF|당신의 사고까지 AI에 외주화하지 마라>\n인공지능(AI)의 시대, 엔비디아의 젠슨 황 CEO는 AI가 그 소프트웨어마저 집어삼키고 있다고 선언했다. 실제로 AI 기술은 과거 인터넷 보급 시기보다 7배나 빠른 속도로 확산하며 인류 역사상 가장 가파른 변화를 이끌고 있다. 이제 AI는 복잡한 판단을 넘어 인간의 고유 영역이라 믿었던 창의성마저 대체하기 시작했다. 데카르트는 “나는 생각한다, 고로 존재한다”라고 말했다. 깊은 사유 없이 말 한마디로 결과물을 ‘딸깍’ 만들어내는 이 시대에, 당신의 생각은 과연 안녕(安寧)한가? 당신의 사고까지 AI에 외주화하지 마라"
+    },
+    {
+      "ts": "1777431516.823479",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "<https://www.chosun.com/economy/tech_it/2026/04/28/U5APO6QT2RG6VNACLHJQGAUB6M/|https://www.chosun.com/economy/tech_it/2026/04/28/U5APO6QT2RG6VNACLHJQGAUB6M/>"
+    },
+    {
+      "ts": "1777431591.835829",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "<https://www.fnnews.com/news/202604281500180962|https://www.fnnews.com/news/202604281500180962>"
+    },
+    {
+      "ts": "1777431798.257019",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "<https://www.aitimes.com/news/articleView.html?idxno=209856|https://www.aitimes.com/news/articleView.html?idxno=209856>"
+    },
+    {
+      "ts": "1777431929.799889",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "<https://www.aitimes.com/news/articleView.html?idxno=209837|https://www.aitimes.com/news/articleView.html?idxno=209837>"
+    },
+    {
+      "ts": "1777432576.490009",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "<https://www.yna.co.kr/view/AKR20260428114100009|https://www.yna.co.kr/view/AKR20260428114100009>"
+    },
+    {
+      "ts": "1777439614.099989",
+      "bucket": "project",
+      "reason": "project_keywords",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Project_Intake",
+      "text": "<https://yozm.wishket.com/magazine/detail/slack/3732/?h=TBL1JAWKF&utm_source=slack&utm_medium=bot&utm_campaign=TBL1JAWKF|개발자의 커서 3 후기, 그들은 왜 따라가기 바쁠까?>\n저는 커서를 약 2년 동안 사용해 왔습니다. 개인 비용으로 결제해 쓸 만큼, 커서를 좋아하는 편입니다. 특히 커서의 Tab 자동완성 기능을 인상 깊게 사용했는데요. 제가 작성하려던 코드의 흐름을 자연스럽게 이어주기도 하고, 때로는 미처 생각하지 못한 로직이나 수정이 필요한 지점을 먼저 짚어주기도 했습니다. 커서가 해당 라인으로 이동해 Tab 입력을 기다리고 있을 때면, 매번 감탄하며 즐겁게 코딩하곤 했습니다. 이처럼 기대와 믿음을 주던 커서가 이번에 커서 3를 출시했습니다. 개인적으로는 커서가 다른 도구와 무엇으로 경쟁할지, 어떤 차별점을 내세울지 궁금했습니다. 그래서 2주가량 클로드 코드를 잠시 내려놓고, 커서 3만 사용해 사이드 프로젝트를 구현해 보았습니다. 개발자의 커서 3 후기, 그들은 왜 따라가기 바쁠까?"
+    },
+    {
+      "ts": "1777442023.628769",
+      "bucket": "company_news",
+      "reason": "company_keywords",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "\"클로드 기반 코딩 에이전트 오작동으로 회사 DB 전체 날아가\" &lt; 산업일반 &lt; AI산업 &lt; 기사본문 - AI타임스 <https://share.google/gy904suQLSZv0WltQ|https://share.google/gy904suQLSZv0WltQ>\n\n설마 싶던게 진짜로 뉴스에 나오기도하네요"
+    },
+    {
+      "ts": "1777507735.754379",
+      "bucket": "project",
+      "reason": "project_keywords",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Project_Intake",
+      "text": "*<https://www.aitimes.com/news/articleView.html?idxno=209929|앤트로픽, '클로드 코드' 비용 추정치 두배로 올려…종량제 전환 예고>*\n\n앤트로픽이 *'클로드 코드'의 예상 사용 비용을 최근 대폭 상향 조정, 현재의 월 정액제 모델을 종료하고 사용량 기반 과금(종량제)으로의 전환을 사실상 예고*했다.\n\n앤트로픽은 27일(현지시간) 기업 개발자 기준 *클로드 코드의 평균 비용이 하루 활성 사용자당 약 13달러로 집계*됐다고 밝혔다.\n\n이는 불과 몇주 전까지 제시했던 *하루 6달러 수준에서 두배 이상 오른 수치*다. *월 기준으로는 개발자 1인당 약 150~250달러가 소요되는 것*으로 나타났다.\n\n이 말은 현재의 *월 20달러 정액제로는 사용자 요청을 감당할 수 있는 수준을 이미 넘어섰다는 내용*이다. 당초 제시했던 하루 6달러 추정치조차 한달로 계산하면 132달러에 달했지만, 그동안은 구독자 중 일부만 이 기능을 사용하고 대다수는 사용하지 않아 전체 수지타산을 맞춰왔다.\n\n그러나 최근 개발자들이 클로드 코드를 업무 전반에 깊숙이 투입하자, 더 이상 버티기 어려운 임계점에 도달했다고 밝힌 셈이다.\n\n결국 이번 비용 추정치 발표는 월 20달러의 구독제 모델을 정리하고, *쓴 만큼 비용을 지불하는 사용량 기반 과금으로 전면적인 체계 개편이 임박했음을 예고*한 셈이다.\n\n다만 앤트로픽은 *전체 사용자의 90%는 하루 30달러 이하 비용 범위에 머물고 있다*고 설명했다.\n\n앤트로픽 내부에서도 변화가 감지되고 있다. 아몰 아바사레 성장 책임자는 “*사용자당 이용량이 크게 증가했으며, 기존 구독 모델은 이러한 사용 패턴을 고려해 설계되지 않았다*”라고 밝혔다. 그는 이미 주간 사용 제한 강화나 피크 시간대 제한 등 소규모 조정을 진행해 왔다고 설명했다.\n\n이 같은 변화는 AI 서비스의 핵심 비용 구조인 ‘토큰(token)’ 사용량 증가와 직결된다. 토큰은 대형언어모델(LLM)이 텍스트를 처리하는 최소 단위로, AI가 입력과 출력을 수행할 때마다 비용이 발생한다. 특히 코드 생성과 같은 고난도 작업은 더 많은 토큰을 요구하기 때문에 비용 상승 압력이 크다.\n\n이번 비용 조정은 단순한 가격 변경을 넘어, AI 산업 전반의 구조적 문제를 드러내는 사례로 평가된다. 최근 AI 에이전트 활용이 급증하면서 연산 자원 수요가 폭발적으로 증가했고, 이에 따라 모델 제공 기업들과 클라우드 인프라 기업들이 모두 부담을 느끼고 있다는 분석이다.\n\n이와 맞물려 최근 일부 사용자들 사이에서는 클로드 코드가 유료 ‘프로(Pro)’ 요금제에서 제외된 것 아니냐는 논란도 일었다. 앤트로픽은 이에 대해 “약 2%의 신규 사용자 대상으로 제한적 실험을 진행한 것”이라고 해명했지만, 사용자 반발은 적지 않았다.\n\n업계에서는 이번 사례가 *AI 서비스의 수익 모델 전환을 가속할 가능성에 주목*하고 있다. *단순 구독 방식만으로는 급증하는 연산 비용을 감당하기 어려워*지면서, *사용량 기반 과금이나 작업 단위 과금 등 정교한 가격 체계가 필요하다는 것*이다. image.png"
+    },
+    {
+      "ts": "1777508013.957349",
+      "bucket": "project",
+      "reason": "project_keywords",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Project_Intake",
+      "text": "<https://yozm.wishket.com/magazine/detail/slack/3733/?h=TBL1JAWKF&utm_source=slack&utm_medium=bot&utm_campaign=TBL1JAWKF|하네스 엔지니어링으로 AI 에이전트를 길들여봤습니다>\n나는 AI 에이전트를 실제 프로젝트에 붙여 쓰는 과정을 반복하면서, 프롬프트가 아니라 워크플로우를 설계해야 한다는 인사이트를 얻었다. 그래서 14개 에이전트, 6단계 사고 모델, /start → /done 워크플로우까지 만들어 실제 프로젝트에서 돌렸다. 분명 잘 돌아갔는데, 문제가 있었다. 프롬프트에 굵은 글씨로 절대 하지 말라고 적어놔도, 에이전트는 가끔 그냥 한다. 이게 프롬프트 엔지니어링의 한계다. 아무리 정교하게 써도, 결국 “부탁”일 뿐이다. 그래서 나는 부탁하는 걸 그만뒀다. 대신 에이전트가 실행되는 환경 자체를 설계하기 시작했다. 프롬프트가 아니라 시스템으로 통제하는 거다. 나중에 보니 업계에서는 이를 ‘하네스 엔지니어링’이라고 부르고 있었다. 이 글은 그 여정에 대한 기록이다. 하네스 엔지니어링으로 AI 에이전트를 길들여봤습니다"
+    },
+    {
+      "ts": "1777508381.019129",
+      "bucket": "project",
+      "reason": "project_keywords",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Project_Intake",
+      "text": "*<https://www.aitimes.com/news/articleView.html?idxno=209921|미스트랄, 기업용 AI 운영 인프라 '워크플로우' 공개...\"에이전트 실패율 낮춰\">*\n\n미스트랄 AI가 *실제 업무 프로세스에 AI를 안정적으로 적용하기 위한 운영 시스템*을 선보였다.\n\n미스트랄은 28일(현지시간) 기업의 업무 과정을 *여러 단계의 AI 작업으로 나누어 연결하고 이를 관리·실행할 수 있도록 돕는 운영 인프라 <https://www.youtube.com/watch?v=9tXQBnpvVsU|‘워크플로우(Workflows)’를 공개>*했다.\n\n워크플로우는 *대형언어모델(LLM) 호출, 외부 API 연동, 도구 활용, 그리고 사람의 승인*까지 포함하는 *다단계 AI 프로세스를 설계·실행·관리할 수 있는 플랫폼*이다. 특히 작업 도중 시스템 장애나 재시작이 발생해도 *이전 단계부터 다시 이어서 실행할 수 있도록 설계*돼, *장시간에 걸친 복잡한 업무에도 안정적으로 대응*한다.\n\n기존에는 이러한 시스템을 구축하기 위해 개발자가 직접 재시도 로직이나 상태 관리, 복구 기능을 구현해야 했지만, 워크플로우는 이를 플랫폼 차원에서 제공한다. *각 단계는 이벤트 기록으로 저장돼 장애 발생 시에도 작업이 유실되지 않으며, 재시도 정책과 스케줄링, 실시간 모니터링, 로그 추적 등도 기본 기능으로 지원*된다.\n\n미스트랄은 기업들이 AI 도입 과정에서 겪는 가장 큰 어려움이 모델 성능이 아니라 운영 인프라에 있다고 보고 있다. 엘리사 살라망카 제품 총괄은 “많은 기업이 개별 실험을 넘어서지 못하는 이유는 기술이 아니라 운영 문제”라며 *“워크플로우는 핵심 비즈니스 과정에서 AI를 안정적으로 실행하기 위한 기반”*이라고 설명했다.\n\n실제로 AI 에이전트 시장은 빠르게 성장하고 있지만, 높은 비용과 복잡성으로 인해 상당수 프로젝트가 중단될 것으로 예상된다. 미스트랄은 워크플로우를 통해 이러한 실패율을 낮추겠다는 전략이다.\n\n워크플로우의 핵심은 크게 3가지다. 먼저 *파이썬 기반 개발 키트를 통해 적은 코드로도 복잡한 AI 오케스트레이션을 구현*할 수 있다.\n\n이어, *실행과 제어를 분리한 구조*를 통해 *데이터는 기업 내부에 유지하면서도 클라우드 등 다양한 환경에서 제어가 가능*하도록 했다. 즉, *미스트랄 서버는 실행 신호만 보낼 뿐, 민감한 데이터나 비즈니스 로직 코드가 전송되지 않는다.* 이는 금융·의료 등 규제 산업에서 중요한 *데이터 주권을 보장하는 설계*다.\n\n마지막으로 *모든 작업 흐름과 의사결정, 오류 발생 지점을 추적할 수 있는 가시성을 제공*해 AI 시스템의 *신뢰성과 관리 효율성*을 높였다.\n\n즉, *워크플로우가 실행되는 동안 각 단계에서 LLM이 어떤 답변을 했고, 어떤 도구를 호출했는지 실시간으로 확인할 수 있는 콘솔 대시보드가 지원*된다. *사고 발생 시 AI가 왜 이런 판단을 했는지를 추적*할 수 있다.\n\n물류, 금융, 고객지원 등 다양한 분야에서 이미 활용되고 있다. 예를 들어, *물류 분야의 화물 통관 과정에서는 서류 검토부터 규정 확인, 승인 요청, 출고까지 이어지는 전 과정을 AI가 자동으로 처리하고, 사람은 최종 승인만 담당하는 방식으로 운영*된다.\n\n금융 분야의 KYC 심사에서는 고객 정보를 분석하고 규정을 확인한 뒤 위험도를 평가하는 과정을 거치는데, 기존에는 몇 시간이 걸리던 업무가 몇분으로 크게 단축된다.\n\n또 고객센터에서는 들어온 문의를 분석해 긴급도를 판단하고, 적절한 담당 팀으로 배정하는 과정이 자동화된다. 이를 통해 문의가 자동으로 분류되고 효율적으로 전달된다.\n\n기술적으로는 장애 허용 워크플로우 엔진인 '템포럴(Temporal)'을 기반으로 한다. 미스트랄은 여기에 AI 특화 기능을 추가해 장기 실행, 상태 유지, 재시도, 스트리밍 등을 지원하도록 확장했다.\n\n또 드래그앤드롭 방식 대신 *개발자 중심 접근을 채택*했다. 미스트랄은 물류 처리, 금융 거래, 규제 준수와 같은 *핵심 업무에서는 코드 기반의 정밀한 제어가 필수적이라고 판단*했다. *개발자가 파이썬으로 작성한 워크플로우는 API나 UI, 또는 챗봇 형태로 조직 내에서 쉽게 실행*할 수 있다.\n\n단독 제품이 아니라 미스트랄이 구축 중인 *‘풀스택 AI 플랫폼’의 일부*다. 맞춤형 모델을 만드는 ‘포지(Forge)’, 사용자 인터페이스를 담당하는 ‘바이브(Vibe)’와 함께, 모델 개발부터 실행, 활용까지 전 과정을 아우르는 구조를 완성해 가고 있다.\n\n살라망카 총괄은 \"워크플로우는 기업용 AI를 위한 오케스트레이션 계층\"이라며 \"AI 기반 프로세스를 개념 증명에서 실제 서비스 단계로 안정적으로 이동시키는 데 필요한 내구성과 가시성을 제공한다\"라고 강조했다. image.png"
+    },
+    {
+      "ts": "1777508951.610369",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "<https://www.chosun.com/economy/tech_it/2026/04/29/GQ4DGOJRMM2WKNRXMYZTMOJUGE/>"
+    },
+    {
+      "ts": "1777509090.454149",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "<https://www.ddaily.co.kr/page/view/2026042914072688744>"
+    },
+    {
+      "ts": "1777509184.322009",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "<https://biz.heraldcorp.com/article/10728492>"
+    },
+    {
+      "ts": "1777509244.338549",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "<https://www.yna.co.kr/view/AKR20260429171000009>"
+    },
+    {
+      "ts": "1777509376.037659",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "<https://www.mt.co.kr/future/2026/04/29/2026042916341859752>"
+    },
+    {
+      "ts": "1777510283.080569",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "<https://www.aitimes.com/news/articleView.html?idxno=209904>"
+    },
+    {
+      "ts": "1777510322.999689",
+      "bucket": "project",
+      "reason": "project_keywords",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Project_Intake",
+      "text": "*<https://www.mt.co.kr/future/2026/04/29/2026042912525134312|\"국방 분야 AI 전환 표준 만든다\"…엘리스그룹-마키나락스 맞손>*\n\nAI(인공지능) 인프라 기업 엘리스그룹이 피지컬 AI 기업 마키나락스와 국방·산업 분야의 AX(인공지능 전환) 사업을 위한 업무협약(MOU)을 체결했다.\n\n양측은 높은 보안 수준이 요구되는 국방 분야의 AI 전환을 선도하고 이를 제조·에너지·금융 등 산업 전반으로 확산한다는 목표다. 엘리스그룹의 클라우드 소프트웨어와 AI PMDC(이동식 모듈형 데이터센터)를 마키나락스의 산업 특화형 AI 기술과 결합해 시너지를 낼 계획이다.\n\n엘리스그룹의 클라우드 소프트웨어 'ECI'는 대규모 GPU(그래픽처리장치) 자원을 유연하게 관리하면서도 데이터를 안전하게 보호하는 고보안 환경을 제공한다. 이를 기반으로 보안이 필수적인 국방 현장에 적용 가능한 고성능 AI 솔루션을 공급할 예정이다.\n\n양측은 온프레미스 및 엣지 컴퓨팅 환경에서도 AI 모델을 효율적으로 배포·운영할 수 있는 기술 고도화를 추진하고 기술 인력 교류와 공동 세미나 개최 등 다각적인 협력을 이어갈 계획이다.\n\n김재원 엘리스그룹 대표는 \"마키나락스의 버티컬 AI 기술과 엘리스그룹의 ECI 및 AI PMDC가 결합한 AI 풀스택 인프라를 통해 국방 AX의 새로운 표준을 만들 것\"이라며 \"고객이 보안 우려 없이 AI 기술을 도입할 수 있도록 최적화된 인프라와 솔루션을 제공하겠다\"고 했다. image.png"
+    },
+    {
+      "ts": "1777511359.872779",
+      "bucket": "project",
+      "reason": "project_keywords",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Project_Intake",
+      "text": "*<https://www.industrynews.co.kr/news/articleView.html?idxno=80583|아이벡스 성민수 대표, “AI, 이제 ‘판단’ 넘어 ‘행동’ 단계”>*\n&gt; *비전·로봇·데이터 통합한 Physical AI 전략 선보여*\n&gt; *“공장은 스스로 움직이는 시스템으로 진화”*\n*아이벡스의 현재 주력 사업과 핵심 경쟁력은?*\n아이벡스는 초기에는 AI 비전 기반 외관검사 중심으로 사업을 시작했다. 자동차, 이차전지, 방산 등 제조 현장에서 실제로 적용되는 검사 솔루션을 구축하면서 레퍼런스를 쌓아왔다. 하지만 지금은 그 범위를 많이 확장했다. 비전 검사만 하는 것이 아니라, *로봇 자동화, 데이터 플랫폼, 그리고 AI 모델 운영까지 포함한 구조로 사업을 확대*했다. 사명을 아이브(AiV)에서 아이벡스(AIVEX)로 변경한 것도 이러한 확장을 반영한 것이다. 핵심 경쟁력은 이 모든 영역을 통합해서 제공할 수 있다는 점이다. 대부분의 기업들은 비전, 로봇, 데이터 각각을 따로 구축하는데, 아이벡스는 하나의 시스템으로 묶어서 턴키 형태로 제공할 수 있다. 특히 공장에서는 단일 공정이 아니라 전체 흐름이 중요하기 때문에, 이 통합 능력이 가장 큰 차별화 요소라고 본다.\n\n*경쟁사들과 비교해 아이벡스만의 차별화 포인트가 있다면?*\n가장 큰 차이는 검사와 로봇을 동시에 구현할 수 있다는 점이다. 제조 공정은 결국 생산, 검사, 물류가 하나의 사이클로 돌아간다. 그런데 시장에서는 이 세 가지를 각각 다른 업체가 맡는 경우가 많다. 그러면 공정 간 연결이 끊기고 문제가 발생한다. 아이벡스는 전체를 하나의 구조로 통합한다. 검사 결과가 바로 로봇 제어로 이어지고, 물류까지 연결되는 구조를 만들 수 있다. 공장은 ‘심리스하게’ 돌아가야 하기 때문에 이 통합 구조가 굉장히 중요하다. 또 하나는 운영 관점이다. 단순히 시스템을 구축하는 것이 아니라, 5년, 10년 동안 안정적으로 돌아가야 하기 때문에 초기 설계부터 운영까지 고려해서 접근한다는 점이 차별화 포인트다."
+    },
+    {
+      "ts": "1777511621.829059",
+      "bucket": "project",
+      "reason": "project_keywords",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Project_Intake",
+      "text": "*<https://www.industrynews.co.kr/news/articleView.html?idxno=80530|중기부, 소공인 스마트제조지원 보조금 부정수급 손 본다>*\n&gt; *페이백·이면계약 등 적발… 사업 구조 전면 개편으로 재발 차단 나서*\n중소벤처기업부(장관 한성숙)가 ‘소공인 스마트제조지원 사업’에서 드러난 *보조금 부정수급 사례*에 대해 *수사의뢰와 보조금 환수 등 강력한 제재를 추진*하는 동시에, *사업 구조 전반을 개편*해 *부정수급을 원천 차단*한다고 밝혔다.\n\n소공인 스마트제조지원 사업은 소공인의 제조 공정에 스마트 장비와 소프트웨어를 도입해 생산성을 높이고자 2020년 시작됐다. 소공인은 소상공인 중 제조업에 속한 근로자 10인 미만의 소규모 사업자를 뜻한다.\n\n사업 경쟁률은 2021년 1.80:1에서 2025년 5.57:1로 꾸준히 상승했고, 중기부의 성과 분석에서도 참여 소공인의 매출과 고용 지표는 개선됐다. 지원 규모 역시 2020년 30억 원에서 2024년 882억 원으로 급격히 확대됐다.\n\n그러나 지원 규모가 빠르게 커지면서 관리 허점도 함께 드러났다. 중기부는 2025년 11월 관계부처 합동 점검에서 다수의 부정수급 정황을 포착했고, 이후 *약 5개월간의 집중 점검*을 거쳐 *2024년 지원기업 1887개사 중 112개사(약 6%)에서 부정수급을 확인*했다.\n\n특히 *일부 공급기업이 사업 전반을 주도하며 부정행위를 유도한 사례가 다수 적발*됐다.\n　\n*페이백·이면계약·허위 데이터 전송까지 적발*\n\n이번 점검에서 확인된 부정수급 유형은 크게 세 가지다.\n\n첫째는 공급기업 주도의 ‘가격 부풀리기 및 페이백’ 수법이다. 사업 내용에 익숙하지 않은 소공인을 대상으로 신청서 작성, 계약 체결, 정산까지 전 과정을 사실상 대신 수행하면서 장비 및 소프트웨어 가격을 실제보다 부풀린 뒤 그 차액 일부를 현금으로 되돌려주는 방식이다. 중기부는 이와 관련해 공급기업 17개사에 대해 수사의뢰 조치를 했다.\n\n둘째는 ‘임차’를 가장한 ‘구매’ 방식의 이면계약이다. 이 사업은 장비 임차 방식만을 지원하지만, 일부 공급기업과 소공인이 공모해 실제로는 장비를 구매하면서 임차 계약으로 위장한 사례가 적발됐다.\n\n사업 선정 이전에 장비를 미리 구매해 두고 이후 임대차계약서를 새로 작성해 보조금을 신청한 경우도 확인됐다. 관련 공급기업 4개사와 소공인 9개사에 대해 수사의뢰 조치가 이뤄졌다.\n\n셋째는 장비 가동 데이터의 허위 전송이다. 장비와 소프트웨어의 가동 여부 및 생산 데이터를 공급기업이 사업 전담기관에 허위로 전송한 사례가 다수 적발됐으며, 이미 폐업한 사업장에 설치된 장비가 정상 가동되는 것처럼 데이터를 조작한 경우도 확인됐다.\n\n이는 사업의 사후관리 시스템 자체를 무력화하는 행위로, 중기부는 관련 공급기업 16개사에 대해 수사의뢰 조치를 했다.\n　\n*최대 5배 제재부가금, 5년간 지원사업 참여 제한*\n\n중기부는 *부정수급 행위에 대해 무관용 원칙을 적용*하겠다는 입장이다. 부정수급이 확인된 112개사에 대해 *보조금 환수와 함께 정부 지원사업 참여 제한 등 행정제재 절차를 개시*했다.\n\n위반 업체에 대해서는 *최대 5년간 중기부 지원사업 참여를 제한*하고, *부정수급액 전액 환수는 물론 최대 5배까지 제재부가금을 부과해 부당이득을 철저히 환수*할 방침이다.\n\n특히 범죄 혐의가 중대한 공급기업 17개사와 소공인 9개사에 대해서는 *형법상 사기 및 보조금법 위반 혐의로 형사고발 조치*를 했으며, *향후 검찰·경찰 수사에도 최대한 협조할 계획*이다. 위반 업체의 부정수급 관련 사업 내용과 경위는 전 부처에 통보될 예정이다.\n\n*2025년 지원기업에 대한 점검도 이미 시작*됐다. 현재 예산당국과 함께 *1530개사에 대한 정밀 조사가 진행 중*이며, 조사 완료 후 *동일한 기준으로 엄정 대응할 계획*이다.\n　\n*임차 방식 폐지·IoT 실시간 점검 등 사업 구조 전면 개편*\n\n중기부는 이번 사태를 계기로 사업 구조 자체를 근본적으로 바꾼다. 개편안은 *공급기업 관리 강화, 소공인 참여 요건 조정, 선정 방식 개편, 가격 검증 강화, 사후관리 체계 개선, 전담 코디네이터 도입* 등 여섯 가지 방향으로 구성됐다.\n\n우선 *공급기업에 대해 역량 진단을 의무화*해 *기술력과 수행 능력을 검증받은 기업만 사업에 참여*할 수 있도록 하고, *참여 이력과 사후관리 수준 등을 종합 평가*해 *우수 업체와 제재 이력 업체를 사업관리시스템에 공개할 계획*이다. 이를 통해 소공인이 검증된 공급기업을 선택할 수 있는 환경을 조성한다.\n\n소공인 참여 요건도 강화된다. 최근 3년 평균 연매출 2억 원 이상인 소공인에게만 신청 자격을 부여하고, 자부담 비율도 기존 30%에서 40%로 높인다. 사업 참여에 대한 소공인의 책임감을 높이고 실질적인 운영 의지를 담보하기 위한 조치다.\n\n지원대상 선정 방식도 기존 서류 중심에서 영상·인터뷰 기반으로 전환된다. 신청 소공인이 직접 공정 현장을 촬영한 영상을 제출하고 인터뷰 및 발표를 통해 사업 필요성을 증명하도록 하며, AI 기반 사업계획서 유사도 분석과 동일 IP 주소 다중 신청 탐지 시스템을 도입해 대리 신청을 원천 차단한다.\n\n가격 적정성 검증도 강화된다. 부정수급의 주요 통로였던 기존 임차 방식을 폐지하고 장비 지원 방식을 구매 방식으로 전환한다. 구매 장비는 보조금법에 따라 중요재산으로 등재하며, 사후관리 기간도 기존 2년에서 5년으로 연장된다.\n\n사업 신청 단계에서 원가산정 자료 제출을 의무화하고, 민간 원가산정기관을 통한 가격 적정성 검증과 회계감독기관의 사전 검토를 통해 이중 확인 체계를 구축할 계획이다.\n\n사후관리 체계도 대폭 강화된다. IoT 기반 데이터 수집 체계를 도입해 장비 가동 여부를 실시간으로 점검하고, 전담기관이 제공하는 IoT 장비를 통해 가동시간·전력사용량 등을 직접 수집함으로써 데이터 조작 가능성을 차단한다. 매분기 데이터 제출 의무화와 불시 현장 점검을 병행해 실제 운영 여부를 교차 검증하는 방식도 적용된다.\n\n마지막으로 사업 전 과정에 전담 코디네이터를 배치해 소공인의 공급기업 의존도를 낮춘다. 코디네이터는 소공인의 공정 특성과 작업환경을 분석해 적합한 기술과 장비를 제안하고, 사업계획 수립부터 운영·성과관리까지 밀착 지원하는 역할을 맡는다.\n\n이를 위해 스마트공장 지원사업 전담기관인 중소기업기술정보진흥원의 제조DX멘토단 약 300명을 활용할 계획이며, 멘토단은 올해 상반기 중 소공인 특화 교육과정을 통해 양성한 뒤 하반기부터 운영한다.\n\n중기부는 개편된 사업계획에 따라 오는 30일 사업을 공고할 예정이다. image.png"
+    },
+    {
+      "ts": "1777511876.050679",
+      "bucket": "project",
+      "reason": "project_keywords",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Project_Intake",
+      "text": "*<https://www.news2day.co.kr/article/20260428500145|[IPO 돋보기] 피지컬AI 기대주 마키나락스, IPO 흥행 기대감 높일까>*\n&gt; *공장·전장 지배할 피지컬 AI로 주목*\n&gt; *영업손실 80억...흑자 턴어라운드 필요*\n(선략)\n\n다만 마키나락스의 펀더멘털은 서늘하다. 금융감독원 전자공시시스템에 따르면 회사의 2025년 매출은 115억원으로 매년 가파른 성장을 보이고 있지만, 고도화된 R&amp;D 인력 유지와 플랫폼 개발비(OPEX) 증가로 인해 여전히 80억원의 영업손실을 기록 중이다.\n\n이에 따라 마키나락스는 수익성 미달을 기술력으로 덮는 ‘기술특례상장’ 트랙을 밟고 있다.\n\n최근 공모주 시장이 철저하게 실적(Cash Flow) 중심으로 재편되고 있는 만큼 상장 주관사가 제시한 미래 추정 실적만으로는 기관의 투심을 1만5000원으로 끌어올리기에 벅찰 수 있다.\n\n이런 상황에 IB업계는 마키나락스가 향후 국내 AI 기업 상장의 바로미터(지표)가 될 것으로 평가하면서도 회사의 적절한 밸류에이션은 플랫폼 마진율에 있다고 지적한다.\n\nIB업계 관계자는 &lt;뉴스투데이&gt;에 “대기업들의 전략적 투자(SI) 유치는 유의미한 초기 생존 마일스톤이지만, 자칫 ‘계열사 하청’ 구조로 매출처가 한정될 리스크도 존재한다”며 “마키나락스가 밴드 상단에서 공모를 흥행시키려면, 특정 대기업을 위한 맞춤형 컨설팅(SI) 용역 매출 비중을 줄이고 런웨이(Runway) 라이선스 판매로 폭발적인 사스(SaaS) 구독 매출(ARR) 상승 곡선을 숫자로 증명해 내야만 한다”고 말했다.\n\n이어 그는 “기술특례상장 기업에 기관이 요구하는 것은 화려한 AI 수식어가 아니라, 결국 1~2년 내 흑자 전환이 가능하다는 재무적 확신”이라고 강조했다.\n\n무엇보다 마키나락스는 기술특례상장 특유의 미래 실적 당겨오기로 산정된 밸류에이션에 대한 시장의 의구심을 실적으로 증명해야 한다. 또 상장 직후 전략적 투자자(SI)와 재무적 투자자(FI)들의 오버행 이슈도 넘어야 한다.\n\n실제 윤성호 대표를 포함한 최대주주의 우호 지분은 공모 후 31.20%(547만7016주)에 불과하기 때문이다.\n\n벤처투자업계 관계자는 “마키나락스가 제조 강국 대한민국의 심장부에 피지컬 AI라는 강력한 소프트웨어를 이식하고 있다는 점은 국가 산업 차원에서 강력한 경쟁력”이라며 “다만 코스닥 시장은 철저히 자본의 논리로 굴러간다. 수요예측 테이블에 앉은 기관투자자들을 설득하려면, 대기업 후광 효과를 벗어나 런웨이 플랫폼을 기반한 압도적인 흑자 전환 로드맵을 수치로 증명해 내야 할 것”이라고 말했다."
+    },
+    {
+      "ts": "1777512034.896639",
+      "bucket": "project",
+      "reason": "project_keywords",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Project_Intake",
+      "text": "*<https://www.mk.co.kr/news/stock/12028414|코스닥 상장 앞둔 마키나락스 “수익 내는 AI 유니콘 되겠다”>*\n\n증권신고서에 따르면 *회사는 내년 매출 373억원, 영업이익 48억원으로 흑자 전환할 것으로 예상*하고 있다.\n\n윤 대표는 “높은 대기업 비중은 안정적인 매출처를 확보했다는 의미”라며 “대기업 매출이 연평균 81% 성장하고 있으며 재구매가 이어지고 있어 향후 매출 규모도 폭발적으로 성장할 것”이라고 말했다.\n\n마키나락스는 대기업과의 강력한 ‘동맹’도 구축했다. SK텔레콤, 네이버, 어플라이드 머티리얼즈, LG CNS, GS, 한화세미텍 등이 주요 주주로 참여하고 있기 때문이다.\n\n윤 대표는 “미국 사업 철수로 시너지가 줄어든 현지 투자기업을 제외하고는 모든 전략적투자자(SI)가 6개월 보호예수를 확약했으며 대부분 장기 투자를 염두에 둔 것으로 알고 있다”고 전했다.\n\n회사는 *공모로 확보한 자금을 AI OS 고도화에 집중 투입할 방침*이다. *다크팩토리 OS·디펜스 OS(이상 가칭)와 같은 산업 특화 OS 개발을 준비하고 있다.*\n\n*해외 시장 공략에도 속도를 낼 예정*이다. *지난해 4월 진출한 일본*에서는 지사 설립 이후 *로봇, 전기전자, 자동차 판매 분야 현지 주요 대기업과 4건의 계약을 체결*했다.\n\n*유럽 시장에도 진출한 상태*다. 직접 지사를 설립하진 않았지만 세계적인 자동화 기업 쿠카 자회사인 디바이스 인사이트와 협력해 지난해 *현지 반도체 장비, 풍력장비 기업과 계약을 맺는 데 성공했다.*"
+    },
+    {
+      "ts": "1777513163.595389",
+      "bucket": "project",
+      "reason": "project_keywords",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Project_Intake",
+      "text": "*<https://news.einfomax.co.kr/news/articleView.html?idxno=4412324|제조 현장에 AI 입힌다…산업부, 527억 선도사업 추진>*\n\n산업통상부가 반도체와 자동차 등 주력 산업 현장에 인공지능(AI)을 도입해 제조 경쟁력을 대폭 강화한다.\n\n산업부는 *527억5천만원 규모의 올해 'AI 팩토리 선도사업' 신규 과제 32개를 공고*한다고 29일 밝혔다. 제조 현장의 생산성을 높이고 불량률을 낮추는 등 산업 기초체력을 키우기 위한 목적이다. 사업 공고는 내달 30일까지 진행된다.\n\n올해 신규 과제는 '제조 AI 대전환(M.AX) 얼라이언스' 소속 400여개 기업과 기관의 수요를 바탕으로 기획됐다. 산업부는 시급성과 파급 효과가 큰 업종을 선별해 지원할 방침이다.\n\n이번 사업부터는 연구개발 과정에서 발생하는 제조데이터를 체계적으로 수집한다. 참여 기업은 제조데이터 제출 동의서를 체결해야 한다. 확보한 데이터는 유사 공정에 적용 가능한 AI 모델 고도화 등 공공 목적의 후속 연구에 활용될 예정이다.\n\n지원 유형은 *대·중·소 협력형, 제조공정 지능화형, 선도기업 지원형 등 5가지로 다양화*했다. 공급망 내 기업들이 데이터를 공유하거나 국산 AI 솔루션의 현장 실증을 지원하는 방식이다. 전 공정을 AI로 운용하는 '풀스택 AI 팩토리' 구현을 위한 기술 검증도 포함됐다.\n\n산업부는 제조 기반이 지역에 집중된 점을 고려해 지방비 매칭을 전제로 최대 5점의 가점을 부여한다. 지역 제조 기업의 AI 도입 문턱을 낮추기 위한 조치다.\n\n산업부는 2030년 M.AX(제조업 인공지능 전환) 최강국 도약을 위해 AI 팩토리 선도사업을 차질 없이 추진해나가겠다고 전했다. image.png"
+    },
+    {
+      "ts": "1777513592.463299",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "<https://www.newspim.com/news/view/20260430000334>"
+    }
+  ],
+  "excluded_messages": []
+}

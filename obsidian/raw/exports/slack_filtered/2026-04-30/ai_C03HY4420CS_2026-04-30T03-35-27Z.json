@@ -1,0 +1,1513 @@
+{
+  "type": "slack_channel_filtered_export",
+  "workspace": "RTM Slack",
+  "collected_at": "2026-04-30T03:35:27.248712+00:00",
+  "channel": {
+    "id": "C03HY4420CS",
+    "name": "ai",
+    "type": "public_channel",
+    "is_archived": false,
+    "is_private": false,
+    "created": "2022-06-02T01:56:45+00:00",
+    "topic": "",
+    "purpose": "",
+    "member_count": 17,
+    "routing": {
+      "channel_bucket": "company_news",
+      "conversation_mode": "company_updates",
+      "rationale": "company_channel_prefix",
+      "wiki_workspace": "rtm",
+      "wiki_target_root": "obsidian/Wiki/Common/Slack_Company_News",
+      "wiki_target_kind": "common"
+    }
+  },
+  "routing": {
+    "channel_profile": {
+      "channel_bucket": "company_news",
+      "conversation_mode": "company_updates",
+      "rationale": "company_channel_prefix",
+      "wiki_workspace": "rtm",
+      "wiki_target_root": "obsidian/Wiki/Common/Slack_Company_News",
+      "wiki_target_kind": "common",
+      "project_wiki_target_root": "obsidian/Wiki/Common/Slack_Project_Intake",
+      "company_wiki_target_root": "obsidian/Wiki/Common/Slack_Company_News"
+    },
+    "primary_bucket": "company_news",
+    "bucket_counts": {
+      "project": 1,
+      "company_news": 10,
+      "casual": 1
+    },
+    "wiki_targets": [
+      {
+        "path": "obsidian/Wiki/Common/Slack_Company_News",
+        "count": 10
+      },
+      {
+        "path": "obsidian/Wiki/Common/Slack_Project_Intake",
+        "count": 1
+      }
+    ]
+  },
+  "history_window": {
+    "oldest_ts": "1776656174.448054",
+    "limit_per_channel": 500,
+    "include_threads": true,
+    "include_files": true
+  },
+  "filter": {
+    "provider": "local_rule",
+    "summary": "GLM unavailable; local rule filter applied",
+    "kept_count": 11,
+    "excluded_count": 1
+  },
+  "messages": [
+    {
+      "ts": "1776741210.789189",
+      "type": "message",
+      "subtype": null,
+      "user": "U07M5E33KDW",
+      "text": "<https://www.instiz.net/name/49301803>",
+      "thread_ts": "1776741210.789189",
+      "reply_count": 5,
+      "reply_users": [
+        "U07RPDCF0DR",
+        "U033Z97MZ3N",
+        "U019E51R1DM"
+      ],
+      "latest_reply": "1776751687.425799",
+      "reactions": [
+        {
+          "name": "cold_face",
+          "users": [
+            "U093NJW4JDS"
+          ],
+          "count": 1
+        },
+        {
+          "name": "우씽",
+          "users": [
+            "U048M5F5MUY"
+          ],
+          "count": 1
+        }
+      ],
+      "edited": null,
+      "files": [],
+      "thread_replies": [
+        {
+          "ts": "1776742510.690089",
+          "type": "message",
+          "subtype": null,
+          "user": "U07RPDCF0DR",
+          "text": "지어낸 말이 아닙니다",
+          "thread_ts": "1776741210.789189",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776743572.274199",
+          "type": "message",
+          "subtype": null,
+          "user": "U033Z97MZ3N",
+          "text": "보통 찹다 라고 하죠?",
+          "thread_ts": "1776741210.789189",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776744527.088159",
+          "type": "message",
+          "subtype": null,
+          "user": "U07RPDCF0DR",
+          "text": "",
+          "thread_ts": "1776741210.789189",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [
+            {
+              "name": "우씽",
+              "users": [
+                "U033Z97MZ3N"
+              ],
+              "count": 1
+            }
+          ],
+          "edited": null,
+          "files": [
+            {
+              "id": "F0AU0MXCAG3",
+              "name": "IMG_7011.jpg",
+              "title": "IMG_7011",
+              "mimetype": "image/jpeg",
+              "filetype": "jpg",
+              "pretty_type": "JPEG",
+              "size": 79302,
+              "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0AU0MXCAG3/img_7011.jpg",
+              "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0AU0MXCAG3/img_7011.jpg"
+            }
+          ]
+        },
+        {
+          "ts": "1776751684.738779",
+          "type": "message",
+          "subtype": null,
+          "user": "U019E51R1DM",
+          "text": "아이고 찹찹찹찹시럽네",
+          "thread_ts": "1776741210.789189",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [
+            {
+              "name": "x",
+              "users": [
+                "U07RPDCF0DR"
+              ],
+              "count": 1
+            }
+          ],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776751687.425799",
+          "type": "message",
+          "subtype": null,
+          "user": "U019E51R1DM",
+          "text": "이렇게 쓰면 되는거죠?",
+          "thread_ts": "1776741210.789189",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1776921273.845979",
+      "type": "message",
+      "subtype": null,
+      "user": "U0235585LTZ",
+      "text": "모두들 클로드 잘 쓰고 있으시죠?\nAI팀은 알아서 잘 사용하고 있으리란 믿음으로 별도 세션을 갖지는 않았으나, 이제 각자 어떻게 사용하고 있는지 공유하는 세션을 가져볼까 합니다.\n내일 오전 10시? or 오후 2시? (이모지 남겨주세요)\n*[기본 준비 사항] 사용하는 플러그인, 스킬 소개*",
+      "thread_ts": "1776921273.845979",
+      "reply_count": 38,
+      "reply_users": [
+        "U019E51R1DM",
+        "U0235585LTZ",
+        "U02MA1AEU8K",
+        "U0AJYQK4QM6",
+        "U07M5E33KDW",
+        "U0AHY277W3V",
+        "U07DYT1V7UH",
+        "U093SP8GFFU"
+      ],
+      "latest_reply": "1777272635.232689",
+      "reactions": [
+        {
+          "name": "keycap_ten",
+          "users": [
+            "U0235585LTZ",
+            "U019E51R1DM",
+            "U0354SL90UV",
+            "U02MA1AEU8K",
+            "U0AJYQK4QM6",
+            "U0AHY277W3V",
+            "U093NJW4JDS",
+            "U048M5F5MUY"
+          ],
+          "count": 8
+        },
+        {
+          "name": "two",
+          "users": [
+            "U0235585LTZ",
+            "U033Z97MZ3N",
+            "U0354SL90UV",
+            "U0AJYQK4QM6",
+            "U0AHY277W3V",
+            "U07DYT1V7UH"
+          ],
+          "count": 6
+        },
+        {
+          "name": "kirby_dance",
+          "users": [
+            "UBKL1FZ28"
+          ],
+          "count": 1
+        }
+      ],
+      "edited": null,
+      "files": [],
+      "thread_replies": [
+        {
+          "ts": "1776921395.553999",
+          "type": "message",
+          "subtype": null,
+          "user": "U019E51R1DM",
+          "text": "뭔가 준비 자료가 필요한건가요? 아니면 자유롭게 공유하는??",
+          "thread_ts": "1776921273.845979",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776921418.815279",
+          "type": "message",
+          "subtype": null,
+          "user": "U0235585LTZ",
+          "text": "자유롭게 공유하시면 됩니다만 자료 준비가 요즘 일도 아니죠 ㅋㅋ",
+          "thread_ts": "1776921273.845979",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776921484.109439",
+          "type": "message",
+          "subtype": null,
+          "user": "U019E51R1DM",
+          "text": "사람이 많아서 사람마다 다 다를거 같아서요",
+          "thread_ts": "1776921273.845979",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776921504.999279",
+          "type": "message",
+          "subtype": null,
+          "user": "U0235585LTZ",
+          "text": "연모님은 플러그인 레포 한번 더 소개해주시죠!!",
+          "thread_ts": "1776921273.845979",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [
+            {
+              "name": "넵",
+              "users": [
+                "U019E51R1DM"
+              ],
+              "count": 1
+            }
+          ],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776922671.599529",
+          "type": "message",
+          "subtype": null,
+          "user": "U02MA1AEU8K",
+          "text": "이건 ai 팀 내부 세션인가요?",
+          "thread_ts": "1776921273.845979",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [
+            {
+              "name": "man-gesturing-ok::skin-tone-2",
+              "users": [
+                "U0235585LTZ"
+              ],
+              "count": 1
+            }
+          ],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776923157.998549",
+          "type": "message",
+          "subtype": null,
+          "user": "U0AJYQK4QM6",
+          "text": "어떻게 사용하시는지 배우러 가도 될까요??",
+          "thread_ts": "1776921273.845979",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776923188.707889",
+          "type": "message",
+          "subtype": null,
+          "user": "U019E51R1DM",
+          "text": "500원입니다",
+          "thread_ts": "1776921273.845979",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776923204.394569",
+          "type": "message",
+          "subtype": null,
+          "user": "U02MA1AEU8K",
+          "text": "저는 300원에 모십니다",
+          "thread_ts": "1776921273.845979",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776923209.617529",
+          "type": "message",
+          "subtype": null,
+          "user": "U019E51R1DM",
+          "text": "아 졌네 ㅠ",
+          "thread_ts": "1776921273.845979",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776923218.165579",
+          "type": "message",
+          "subtype": null,
+          "user": "U07M5E33KDW",
+          "text": "저는 내일 휴가를 사용할 수도 있는데, 휴가사용하면 허들로 해도 될까요?",
+          "thread_ts": "1776921273.845979",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776923220.479009",
+          "type": "message",
+          "subtype": null,
+          "user": "U0AJYQK4QM6",
+          "text": "800원으로 전부 들어보겠습니다",
+          "thread_ts": "1776921273.845979",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776923239.545629",
+          "type": "message",
+          "subtype": null,
+          "user": "U019E51R1DM",
+          "text": "원격 참여는 250 원",
+          "thread_ts": "1776921273.845979",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776923241.294459",
+          "type": "message",
+          "subtype": null,
+          "user": "U07M5E33KDW",
+          "text": "사회생활 만렙이네",
+          "thread_ts": "1776921273.845979",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776923254.387479",
+          "type": "message",
+          "subtype": null,
+          "user": "U07M5E33KDW",
+          "text": "영민님이 제 250원까지 내주실듯요",
+          "thread_ts": "1776921273.845979",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776923278.796479",
+          "type": "message",
+          "subtype": null,
+          "user": "U0AJYQK4QM6",
+          "text": "오늘 자판기 밑을 확인하며 다녀야겠네요...",
+          "thread_ts": "1776921273.845979",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [
+            {
+              "name": "blob-dance",
+              "users": [
+                "U019E51R1DM"
+              ],
+              "count": 1
+            },
+            {
+              "name": "감사콩",
+              "users": [
+                "U07M5E33KDW"
+              ],
+              "count": 1
+            }
+          ],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776923774.674099",
+          "type": "message",
+          "subtype": null,
+          "user": "U0235585LTZ",
+          "text": "<@U048M5F5MUY> <@U093NJW4JDS> <@U0AHY277W3V>",
+          "thread_ts": "1776921273.845979",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776923903.443709",
+          "type": "message",
+          "subtype": null,
+          "user": "U0AHY277W3V",
+          "text": "저도 어떻게 활용하시는지 배우고 싶습니다!",
+          "thread_ts": "1776921273.845979",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776924080.875389",
+          "type": "message",
+          "subtype": null,
+          "user": "U019E51R1DM",
+          "text": "플러그인/스킬 개념 공부나 하나 직접 만들어보고 들으시면 더욱 도움이 되실지도,,,?",
+          "thread_ts": "1776921273.845979",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [
+            {
+              "name": "party-parrot",
+              "users": [
+                "U0AJYQK4QM6"
+              ],
+              "count": 1
+            }
+          ],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776925665.330739",
+          "type": "message",
+          "subtype": null,
+          "user": "U07DYT1V7UH",
+          "text": "원격 250이면 되나요\n좋네요",
+          "thread_ts": "1776921273.845979",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776925714.929119",
+          "type": "message",
+          "subtype": null,
+          "user": "U07DYT1V7UH",
+          "text": "클로드는 많이 안써봐서 좀 들어야겠는데\n초심자에 맞춰서도..",
+          "thread_ts": "1776921273.845979",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776925870.241559",
+          "type": "message",
+          "subtype": null,
+          "user": "U02MA1AEU8K",
+          "text": "ai팀 전체 참석이고 자유토크 형식이면 각자 한 5분 정도만 얘기해도 1시간쯤 되겠는데요...\n\n키워드 공유 정도라고 보셔야할듯. 세미나 하기에는 시간이 짧네여",
+          "thread_ts": "1776921273.845979",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776925944.814149",
+          "type": "message",
+          "subtype": null,
+          "user": "U07DYT1V7UH",
+          "text": "글쿠만요..\n그래도 감사히 듣겠슴다",
+          "thread_ts": "1776921273.845979",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776925974.098349",
+          "type": "message",
+          "subtype": null,
+          "user": "U07DYT1V7UH",
+          "text": "엔솔도 클코가 되면 좋겠네요:cry:",
+          "thread_ts": "1776921273.845979",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776925988.506279",
+          "type": "message",
+          "subtype": null,
+          "user": "U02MA1AEU8K",
+          "text": "정진님은 안에서 커서만쓰시는건가요?",
+          "thread_ts": "1776921273.845979",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776926057.336979",
+          "type": "message",
+          "subtype": null,
+          "user": "U07DYT1V7UH",
+          "text": "네 커서만 쓰고 있어요",
+          "thread_ts": "1776921273.845979",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776926078.553819",
+          "type": "message",
+          "subtype": null,
+          "user": "U07DYT1V7UH",
+          "text": "무연님도 커서만",
+          "thread_ts": "1776921273.845979",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776926159.918449",
+          "type": "message",
+          "subtype": null,
+          "user": "U02MA1AEU8K",
+          "text": "그럼 커서 최신 기능도 소개좀 해주시죠 ㅋㅋ",
+          "thread_ts": "1776921273.845979",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776926265.505049",
+          "type": "message",
+          "subtype": null,
+          "user": "U07DYT1V7UH",
+          "text": "ㅋㅋㅋ 커서는 최신 기능이..\n찾아보고 내일 말씀드릴게요",
+          "thread_ts": "1776921273.845979",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [
+            {
+              "name": "+1",
+              "users": [
+                "U02MA1AEU8K"
+              ],
+              "count": 1
+            }
+          ],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776926316.038079",
+          "type": "message",
+          "subtype": null,
+          "user": "U02MA1AEU8K",
+          "text": "커서 3.0 사용해보셨는지모르겠는데, 사용해보셨다면 저는 그 부분의 체감이 궁금하긴 합니다...",
+          "thread_ts": "1776921273.845979",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776926463.777069",
+          "type": "message",
+          "subtype": null,
+          "user": "U07DYT1V7UH",
+          "text": "커서 에이젠트 라는게 있긴한데 그걸 말씀드려야겠네요",
+          "thread_ts": "1776921273.845979",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [
+            {
+              "name": "감사콩",
+              "users": [
+                "U02MA1AEU8K"
+              ],
+              "count": 1
+            }
+          ],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776926797.613339",
+          "type": "message",
+          "subtype": null,
+          "user": "U019E51R1DM",
+          "text": "인환님 넥서스 소개하시려면 아예 따로 세션하나 잡고 해도 좋을거 같아여 도움 많이 될듯요 ㅎㅎ",
+          "thread_ts": "1776921273.845979",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776926847.783139",
+          "type": "message",
+          "subtype": null,
+          "user": "U02MA1AEU8K",
+          "text": "다음 주 정도쯤에 엔지니어링 관점에서 LLM 을 주제로 한번 하려고합니다 ㅎㅎ 자료 준비를 해야해서...",
+          "thread_ts": "1776921273.845979",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [
+            {
+              "name": "fire",
+              "users": [
+                "U019E51R1DM",
+                "U07DYT1V7UH",
+                "U0AJYQK4QM6"
+              ],
+              "count": 3
+            },
+            {
+              "name": "thumbsup_all",
+              "users": [
+                "U0235585LTZ",
+                "U07DYT1V7UH",
+                "U0AJYQK4QM6"
+              ],
+              "count": 3
+            }
+          ],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776926917.057999",
+          "type": "message",
+          "subtype": null,
+          "user": "U019E51R1DM",
+          "text": "전 한번 들었는데 맛도리입니다 (바람 넣기)",
+          "thread_ts": "1776921273.845979",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [
+            {
+              "name": "face_with_spiral_eyes",
+              "users": [
+                "U02MA1AEU8K"
+              ],
+              "count": 1
+            }
+          ],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776928445.103179",
+          "type": "message",
+          "subtype": null,
+          "user": "U093SP8GFFU",
+          "text": "<@U0235585LTZ> \nㅠㅠ 다음주에하면 안될까요",
+          "thread_ts": "1776921273.845979",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776928477.395789",
+          "type": "message",
+          "subtype": null,
+          "user": "U0235585LTZ",
+          "text": "따로 들으시죠 ㅎ",
+          "thread_ts": "1776921273.845979",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [
+            {
+              "name": "smiling_face_with_tear",
+              "users": [
+                "U093SP8GFFU"
+              ],
+              "count": 1
+            }
+          ],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776992738.736769",
+          "type": "message",
+          "subtype": null,
+          "user": "U07DYT1V7UH",
+          "text": "지금 엔솔 출근중이라 늦어서 불참하겠습니다,,\n죄송합니다ㅠ",
+          "thread_ts": "1776921273.845979",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1777272386.434649",
+          "type": "message",
+          "subtype": null,
+          "user": "U019E51R1DM",
+          "text": "<@U0235585LTZ> 님 저번에 공유해주셨던 자료 받을 수 있을까여",
+          "thread_ts": "1776921273.845979",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1777272635.232689",
+          "type": "message",
+          "subtype": null,
+          "user": "U0235585LTZ",
+          "text": "",
+          "thread_ts": "1776921273.845979",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [
+            {
+              "name": "pray",
+              "users": [
+                "U019E51R1DM"
+              ],
+              "count": 1
+            }
+          ],
+          "edited": null,
+          "files": [
+            {
+              "id": "F0B04G5CE5S",
+              "name": "ai-team-share-session.html",
+              "title": "ai-team-share-session.html",
+              "mimetype": "text/plain",
+              "filetype": "html",
+              "pretty_type": "HTML",
+              "size": 42122,
+              "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0B04G5CE5S/ai-team-share-session.html",
+              "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0B04G5CE5S/ai-team-share-session.html"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "ts": "1776992325.957129",
+      "type": "message",
+      "subtype": null,
+      "user": "U0235585LTZ",
+      "text": "죄송합니다. 5분 정도 늦을 것 같네요;; 누가 원격 세팅 좀 부탁해요.",
+      "thread_ts": "1776992325.957129",
+      "reply_count": 2,
+      "reply_users": [
+        "U033Z97MZ3N",
+        "U07M5E33KDW"
+      ],
+      "latest_reply": "1776993046.895119",
+      "reactions": [],
+      "edited": null,
+      "files": [],
+      "thread_replies": [
+        {
+          "ts": "1776992409.648199",
+          "type": "message",
+          "subtype": null,
+          "user": "U033Z97MZ3N",
+          "text": "허들 세팅해뒀습니다!",
+          "thread_ts": "1776992325.957129",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [
+            {
+              "name": "thumbsup_all",
+              "users": [
+                "U0235585LTZ"
+              ],
+              "count": 1
+            }
+          ],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776993046.895119",
+          "type": "message",
+          "subtype": null,
+          "user": "U07M5E33KDW",
+          "text": "저 일정이 길어져서 밖인데, 핸드폰이 잘 안되서 참석을 못할것같습니다..",
+          "thread_ts": "1776992325.957129",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1776996777.464709",
+      "type": "message",
+      "subtype": null,
+      "user": "U019E51R1DM",
+      "text": "<https://github.com/teamRTM/rtm-plugin-repo>",
+      "thread_ts": "1776996777.464709",
+      "reply_count": 6,
+      "reply_users": [
+        "U019E51R1DM",
+        "U0AJYQK4QM6"
+      ],
+      "latest_reply": "1777003498.519379",
+      "reactions": [
+        {
+          "name": "+1",
+          "users": [
+            "U02MA1AEU8K",
+            "U093NJW4JDS",
+            "U048M5F5MUY",
+            "U0354SL90UV",
+            "U0AJYQK4QM6"
+          ],
+          "count": 5
+        },
+        {
+          "name": "+1::skin-tone-2",
+          "users": [
+            "U033Z97MZ3N"
+          ],
+          "count": 1
+        }
+      ],
+      "edited": null,
+      "files": [],
+      "thread_replies": [
+        {
+          "ts": "1777002771.340129",
+          "type": "message",
+          "subtype": "thread_broadcast",
+          "user": "U019E51R1DM",
+          "text": "이거 혹시 사용하시는 분 계시면, 써보시고\n이렇게 운영하면 좋겠다 혹은 개선했으면 하는 점들을\n여기 thread 에 달아주시면 좋을거 같습니다.",
+          "thread_ts": "1776996777.464709",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1777003248.163599",
+          "type": "message",
+          "subtype": null,
+          "user": "U0AJYQK4QM6",
+          "text": "claude cli 사용하실 때 전역으로 설치해 사용하시는지, 아니면 가상 환경 별로 사용하시는지 질문 드립니다!",
+          "thread_ts": "1776996777.464709",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1777003338.311529",
+          "type": "message",
+          "subtype": null,
+          "user": "U019E51R1DM",
+          "text": "클로드 코드를 위한 가상환경은 만들어서 사용해본 적이 없긴해요. 보통 배정된 서버 계정의 root 를 기준으로 전역설정 사용합니다",
+          "thread_ts": "1776996777.464709",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1777003414.926549",
+          "type": "message",
+          "subtype": null,
+          "user": "U0AJYQK4QM6",
+          "text": "프로젝트 별로 관리를 해야하나 궁금했습니다. 말씀해주신대로 전역으로 사용해보도록 하겠습니다!!",
+          "thread_ts": "1776996777.464709",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1777003481.453259",
+          "type": "message",
+          "subtype": null,
+          "user": "U019E51R1DM",
+          "text": "음 프로젝트 별로 설정할 수 도 있겠지만, 지금 구조는 전역이 더 알맞을거 같긴하네요",
+          "thread_ts": "1776996777.464709",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [
+            {
+              "name": "party-parrot",
+              "users": [
+                "U0AJYQK4QM6"
+              ],
+              "count": 1
+            }
+          ],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1777003498.519379",
+          "type": "message",
+          "subtype": null,
+          "user": "U0AJYQK4QM6",
+          "text": "넵 알겠습니다 감사합니다!!!",
+          "thread_ts": "1776996777.464709",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1777002771.340129",
+      "type": "message",
+      "subtype": "thread_broadcast",
+      "user": "U019E51R1DM",
+      "text": "이거 혹시 사용하시는 분 계시면, 써보시고\n이렇게 운영하면 좋겠다 혹은 개선했으면 하는 점들을\n여기 thread 에 달아주시면 좋을거 같습니다.",
+      "thread_ts": "1776996777.464709",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1777275118.199129",
+      "type": "message",
+      "subtype": null,
+      "user": "U0235585LTZ",
+      "text": "그동안 클로드 활용해서 업무 효율화를 보여주신 덕분에 1인 1계정 premium 으로 사용할 수 있게 되었네요.\n회사 전체로 보면 큰 비용 증가입니다.\n당연하게 생각하지 마시고, 남들 다 premium 이니까 무조건 premium 으로 시작해야 된다고 생각하지 않으셨으면 합니다.\ngeneral 에서도 언급했듯이, 월간 사용량 모니터링 후 조절이 될 수 있습니다.\n아직 seat 배정 안되신 분들이 있습니다. 필요하실 때 요청해 주시면 바로 배정해 드리겠습니다.\nAI팀 화이팅입니다! 열일하세요~",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [
+        {
+          "name": "fire",
+          "users": [
+            "U0354SL90UV",
+            "U093SP8GFFU",
+            "U02MA1AEU8K",
+            "U093NJW4JDS",
+            "U07DYT1V7UH",
+            "U0AJYQK4QM6"
+          ],
+          "count": 6
+        },
+        {
+          "name": "감사콩",
+          "users": [
+            "U093SP8GFFU",
+            "U02MA1AEU8K",
+            "U093NJW4JDS",
+            "U07DYT1V7UH"
+          ],
+          "count": 4
+        }
+      ],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1777277592.963719",
+      "type": "message",
+      "subtype": null,
+      "user": "U02MA1AEU8K",
+      "text": "내일 (28일, 화), ~13:00~ 13:30부터 1시간 정도 LLM 엔지니어링 관련해서 경험한 내용들 공유하는 세션 가져보려고 합니다.\n\n관심있으신 분들은 와주시면 감사하겠습니다. :감사콩:",
+      "thread_ts": "1777277592.963719",
+      "reply_count": 1,
+      "reply_users": [
+        "U02MA1AEU8K"
+      ],
+      "latest_reply": "1777278510.035989",
+      "reactions": [
+        {
+          "name": "white_check_mark",
+          "users": [
+            "U0235585LTZ",
+            "U093NJW4JDS",
+            "U019E51R1DM",
+            "U093SP8GFFU",
+            "U0AJYQK4QM6"
+          ],
+          "count": 5
+        }
+      ],
+      "edited": {
+        "user": "U02MA1AEU8K",
+        "ts": "1777278715.000000"
+      },
+      "files": [
+        {
+          "id": "F0AV92X9JCT",
+          "name": "poster.png",
+          "title": "poster.png",
+          "mimetype": "image/png",
+          "filetype": "png",
+          "pretty_type": "PNG",
+          "size": 1383646,
+          "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0AV92X9JCT/poster.png",
+          "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0AV92X9JCT/poster.png"
+        },
+        {
+          "id": "F0B01D6GH3L",
+          "name": "llm-harness-seminar.pdf",
+          "title": "llm-harness-seminar.pdf",
+          "mimetype": "application/pdf",
+          "filetype": "pdf",
+          "pretty_type": "PDF",
+          "size": 914312,
+          "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0B01D6GH3L/llm-harness-seminar.pdf",
+          "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0B01D6GH3L/llm-harness-seminar.pdf"
+        }
+      ],
+      "thread_replies": [
+        {
+          "ts": "1777278510.035989",
+          "type": "message",
+          "subtype": "thread_broadcast",
+          "user": "U02MA1AEU8K",
+          "text": "13시 30분으로 변경해서 ab 회의실로 잡았습니다\n\n13시 30분으로 변경입니다",
+          "thread_ts": "1777277592.963719",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [
+            {
+              "name": "man-gesturing-ok",
+              "users": [
+                "U093NJW4JDS",
+                "U093SP8GFFU",
+                "U0354SL90UV",
+                "U0AJYQK4QM6"
+              ],
+              "count": 4
+            }
+          ],
+          "edited": null,
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1777278510.035989",
+      "type": "message",
+      "subtype": "thread_broadcast",
+      "user": "U02MA1AEU8K",
+      "text": "13시 30분으로 변경해서 ab 회의실로 잡았습니다\n\n13시 30분으로 변경입니다",
+      "thread_ts": "1777277592.963719",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [
+        {
+          "name": "man-gesturing-ok",
+          "users": [
+            "U093NJW4JDS",
+            "U093SP8GFFU",
+            "U0354SL90UV",
+            "U0AJYQK4QM6"
+          ],
+          "count": 4
+        }
+      ],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1777373610.942629",
+      "type": "message",
+      "subtype": null,
+      "user": "U0235585LTZ",
+      "text": "<@U02MA1AEU8K> 출처: GeekNews\n <https://share.google/WAy7NzCzwCZYVAV24|https://share.google/WAy7NzCzwCZYVAV24>",
+      "thread_ts": "1777373610.942629",
+      "reply_count": 1,
+      "reply_users": [
+        "U02MA1AEU8K"
+      ],
+      "latest_reply": "1777373633.142859",
+      "reactions": [],
+      "edited": null,
+      "files": [],
+      "thread_replies": [
+        {
+          "ts": "1777373633.142859",
+          "type": "message",
+          "subtype": null,
+          "user": "U02MA1AEU8K",
+          "text": "역시 저와같은 사람이 많았군요",
+          "thread_ts": "1777373610.942629",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1777425531.083359",
+      "type": "message",
+      "subtype": null,
+      "user": "U02MA1AEU8K",
+      "text": "데스크톱 앱으로 클로드코드 쓸 때, 예전에 권한 설정 중에 bypass 있었던 것 같은데, 오늘 업데이트해보니 없어졌습니다...\n\n혹시 저랑 비슷한 케이스 겪었는데 해결하신 분 있으신가요?",
+      "thread_ts": "1777425531.083359",
+      "reply_count": 5,
+      "reply_users": [
+        "U0235585LTZ",
+        "U02MA1AEU8K"
+      ],
+      "latest_reply": "1777427917.462139",
+      "reactions": [],
+      "edited": null,
+      "files": [
+        {
+          "id": "F0B0M1SN7A8",
+          "name": "스크린샷 2026-04-29 10.18.04.png",
+          "title": "스크린샷 2026-04-29 10.18.04.png",
+          "mimetype": "image/png",
+          "filetype": "png",
+          "pretty_type": "PNG",
+          "size": 30920,
+          "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0B0M1SN7A8/_______________________________2026-04-29_10.18.04.png",
+          "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0B0M1SN7A8/_______________________________2026-04-29_10.18.04.png"
+        }
+      ],
+      "thread_replies": [
+        {
+          "ts": "1777426115.914589",
+          "type": "message",
+          "subtype": null,
+          "user": "U0235585LTZ",
+          "text": "설정 &gt; Claude Code &gt; 권한 우회 모드 허용",
+          "thread_ts": "1777425531.083359",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1777426152.643629",
+          "type": "message",
+          "subtype": null,
+          "user": "U02MA1AEU8K",
+          "text": "저도 그게 있었던 것으로 분명 봤었는데,\n\n없어졌습니다...\n\n최신버전 괜히 업데이트했어요",
+          "thread_ts": "1777425531.083359",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": [
+            {
+              "id": "F0B0B3NR1D1",
+              "name": "스크린샷 2026-04-29 10.28.53.png",
+              "title": "스크린샷 2026-04-29 10.28.53.png",
+              "mimetype": "image/png",
+              "filetype": "png",
+              "pretty_type": "PNG",
+              "size": 242631,
+              "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0B0B3NR1D1/_______________________________2026-04-29_10.28.53.png",
+              "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0B0B3NR1D1/_______________________________2026-04-29_10.28.53.png"
+            }
+          ]
+        },
+        {
+          "ts": "1777426204.028779",
+          "type": "message",
+          "subtype": null,
+          "user": "U0235585LTZ",
+          "text": "맥만 없어졌네요. 윈도우는 업데이트 해도 있던데.",
+          "thread_ts": "1777425531.083359",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [
+            {
+              "name": "rage",
+              "users": [
+                "U02MA1AEU8K"
+              ],
+              "count": 1
+            }
+          ],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1777426223.971439",
+          "type": "message",
+          "subtype": null,
+          "user": "U02MA1AEU8K",
+          "text": "너무 업데이트 자주하더니 이런 실수를...",
+          "thread_ts": "1777425531.083359",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1777427917.462139",
+          "type": "message",
+          "subtype": "thread_broadcast",
+          "user": "U02MA1AEU8K",
+          "text": "클로드 데스크톱 앱에서 클로드코드 쓰시는 분들은 조심하셔야 할 것 같습니다. 권한 우회모드 (bypass)가 동작하지 않습니다.\n\n일단 윈도우 쓰시는 명식님 설정에도 저 권한 우회모드 토글이 없어진 것 확인했습니다.\n\n최신 버전 업데이트하시는 분들은 조심하세요.",
+          "thread_ts": "1777425531.083359",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [
+            {
+              "name": "감사콩",
+              "users": [
+                "U0354SL90UV"
+              ],
+              "count": 1
+            }
+          ],
+          "edited": null,
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1777427917.462139",
+      "type": "message",
+      "subtype": "thread_broadcast",
+      "user": "U02MA1AEU8K",
+      "text": "클로드 데스크톱 앱에서 클로드코드 쓰시는 분들은 조심하셔야 할 것 같습니다. 권한 우회모드 (bypass)가 동작하지 않습니다.\n\n일단 윈도우 쓰시는 명식님 설정에도 저 권한 우회모드 토글이 없어진 것 확인했습니다.\n\n최신 버전 업데이트하시는 분들은 조심하세요.",
+      "thread_ts": "1777425531.083359",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [
+        {
+          "name": "감사콩",
+          "users": [
+            "U0354SL90UV"
+          ],
+          "count": 1
+        }
+      ],
+      "edited": null,
+      "files": []
+    }
+  ],
+  "routed_messages": [
+    {
+      "ts": "1776741210.789189",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "<https://www.instiz.net/name/49301803>"
+    },
+    {
+      "ts": "1776921273.845979",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "모두들 클로드 잘 쓰고 있으시죠?\nAI팀은 알아서 잘 사용하고 있으리란 믿음으로 별도 세션을 갖지는 않았으나, 이제 각자 어떻게 사용하고 있는지 공유하는 세션을 가져볼까 합니다.\n내일 오전 10시? or 오후 2시? (이모지 남겨주세요)\n*[기본 준비 사항] 사용하는 플러그인, 스킬 소개*"
+    },
+    {
+      "ts": "1776992325.957129",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "죄송합니다. 5분 정도 늦을 것 같네요;; 누가 원격 세팅 좀 부탁해요."
+    },
+    {
+      "ts": "1776996777.464709",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "<https://github.com/teamRTM/rtm-plugin-repo>"
+    },
+    {
+      "ts": "1777002771.340129",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "이거 혹시 사용하시는 분 계시면, 써보시고\n이렇게 운영하면 좋겠다 혹은 개선했으면 하는 점들을\n여기 thread 에 달아주시면 좋을거 같습니다."
+    },
+    {
+      "ts": "1777275118.199129",
+      "bucket": "company_news",
+      "reason": "company_keywords",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "그동안 클로드 활용해서 업무 효율화를 보여주신 덕분에 1인 1계정 premium 으로 사용할 수 있게 되었네요.\n회사 전체로 보면 큰 비용 증가입니다.\n당연하게 생각하지 마시고, 남들 다 premium 이니까 무조건 premium 으로 시작해야 된다고 생각하지 않으셨으면 합니다.\ngeneral 에서도 언급했듯이, 월간 사용량 모니터링 후 조절이 될 수 있습니다.\n아직 seat 배정 안되신 분들이 있습니다. 필요하실 때 요청해 주시면 바로 배정해 드리겠습니다.\nAI팀 화이팅입니다! 열일하세요~"
+    },
+    {
+      "ts": "1777277592.963719",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "내일 (28일, 화), ~13:00~ 13:30부터 1시간 정도 LLM 엔지니어링 관련해서 경험한 내용들 공유하는 세션 가져보려고 합니다.\n\n관심있으신 분들은 와주시면 감사하겠습니다. :감사콩: poster.png llm-harness-seminar.pdf"
+    },
+    {
+      "ts": "1777278510.035989",
+      "bucket": "project",
+      "reason": "project_keywords",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Project_Intake",
+      "text": "13시 30분으로 변경해서 ab 회의실로 잡았습니다\n\n13시 30분으로 변경입니다"
+    },
+    {
+      "ts": "1777373610.942629",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "<@U02MA1AEU8K> 출처: GeekNews\n <https://share.google/WAy7NzCzwCZYVAV24|https://share.google/WAy7NzCzwCZYVAV24>"
+    },
+    {
+      "ts": "1777425531.083359",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "데스크톱 앱으로 클로드코드 쓸 때, 예전에 권한 설정 중에 bypass 있었던 것 같은데, 오늘 업데이트해보니 없어졌습니다...\n\n혹시 저랑 비슷한 케이스 겪었는데 해결하신 분 있으신가요? 스크린샷 2026-04-29 10.18.04.png"
+    },
+    {
+      "ts": "1777427917.462139",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "클로드 데스크톱 앱에서 클로드코드 쓰시는 분들은 조심하셔야 할 것 같습니다. 권한 우회모드 (bypass)가 동작하지 않습니다.\n\n일단 윈도우 쓰시는 명식님 설정에도 저 권한 우회모드 토글이 없어진 것 확인했습니다.\n\n최신 버전 업데이트하시는 분들은 조심하세요."
+    }
+  ],
+  "excluded_messages": [
+    {
+      "ts": "1777520175.029939",
+      "reason": "system_membership_event",
+      "bucket": "casual",
+      "text": "<@U0B15H1AQJV> has joined the channel",
+      "subtype": "channel_join"
+    }
+  ]
+}

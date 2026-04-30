@@ -5,6 +5,7 @@
 ## 목적
 
 - Google Drive 수집기
+- Slack 수집기
 - 위키화 러너
 - 검수/재구조화 러너
 - 상태 머신 및 스케줄러
@@ -61,6 +62,7 @@ docker compose up --build
   - `automation/drive_wikify/src/`
 - 런타임 상태:
   - `automation/drive_wikify/runtime/`
+  - `automation/wiki_api/runtime/slack_collection_state.json`
 - 설정:
   - `automation/drive_wikify/config/`
 

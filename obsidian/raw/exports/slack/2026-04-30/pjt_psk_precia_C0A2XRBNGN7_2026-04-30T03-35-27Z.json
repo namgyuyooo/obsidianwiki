@@ -1,0 +1,1200 @@
+{
+  "type": "slack_channel_export",
+  "workspace": "RTM Slack",
+  "collected_at": "2026-04-30T03:35:27.248712+00:00",
+  "channel": {
+    "id": "C0A2XRBNGN7",
+    "name": "pjt_psk_precia",
+    "type": "public_channel",
+    "is_archived": false,
+    "is_private": false,
+    "created": "2025-12-12T00:41:33+00:00",
+    "topic": "",
+    "purpose": "",
+    "member_count": 8,
+    "routing": {
+      "channel_bucket": "project",
+      "conversation_mode": "project_updates",
+      "rationale": "project_channel_prefix",
+      "wiki_workspace": "rtm",
+      "wiki_target_root": "obsidian/Wiki/Common/Slack_Project_Intake",
+      "wiki_target_kind": "common"
+    }
+  },
+  "routing": {
+    "channel_bucket": "project",
+    "conversation_mode": "project_updates",
+    "rationale": "project_channel_prefix",
+    "wiki_workspace": "rtm",
+    "wiki_target_root": "obsidian/Wiki/Common/Slack_Project_Intake",
+    "wiki_target_kind": "common",
+    "project_wiki_target_root": "obsidian/Wiki/Common/Slack_Project_Intake",
+    "company_wiki_target_root": "obsidian/Wiki/Common/Slack_Company_News"
+  },
+  "history_window": {
+    "oldest_ts": "1776656286.008182",
+    "limit_per_channel": 500,
+    "include_threads": true,
+    "include_files": true
+  },
+  "messages": [
+    {
+      "ts": "1776754455.639079",
+      "type": "message",
+      "subtype": null,
+      "user": "U035802E4UA",
+      "text": "<@U0328CH80JV>\n명식님 20일 오전에 온 프레시아 메일 파일 인식 관련해서 지금 첨부된 이미지의 Camera01 폴더의 데이터 받아 볼 수 있을까요?\n현재 프로그램 내부에서는 파일 인식은 잘 되고 있어서요. 정확한 원인 분석하기 위함입니다.",
+      "thread_ts": "1776754455.639079",
+      "reply_count": 16,
+      "reply_users": [
+        "U0328CH80JV",
+        "U035802E4UA",
+        "U0AJYQK4QM6",
+        "U0354SL90UV",
+        "U03S8T88QGP"
+      ],
+      "latest_reply": "1776855688.116689",
+      "reactions": [],
+      "edited": null,
+      "files": [
+        {
+          "id": "F0AULP2ST1P",
+          "name": "0.png",
+          "title": "0.png",
+          "mimetype": "image/png",
+          "filetype": "png",
+          "pretty_type": "PNG",
+          "size": 585566,
+          "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0AULP2ST1P/0.png",
+          "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0AULP2ST1P/0.png"
+        }
+      ],
+      "thread_replies": [
+        {
+          "ts": "1776818503.886939",
+          "type": "message",
+          "subtype": null,
+          "user": "U0328CH80JV",
+          "text": "첨부 이미지로 분석해주세요.\n(전달드린 메일에서 해당 데이터만 스레드에 남겼습니다.)",
+          "thread_ts": "1776754455.639079",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": [
+            {
+              "id": "F0ATZJS593R",
+              "name": "094856_Bevel size check_Centering wf_50_LP3_#19#00.bmp",
+              "title": "094856_Bevel size check_Centering wf_50_LP3_#19#00.bmp",
+              "mimetype": "image/bmp",
+              "filetype": "bmp",
+              "pretty_type": "Bitmap",
+              "size": 1229878,
+              "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0ATZJS593R/094856_bevel_size_check_centering_wf_50_lp3__19_00.bmp",
+              "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0ATZJS593R/094856_bevel_size_check_centering_wf_50_lp3__19_00.bmp"
+            },
+            {
+              "id": "F0AUD0WNK7G",
+              "name": "094859_Bevel size check_Centering wf_90_LP3_#19#00.bmp",
+              "title": "094859_Bevel size check_Centering wf_90_LP3_#19#00.bmp",
+              "mimetype": "image/bmp",
+              "filetype": "bmp",
+              "pretty_type": "Bitmap",
+              "size": 1229878,
+              "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0AUD0WNK7G/094859_bevel_size_check_centering_wf_90_lp3__19_00.bmp",
+              "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0AUD0WNK7G/094859_bevel_size_check_centering_wf_90_lp3__19_00.bmp"
+            },
+            {
+              "id": "F0AU8LX7G0K",
+              "name": "094903_Bevel size check_Centering wf_130_LP3_#19#00.bmp",
+              "title": "094903_Bevel size check_Centering wf_130_LP3_#19#00.bmp",
+              "mimetype": "image/bmp",
+              "filetype": "bmp",
+              "pretty_type": "Bitmap",
+              "size": 1229878,
+              "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0AU8LX7G0K/094903_bevel_size_check_centering_wf_130_lp3__19_00.bmp",
+              "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0AU8LX7G0K/094903_bevel_size_check_centering_wf_130_lp3__19_00.bmp"
+            },
+            {
+              "id": "F0AUF2R0FNW",
+              "name": "094905_Bevel size check_Centering wf_170_LP3_#19#00.bmp",
+              "title": "094905_Bevel size check_Centering wf_170_LP3_#19#00.bmp",
+              "mimetype": "image/bmp",
+              "filetype": "bmp",
+              "pretty_type": "Bitmap",
+              "size": 1229878,
+              "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0AUF2R0FNW/094905_bevel_size_check_centering_wf_170_lp3__19_00.bmp",
+              "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0AUF2R0FNW/094905_bevel_size_check_centering_wf_170_lp3__19_00.bmp"
+            }
+          ]
+        },
+        {
+          "ts": "1776819728.468849",
+          "type": "message",
+          "subtype": null,
+          "user": "U035802E4UA",
+          "text": "이미지 네장 모두 \"float division by zero\" 에러로 추론 실패입니다.\n<@U0354SL90UV> <@U0AJYQK4QM6> 실패 케이스가 맞는 것 같은데, 데이터 문제 맞을까요?",
+          "thread_ts": "1776754455.639079",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": [
+            {
+              "id": "F0AUJNVA20L",
+              "name": "image.png",
+              "title": "image.png",
+              "mimetype": "image/png",
+              "filetype": "png",
+              "pretty_type": "PNG",
+              "size": 2391944,
+              "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0AUJNVA20L/image.png",
+              "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0AUJNVA20L/image.png"
+            }
+          ]
+        },
+        {
+          "ts": "1776819761.048019",
+          "type": "message",
+          "subtype": null,
+          "user": "U035802E4UA",
+          "text": "기존 추론 잘 되던 이미지",
+          "thread_ts": "1776754455.639079",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": [
+            {
+              "id": "F0AUBNWF7N1",
+              "name": "image.png",
+              "title": "image.png",
+              "mimetype": "image/png",
+              "filetype": "png",
+              "pretty_type": "PNG",
+              "size": 886611,
+              "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0AUBNWF7N1/image.png",
+              "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0AUBNWF7N1/image.png"
+            }
+          ]
+        },
+        {
+          "ts": "1776820171.304439",
+          "type": "message",
+          "subtype": null,
+          "user": "U0AJYQK4QM6",
+          "text": "일단 추론은 잘 되는 것으로 보이는데 어떤 문제인지 확인해보겠습니다!",
+          "thread_ts": "1776754455.639079",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": [
+            {
+              "id": "F0AU8QPT7JP",
+              "name": "image.png",
+              "title": "image.png",
+              "mimetype": "image/png",
+              "filetype": "png",
+              "pretty_type": "PNG",
+              "size": 1013662,
+              "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0AU8QPT7JP/image.png",
+              "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0AU8QPT7JP/image.png"
+            }
+          ]
+        },
+        {
+          "ts": "1776833130.126769",
+          "type": "message",
+          "subtype": null,
+          "user": "U035802E4UA",
+          "text": "해당 문제 개발 쪽에서 확인했습니다. <@U0AJYQK4QM6> <@U0354SL90UV>",
+          "thread_ts": "1776754455.639079",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [
+            {
+              "name": "감사콩",
+              "users": [
+                "U0354SL90UV",
+                "U0AJYQK4QM6"
+              ],
+              "count": 2
+            },
+            {
+              "name": "+1",
+              "users": [
+                "U0328CH80JV"
+              ],
+              "count": 1
+            }
+          ],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776833238.518469",
+          "type": "message",
+          "subtype": null,
+          "user": "U035802E4UA",
+          "text": "<@U0328CH80JV> 이거 수정해서 메일로 전달 드리면 되는건가요? 아니면 측정 안되는 이미지 셋 (영민님 확인 중) 이것도 같이 확인 후에 배포 하면 되는건가요?",
+          "thread_ts": "1776754455.639079",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": {
+            "user": "U035802E4UA",
+            "ts": "1776833330.000000"
+          },
+          "files": []
+        },
+        {
+          "ts": "1776833392.572109",
+          "type": "message",
+          "subtype": null,
+          "user": "U0328CH80JV",
+          "text": "영민님것 진행되는것 보고 판단합시다. 내일 넘어서까지 시간 더 필요하면 이것부터 배포하고 정리될것 같으면 묶어서 배포합시다.",
+          "thread_ts": "1776754455.639079",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [
+            {
+              "name": "man-gesturing-ok",
+              "users": [
+                "U035802E4UA"
+              ],
+              "count": 1
+            }
+          ],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776833415.988729",
+          "type": "message",
+          "subtype": null,
+          "user": "U035802E4UA",
+          "text": "<@U03S8T88QGP> 추후 배포 부탁드립니다!",
+          "thread_ts": "1776754455.639079",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [
+            {
+              "name": "white_check_mark",
+              "users": [
+                "U03S8T88QGP"
+              ],
+              "count": 1
+            }
+          ],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776833567.109949",
+          "type": "message",
+          "subtype": null,
+          "user": "U0328CH80JV",
+          "text": "<@U0AJYQK4QM6> 내일까지 해결 할 수 있을것 같나요?",
+          "thread_ts": "1776754455.639079",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776833582.606389",
+          "type": "message",
+          "subtype": null,
+          "user": "U0354SL90UV",
+          "text": "영민님 단에서 로직은 완료된 상태고,\n제가 테스트해서 오늘까지 말씀드리겠습니다",
+          "thread_ts": "1776754455.639079",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776833589.530059",
+          "type": "message",
+          "subtype": null,
+          "user": "U0354SL90UV",
+          "text": "자잘한 수정이 추가됐습니다.",
+          "thread_ts": "1776754455.639079",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776833893.889699",
+          "type": "message",
+          "subtype": null,
+          "user": "U0AJYQK4QM6",
+          "text": "ACL 탐지 영역 확대 진행하였고, 로직에서 자잘한 오류들 수정하여 준영님께 전달드렸습니다!",
+          "thread_ts": "1776754455.639079",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776845415.329279",
+          "type": "message",
+          "subtype": "thread_broadcast",
+          "user": "U03S8T88QGP",
+          "text": "<@U0328CH80JV> 설치파일 아래 경로에 업로드하였습니다.\n`\\\\10.10.100.15\\vision_nas\\00_프로젝트\\2026_PSK Precia\\0.설치 파일\\20260422`",
+          "thread_ts": "1776754455.639079",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776845440.981829",
+          "type": "message",
+          "subtype": null,
+          "user": "U035802E4UA",
+          "text": "추론 되는 것도 테스트 확인 했습니다.",
+          "thread_ts": "1776754455.639079",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": [
+            {
+              "id": "F0AUDRFR17F",
+              "name": "image.png",
+              "title": "image.png",
+              "mimetype": "image/png",
+              "filetype": "png",
+              "pretty_type": "PNG",
+              "size": 718180,
+              "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0AUDRFR17F/image.png",
+              "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0AUDRFR17F/image.png"
+            }
+          ]
+        },
+        {
+          "ts": "1776855433.515109",
+          "type": "message",
+          "subtype": null,
+          "user": "U0328CH80JV",
+          "text": "추론 안되던건 원인이 뭐였나요? <@U03S8T88QGP> <@U035802E4UA>",
+          "thread_ts": "1776754455.639079",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776855688.116689",
+          "type": "message",
+          "subtype": null,
+          "user": "U03S8T88QGP",
+          "text": "추론 결과 etch가 없어, 통계값이 0으로 나온 것에 대한 예외처리가 되어있지 않았던 문제였습니다.\n\n예외처리 로직 추가하여 해결하였습니다.",
+          "thread_ts": "1776754455.639079",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [
+            {
+              "name": "white_check_mark",
+              "users": [
+                "U0328CH80JV"
+              ],
+              "count": 1
+            }
+          ],
+          "edited": null,
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1776818560.345379",
+      "type": "message",
+      "subtype": null,
+      "user": "U0328CH80JV",
+      "text": "<@U0AJYQK4QM6> 측정이 제대로 안되는 이미지셋입니다. 첨부 이미지로 테스트 해보시기 바랍니다.",
+      "thread_ts": "1776818560.345379",
+      "reply_count": 1,
+      "reply_users": [
+        "U0AJYQK4QM6"
+      ],
+      "latest_reply": "1776818572.194109",
+      "reactions": [
+        {
+          "name": "eyes",
+          "users": [
+            "U0AJYQK4QM6",
+            "U0354SL90UV"
+          ],
+          "count": 2
+        }
+      ],
+      "edited": null,
+      "files": [
+        {
+          "id": "F0AUJL7CLH2",
+          "name": "000913_bulk_marathon_2-2_22_0_LP2_#00#14.bmp",
+          "title": "000913_bulk_marathon_2-2_22_0_LP2_#00#14.bmp",
+          "mimetype": "image/bmp",
+          "filetype": "bmp",
+          "pretty_type": "Bitmap",
+          "size": 1229878,
+          "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0AUJL7CLH2/000913_bulk_marathon_2-2_22_0_lp2__00_14.bmp",
+          "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0AUJL7CLH2/000913_bulk_marathon_2-2_22_0_lp2__00_14.bmp"
+        },
+        {
+          "id": "F0AUTVAFALR",
+          "name": "000916_bulk_marathon_2-2_22_90_LP2_#00#14.bmp",
+          "title": "000916_bulk_marathon_2-2_22_90_LP2_#00#14.bmp",
+          "mimetype": "image/bmp",
+          "filetype": "bmp",
+          "pretty_type": "Bitmap",
+          "size": 1229878,
+          "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0AUTVAFALR/000916_bulk_marathon_2-2_22_90_lp2__00_14.bmp",
+          "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0AUTVAFALR/000916_bulk_marathon_2-2_22_90_lp2__00_14.bmp"
+        },
+        {
+          "id": "F0AUBL3RWLD",
+          "name": "000919_bulk_marathon_2-2_22_180_LP2_#00#14.bmp",
+          "title": "000919_bulk_marathon_2-2_22_180_LP2_#00#14.bmp",
+          "mimetype": "image/bmp",
+          "filetype": "bmp",
+          "pretty_type": "Bitmap",
+          "size": 1229878,
+          "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0AUBL3RWLD/000919_bulk_marathon_2-2_22_180_lp2__00_14.bmp",
+          "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0AUBL3RWLD/000919_bulk_marathon_2-2_22_180_lp2__00_14.bmp"
+        },
+        {
+          "id": "F0ATZJWUVJT",
+          "name": "000923_bulk_marathon_2-2_22_270_LP2_#00#14.bmp",
+          "title": "000923_bulk_marathon_2-2_22_270_LP2_#00#14.bmp",
+          "mimetype": "image/bmp",
+          "filetype": "bmp",
+          "pretty_type": "Bitmap",
+          "size": 1229878,
+          "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0ATZJWUVJT/000923_bulk_marathon_2-2_22_270_lp2__00_14.bmp",
+          "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0ATZJWUVJT/000923_bulk_marathon_2-2_22_270_lp2__00_14.bmp"
+        }
+      ],
+      "thread_replies": [
+        {
+          "ts": "1776818572.194109",
+          "type": "message",
+          "subtype": null,
+          "user": "U0AJYQK4QM6",
+          "text": "넵 감사합니다!",
+          "thread_ts": "1776818560.345379",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1776838383.292209",
+      "type": "message",
+      "subtype": null,
+      "user": "U0AJYQK4QM6",
+      "text": "<@U03S8T88QGP>, cc <@U0328CH80JV> <@U035802E4UA> <@U0354SL90UV>\n<https://github.com/teamRTM/rtm-hubble-precia-demo/tree/VD3-454>\nprecia 탐지 영역 확대 로직 추가, 기존 로직 강화하였고 테스트 완료하여 push 하였습니다.\n확인해주시면 감사하겠습니다!",
+      "thread_ts": "1776838383.292209",
+      "reply_count": 1,
+      "reply_users": [
+        "U035802E4UA"
+      ],
+      "latest_reply": "1776842171.393369",
+      "reactions": [
+        {
+          "name": "eyes",
+          "users": [
+            "U035802E4UA"
+          ],
+          "count": 1
+        }
+      ],
+      "edited": null,
+      "files": [],
+      "thread_replies": [
+        {
+          "ts": "1776842171.393369",
+          "type": "message",
+          "subtype": null,
+          "user": "U035802E4UA",
+          "text": "머지하고 삭제했습니다~",
+          "thread_ts": "1776838383.292209",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1776845415.329279",
+      "type": "message",
+      "subtype": "thread_broadcast",
+      "user": "U03S8T88QGP",
+      "text": "<@U0328CH80JV> 설치파일 아래 경로에 업로드하였습니다.\n`\\\\10.10.100.15\\vision_nas\\00_프로젝트\\2026_PSK Precia\\0.설치 파일\\20260422`",
+      "thread_ts": "1776754455.639079",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1777006007.594799",
+      "type": "message",
+      "subtype": null,
+      "user": "U0328CH80JV",
+      "text": "하태경 책임님이 방향을 잘 정리해주신것 같은데, 전반적인 데이터를 일괄로 공유해주셨습니다\n아래의 데이터로 현재 로직으로 검출이 잘 되는지 추가 검토해주세요.\n데이터 한번 보시고 실험 일정 정리해서 본 스레드에 공유해주세요.  <@U0AJYQK4QM6>\n\n*데이터 경로 : vision_nas\\00_프로젝트\\2026_PSK Precia\\Data\\20260424*\n\n** 메일 참조.\n[수신: RTM 배명식님]\n[발신: PSK 하태경]\n\n안녕하세요\nPSK 하태경 입니다\n\n길이 측정 로직에 예외 사항이 예상보다 지속적으로 발생을 해서, 건 별로 수정하기 보다는 다량의 이미지를 다시 제공해 드리고 로직을 다시 업데이트 하는것이 효율적일 것으로 판단됩니다\n\n1, 2 호기에 대해서 이미지 수집을 완료 했고 전달 드릴예정입니다.\n\n받아 보시고 모델 업데이트 일정 검토 부탁 드리겠습니다\n\n이상입니다",
+      "thread_ts": "1777006007.594799",
+      "reply_count": 12,
+      "reply_users": [
+        "U0354SL90UV",
+        "U0AJYQK4QM6",
+        "U0328CH80JV"
+      ],
+      "latest_reply": "1777361842.385749",
+      "reactions": [],
+      "edited": null,
+      "files": [],
+      "thread_replies": [
+        {
+          "ts": "1777006219.081809",
+          "type": "message",
+          "subtype": null,
+          "user": "U0354SL90UV",
+          "text": "엣칭에 사용하는 가스 종류별로 업데이트는 따로 공식적으로 정해진게 없는건가요?\n\nSiO2 (기본) 데이터의 업데이트가 한번 방점을 찍은 뒤\n특수 가스들로 엣칭했을때에 맞춰서 개선하는 것으로 생각되었는데, 아닐까요?\n\n이전 업데이트부터 영민님께 맡겨드린 상태지만, 지속적인 길이 측정 로직 예외사항이라고 준 데이터들이 기본 SiO2 데이터가 아닌 것으로 저는 파악하고 있어서요.",
+          "thread_ts": "1777006007.594799",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": {
+            "user": "U0354SL90UV",
+            "ts": "1777006238.000000"
+          },
+          "files": []
+        },
+        {
+          "ts": "1777006410.995009",
+          "type": "message",
+          "subtype": null,
+          "user": "U0AJYQK4QM6",
+          "text": "확인해보겠습니다!",
+          "thread_ts": "1777006007.594799",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1777006513.679759",
+          "type": "message",
+          "subtype": null,
+          "user": "U0328CH80JV",
+          "text": "SIO2, PR, ACL 이렇게 3가지 언급되었습니다. SIO2 가 국내 대부분이다라는 얘기는 있었으나, 이걸로 국한하지는 않아서.",
+          "thread_ts": "1777006007.594799",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1777007249.413989",
+          "type": "message",
+          "subtype": null,
+          "user": "U0354SL90UV",
+          "text": "<@U0AJYQK4QM6>\n개선 진행 진행하시다가, etching 가스 종류별로 로직을 나누는 것도 고려해보셔야할 것 같습니다.\n\nACL은 (제일 이미지가 더러운 케이스, PR과 제가 혼동했을 수 있음) 특히 기준이 애매해서 중간에 PSK 측과 잡아야하는 기준에 대한 정보 미팅이 필요할 수도 있습니다.\n\n또한, 지속적으로 업데이트가 된다면 이미지 1장에 대하여 이전 예측 결과 y 값을들 정답 라벨로 따로 저장해두고, 해당 값과 신규 로직의 y값(+-3정도), 갯수의 차이가 나는지 여부로 성능 Test를 정량적으로 해볼 수 있을 것 같습니다.\n\n최초에 poc로 시작했던 걸 화면으로 보고싶다에서 시작되어 따로 방점 없이 지속적인 개선이 진행되는 방향으로 가서, 멀리 봤을 때 데이터셋 준비가 필요해보입니다.\n\n다만 정답 데이터셋 준비는 제가 할수도 있으니 인지만 해두시고 데이터에 대한 검증만 우선적으로 부탁드리겠습니다.",
+          "thread_ts": "1777006007.594799",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1777007294.989199",
+          "type": "message",
+          "subtype": null,
+          "user": "U0328CH80JV",
+          "text": "정보 확인 관련한 미팅 필요하면 주저하지 마시고 요청해주세요",
+          "thread_ts": "1777006007.594799",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1777007484.383589",
+          "type": "message",
+          "subtype": null,
+          "user": "U0328CH80JV",
+          "text": "금일 공유된 데이터 1차로 분류먼저 해보시고, 각 케이스별 방향을 고민해봅시다. SIO2, ACL, PR, 기타(미확인) 이렇게 구분하면 될듯하고, 각 웨이퍼별 현재 로직으로 잘 탐지되는지, 개선 필요한지 정리해주세요. 이 결과로 내부 리뷰 합시다.",
+          "thread_ts": "1777006007.594799",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1777008205.029529",
+          "type": "message",
+          "subtype": null,
+          "user": "U0AJYQK4QM6",
+          "text": "기존에 유형별로 간단하게 정리한 파일이 있어 공유 드립니다! 다운로드 하시면 예시 이미지도 같이 보실 수 있습니다!",
+          "thread_ts": "1777006007.594799",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": {
+            "user": "U0AJYQK4QM6",
+            "ts": "1777008230.000000"
+          },
+          "files": [
+            {
+              "id": "F0AUY776YMC",
+              "name": "Wafer 상태 별 특징 및 예시 이미지 (1).xlsx",
+              "title": "Wafer 상태 별 특징 및 예시 이미지 (1).xlsx",
+              "mimetype": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+              "filetype": "xlsx",
+              "pretty_type": "Excel Spreadsheet",
+              "size": 1630168,
+              "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0AUY776YMC/wafer_________________________________________________________________________________________1_.xlsx",
+              "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0AUY776YMC/wafer_________________________________________________________________________________________1_.xlsx"
+            }
+          ]
+        },
+        {
+          "ts": "1777017334.011879",
+          "type": "message",
+          "subtype": null,
+          "user": "U0AJYQK4QM6",
+          "text": "예측이 어렵거나 기준이 모호한 케이스들 정리해보았습니다!\n추가로, 기존 SiO2와 다르게 이번에 새로 들어온 케이스에서 파일에 첨부된 이미지와 같이 모호한 경우가 많아 오히려 어려움이 있을 것으로 예상됩니다.\n\nACL의 경우 예측이 비교적 어려울 것으로 예상이 되었는데, 기존 로직으로도 이번에 들어온 데이터 포함 전부 정상 작동 되는것을 확인하였습니다.\n\n마지막으로 PR의 경우, 기존과 동일하게 데이터의 케이스가 너무 다양해 해결이 불가능할 것으로 보입니다.",
+          "thread_ts": "1777006007.594799",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [
+            {
+              "name": "white_check_mark",
+              "users": [
+                "U0328CH80JV"
+              ],
+              "count": 1
+            }
+          ],
+          "edited": {
+            "user": "U0AJYQK4QM6",
+            "ts": "1777017347.000000"
+          },
+          "files": [
+            {
+              "id": "F0AV13QUP34",
+              "name": "review_report_embedded.pdf",
+              "title": "review_report_embedded.pdf",
+              "mimetype": "application/pdf",
+              "filetype": "pdf",
+              "pretty_type": "PDF",
+              "size": 7899856,
+              "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0AV13QUP34/review_report_embedded.pdf",
+              "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0AV13QUP34/review_report_embedded.pdf"
+            }
+          ]
+        },
+        {
+          "ts": "1777258244.675359",
+          "type": "message",
+          "subtype": null,
+          "user": "U0328CH80JV",
+          "text": "모호한 케이스들 PSK 와 리뷰 해보고 진행 방향 결정합시다. 모양이 이상한 것도 있으나, 측정해야 할 것들도 있을것 같아요. 수요일이나 목요일 중 화상회의 요청할까 합니다. <@U0AJYQK4QM6>",
+          "thread_ts": "1777006007.594799",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1777259726.721469",
+          "type": "message",
+          "subtype": null,
+          "user": "U0AJYQK4QM6",
+          "text": "넵 확인했습니다!",
+          "thread_ts": "1777006007.594799",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1777274257.878559",
+          "type": "message",
+          "subtype": null,
+          "user": "U0AJYQK4QM6",
+          "text": "기존에 보유하던 데이터와 다르게 새로 들어온 데이터에서 SiO2의 이미지가 일관적이지 않아 일일히 확인 후 분류 작업 중입니다.\n\n해당 케이스 예시 공유드립니다.\n\n이렇게 같은 케이스에서도 차이가 많이 나면 기존 로직으로는 해결이 힘들 것으로 보입니다.\n\n데이터는 내일까지 전부 확인 후 파일 경로와 함께 정리하도록 하겠습니다.",
+          "thread_ts": "1777006007.594799",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": [
+            {
+              "id": "F0AV8ML991R",
+              "name": "111535_wf back_0_LP3_#01#00.bmp",
+              "title": "111535_wf back_0_LP3_#01#00.bmp",
+              "mimetype": "image/bmp",
+              "filetype": "bmp",
+              "pretty_type": "Bitmap",
+              "size": 1229878,
+              "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0AV8ML991R/111535_wf_back_0_lp3__01_00.bmp",
+              "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0AV8ML991R/111535_wf_back_0_lp3__01_00.bmp"
+            },
+            {
+              "id": "F0AVD1GFE14",
+              "name": "Camera02_135450_PM1-2 cen3_0_LP3_#00#06.bmp",
+              "title": "Camera02_135450_PM1-2 cen3_0_LP3_#00#06.bmp",
+              "mimetype": "image/bmp",
+              "filetype": "bmp",
+              "pretty_type": "Bitmap",
+              "size": 1229878,
+              "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0AVD1GFE14/camera02_135450_pm1-2_cen3_0_lp3__00_06.bmp",
+              "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0AVD1GFE14/camera02_135450_pm1-2_cen3_0_lp3__00_06.bmp"
+            },
+            {
+              "id": "F0B0VBC0T88",
+              "name": "Camera02_142029_PM1-2 JHICC SIN window_0_LP3_#00#05.bmp",
+              "title": "Camera02_142029_PM1-2 JHICC SIN window_0_LP3_#00#05.bmp",
+              "mimetype": "image/bmp",
+              "filetype": "bmp",
+              "pretty_type": "Bitmap",
+              "size": 1229878,
+              "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0B0VBC0T88/camera02_142029_pm1-2_jhicc_sin_window_0_lp3__00_05.bmp",
+              "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0B0VBC0T88/camera02_142029_pm1-2_jhicc_sin_window_0_lp3__00_05.bmp"
+            },
+            {
+              "id": "F0B013AS1PU",
+              "name": "131640_SS_0_LP2_#06#00.bmp",
+              "title": "131640_SS_0_LP2_#06#00.bmp",
+              "mimetype": "image/bmp",
+              "filetype": "bmp",
+              "pretty_type": "Bitmap",
+              "size": 1229878,
+              "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0B013AS1PU/131640_ss_0_lp2__06_00.bmp",
+              "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0B013AS1PU/131640_ss_0_lp2__06_00.bmp"
+            },
+            {
+              "id": "F0AVBLSS0DB",
+              "name": "091014_20260420_092842_230_LP3_#01#00.bmp",
+              "title": "091014_20260420_092842_230_LP3_#01#00.bmp",
+              "mimetype": "image/bmp",
+              "filetype": "bmp",
+              "pretty_type": "Bitmap",
+              "size": 1229878,
+              "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0AVBLSS0DB/091014_20260420_092842_230_lp3__01_00.bmp",
+              "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0AVBLSS0DB/091014_20260420_092842_230_lp3__01_00.bmp"
+            },
+            {
+              "id": "F0AVD1GA4T0",
+              "name": "101704_JHICC vision_130_LP2_#00#01.bmp",
+              "title": "101704_JHICC vision_130_LP2_#00#01.bmp",
+              "mimetype": "image/bmp",
+              "filetype": "bmp",
+              "pretty_type": "Bitmap",
+              "size": 1229878,
+              "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0AVD1GA4T0/101704_jhicc_vision_130_lp2__00_01.bmp",
+              "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0AVD1GA4T0/101704_jhicc_vision_130_lp2__00_01.bmp"
+            },
+            {
+              "id": "F0B0VBCS1KJ",
+              "name": "101943_JHICC vision_170_LP2_#00#03.bmp",
+              "title": "101943_JHICC vision_170_LP2_#00#03.bmp",
+              "mimetype": "image/bmp",
+              "filetype": "bmp",
+              "pretty_type": "Bitmap",
+              "size": 1229878,
+              "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0B0VBCS1KJ/101943_jhicc_vision_170_lp2__00_03.bmp",
+              "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0B0VBCS1KJ/101943_jhicc_vision_170_lp2__00_03.bmp"
+            },
+            {
+              "id": "F0B0E0GPXA5",
+              "name": "101940_JHICC vision_130_LP2_#00#03.bmp",
+              "title": "101940_JHICC vision_130_LP2_#00#03.bmp",
+              "mimetype": "image/bmp",
+              "filetype": "bmp",
+              "pretty_type": "Bitmap",
+              "size": 1229878,
+              "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0B0E0GPXA5/101940_jhicc_vision_130_lp2__00_03.bmp",
+              "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0B0E0GPXA5/101940_jhicc_vision_130_lp2__00_03.bmp"
+            },
+            {
+              "id": "F0B0VBCR0RW",
+              "name": "085125_JHICC demo pre vision_225_LP3_#00#12.bmp",
+              "title": "085125_JHICC demo pre vision_225_LP3_#00#12.bmp",
+              "mimetype": "image/bmp",
+              "filetype": "bmp",
+              "pretty_type": "Bitmap",
+              "size": 1229878,
+              "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0B0VBCR0RW/085125_jhicc_demo_pre_vision_225_lp3__00_12.bmp",
+              "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0B0VBCR0RW/085125_jhicc_demo_pre_vision_225_lp3__00_12.bmp"
+            },
+            {
+              "id": "F0AUZK7PP39",
+              "name": "090201_PM1-2 JHICC demo run 6_135_LP3_#00#12.bmp",
+              "title": "090201_PM1-2 JHICC demo run 6_135_LP3_#00#12.bmp",
+              "mimetype": "image/bmp",
+              "filetype": "bmp",
+              "pretty_type": "Bitmap",
+              "size": 1229878,
+              "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0AUZK7PP39/090201_pm1-2_jhicc_demo_run_6_135_lp3__00_12.bmp",
+              "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0AUZK7PP39/090201_pm1-2_jhicc_demo_run_6_135_lp3__00_12.bmp"
+            }
+          ]
+        },
+        {
+          "ts": "1777361842.385749",
+          "type": "message",
+          "subtype": null,
+          "user": "U0AJYQK4QM6",
+          "text": "<@U0328CH80JV>\nSiO2, ACL, PR 별로 검토가 필요한 데이터와 경로 정리하였습니다.\n\n기존 가지고 있던 이미지는 VISION_NAS 경로 매칭이 필요해 추후 진행하도록 하겠습니다.",
+          "thread_ts": "1777006007.594799",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": {
+            "user": "U0AJYQK4QM6",
+            "ts": "1777361854.000000"
+          },
+          "files": [
+            {
+              "id": "F0AV8LKT03Z",
+              "name": "종류 별 검토 케이스 정리.xlsx",
+              "title": "종류 별 검토 케이스 정리.xlsx",
+              "mimetype": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+              "filetype": "xlsx",
+              "pretty_type": "Excel Spreadsheet",
+              "size": 4341715,
+              "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0AV8LKT03Z/____________________________________________________________________________.xlsx",
+              "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0AV8LKT03Z/____________________________________________________________________________.xlsx"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "ts": "1777007208.345459",
+      "type": "message",
+      "subtype": null,
+      "user": "U0AJYQK4QM6",
+      "text": "<@U035802E4UA> 방금 전달받은 20260424 데이터의 이미지를 확인해보았는데, 이전 로직으로 추정되는 결과물이 나오고 있는 것으로 보입니다. 확인 부탁드립니다!",
+      "thread_ts": "1777007208.345459",
+      "reply_count": 5,
+      "reply_users": [
+        "U035802E4UA",
+        "U0AJYQK4QM6",
+        "U0354SL90UV"
+      ],
+      "latest_reply": "1777008145.414019",
+      "reactions": [
+        {
+          "name": "eyes",
+          "users": [
+            "U035802E4UA"
+          ],
+          "count": 1
+        }
+      ],
+      "edited": null,
+      "files": [
+        {
+          "id": "F0B0EEWR2QG",
+          "name": "112047_1k oxide Bevel check_0_LP1_#00#01.jpg",
+          "title": "112047_1k oxide Bevel check_0_LP1_#00#01.jpg",
+          "mimetype": "image/jpeg",
+          "filetype": "jpg",
+          "pretty_type": "JPEG",
+          "size": 285458,
+          "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0B0EEWR2QG/112047_1k_oxide_bevel_check_0_lp1__00_01.jpg",
+          "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0B0EEWR2QG/112047_1k_oxide_bevel_check_0_lp1__00_01.jpg"
+        },
+        {
+          "id": "F0AVD415TDX",
+          "name": "125711_1k TEOS B_120s_2nd_50_LP1_#00#07.jpg",
+          "title": "125711_1k TEOS B_120s_2nd_50_LP1_#00#07.jpg",
+          "mimetype": "image/jpeg",
+          "filetype": "jpg",
+          "pretty_type": "JPEG",
+          "size": 288776,
+          "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0AVD415TDX/125711_1k_teos_b_120s_2nd_50_lp1__00_07.jpg",
+          "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0AVD415TDX/125711_1k_teos_b_120s_2nd_50_lp1__00_07.jpg"
+        }
+      ],
+      "thread_replies": [
+        {
+          "ts": "1777007382.507829",
+          "type": "message",
+          "subtype": null,
+          "user": "U035802E4UA",
+          "text": "해당 이미지 명이 뭔가요? (올려주신 두개의 이미지)",
+          "thread_ts": "1777007208.345459",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": {
+            "user": "U035802E4UA",
+            "ts": "1777007415.000000"
+          },
+          "files": []
+        },
+        {
+          "ts": "1777007633.076559",
+          "type": "message",
+          "subtype": null,
+          "user": "U0AJYQK4QM6",
+          "text": "VISION_NAS/00_프로젝트/2026_PSK Precia/Data/20260424/3차 데이터(1,2호기 통합)/1K Oxide Vision zip/260423_3호기PM1-2 Vision RTM ERROR_1K, 5K Oxide/260325_1k Centering Test/2026-03-26/Camera02/112047_1k oxide Bevel check_0_LP1_#00#01.bmp\n\nVISION_NAS/00_프로젝트/2026_PSK Precia/Data/20260424/3차 데이터(1,2호기 통합)/1K Oxide Vision zip/260423_3호기PM1-2 Vision RTM ERROR_1K, 5K Oxide/260325_1k Centering Test/2026-03-27/Camera02/125711_1k TEOS B_120s_2nd_50_LP1_#00#07.bmp",
+          "thread_ts": "1777007208.345459",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1777007684.607659",
+          "type": "message",
+          "subtype": null,
+          "user": "U0AJYQK4QM6",
+          "text": "입니다!",
+          "thread_ts": "1777007208.345459",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1777007880.598749",
+          "type": "message",
+          "subtype": null,
+          "user": "U0354SL90UV",
+          "text": "~방금 고은님이 말씀하신 것 정리입니다.~\n• ~원본 데이터와 함께 추론 결과의 시각화가 포함된 이미지는, RTM 프로그램에서 나온 결과가 아닌 것 같음.~\n• ~단순히 참조용으로 첨부해준 것인지, 검사 프로그램이 혼동된 것인지 PSK 측에 확인 필요~\n<@U0AJYQK4QM6>\n• 시각화된 이미지는 참조용, (기존 PSK가 사용하던 장비 이미지)\n• 원본 bmp 이미지들을 받아서 일반화성능 검증 및 못하는 case들에 대한 개선 방향 잡기",
+          "thread_ts": "1777007208.345459",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [
+            {
+              "name": "man-gesturing-ok",
+              "users": [
+                "U035802E4UA",
+                "U0AJYQK4QM6"
+              ],
+              "count": 2
+            }
+          ],
+          "edited": {
+            "user": "U0354SL90UV",
+            "ts": "1777007965.000000"
+          },
+          "files": []
+        },
+        {
+          "ts": "1777008145.414019",
+          "type": "message",
+          "subtype": null,
+          "user": "U035802E4UA",
+          "text": "저희 프로그램 내부에서는 .jpg로 들어오는 이미지는 다 무시 중입니다!",
+          "thread_ts": "1777007208.345459",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [
+            {
+              "name": "raised_hands",
+              "users": [
+                "U0AJYQK4QM6"
+              ],
+              "count": 1
+            }
+          ],
+          "edited": null,
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1777444944.370429",
+      "type": "message",
+      "subtype": null,
+      "user": "U0328CH80JV",
+      "text": "<@U0AJYQK4QM6>\npsk 업무간 작성하는 문서는 아래의 클릭업 링크에 건별로 페이지 추가하는 방식으로 작성해주세요.\n<https://app.clickup.com/9018369309/v/dc/8crjt8x-16818>",
+      "thread_ts": "1777444944.370429",
+      "reply_count": 1,
+      "reply_users": [
+        "U0AJYQK4QM6"
+      ],
+      "latest_reply": "1777444984.392479",
+      "reactions": [],
+      "edited": null,
+      "files": [],
+      "thread_replies": [
+        {
+          "ts": "1777444984.392479",
+          "type": "message",
+          "subtype": null,
+          "user": "U0AJYQK4QM6",
+          "text": "넵 확인했습니다!",
+          "thread_ts": "1777444944.370429",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1777513453.348119",
+      "type": "message",
+      "subtype": null,
+      "user": "U0328CH80JV",
+      "text": "오후 1시에 내부 리뷰하겠습니다. 자료 준비 해주세요. <@U0AJYQK4QM6>\n참고로 오후에 진행하려고 했던 고객사 화상회의는 담당자 일정으로 차주에 진행합니다.",
+      "thread_ts": "1777513453.348119",
+      "reply_count": 1,
+      "reply_users": [
+        "U0AJYQK4QM6"
+      ],
+      "latest_reply": "1777513791.700519",
+      "reactions": [
+        {
+          "name": "eyes",
+          "users": [
+            "U0354SL90UV"
+          ],
+          "count": 1
+        },
+        {
+          "name": "white_check_mark",
+          "users": [
+            "U0AJYQK4QM6"
+          ],
+          "count": 1
+        }
+      ],
+      "edited": null,
+      "files": [],
+      "thread_replies": [
+        {
+          "ts": "1777513791.700519",
+          "type": "message",
+          "subtype": null,
+          "user": "U0AJYQK4QM6",
+          "text": "넵 확인했습니다. 클릭업에 문서 작성하여 업로드 하였습니다. PDF 파일도 함께 첨부하였습니다.",
+          "thread_ts": "1777513453.348119",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1777515320.608379",
+      "type": "message",
+      "subtype": null,
+      "user": "U0328CH80JV",
+      "text": "상호작용 요소가 있는 :clipboard: _PSK Precia 일일 브리핑 — 2026-04-30 (목)_\n_자동 브리핑 시스템_ :white_check_mark: 전일 완료 사항 • ClickUp 기준 2026-04-29 완료 태스크 없음\n• Slack 전일 메시지 없음\n• *배명식 PM (4/29 07:22)*: PSK 하태경 책임에게 오늘(4/30) 오후 14시 이후 화상회의 요청 메일 발송 — 6천여장 이미지 검증 중 미확인 유형 발견, 방향 논의 필요 :pushpin: 오늘 잔여 태스크 :speech_balloon: 주요 커뮤니케이션 (전일) *이메일 — Re(60): Precia 설비 웨이퍼 외곽 길이 측정 AI 개발 건*\n• *하태경 (PSK, 4/23)*: 로직 예외 지속 발생 → 6천여장 이미지 재제공 + 로직 재업데이트 방향 제시\n• *배명식 (RTM, 4/29)*: 이미지 검증 중 미확인 유형 발견, 예외처리 vs. 신규 로직 논의 필요 → 오늘 오후 14시 이후 화상회의 요청\n• *김건종 (PSK, 4/29 21:46)*: 교육 일정으로 오늘 회의 불참 회신 :warning: 주의 필요 항목 :red_circle: *오늘 화상회의 일정 미확정* — 하태경 책임 수락 여부 미확인, 오전 중 일정 확인 필요\n:red_circle: *로직 방향 결정 미정* — 예외처리 vs. 신규 로직, 오늘 회의에서 결정 필요 (맹준영, 배명식, 하태경)\n:large_yellow_circle: *VD3-184 약 3주 지연* — Phase 1 5월 납품 일정 고려 시 긴급 처리 필요 (송고은, 주권일, 맹준영)\n:large_yellow_circle: *김건종 오늘 불참* — 현장 피드백 창구 별도 일정 조율 검토 *다음을 사용하여 보냄* Claude",
+      "thread_ts": "1777515320.608379",
+      "reply_count": 1,
+      "reply_users": [
+        "U0354SL90UV"
+      ],
+      "latest_reply": "1777520005.822269",
+      "reactions": [],
+      "edited": null,
+      "files": [],
+      "thread_replies": [
+        {
+          "ts": "1777520005.822269",
+          "type": "message",
+          "subtype": null,
+          "user": "U0354SL90UV",
+          "text": "오 이건 명식님이 직접 만드신건가요?",
+          "thread_ts": "1777515320.608379",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1777520286.626569",
+      "type": "message",
+      "subtype": "channel_join",
+      "user": "U0B15H1AQJV",
+      "text": "<@U0B15H1AQJV> has joined the channel",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    }
+  ]
+}

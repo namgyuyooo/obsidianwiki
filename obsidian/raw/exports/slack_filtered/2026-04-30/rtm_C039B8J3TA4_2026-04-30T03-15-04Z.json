@@ -1,0 +1,30 @@
+{
+  "type": "slack_channel_filtered_export",
+  "workspace": "RTM Slack",
+  "collected_at": "2026-04-30T03:15:04.420293+00:00",
+  "channel": {
+    "id": "C039B8J3TA4",
+    "name": "rtm",
+    "type": "public_channel",
+    "is_archived": false,
+    "is_private": false,
+    "created": "2022-03-25T03:57:53+00:00",
+    "topic": "",
+    "purpose": "",
+    "member_count": 22
+  },
+  "history_window": {
+    "oldest_ts": "1777346104.420329",
+    "limit_per_channel": 50,
+    "include_threads": true,
+    "include_files": true
+  },
+  "filter": {
+    "provider": "local_rule",
+    "summary": "GLM unavailable; local rule filter applied",
+    "kept_count": 0,
+    "excluded_count": 0
+  },
+  "messages": [],
+  "excluded_messages": []
+}

@@ -21,6 +21,7 @@ http://127.0.0.1:8787
 - 위키/L1 memory markdown index와 링크 graph 생성
 - markdown 페이지 조회
 - `drive_wikify.cli` 안전 명령 트리거
+- Slack 채널 목록 조회와 raw evidence 수집 트리거
 - 실행 중 자동화 상태 조회와 중지
 - `once`, `daily`, `interval` 예약 실행
 - Drive Wikify `.env` 운영 설정 조회/수정
@@ -56,10 +57,14 @@ http://127.0.0.1:8787
 - `OPENCLAW_API_KEY`: OpenClaw 전용 override. 비우면 `GLM_API_KEY` 사용
 - `PAPERCLIP_URL`: Paperclip 상태 확인 URL, 기본 `http://127.0.0.1:3000`
 - `PAPERCLIP_API_KEY`: Paperclip bridge bearer token 후보
+- `SLACK_BOT_TOKEN` / `SLACK_USER_TOKEN`: Slack raw 수집 인증
+- `SLACK_CHANNELS`: 기본 수집 채널 셀렉터
+- `SLACK_EXPORT_ROOT`: raw Slack export 저장 위치
 
 ## 역할 분리
 
 - `수집 파이프라인`: rclone 미리보기, manifest 생성, 위키화 실행, OpenClaw/GLM 트리거, 실행 로그를 담당한다.
+- `Slack 수집`: 채널 목록 조회, 증분 수집, raw export/state 보존을 담당한다.
 - `운영`: 상태, 예약, 설정, 스킬 카탈로그를 담당한다.
 - `Paperclip`: 독립 지식 저장소가 아니라 위키와 GLM 챗이 참고할 agent/template/task 컨텍스트 브리지다.
 

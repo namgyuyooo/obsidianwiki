@@ -1,0 +1,829 @@
+{
+  "type": "slack_channel_filtered_export",
+  "workspace": "RTM Slack",
+  "collected_at": "2026-04-30T03:35:27.248712+00:00",
+  "channel": {
+    "id": "C0AKMTUPTP1",
+    "name": "clickup_noti_대덕전자",
+    "type": "public_channel",
+    "is_archived": false,
+    "is_private": false,
+    "created": "2026-03-12T04:00:46+00:00",
+    "topic": "",
+    "purpose": "",
+    "member_count": 8,
+    "routing": {
+      "channel_bucket": "company_news",
+      "conversation_mode": "company_updates",
+      "rationale": "default_company_updates",
+      "wiki_workspace": "rtm",
+      "wiki_target_root": "obsidian/Wiki/Common/Slack_Company_News",
+      "wiki_target_kind": "common"
+    }
+  },
+  "routing": {
+    "channel_profile": {
+      "channel_bucket": "company_news",
+      "conversation_mode": "company_updates",
+      "rationale": "default_company_updates",
+      "wiki_workspace": "rtm",
+      "wiki_target_root": "obsidian/Wiki/Common/Slack_Company_News",
+      "wiki_target_kind": "common",
+      "project_wiki_target_root": "obsidian/Wiki/Common/Slack_Project_Intake",
+      "company_wiki_target_root": "obsidian/Wiki/Common/Slack_Company_News"
+    },
+    "primary_bucket": "company_news",
+    "bucket_counts": {
+      "project": 0,
+      "company_news": 36,
+      "casual": 1
+    },
+    "wiki_targets": [
+      {
+        "path": "obsidian/Wiki/Common/Slack_Company_News",
+        "count": 36
+      }
+    ]
+  },
+  "history_window": {
+    "oldest_ts": "1776656207.037501",
+    "limit_per_channel": 500,
+    "include_threads": true,
+    "include_files": true
+  },
+  "filter": {
+    "provider": "local_rule",
+    "summary": "GLM unavailable; local rule filter applied",
+    "kept_count": 36,
+    "excluded_count": 1
+  },
+  "messages": [
+    {
+      "ts": "1776656323.473919",
+      "type": "message",
+      "subtype": null,
+      "user": "U07AJMY59QU",
+      "text": "*Task created* by Injo Kim(김인조)",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1776656360.591819",
+      "type": "message",
+      "subtype": null,
+      "user": "U07AJMY59QU",
+      "text": "*Task created* by Injo Kim(김인조)",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1776656366.540149",
+      "type": "message",
+      "subtype": null,
+      "user": "U07AJMY59QU",
+      "text": "Injo Kim(김인조) added assignee: Injo Kim(김인조)",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1776656382.107639",
+      "type": "message",
+      "subtype": null,
+      "user": "U07AJMY59QU",
+      "text": "*Task status changed* from `to do` to `in progress`",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1776658153.003389",
+      "type": "message",
+      "subtype": null,
+      "user": "U07AJMY59QU",
+      "text": "*Task status changed* from `to do` to `in progress`",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1776667661.416269",
+      "type": "message",
+      "subtype": null,
+      "user": "U07AJMY59QU",
+      "text": "*Task status changed* from `in progress` to `done`",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1776667676.565649",
+      "type": "message",
+      "subtype": null,
+      "user": "U07AJMY59QU",
+      "text": "*Task status changed* from `in progress` to `done`",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1776667704.740649",
+      "type": "message",
+      "subtype": null,
+      "user": "U07AJMY59QU",
+      "text": "*Task status changed* from `to do` to `done`",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1776668303.393999",
+      "type": "message",
+      "subtype": null,
+      "user": "U07AJMY59QU",
+      "text": "*Task status changed* from `in progress` to `blocked`",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1776668310.856799",
+      "type": "message",
+      "subtype": null,
+      "user": "U07AJMY59QU",
+      "text": "*Task status changed* from `blocked` to `Closed`",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1776668313.340439",
+      "type": "message",
+      "subtype": null,
+      "user": "U07AJMY59QU",
+      "text": "*Task status changed* from `Closed` to `done`",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1776824172.785819",
+      "type": "message",
+      "subtype": null,
+      "user": "U07AJMY59QU",
+      "text": "*Task created* by Hyunjee Kang(강현지)",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1776824198.171489",
+      "type": "message",
+      "subtype": null,
+      "user": "U07AJMY59QU",
+      "text": "*Task created* by Hyunjee Kang(강현지)",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1776824260.070719",
+      "type": "message",
+      "subtype": null,
+      "user": "U07AJMY59QU",
+      "text": "Hyunjee Kang(강현지) added assignee: Hyunjee Kang(강현지)",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1776846557.470189",
+      "type": "message",
+      "subtype": null,
+      "user": "U07AJMY59QU",
+      "text": "*Task created* by Sanggeon Kim(김상건)",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1776846562.780449",
+      "type": "message",
+      "subtype": null,
+      "user": "U07AJMY59QU",
+      "text": "*Task status changed* from `to do` to `in progress`",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1776846567.800829",
+      "type": "message",
+      "subtype": null,
+      "user": "U07AJMY59QU",
+      "text": "Sanggeon Kim(김상건) added assignee: Sanggeon Kim(김상건)",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1776846899.379209",
+      "type": "message",
+      "subtype": null,
+      "user": "U07AJMY59QU",
+      "text": "*Task status changed* from `in progress` to `done`",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1776900204.772649",
+      "type": "message",
+      "subtype": null,
+      "user": "U07AJMY59QU",
+      "text": "*Task created* by Injo Kim(김인조)",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1777248033.085989",
+      "type": "message",
+      "subtype": null,
+      "user": "U07AJMY59QU",
+      "text": "*Task status changed* from `to do` to `in progress`",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1777248038.067439",
+      "type": "message",
+      "subtype": null,
+      "user": "U07AJMY59QU",
+      "text": "*Task status changed* from `in progress` to `blocked`",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1777248076.634959",
+      "type": "message",
+      "subtype": null,
+      "user": "U07AJMY59QU",
+      "text": "*Comment added* by Injo Kim(김인조)",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1777248093.379149",
+      "type": "message",
+      "subtype": null,
+      "user": "U07AJMY59QU",
+      "text": "*Task status changed* from `blocked` to `done`",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1777269676.848849",
+      "type": "message",
+      "subtype": null,
+      "user": "U07AJMY59QU",
+      "text": "*Task created* by Injo Kim(김인조)",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1777419101.064399",
+      "type": "message",
+      "subtype": null,
+      "user": "U07AJMY59QU",
+      "text": "*Task status changed* from `to do` to `done`",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1777419143.894419",
+      "type": "message",
+      "subtype": null,
+      "user": "U07AJMY59QU",
+      "text": "*Task created* by Injo Kim(김인조)",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1777419177.097149",
+      "type": "message",
+      "subtype": null,
+      "user": "U07AJMY59QU",
+      "text": "*Task created* by Injo Kim(김인조)",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1777419203.222809",
+      "type": "message",
+      "subtype": null,
+      "user": "U07AJMY59QU",
+      "text": "*Task created* by Injo Kim(김인조)",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1777419230.389559",
+      "type": "message",
+      "subtype": null,
+      "user": "U07AJMY59QU",
+      "text": "*Task status changed* from `to do` to `in progress`",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1777427065.592269",
+      "type": "message",
+      "subtype": null,
+      "user": "U07AJMY59QU",
+      "text": "*Task status changed* from `in progress` to `done`",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1777427116.501239",
+      "type": "message",
+      "subtype": null,
+      "user": "U07AJMY59QU",
+      "text": "Injo Kim(김인조) mentioned you in a comment",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1777427160.759489",
+      "type": "message",
+      "subtype": null,
+      "user": "U07AJMY59QU",
+      "text": "*Comment added* by Injo Kim(김인조)",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1777434425.378309",
+      "type": "message",
+      "subtype": null,
+      "user": "U07AJMY59QU",
+      "text": "*Task status changed* from `to do` to `in progress`",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1777445320.737729",
+      "type": "message",
+      "subtype": null,
+      "user": "U07AJMY59QU",
+      "text": "*Task status changed* from `in progress` to `done`",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1777445346.876019",
+      "type": "message",
+      "subtype": null,
+      "user": "U07AJMY59QU",
+      "text": "Injo Kim(김인조) mentioned you in a comment",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1777505547.602179",
+      "type": "message",
+      "subtype": null,
+      "user": "U07AJMY59QU",
+      "text": "*Task status changed* from `to do` to `done`",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    }
+  ],
+  "routed_messages": [
+    {
+      "ts": "1776656323.473919",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "*Task created* by Injo Kim(김인조)"
+    },
+    {
+      "ts": "1776656360.591819",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "*Task created* by Injo Kim(김인조)"
+    },
+    {
+      "ts": "1776656366.540149",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "Injo Kim(김인조) added assignee: Injo Kim(김인조)"
+    },
+    {
+      "ts": "1776656382.107639",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "*Task status changed* from `to do` to `in progress`"
+    },
+    {
+      "ts": "1776658153.003389",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "*Task status changed* from `to do` to `in progress`"
+    },
+    {
+      "ts": "1776667661.416269",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "*Task status changed* from `in progress` to `done`"
+    },
+    {
+      "ts": "1776667676.565649",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "*Task status changed* from `in progress` to `done`"
+    },
+    {
+      "ts": "1776667704.740649",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "*Task status changed* from `to do` to `done`"
+    },
+    {
+      "ts": "1776668303.393999",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "*Task status changed* from `in progress` to `blocked`"
+    },
+    {
+      "ts": "1776668310.856799",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "*Task status changed* from `blocked` to `Closed`"
+    },
+    {
+      "ts": "1776668313.340439",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "*Task status changed* from `Closed` to `done`"
+    },
+    {
+      "ts": "1776824172.785819",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "*Task created* by Hyunjee Kang(강현지)"
+    },
+    {
+      "ts": "1776824198.171489",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "*Task created* by Hyunjee Kang(강현지)"
+    },
+    {
+      "ts": "1776824260.070719",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "Hyunjee Kang(강현지) added assignee: Hyunjee Kang(강현지)"
+    },
+    {
+      "ts": "1776846557.470189",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "*Task created* by Sanggeon Kim(김상건)"
+    },
+    {
+      "ts": "1776846562.780449",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "*Task status changed* from `to do` to `in progress`"
+    },
+    {
+      "ts": "1776846567.800829",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "Sanggeon Kim(김상건) added assignee: Sanggeon Kim(김상건)"
+    },
+    {
+      "ts": "1776846899.379209",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "*Task status changed* from `in progress` to `done`"
+    },
+    {
+      "ts": "1776900204.772649",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "*Task created* by Injo Kim(김인조)"
+    },
+    {
+      "ts": "1777248033.085989",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "*Task status changed* from `to do` to `in progress`"
+    },
+    {
+      "ts": "1777248038.067439",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "*Task status changed* from `in progress` to `blocked`"
+    },
+    {
+      "ts": "1777248076.634959",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "*Comment added* by Injo Kim(김인조)"
+    },
+    {
+      "ts": "1777248093.379149",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "*Task status changed* from `blocked` to `done`"
+    },
+    {
+      "ts": "1777269676.848849",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "*Task created* by Injo Kim(김인조)"
+    },
+    {
+      "ts": "1777419101.064399",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "*Task status changed* from `to do` to `done`"
+    },
+    {
+      "ts": "1777419143.894419",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "*Task created* by Injo Kim(김인조)"
+    },
+    {
+      "ts": "1777419177.097149",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "*Task created* by Injo Kim(김인조)"
+    },
+    {
+      "ts": "1777419203.222809",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "*Task created* by Injo Kim(김인조)"
+    },
+    {
+      "ts": "1777419230.389559",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "*Task status changed* from `to do` to `in progress`"
+    },
+    {
+      "ts": "1777427065.592269",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "*Task status changed* from `in progress` to `done`"
+    },
+    {
+      "ts": "1777427116.501239",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "Injo Kim(김인조) mentioned you in a comment"
+    },
+    {
+      "ts": "1777427160.759489",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "*Comment added* by Injo Kim(김인조)"
+    },
+    {
+      "ts": "1777434425.378309",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "*Task status changed* from `to do` to `in progress`"
+    },
+    {
+      "ts": "1777445320.737729",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "*Task status changed* from `in progress` to `done`"
+    },
+    {
+      "ts": "1777445346.876019",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "Injo Kim(김인조) mentioned you in a comment"
+    },
+    {
+      "ts": "1777505547.602179",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "*Task status changed* from `to do` to `done`"
+    }
+  ],
+  "excluded_messages": [
+    {
+      "ts": "1777520207.646779",
+      "reason": "system_membership_event",
+      "bucket": "casual",
+      "text": "<@U0B15H1AQJV> has joined the channel",
+      "subtype": "channel_join"
+    }
+  ]
+}

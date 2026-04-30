@@ -26,14 +26,21 @@
         </div>
 
         <nav class="nav-list" aria-label="Primary">
-          <button class="nav-item active" id="mission-nav-item" data-view="mission">Mission Control</button>
-          <button class="nav-item" id="chat-nav-item" data-view="chat">업무 GLM 챗</button>
-          <button class="nav-item" data-view="pipeline">수집 파이프라인</button>
-          <button class="nav-item" data-view="paperclip">Paperclip Studio</button>
-          <button class="nav-item" id="spotlite-nav-item" data-view="spotlite">업무 Spotlite</button>
-          <button class="nav-item" id="wiki-nav-item" data-view="wiki">업무 위키</button>
-          <button class="nav-item" id="ingest-nav-item" data-view="ingest">업무 지식 주입</button>
-          <button class="nav-item" data-view="operations">운영 설정</button>
+          <section class="nav-group" aria-label="업무 운영 탭">
+            <div class="nav-group-label">업무 운영</div>
+            <button class="nav-item active" id="mission-nav-item" data-view="mission">Mission Control</button>
+            <button class="nav-item" id="decisions-nav-item" data-view="decisions">결정 대기</button>
+            <button class="nav-item" id="chat-nav-item" data-view="chat">업무 GLM 챗</button>
+            <button class="nav-item" id="spotlite-nav-item" data-view="spotlite">업무 Spotlite</button>
+          </section>
+          <section class="nav-group" aria-label="위키 관리 탭">
+            <div class="nav-group-label">위키 관리</div>
+            <button class="nav-item" data-view="pipeline">수집 파이프라인</button>
+            <button class="nav-item" data-view="paperclip">Paperclip Studio</button>
+            <button class="nav-item" id="wiki-nav-item" data-view="wiki">업무 위키</button>
+            <button class="nav-item" id="ingest-nav-item" data-view="ingest">업무 지식 주입</button>
+            <button class="nav-item" data-view="operations">운영 설정</button>
+          </section>
         </nav>
 
         <section class="sidebar-utility-panel">
@@ -74,15 +81,15 @@
         <section id="mission" class="view active">
           <div class="mission-hero" data-anchor="지휘실">
             <div>
-              <span class="eyebrow">Mission Control</span>
-              <h3>오늘 무엇을 추진해야 하는가</h3>
-              <p>위키는 뒤의 근거 저장소로 두고, 여기서는 프로젝트 상태, 결정 대기, 핵심문서, 수집 상태, 다음 액션을 CEO/PM 관점으로 봅니다.</p>
+              <span class="eyebrow">Work Mission Control</span>
+              <h3>오늘의 업무 운영 지휘실</h3>
+              <p>여기는 위키 관리 화면이 아니라 실무 운영 대시보드입니다. 프로젝트 상태, 막힌 점, 데이터 확인 대기, 핵심 근거, 다음 액션을 PM/실무 리드 관점으로 바로 판단합니다.</p>
             </div>
             <div class="mission-actions mission-command-box">
-              <textarea id="mission-command-input" placeholder="예: 쏘닉스 자료를 찾아 수집하고 위키화해서 오늘 액션으로 정리해줘."></textarea>
+              <textarea id="mission-command-input" placeholder="예: 쏘닉스 프로젝트 기준으로 오늘 고객 후속, 막힌 점, 필요한 근거, 다음 액션을 정리해줘."></textarea>
               <div>
                 <button id="mission-command-chat" class="command-button accent" type="button">GLM과 추진 논의</button>
-                <button id="mission-command-collect" class="command-button" type="button">Drive 표적 수집 계획</button>
+                <button id="mission-command-collect" class="command-button" type="button">근거 수집 계획</button>
               </div>
               <button id="mission-refresh" class="command-button" type="button">Mission Control 갱신</button>
             </div>
@@ -90,23 +97,23 @@
 
           <section class="mission-answer-grid" data-anchor="다섯 질문">
             <article>
-              <span>오늘 뭘 해야 하지?</span>
+              <span>오늘 최우선 액션은?</span>
               <strong id="mission-answer-today">로딩 중</strong>
             </article>
             <article>
-              <span>어떤 자료가 새로 들어왔지?</span>
+              <span>어떤 근거로 움직이지?</span>
               <strong id="mission-answer-evidence">로딩 중</strong>
             </article>
             <article>
-              <span>무엇이 결정 대기지?</span>
+              <span>무엇이 데이터 확인 대기지?</span>
               <strong id="mission-answer-pending">로딩 중</strong>
             </article>
             <article>
-              <span>어떤 프로젝트가 위험하지?</span>
+              <span>어디가 막혀 있지?</span>
               <strong id="mission-answer-risk">로딩 중</strong>
             </article>
             <article>
-              <span>다음 액션은 뭐지?</span>
+              <span>다음 보고/실행은?</span>
               <strong id="mission-answer-next">로딩 중</strong>
             </article>
           </section>
@@ -114,8 +121,8 @@
           <section class="mission-pipeline-flow panel" data-anchor="자동화 흐름">
             <div class="panel-heading">
               <div>
-                <h3>수집 → 위키화 상태 머신</h3>
-                <p>자동화는 버튼 모음이 아니라 어디까지 갔는지 보여주는 흐름이어야 합니다.</p>
+                <h3>업무 실행 흐름</h3>
+                <p>수집, 근거 확인, 데이터 검증, 실행 액션까지 현재 업무가 어디에 걸려 있는지 보여줍니다.</p>
               </div>
               <button id="mission-open-pipeline" class="command-button" type="button">Pipeline 열기</button>
             </div>
@@ -128,15 +135,15 @@
               <strong id="mission-ongoing">0</strong>
             </article>
             <article class="metric">
-              <span>결정 대기</span>
+              <span>데이터 확인 대기</span>
               <strong id="mission-decisions">0</strong>
             </article>
             <article class="metric">
-              <span>핵심문서 후보</span>
+              <span>활용 근거 후보</span>
               <strong id="mission-core-docs">0</strong>
             </article>
             <article class="metric">
-              <span>수집/위키화</span>
+              <span>실행 진척</span>
               <strong id="mission-coverage">0%</strong>
             </article>
           </section>
@@ -145,8 +152,8 @@
             <section class="panel mission-project-panel">
               <div class="panel-heading">
                 <div>
-                  <h3>Project Command Center</h3>
-                  <p>진행 중, 최근 변경, 결정 대기, 핵심문서 우선으로 정렬합니다.</p>
+                  <h3>업무 프로젝트 보드</h3>
+                  <p>진행 중 상태, 최근 활동, 막힘, 데이터 확인 대기, 핵심 근거 우선으로 정렬합니다.</p>
                 </div>
                 <span id="mission-project-count">0건</span>
               </div>
@@ -159,7 +166,7 @@
               <div class="panel-heading">
                 <div>
                   <h3 id="mission-detail-title">프로젝트 선택</h3>
-                  <p id="mission-detail-subtitle">카드를 누르면 CEO/PM 브리핑이 표시됩니다.</p>
+                  <p id="mission-detail-subtitle">카드를 누르면 실무 운영 브리핑이 표시됩니다.</p>
                 </div>
               </div>
               <div class="mission-brief-modes">
@@ -177,14 +184,14 @@
           <div class="mission-bottom-grid" data-anchor="결정과 문서">
             <section class="panel">
               <div class="panel-heading">
-                <h3>결정 대기 큐</h3>
+                <h3>데이터 확인 대기</h3>
                 <span id="mission-decision-count">0건</span>
               </div>
               <div id="mission-decision-queue" class="event-list"></div>
             </section>
             <section class="panel">
               <div class="panel-heading">
-                <h3>핵심문서 활용</h3>
+                <h3>핵심 근거 활용</h3>
                 <span id="mission-doc-count">0건</span>
               </div>
               <div id="mission-core-documents" class="event-list"></div>
@@ -195,6 +202,13 @@
                 <span id="mission-llm-count">0건</span>
               </div>
               <div id="mission-llm-usage" class="event-list"></div>
+            </section>
+            <section class="panel">
+              <div class="panel-heading">
+                <h3>위키 정합성 주의</h3>
+                <span id="mission-project-governance-summary">조회 대기</span>
+              </div>
+              <div id="mission-project-governance" class="event-list"></div>
             </section>
           </div>
         </section>
@@ -221,6 +235,93 @@
             </div>
             <div id="spotlite-work-templates" class="spotlite-template-list"></div>
           </section>
+        </section>
+
+        <section id="decisions" class="view">
+          <div class="decision-hero" data-anchor="빠른 판정">
+            <div>
+              <span class="eyebrow">Data Conflict Triage</span>
+              <h3>데이터 불일치와 충돌만 빠르게 정리</h3>
+              <p>카드 한 장씩 보며 출처 상충, 값 차이, 버전 차이, 미확정 사실을 정리합니다. 실무 리스크나 실행 액션은 Mission Control에서 관리하고, 여기서는 위키 데이터 정합성만 다룹니다.</p>
+            </div>
+            <div class="decision-hero-actions">
+              <button id="decision-refresh" class="command-button" type="button">결정 큐 새로고침</button>
+              <button id="decision-open-mission" class="command-button" type="button">Mission Control 보기</button>
+            </div>
+          </div>
+
+          <section class="decision-summary metric-grid" data-anchor="현황">
+            <article class="metric">
+              <span>대기 중</span>
+              <strong id="decision-summary-pending">0</strong>
+            </article>
+            <article class="metric">
+              <span>승인됨</span>
+              <strong id="decision-summary-approved">0</strong>
+            </article>
+            <article class="metric">
+              <span>보류/추가조사</span>
+              <strong id="decision-summary-held">0</strong>
+            </article>
+            <article class="metric">
+              <span>현재 카드</span>
+              <strong id="decision-summary-index">0 / 0</strong>
+            </article>
+          </section>
+
+          <section id="decision-activity-strip" class="decision-activity-strip panel" data-anchor="처리 상태">
+            <strong>대기 중</strong>
+            <p>카드를 처리하면 결과와 다음 상태가 여기에 표시됩니다.</p>
+          </section>
+
+          <div class="decision-layout" data-anchor="카드 판정">
+            <section class="panel decision-stage">
+              <div class="panel-heading">
+                <div>
+                  <h3>Decision Deck</h3>
+                  <p>좌우 버튼 또는 방향키로 데이터 충돌 카드를 넘길 수 있습니다. `←` 보류, `→` 승인 반영, `↑↓` 카드 이동.</p>
+                </div>
+                <span id="decision-stage-status">로딩 중</span>
+              </div>
+              <div id="decision-card-stack" class="decision-card-stack"></div>
+              <div class="decision-stage-actions">
+                <button id="decision-prev" class="command-button" type="button">이전 카드</button>
+                <button id="decision-hold" class="command-button" type="button">보류</button>
+                <button id="decision-approve" class="command-button accent" type="button">승인 반영</button>
+                <button id="decision-next" class="command-button" type="button">다음 카드</button>
+              </div>
+            </section>
+
+            <aside class="panel decision-sidebar">
+              <div class="panel-heading">
+                <div>
+                  <h3>Queue Rail</h3>
+                  <p>프로젝트별 데이터 불일치 항목을 눌러 바로 점프합니다.</p>
+                </div>
+                <span id="decision-queue-count">0건</span>
+              </div>
+              <div id="decision-queue-rail" class="decision-queue-rail"></div>
+            </aside>
+          </div>
+
+          <div class="decision-bottom-grid" data-anchor="후속 연결">
+            <section class="panel">
+              <div class="panel-heading">
+                <h3>프로젝트 맥락</h3>
+                <span id="decision-context-project">미선택</span>
+              </div>
+              <div id="decision-context" class="decision-context">
+                <p>카드를 선택하면 연결 프로젝트의 요약, 다음 액션, 리스크를 표시합니다.</p>
+              </div>
+            </section>
+            <section class="panel">
+              <div class="panel-heading">
+                <h3>최근 판정 기록</h3>
+                <span id="decision-history-count">0건</span>
+              </div>
+              <div id="decision-history" class="event-list"></div>
+            </section>
+          </div>
         </section>
 
         <section id="spotlite-personal" class="view">
@@ -574,6 +675,37 @@
                 <input name="SLACK_COLLECT_MAX_MINUTES" type="number" min="1" placeholder="기본 10분" />
               </label>
               <label>
+                <span>Slack GLM 필터</span>
+                <select name="SLACK_FILTER_WITH_GLM">
+                  <option value="true">true</option>
+                  <option value="false">false</option>
+                </select>
+              </label>
+              <label>
+                <span>Slack filtered export 경로</span>
+                <input name="SLACK_FILTER_EXPORT_ROOT" placeholder="obsidian/raw/exports/slack_filtered" />
+              </label>
+              <label>
+                <span>Slack 프로젝트 채널 prefix</span>
+                <input name="SLACK_PROJECT_CHANNEL_PREFIXES" placeholder="pjt_,pjt-,hubble-pjt-" />
+              </label>
+              <label>
+                <span>Slack 회사소식 채널 prefix</span>
+                <input name="SLACK_COMPANY_CHANNEL_PREFIXES" placeholder="sales_,rtm,team_,ai" />
+              </label>
+              <label>
+                <span>Slack 혼합 채널 prefix</span>
+                <input name="SLACK_MIXED_CHANNEL_PREFIXES" placeholder="tf_" />
+              </label>
+              <label>
+                <span>Slack 프로젝트 인입 위키 루트</span>
+                <input name="SLACK_PROJECT_WIKI_ROOT" placeholder="obsidian/Wiki/Common/Slack_Project_Intake" />
+              </label>
+              <label>
+                <span>Slack 회사소식 위키 루트</span>
+                <input name="SLACK_COMPANY_WIKI_ROOT" placeholder="obsidian/Wiki/Common/Slack_Company_News" />
+              </label>
+              <label>
                 <span>개인용 Spotlite PIN</span>
                 <input name="SPOTLITE_PERSONAL_PIN" type="password" inputmode="numeric" maxlength="4" placeholder="기본 0953" />
               </label>
@@ -595,6 +727,66 @@
             </div>
             <strong id="pipeline-drive-default">기본 경로: gdrive: 최상위</strong>
           </div>
+
+          <section class="panel" data-anchor="Slack 분기">
+            <div class="panel-heading">
+              <div>
+                <h3>Slack 분기 수집</h3>
+                <p>채널 prefix와 대화 성격을 같이 보고 `프로젝트 관련내용`과 `회사소식`을 분기합니다. 프로젝트성 대화는 프로젝트 인입 위키로, 회사 공지/대외 소식은 회사소식 위키로 따로 관리합니다.</p>
+              </div>
+              <span id="slack-workspace-status">Slack 설정 대기</span>
+            </div>
+            <div id="slack-routing-summary" class="slack-summary-grid"></div>
+            <div class="drive-instruction-box slack-routing-console">
+              <label>
+                <span>채널 검색</span>
+                <input id="slack-channel-query" type="search" placeholder="예: pjt, sales, rtm, tf" />
+              </label>
+              <div class="drive-instruction-actions">
+                <button id="slack-channel-search" class="command-button" type="button">채널 조회</button>
+                <button id="slack-routing-refresh" class="command-button" type="button">상태 갱신</button>
+                <span id="slack-collect-status">최근 수집 기록 없음</span>
+              </div>
+              <div class="slack-selection-actions">
+                <button id="slack-select-project" class="command-button" type="button">프로젝트 후보 선택</button>
+                <button id="slack-select-company" class="command-button" type="button">회사소식 후보 선택</button>
+                <button id="slack-select-mixed" class="command-button" type="button">혼합 채널 선택</button>
+                <button id="slack-clear-selection" class="command-button" type="button">선택 해제</button>
+              </div>
+            </div>
+            <div class="panel-grid slack-routing-grid">
+              <section class="panel">
+                <div class="panel-heading compact-heading">
+                  <h3>채널 목록</h3>
+                  <span><strong id="slack-channel-count">0개</strong> · <strong id="slack-selected-count">0개 선택</strong></span>
+                </div>
+                <div id="slack-channel-list" class="slack-channel-list"></div>
+              </section>
+              <section class="panel">
+                <div class="panel-heading compact-heading">
+                  <h3>2일 수집 실행</h3>
+                  <span>최근 2일 기준</span>
+                </div>
+                <div class="settings-grid slack-collect-grid">
+                  <label>
+                    <span>Lookback 일수</span>
+                    <input id="slack-oldest-days" type="number" min="1" value="2" />
+                  </label>
+                  <label>
+                    <span>채널당 메시지 수</span>
+                    <input id="slack-limit-per-channel" type="number" min="1" value="80" />
+                  </label>
+                </div>
+                <div class="ingest-actions">
+                  <button id="slack-collect-preview" class="command-button" type="button">2일 미리보기</button>
+                  <button id="slack-collect-run" class="command-button accent" type="button">2일 수집 실행</button>
+                </div>
+                <div id="slack-collection-result" class="event-list">
+                  <p class="pipeline-note">최근 2일 수집 결과가 여기에 표시됩니다.</p>
+                </div>
+              </section>
+            </div>
+          </section>
 
           <section class="pipeline-steps" aria-label="수집 파이프라인 단계" data-anchor="실행 단계">
             <article class="pipeline-step">
@@ -623,12 +815,18 @@
             </article>
             <article class="pipeline-step">
               <span>5</span>
+              <strong>수집 후 후속 단계</strong>
+              <p>이미 수집된 local mirror를 기준으로 manifest, 위키화, 그래프 갱신을 이어서 실행합니다.</p>
+              <button class="command-button accent" id="continue-after-collection" type="button">후속 단계 실행</button>
+            </article>
+            <article class="pipeline-step">
+              <span>6</span>
               <strong>전체 흐름 미리보기</strong>
               <p>copy, manifest, run 흐름을 안전하게 dry-run으로 확인합니다.</p>
               <button class="command-button accent" data-command="full-cycle" data-dry-run="true">전체 흐름 미리보기</button>
             </article>
             <article class="pipeline-step">
-              <span>6</span>
+              <span>7</span>
               <strong>오픈클로/GLM 트리거</strong>
               <p>OpenClaw webhook이 없으면 로컬 Drive Wikify dry-run을 실제 실행합니다.</p>
               <button class="command-button accent" id="openclaw-trigger" type="button">오픈클로 자동화 호출</button>
@@ -1092,6 +1290,88 @@
           </div>
         </section>
 
+        <dialog id="decision-evidence-modal" class="decision-evidence-modal">
+          <div class="decision-evidence-card">
+            <div class="decision-evidence-header">
+              <div>
+                <p class="eyebrow">Decision Evidence</p>
+                <h3 id="decision-evidence-title">근거 문서</h3>
+                <code id="decision-evidence-path"></code>
+              </div>
+              <form method="dialog">
+                <button id="decision-evidence-close" class="command-button" type="submit">닫기</button>
+              </form>
+            </div>
+            <div id="decision-evidence-content" class="decision-evidence-content">
+              <div class="notion-details-placeholder"><p>문서를 불러오는 중입니다.</p></div>
+            </div>
+            <div class="decision-evidence-footer">
+              <button id="decision-evidence-open-wiki" class="command-button" type="button">위키 탭에서 열기</button>
+            </div>
+          </div>
+        </dialog>
+
+        <dialog id="decision-compare-modal" class="decision-compare-modal">
+          <div class="decision-compare-card">
+            <div class="decision-compare-header">
+              <div>
+                <p class="eyebrow">Conflict Compare</p>
+                <h3 id="decision-compare-title">충돌 비교</h3>
+                <p id="decision-compare-summary">출처와 반영 대상 문서를 동시에 비교합니다.</p>
+              </div>
+              <form method="dialog">
+                <button id="decision-compare-close" class="command-button" type="button">닫기</button>
+              </form>
+            </div>
+            <div class="decision-compare-workspace">
+              <section class="decision-compare-pane">
+                <div class="decision-compare-pane-head">
+                  <div>
+                    <strong>출처 문서</strong>
+                    <code id="decision-compare-source-path"></code>
+                  </div>
+                  <button id="decision-compare-open-source" class="command-button" type="button">근거 모달</button>
+                </div>
+                <div id="decision-compare-source" class="decision-compare-body">
+                  <div class="notion-details-placeholder"><p>출처 문서를 불러오는 중입니다.</p></div>
+                </div>
+              </section>
+              <section class="decision-compare-pane">
+                <div class="decision-compare-pane-head">
+                  <div>
+                    <strong>반영 대상 문서</strong>
+                    <code id="decision-compare-target-path"></code>
+                  </div>
+                  <button id="decision-compare-open-target" class="command-button" type="button">위키 탭</button>
+                </div>
+                <textarea id="decision-compare-target-editor" class="decision-compare-editor" placeholder="대상 문서를 직접 수정하세요."></textarea>
+                <div id="decision-compare-target-preview" class="decision-compare-body decision-compare-target-preview"></div>
+              </section>
+            </div>
+            <div class="decision-compare-footer">
+              <span id="decision-compare-status">비교 후 채택 또는 수정 저장을 선택하세요.</span>
+              <div class="decision-compare-actions">
+                <button id="decision-compare-glm-merge" class="command-button" type="button">GLM 병합안 제안</button>
+                <button id="decision-compare-copy-source" class="command-button" type="button">좌측 내용 채택</button>
+                <button id="decision-compare-save-target" class="command-button" type="button">우측 문서 저장</button>
+                <button id="decision-compare-approve" class="command-button accent" type="button">비교 후 승인</button>
+              </div>
+            </div>
+            <section id="decision-compare-merge-panel" class="decision-compare-merge-panel" hidden>
+              <div class="decision-compare-merge-head">
+                <strong id="decision-compare-merge-title">GLM 병합 제안</strong>
+                <span id="decision-compare-merge-meta">대기 중</span>
+              </div>
+              <div id="decision-compare-merge-body" class="decision-compare-merge-body">
+                <p class="pipeline-note">충돌 항목에서 GLM 병합안을 요청하면 요약, 병합 전략, 추천 초안이 여기에 표시됩니다.</p>
+              </div>
+              <div class="decision-compare-merge-actions">
+                <button id="decision-compare-apply-merge" class="command-button" type="button">제안문을 우측에 반영</button>
+              </div>
+            </section>
+          </div>
+        </dialog>
+
         <section id="paperclip" class="view">
           <div class="paperclip-hero" data-anchor="개요">
             <div>
@@ -1161,6 +1441,14 @@
         </section>
       </section>
     </main>
-    <script src="./app.js?v=20260429-rclone-progress"></script>
+    <script>
+      (function redirectToLiveWikiOps() {
+        if (window.location.protocol !== "file:") return;
+        if (window.location.search.includes("static=1")) return;
+        const target = `http://127.0.0.1:8787/${window.location.hash || ""}`;
+        window.location.replace(target);
+      })();
+    </script>
+    <script src="./app.js?v=20260430-decisions-live"></script>
   </body>
 </html>

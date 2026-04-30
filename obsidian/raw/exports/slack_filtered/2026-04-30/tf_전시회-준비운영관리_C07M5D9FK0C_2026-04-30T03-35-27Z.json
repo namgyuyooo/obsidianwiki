@@ -1,0 +1,116 @@
+{
+  "type": "slack_channel_filtered_export",
+  "workspace": "RTM Slack",
+  "collected_at": "2026-04-30T03:35:27.248712+00:00",
+  "channel": {
+    "id": "C07M5D9FK0C",
+    "name": "tf_전시회-준비운영관리",
+    "type": "public_channel",
+    "is_archived": false,
+    "is_private": false,
+    "created": "2024-09-12T05:15:57+00:00",
+    "topic": "전시회 준비, 운영·관리 협업 채널",
+    "purpose": "RTM 전시회 참가 준비를 위해 협업 필요사항을 논의하고, 관련된 자료를 공유하는 등 전시회 관련 협업을 위한 채널",
+    "member_count": 27,
+    "routing": {
+      "channel_bucket": "mixed",
+      "conversation_mode": "mixed_triage",
+      "rationale": "mixed_channel_prefix",
+      "wiki_workspace": "rtm",
+      "wiki_target_root": "obsidian/Wiki/Common/Slack_Project_Intake",
+      "wiki_target_kind": "common"
+    }
+  },
+  "routing": {
+    "channel_profile": {
+      "channel_bucket": "mixed",
+      "conversation_mode": "mixed_triage",
+      "rationale": "mixed_channel_prefix",
+      "wiki_workspace": "rtm",
+      "wiki_target_root": "obsidian/Wiki/Common/Slack_Project_Intake",
+      "wiki_target_kind": "common",
+      "project_wiki_target_root": "obsidian/Wiki/Common/Slack_Project_Intake",
+      "company_wiki_target_root": "obsidian/Wiki/Common/Slack_Company_News"
+    },
+    "primary_bucket": "company_news",
+    "bucket_counts": {
+      "project": 0,
+      "company_news": 1,
+      "casual": 0
+    },
+    "wiki_targets": [
+      {
+        "path": "obsidian/Wiki/Common/Slack_Company_News",
+        "count": 1
+      }
+    ]
+  },
+  "history_window": {
+    "oldest_ts": "1776656413.307992",
+    "limit_per_channel": 500,
+    "include_threads": true,
+    "include_files": true
+  },
+  "filter": {
+    "provider": "local_rule",
+    "summary": "GLM unavailable; local rule filter applied",
+    "kept_count": 1,
+    "excluded_count": 0
+  },
+  "messages": [
+    {
+      "ts": "1776763690.005389",
+      "type": "message",
+      "subtype": null,
+      "user": "U04C3UYFY1F",
+      "text": "<@UBKL1FZ28> <@U0A11G512F3> <@U03NJDDPZPZ> <@U049Z3PQ2KA>\n(CC. <@U05AWGZ1TRD> <@U0328CH80JV> <@U07N3NGH7TR>)\n\n전시회 준비 및 대응 감사드립니다.\nSIMTOS 전시회 확보DB 및 컨텍 담당자 공유드립니다.\n\n• 확보DB: 159사 (목표대비 +6.0%)\n• 허정 61사, 이욱 46사, 이건영 50사, 2개는 학교\n• 4/30일 목표로 초회 유선 컨텍 완료 예정 (영업채널에 별도 공유완료)\n",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [
+        {
+          "name": "+1",
+          "users": [
+            "U03NJDDPZPZ",
+            "U05AWGZ1TRD",
+            "UBKL1FZ28",
+            "U04FRP4PQF5"
+          ],
+          "count": 4
+        },
+        {
+          "name": "+1::skin-tone-3",
+          "users": [
+            "U07N3NGH7TR"
+          ],
+          "count": 1
+        }
+      ],
+      "edited": null,
+      "files": [
+        {
+          "id": "F0AU5FRGBD3",
+          "name": "RTM_2026전시회진척관리_20260421.xlsx",
+          "title": "RTM_2026전시회진척관리_20260421.xlsx",
+          "mimetype": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          "filetype": "xlsx",
+          "pretty_type": "Excel Spreadsheet",
+          "size": 220148,
+          "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0AU5FRGBD3/rtm_2026______________________20260421.xlsx",
+          "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0AU5FRGBD3/rtm_2026______________________20260421.xlsx"
+        }
+      ]
+    }
+  ],
+  "routed_messages": [
+    {
+      "ts": "1776763690.005389",
+      "bucket": "company_news",
+      "reason": "company_keywords",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "<@UBKL1FZ28> <@U0A11G512F3> <@U03NJDDPZPZ> <@U049Z3PQ2KA>\n(CC. <@U05AWGZ1TRD> <@U0328CH80JV> <@U07N3NGH7TR>)\n\n전시회 준비 및 대응 감사드립니다.\nSIMTOS 전시회 확보DB 및 컨텍 담당자 공유드립니다.\n\n• 확보DB: 159사 (목표대비 +6.0%)\n• 허정 61사, 이욱 46사, 이건영 50사, 2개는 학교\n• 4/30일 목표로 초회 유선 컨텍 완료 예정 (영업채널에 별도 공유완료) RTM_2026전시회진척관리_20260421.xlsx"
+    }
+  ],
+  "excluded_messages": []
+}

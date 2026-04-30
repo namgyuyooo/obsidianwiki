@@ -1,0 +1,205 @@
+{
+  "type": "slack_channel_filtered_export",
+  "workspace": "RTM Slack",
+  "collected_at": "2026-04-30T03:35:27.248712+00:00",
+  "channel": {
+    "id": "C02MN33MA64",
+    "name": "bull-man-kyu",
+    "type": "public_channel",
+    "is_archived": false,
+    "is_private": false,
+    "created": "2021-11-11T03:20:25+00:00",
+    "topic": "",
+    "purpose": "dartslive200s",
+    "member_count": 38,
+    "routing": {
+      "channel_bucket": "company_news",
+      "conversation_mode": "company_updates",
+      "rationale": "default_company_updates",
+      "wiki_workspace": "rtm",
+      "wiki_target_root": "obsidian/Wiki/Common/Slack_Company_News",
+      "wiki_target_kind": "common"
+    }
+  },
+  "routing": {
+    "channel_profile": {
+      "channel_bucket": "company_news",
+      "conversation_mode": "company_updates",
+      "rationale": "default_company_updates",
+      "wiki_workspace": "rtm",
+      "wiki_target_root": "obsidian/Wiki/Common/Slack_Company_News",
+      "wiki_target_kind": "common",
+      "project_wiki_target_root": "obsidian/Wiki/Common/Slack_Project_Intake",
+      "company_wiki_target_root": "obsidian/Wiki/Common/Slack_Company_News"
+    },
+    "primary_bucket": "company_news",
+    "bucket_counts": {
+      "project": 0,
+      "company_news": 2,
+      "casual": 0
+    },
+    "wiki_targets": [
+      {
+        "path": "obsidian/Wiki/Common/Slack_Company_News",
+        "count": 2
+      }
+    ]
+  },
+  "history_window": {
+    "oldest_ts": "1776656202.640823",
+    "limit_per_channel": 500,
+    "include_threads": true,
+    "include_files": true
+  },
+  "filter": {
+    "provider": "local_rule",
+    "summary": "GLM unavailable; local rule filter applied",
+    "kept_count": 2,
+    "excluded_count": 0
+  },
+  "messages": [
+    {
+      "ts": "1776741558.139559",
+      "type": "message",
+      "subtype": null,
+      "user": "U033Z97MZ3N",
+      "text": "ㅁㅁㄷ <@U07N3NGH7TR> <@U04FRP4PQF5> ",
+      "thread_ts": "1776741558.139559",
+      "reply_count": 4,
+      "reply_users": [
+        "U07N3NGH7TR",
+        "U04FRP4PQF5",
+        "U019E51R1DM"
+      ],
+      "latest_reply": "1776742070.802139",
+      "reactions": [
+        {
+          "name": "homersimpson-pbjdance",
+          "users": [
+            "U07N3NGH7TR",
+            "U04FRP4PQF5"
+          ],
+          "count": 2
+        }
+      ],
+      "edited": null,
+      "files": [],
+      "thread_replies": [
+        {
+          "ts": "1776741597.480499",
+          "type": "message",
+          "subtype": null,
+          "user": "U07N3NGH7TR",
+          "text": "디카페인 아이스아메리카노 샷 두개 추가요",
+          "thread_ts": "1776741558.139559",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776741607.489929",
+          "type": "message",
+          "subtype": null,
+          "user": "U04FRP4PQF5",
+          "text": "아아:)",
+          "thread_ts": "1776741558.139559",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776742044.997819",
+          "type": "message",
+          "subtype": null,
+          "user": "U019E51R1DM",
+          "text": "앗..이것 때문에 분노의 맨발을...",
+          "thread_ts": "1776741558.139559",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776742070.802139",
+          "type": "message",
+          "subtype": null,
+          "user": "U04FRP4PQF5",
+          "text": "ㅋㅋㅋㅋ",
+          "thread_ts": "1776741558.139559",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1776913342.004719",
+      "type": "message",
+      "subtype": null,
+      "user": "U04FRP4PQF5",
+      "text": "<@U033Z97MZ3N> ",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [
+        {
+          "name": "eyes",
+          "users": [
+            "U033Z97MZ3N"
+          ],
+          "count": 1
+        },
+        {
+          "name": "shake",
+          "users": [
+            "U033Z97MZ3N"
+          ],
+          "count": 1
+        }
+      ],
+      "edited": null,
+      "files": [
+        {
+          "id": "F0AUMADQPBP",
+          "name": "IMG_1011.jpg",
+          "title": "IMG_1011",
+          "mimetype": "image/jpeg",
+          "filetype": "jpg",
+          "pretty_type": "JPEG",
+          "size": 835453,
+          "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0AUMADQPBP/img_1011.jpg",
+          "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0AUMADQPBP/img_1011.jpg"
+        }
+      ]
+    }
+  ],
+  "routed_messages": [
+    {
+      "ts": "1776741558.139559",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "ㅁㅁㄷ <@U07N3NGH7TR> <@U04FRP4PQF5>"
+    },
+    {
+      "ts": "1776913342.004719",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "<@U033Z97MZ3N> IMG_1011"
+    }
+  ],
+  "excluded_messages": []
+}

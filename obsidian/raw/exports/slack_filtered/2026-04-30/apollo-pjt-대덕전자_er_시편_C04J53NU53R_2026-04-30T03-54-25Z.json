@@ -1,0 +1,67 @@
+{
+  "type": "slack_channel_filtered_export",
+  "workspace": "RTM Slack",
+  "collected_at": "2026-04-30T03:54:25.842750+00:00",
+  "channel": {
+    "id": "C04J53NU53R",
+    "name": "apollo-pjt-대덕전자_er_시편",
+    "type": "public_channel",
+    "is_archived": false,
+    "is_private": false,
+    "created": "2023-01-12T07:32:30+00:00",
+    "topic": "",
+    "purpose": "",
+    "member_count": 8,
+    "routing": {
+      "channel_bucket": "project",
+      "conversation_mode": "project_updates",
+      "rationale": "project_name_pattern",
+      "wiki_workspace": "rtm",
+      "wiki_target_root": "obsidian/Wiki/Common/Slack_Project_Intake",
+      "wiki_target_kind": "common"
+    }
+  },
+  "routing": {
+    "channel_profile": {
+      "channel_bucket": "project",
+      "conversation_mode": "project_updates",
+      "rationale": "project_name_pattern",
+      "wiki_workspace": "rtm",
+      "wiki_target_root": "obsidian/Wiki/Common/Slack_Project_Intake",
+      "wiki_target_kind": "common",
+      "project_wiki_target_root": "obsidian/Wiki/Common/Slack_Project_Intake",
+      "company_wiki_target_root": "obsidian/Wiki/Common/Slack_Company_News"
+    },
+    "primary_bucket": "project",
+    "bucket_counts": {
+      "project": 0,
+      "company_news": 0,
+      "casual": 1
+    },
+    "wiki_targets": []
+  },
+  "history_window": {
+    "oldest_ts": "1777520197.499118",
+    "limit_per_channel": 60,
+    "include_threads": true,
+    "include_files": true
+  },
+  "filter": {
+    "provider": "local_rule",
+    "summary": "GLM unavailable; local rule filter applied (http_429:{\"error\":{\"code\":\"1113\",\"message\":\"Insufficient balance or no resource package. Please recharge.\"}})",
+    "error": "http_429:{\"error\":{\"code\":\"1113\",\"message\":\"Insufficient balance or no resource package. Please recharge.\"}}",
+    "kept_count": 0,
+    "excluded_count": 1
+  },
+  "messages": [],
+  "routed_messages": [],
+  "excluded_messages": [
+    {
+      "ts": "1777520197.499119",
+      "reason": "system_membership_event",
+      "bucket": "casual",
+      "text": "<@U0B15H1AQJV> has joined the channel",
+      "subtype": "channel_join"
+    }
+  ]
+}

@@ -1,0 +1,151 @@
+{
+  "type": "slack_channel_export",
+  "workspace": "RTM Slack",
+  "collected_at": "2026-04-30T03:35:27.248712+00:00",
+  "channel": {
+    "id": "C071W89AMU2",
+    "name": "pjt-비지에프에코스페셜티-구-flk",
+    "type": "public_channel",
+    "is_archived": false,
+    "is_private": false,
+    "created": "2024-05-03T13:51:31+00:00",
+    "topic": "",
+    "purpose": "",
+    "member_count": 15,
+    "routing": {
+      "channel_bucket": "project",
+      "conversation_mode": "project_updates",
+      "rationale": "project_channel_prefix",
+      "wiki_workspace": "rtm",
+      "wiki_target_root": "obsidian/Wiki/Common/Slack_Project_Intake",
+      "wiki_target_kind": "common"
+    }
+  },
+  "routing": {
+    "channel_bucket": "project",
+    "conversation_mode": "project_updates",
+    "rationale": "project_channel_prefix",
+    "wiki_workspace": "rtm",
+    "wiki_target_root": "obsidian/Wiki/Common/Slack_Project_Intake",
+    "wiki_target_kind": "common",
+    "project_wiki_target_root": "obsidian/Wiki/Common/Slack_Project_Intake",
+    "company_wiki_target_root": "obsidian/Wiki/Common/Slack_Company_News"
+  },
+  "history_window": {
+    "oldest_ts": "1776656269.507410",
+    "limit_per_channel": 500,
+    "include_threads": true,
+    "include_files": true
+  },
+  "messages": [
+    {
+      "ts": "1777378521.106329",
+      "type": "message",
+      "subtype": null,
+      "user": "U0328CH80JV",
+      "text": "<@U093NJW4JDS>\nA) 비지에프 크롭이슈 리뷰\n4월 29일 (수요일) · 오후 1:00~ 2:00\n시간대: Asia/Seoul",
+      "thread_ts": "1777378521.106329",
+      "reply_count": 2,
+      "reply_users": [
+        "U093NJW4JDS",
+        "U0328CH80JV"
+      ],
+      "latest_reply": "1777438775.467879",
+      "reactions": [
+        {
+          "name": "white_check_mark",
+          "users": [
+            "U093NJW4JDS"
+          ],
+          "count": 1
+        }
+      ],
+      "edited": null,
+      "files": [],
+      "thread_replies": [
+        {
+          "ts": "1777438275.150319",
+          "type": "message",
+          "subtype": null,
+          "user": "U093NJW4JDS",
+          "text": "*영역 검출 모델 고도화* 보고서 최종 수정 링크 공유드립니다.\n링크 : <https://gazagaza.atlassian.net/wiki/spaces/AI/pages/3285811210/BGF>",
+          "thread_ts": "1777378521.106329",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1777438775.467879",
+          "type": "message",
+          "subtype": null,
+          "user": "U0328CH80JV",
+          "text": "회의록 작성하는 gemini\n\n1. 회의 개요\n• *회의 제목*: 영역 검출 모델 성능 개선 및 재학습 결과 공유\n• *일시*: 2026년 4월 29일 (수)\n• *참석자*: 배소희, 배명식\n2. 회의 목적\n• 특정 제품군(718, 딘팔 등)에서 발생한 *영역 크롭(Crop) 오류* 원인 파악 및 개선 결과 보고.\n• 추론 프로그램 로직 수정 및 데이터 재학습을 통한 모델 고도화 현황 공유.\n3. 주요 논의 사항\n*영역 검출 오류 원인 분석*\n• • *현상*: 000(정면) 각도 이미지에서 크롭이 정확하지 않거나 하단부로 치우치는 문제 발생.\n• • *원인*:\n*추론 프로그램 오류*: 우측 상단을 가이드로 잡는 로직 상의 문제 확인.\n*모델 노후화*: 기존 데이터셋의 부족으로 인한 판단 성능 저하.\n*뉴매틱 밸브(Pneumatic Valve) 특이성*: 반사도가 너무 높아 홀(Hole) 영역을 오인식함.\n\n*모델 재학습 및 성능 개선*\n• *데이터 보강*: 제품별 신규 검출 셋에 각 5시료씩 추가하여 재학습 진행.\n• *라벨링 고도화*: 기존 모델의 추론 결과를 수동으로 수정하는 방식으로 라벨링 효율성 제고 및 정확도 향상.\n• *성능 비교*: 수치상(F1 Score 등) 큰 차이는 없으나, 실제 테스트 셋 전수 검사 결과 오검출 및 크롭 오류가 해소됨을 확인.\n*기술적 한계 및 라이브러리 검토*\n• • *Ultralytics vs Moon*:\nUltralytics(YOLOv8/11 등)는 도넛(Donut) 형태의 영역 학습에 취약함.\n현재 제조 환경에 특화된 'Moon' 라이브러리 및 YOLO-NAS 모델 구조가 도넛 형태 학습에 더 적합함을 확인.\n\n4. 결정 사항 (Decisions)\n• *추론 프로그램 로직 수정 완료*: 우측 상단 가이드 인식 오류 수정 및 고신뢰도 영역 우선 추출 로직 적용.\n• *모델 배포 승인*: 000 각도 및 기타 각도에서의 크롭 오류가 해결되었으므로 금일 중 배포 진행.\n• *데이터 활용 가이드*: 크롭이 소폭 잘못된 데이터라도 검출 성능에 지장이 없다면 학습 데이터로 포함하여 활용하기로 함.\n5. 실행 과제 (Action Items)\n• *[담당자]* 모델 성능 비교 수치 제외 및 최종 링크 전달 (회의 중 요청 사항 반영).\n• *[담당자]* 금일 오후 중 30일자 버전 모델 배포 및 채널 공유.\n• *[담당자]* 크롭 오류 발생 시 데이터 처리 방향성(폐기 여부 등) 최종 정리 및 지침화.\n6. 다음 일정\n• *배포 후 모니터링*: 4월 30일 배포 이후 실제 현장 데이터 매칭 결과 팔로업.\n*비고*: 뉴매틱 밸브와 같이 반사도가 극도로 높은 제품은 향후 조명 환경이나 모델 가중치 조정 등 추가 검토가 필요함.",
+          "thread_ts": "1777378521.106329",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1777444957.968459",
+      "type": "message",
+      "subtype": null,
+      "user": "U093NJW4JDS",
+      "text": "2026.04.29(수) 원격 작업 내역 <@U0328CH80JV>\n\n1. 소요시간 : 50분. (14:50~15:40)\n2. 작업 내역\n• v2.0.0 배포\n• 추론프로그램 : 영역 검출 안정성 개선 - 후처리 강화 (파편 검출 필터링, 라벨 병합 순서 조정), 영역 임계값 상향 (0.25 → 0.6)\n• 뉴매틱 시료 포함 영역 재학습 모델 배포\n• 로그 추출\n로그 경로\n*RTM : /FLK/04. AI모델/02. flk_log*\n*WGS : /FLK/02. Data(공유)/04. WGS Log/2026/04*",
+      "thread_ts": "1777444957.968459",
+      "reply_count": 1,
+      "reply_users": [
+        "U0328CH80JV"
+      ],
+      "latest_reply": "1777444984.824759",
+      "reactions": [
+        {
+          "name": "+1",
+          "users": [
+            "U0328CH80JV"
+          ],
+          "count": 1
+        }
+      ],
+      "edited": null,
+      "files": [],
+      "thread_replies": [
+        {
+          "ts": "1777444984.824759",
+          "type": "message",
+          "subtype": null,
+          "user": "U0328CH80JV",
+          "text": "수고하셨습니다.",
+          "thread_ts": "1777444957.968459",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1777520270.154369",
+      "type": "message",
+      "subtype": "channel_join",
+      "user": "U0B15H1AQJV",
+      "text": "<@U0B15H1AQJV> has joined the channel",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    }
+  ]
+}

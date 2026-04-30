@@ -1,0 +1,259 @@
+{
+  "type": "slack_channel_filtered_export",
+  "workspace": "RTM Slack",
+  "collected_at": "2026-04-30T03:35:27.248712+00:00",
+  "channel": {
+    "id": "C0ATZJWHG82",
+    "name": "경동나비엔",
+    "type": "public_channel",
+    "is_archived": false,
+    "is_private": false,
+    "created": "2026-04-20T08:06:34+00:00",
+    "topic": "",
+    "purpose": "",
+    "member_count": 4,
+    "routing": {
+      "channel_bucket": "company_news",
+      "conversation_mode": "company_updates",
+      "rationale": "default_company_updates",
+      "wiki_workspace": "rtm",
+      "wiki_target_root": "obsidian/Wiki/Common/Slack_Company_News",
+      "wiki_target_kind": "common"
+    }
+  },
+  "routing": {
+    "channel_profile": {
+      "channel_bucket": "company_news",
+      "conversation_mode": "company_updates",
+      "rationale": "default_company_updates",
+      "wiki_workspace": "rtm",
+      "wiki_target_root": "obsidian/Wiki/Common/Slack_Company_News",
+      "wiki_target_kind": "common",
+      "project_wiki_target_root": "obsidian/Wiki/Common/Slack_Project_Intake",
+      "company_wiki_target_root": "obsidian/Wiki/Common/Slack_Company_News"
+    },
+    "primary_bucket": "project",
+    "bucket_counts": {
+      "project": 2,
+      "company_news": 1,
+      "casual": 5
+    },
+    "wiki_targets": [
+      {
+        "path": "obsidian/Wiki/Common/Slack_Project_Intake",
+        "count": 2
+      },
+      {
+        "path": "obsidian/Wiki/Common/Slack_Company_News",
+        "count": 1
+      }
+    ]
+  },
+  "history_window": {
+    "oldest_ts": "1776656426.850068",
+    "limit_per_channel": 500,
+    "include_threads": true,
+    "include_files": true
+  },
+  "filter": {
+    "provider": "local_rule",
+    "summary": "GLM unavailable; local rule filter applied",
+    "kept_count": 3,
+    "excluded_count": 5
+  },
+  "messages": [
+    {
+      "ts": "1776831953.137339",
+      "type": "message",
+      "subtype": null,
+      "user": "UBKL1FZ28",
+      "text": "",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": [
+        {
+          "id": "F0AUDUT9006",
+          "name": "260318_경동나비엔_PLC 로 센서데이터 수집 견적.pptx",
+          "title": "260318_경동나비엔_PLC 로 센서데이터 수집 견적.pptx",
+          "mimetype": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+          "filetype": "pptx",
+          "pretty_type": "PowerPoint Presentation",
+          "size": 35400042,
+          "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0AUDUT9006/260318_________________________________________plc____________________________________________________________________________.pptx",
+          "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0AUDUT9006/260318_________________________________________plc____________________________________________________________________________.pptx"
+        },
+        {
+          "id": "F0AUG1B6U1G",
+          "name": "250924_경동나비엔-RTM poc 제안서_00.pptx",
+          "title": "250924_경동나비엔-RTM poc 제안서_00.pptx",
+          "mimetype": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+          "filetype": "pptx",
+          "pretty_type": "PowerPoint Presentation",
+          "size": 53219635,
+          "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0AUG1B6U1G/250924________________________________________-rtm_poc_______________________00.pptx",
+          "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0AUG1B6U1G/250924________________________________________-rtm_poc_______________________00.pptx"
+        },
+        {
+          "id": "F0AU9KK1WTD",
+          "name": "260310_RTM_경동나비엔_예지보전로드맵_01.pptx",
+          "title": "260310_RTM_경동나비엔_예지보전로드맵_01.pptx",
+          "mimetype": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+          "filetype": "pptx",
+          "pretty_type": "PowerPoint Presentation",
+          "size": 84239190,
+          "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0AU9KK1WTD/260310_rtm__________________________________________________________________________________________01.pptx",
+          "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0AU9KK1WTD/260310_rtm__________________________________________________________________________________________01.pptx"
+        },
+        {
+          "id": "F0AUCJP14JH",
+          "name": "260207_경동나비엔 시업계획서 작성용 시나리오 01.pptx",
+          "title": "260207_경동나비엔 시업계획서 작성용 시나리오 01.pptx",
+          "mimetype": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+          "filetype": "pptx",
+          "pretty_type": "PowerPoint Presentation",
+          "size": 54125388,
+          "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0AUCJP14JH/260207___________________________________________________________________________________________________________________________________01.pptx",
+          "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0AUCJP14JH/260207___________________________________________________________________________________________________________________________________01.pptx"
+        },
+        {
+          "id": "F0AU9KMGT51",
+          "name": "멀티센서_센서조합별견적_경동나비엔_251117.xlsx",
+          "title": "멀티센서_센서조합별견적_경동나비엔_251117.xlsx",
+          "mimetype": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          "filetype": "xlsx",
+          "pretty_type": "Excel Spreadsheet",
+          "size": 9641,
+          "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0AU9KMGT51/_________________________________________________________________________________________________________________________________251117.xlsx",
+          "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0AU9KMGT51/_________________________________________________________________________________________________________________________________251117.xlsx"
+        }
+      ]
+    },
+    {
+      "ts": "1776831971.039599",
+      "type": "message",
+      "subtype": null,
+      "user": "UBKL1FZ28",
+      "text": "",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": [
+        {
+          "id": "F0AUDV1G2K0",
+          "name": "251031_경동나비엔-RTM 예지보전 견적 구조.pptx",
+          "title": "251031_경동나비엔-RTM 예지보전 견적 구조.pptx",
+          "mimetype": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+          "filetype": "pptx",
+          "pretty_type": "PowerPoint Presentation",
+          "size": 50645784,
+          "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0AUDV1G2K0/251031________________________________________-rtm____________________________________________________________.pptx",
+          "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0AUDV1G2K0/251031________________________________________-rtm____________________________________________________________.pptx"
+        }
+      ]
+    },
+    {
+      "ts": "1776831990.304309",
+      "type": "message",
+      "subtype": null,
+      "user": "UBKL1FZ28",
+      "text": "",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": [
+        {
+          "id": "F0AVA9EJSRE",
+          "name": "250924_경동나비엔-RTM poc 제안서_00.pptx",
+          "title": "250924_경동나비엔-RTM poc 제안서_00.pptx",
+          "mimetype": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+          "filetype": "pptx",
+          "pretty_type": "PowerPoint Presentation",
+          "size": 53219635,
+          "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0AVA9EJSRE/250924________________________________________-rtm_poc_______________________00.pptx",
+          "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0AVA9EJSRE/250924________________________________________-rtm_poc_______________________00.pptx"
+        },
+        {
+          "id": "F0AVA9F2EHW",
+          "name": "경동나비엔 설비진단 제안_20250923.pptx",
+          "title": "경동나비엔 설비진단 제안_20250923.pptx",
+          "mimetype": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+          "filetype": "pptx",
+          "pretty_type": "PowerPoint Presentation",
+          "size": 3247141,
+          "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0AVA9F2EHW/__________________________________________________________________________________________20250923.pptx",
+          "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0AVA9F2EHW/__________________________________________________________________________________________20250923.pptx"
+        }
+      ]
+    }
+  ],
+  "routed_messages": [
+    {
+      "ts": "1776831953.137339",
+      "bucket": "project",
+      "reason": "project_keywords",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Project_Intake",
+      "text": "260318_경동나비엔_PLC 로 센서데이터 수집 견적.pptx 250924_경동나비엔-RTM poc 제안서_00.pptx 260310_RTM_경동나비엔_예지보전로드맵_01.pptx 260207_경동나비엔 시업계획서 작성용 시나리오 01.pptx 멀티센서_센서조합별견적_경동나비엔_251117.xlsx"
+    },
+    {
+      "ts": "1776831971.039599",
+      "bucket": "company_news",
+      "reason": "channel_company_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "251031_경동나비엔-RTM 예지보전 견적 구조.pptx"
+    },
+    {
+      "ts": "1776831990.304309",
+      "bucket": "project",
+      "reason": "project_keywords",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Project_Intake",
+      "text": "250924_경동나비엔-RTM poc 제안서_00.pptx 경동나비엔 설비진단 제안_20250923.pptx"
+    }
+  ],
+  "excluded_messages": [
+    {
+      "ts": "1776672394.179219",
+      "reason": "system_membership_event",
+      "bucket": "casual",
+      "text": "<@UBKL1FZ28> has joined the channel",
+      "subtype": "channel_join"
+    },
+    {
+      "ts": "1776672415.390209",
+      "reason": "system_membership_event",
+      "bucket": "casual",
+      "text": "<@U025MG70MNX> has joined the channel",
+      "subtype": "channel_join"
+    },
+    {
+      "ts": "1776672415.489589",
+      "reason": "system_membership_event",
+      "bucket": "casual",
+      "text": "<@U0A11G512F3> has joined the channel",
+      "subtype": "channel_join"
+    },
+    {
+      "ts": "1776676653.475079",
+      "reason": "system_membership_event",
+      "bucket": "casual",
+      "text": "<@U07AJMY59QU> has joined the channel",
+      "subtype": "channel_join"
+    },
+    {
+      "ts": "1777520427.456809",
+      "reason": "system_membership_event",
+      "bucket": "casual",
+      "text": "<@U0B15H1AQJV> has joined the channel",
+      "subtype": "channel_join"
+    }
+  ]
+}

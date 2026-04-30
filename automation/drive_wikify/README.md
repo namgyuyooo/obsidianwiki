@@ -53,6 +53,18 @@
   - `MAX_FETCH_DOCS`
   - `CHUNK_SIZE_MIN_CHARS`
   - `CHUNK_SIZE_MAX_CHARS`
+- Slack:
+  - `SLACK_BOT_TOKEN`
+  - `SLACK_USER_TOKEN`
+  - `SLACK_WORKSPACE_NAME`
+  - `SLACK_CHANNEL_TYPES`
+  - `SLACK_CHANNELS`
+  - `SLACK_EXPORT_ROOT`
+  - `SLACK_STATE_PATH`
+  - `SLACK_HISTORY_LIMIT`
+  - `SLACK_OLDEST_DAYS`
+  - `SLACK_INCLUDE_THREADS`
+  - `SLACK_INCLUDE_FILES`
 
 ## 권장 흐름
 
@@ -96,6 +108,22 @@ PYTHONPATH=automation/drive_wikify/src \
 
 `--env-file`로 다른 `.env`를 지정할 수 있고, `--config`는 legacy YAML/JSON 호환용이다.
 
+## Slack 수집 예시
+
+```bash
+PYTHONPATH=automation/drive_wikify/src \
+/Users/rtm/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3 \
+-m drive_wikify.cli slack-channels --json
+```
+
+```bash
+PYTHONPATH=automation/drive_wikify/src \
+/Users/rtm/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3 \
+-m drive_wikify.cli slack-collect --channel sales_team --json
+```
+
+세부 운영 기준은 `automation/drive_wikify/Slack_Collection_Operating_Model.md`를 따른다.
+
 ## Docker 실행
 
 Docker에서는 repo, 인증키, 런타임을 분리한다.
@@ -119,9 +147,11 @@ docker compose up --build
 - `--checkers 1`
 - `--transfers 1`
 - `--bwlimit 1M`
+- `--check-first`는 사용하지 않는다. 전체 Drive 체크가 끝나기 전까지 전송 피드백이 막히므로, 발견 즉시 copy하면서 진행률을 기록한다.
 - `--exclude Github/**`
 - `--exclude GitHub/**`
 - `--exclude Obsidian_wiki/**`
+- `ALLOWED_FILE_TYPES` 기준 `--filter "+ *.hwp"`, `--filter "+ **/*.hwp"` 형태로 문서만 포함하고 마지막에 `--filter "- *"`
 - 1배치 = 20~50개 파일
 - 1파일 = 8,000~15,000자 청크
 - `청크 요약 -> 파일 요약 -> 프로젝트 위키 반영`

@@ -1,0 +1,467 @@
+{
+  "type": "slack_channel_filtered_export",
+  "workspace": "RTM Slack",
+  "collected_at": "2026-04-30T03:35:27.248712+00:00",
+  "channel": {
+    "id": "C07RMMQC8GP",
+    "name": "sales-inbound",
+    "type": "public_channel",
+    "is_archived": false,
+    "is_private": false,
+    "created": "2024-10-16T05:21:05+00:00",
+    "topic": "",
+    "purpose": "홈페이지로 유입되는 잠재고객 발생 시 문의 내용을 포함한 알림 채널",
+    "member_count": 21,
+    "routing": {
+      "channel_bucket": "project",
+      "conversation_mode": "project_updates",
+      "rationale": "project_topic_keywords",
+      "wiki_workspace": "rtm",
+      "wiki_target_root": "obsidian/Wiki/Common/Slack_Project_Intake",
+      "wiki_target_kind": "common"
+    }
+  },
+  "routing": {
+    "channel_profile": {
+      "channel_bucket": "project",
+      "conversation_mode": "project_updates",
+      "rationale": "project_topic_keywords",
+      "wiki_workspace": "rtm",
+      "wiki_target_root": "obsidian/Wiki/Common/Slack_Project_Intake",
+      "wiki_target_kind": "common",
+      "project_wiki_target_root": "obsidian/Wiki/Common/Slack_Project_Intake",
+      "company_wiki_target_root": "obsidian/Wiki/Common/Slack_Company_News"
+    },
+    "primary_bucket": "project",
+    "bucket_counts": {
+      "project": 7,
+      "company_news": 2,
+      "casual": 0
+    },
+    "wiki_targets": [
+      {
+        "path": "obsidian/Wiki/Common/Slack_Project_Intake",
+        "count": 7
+      },
+      {
+        "path": "obsidian/Wiki/Common/Slack_Company_News",
+        "count": 2
+      }
+    ]
+  },
+  "history_window": {
+    "oldest_ts": "1776656341.576555",
+    "limit_per_channel": 500,
+    "include_threads": true,
+    "include_files": true
+  },
+  "filter": {
+    "provider": "local_rule",
+    "summary": "GLM unavailable; local rule filter applied",
+    "kept_count": 9,
+    "excluded_count": 0
+  },
+  "messages": [
+    {
+      "ts": "1776727653.178109",
+      "type": "message",
+      "subtype": "bot_message",
+      "user": "B06971EEQJV",
+      "text": "<@U03NJDDPZPZ>\n\n*[2025 EHM Brochure 열람 안내]*\n• 엘지 디스플레이\n• 여태선\n• <mailto:brian.yeo@lgdisplay.com|brian.yeo@lgdisplay.com>\n• 01055193387\n\n<https://featpaper.com/dashboard/documents/undefined|상세정보 보기>",
+      "thread_ts": "1776727653.178109",
+      "reply_count": 1,
+      "reply_users": [
+        "U03NJDDPZPZ"
+      ],
+      "latest_reply": "1776759023.981449",
+      "reactions": [
+        {
+          "name": "eyes",
+          "users": [
+            "U03NJDDPZPZ"
+          ],
+          "count": 1
+        },
+        {
+          "name": "done",
+          "users": [
+            "U03NJDDPZPZ"
+          ],
+          "count": 1
+        }
+      ],
+      "edited": null,
+      "files": [],
+      "thread_replies": [
+        {
+          "ts": "1776759023.981449",
+          "type": "message",
+          "subtype": null,
+          "user": "U03NJDDPZPZ",
+          "text": "*금일(4/21) 통화완료.* cc <@U04C3UYFY1F>\n• 지난주 SIMTOS 전시회에서 RTM 발견\n• 소개자료 확인하려고 홈페이지 방문\n• 내부에서 검토용으로 자료 공유하려고 함\n• 이메일로 EHM 상세소개자료 보내드림\n• 아직 본격적인 검토는 아닌 것 같고, 이것저것 살펴보는 단계처럼 보였음 (추측)",
+          "thread_ts": "1776727653.178109",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [
+            {
+              "name": "eyes",
+              "users": [
+                "U04C3UYFY1F",
+                "U0A11G512F3"
+              ],
+              "count": 2
+            },
+            {
+              "name": "+1",
+              "users": [
+                "U04C3UYFY1F",
+                "U0A11G512F3"
+              ],
+              "count": 2
+            }
+          ],
+          "edited": null,
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1776926273.743569",
+      "type": "message",
+      "subtype": "bot_message",
+      "user": "B06971EEQJV",
+      "text": "홈페이지 엔진 데모 신청\n1. 연락처01096590414\n2.회사 이메일\n\n\n\n_<https://zapier.com/webintent/edit-zap/301715340?source=slack|Sent by Zapier>_",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1776926289.699339",
+      "type": "message",
+      "subtype": "bot_message",
+      "user": "B06971EEQJV",
+      "text": "홈페이지 엔진 데모 신청\n1. 연락처01096590414\n2.회사 이메일\n\n\n\n_<https://zapier.com/webintent/edit-zap/301715340?source=slack|Sent by Zapier>_",
+      "thread_ts": "1776926289.699339",
+      "reply_count": 3,
+      "reply_users": [
+        "U03NJDDPZPZ",
+        "U04C3UYFY1F"
+      ],
+      "latest_reply": "1776931576.189799",
+      "reactions": [],
+      "edited": null,
+      "files": [],
+      "thread_replies": [
+        {
+          "ts": "1776926336.283599",
+          "type": "message",
+          "subtype": null,
+          "user": "U03NJDDPZPZ",
+          "text": "cc <!subteam^S0A8KJGN4DC>",
+          "thread_ts": "1776926289.699339",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776926351.787469",
+          "type": "message",
+          "subtype": null,
+          "user": "U03NJDDPZPZ",
+          "text": "You just received a new form submission on your website RTM.\nemail: <mailto:1203jsl@sti.co.kr|1203jsl@sti.co.kr>\n휴대폰 번호: 01096590414\nCheckbox: true",
+          "thread_ts": "1776926289.699339",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776931576.189799",
+          "type": "message",
+          "subtype": null,
+          "user": "U04C3UYFY1F",
+          "text": "예전에 제가 한번 방문했던 업체인듯 하네요.. 대구..\n제가 컨텍해보겠습니다.",
+          "thread_ts": "1776926289.699339",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [
+            {
+              "name": "+1",
+              "users": [
+                "U03NJDDPZPZ"
+              ],
+              "count": 1
+            }
+          ],
+          "edited": null,
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1776995173.083949",
+      "type": "message",
+      "subtype": "bot_message",
+      "user": "B06971EEQJV",
+      "text": "<@U03NJDDPZPZ>\n\n*[2025 EHM Brochure 열람 안내]*\n• 유네코레일\n• 장민우\n• <mailto:jmu5250@gmail.com|jmu5250@gmail.com>\n• 01083293807\n\n<https://featpaper.com/dashboard/documents/undefined|상세정보 보기>",
+      "thread_ts": "1776995173.083949",
+      "reply_count": 2,
+      "reply_users": [
+        "U03NJDDPZPZ",
+        "U0A11G512F3"
+      ],
+      "latest_reply": "1776995321.401439",
+      "reactions": [
+        {
+          "name": "eyes",
+          "users": [
+            "U03NJDDPZPZ"
+          ],
+          "count": 1
+        }
+      ],
+      "edited": null,
+      "files": [],
+      "thread_replies": [
+        {
+          "ts": "1776995218.505139",
+          "type": "message",
+          "subtype": null,
+          "user": "U03NJDDPZPZ",
+          "text": "<https://www.jobkorea.co.kr/recruit/co_read/c/unecorail>",
+          "thread_ts": "1776995173.083949",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": [
+            {
+              "id": "F0AVC9G2ZU1",
+              "name": "image.png",
+              "title": "image.png",
+              "mimetype": "image/png",
+              "filetype": "png",
+              "pretty_type": "PNG",
+              "size": 378071,
+              "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0AVC9G2ZU1/image.png",
+              "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0AVC9G2ZU1/image.png"
+            }
+          ]
+        },
+        {
+          "ts": "1776995321.401439",
+          "type": "message",
+          "subtype": null,
+          "user": "U0A11G512F3",
+          "text": "<@U03NJDDPZPZ> <@U04C3UYFY1F> 심토스 기간 중 방문 고객으로 유선 연락을 했으나, 도입의지 없으며 제품소개서 공유 후 회신 예정입니다.",
+          "thread_ts": "1776995173.083949",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [
+            {
+              "name": "white_check_mark",
+              "users": [
+                "U03NJDDPZPZ",
+                "U04C3UYFY1F"
+              ],
+              "count": 2
+            }
+          ],
+          "edited": null,
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1776995553.570359",
+      "type": "message",
+      "subtype": "bot_message",
+      "user": "B06971EEQJV",
+      "text": "<@U03NJDDPZPZ>\n\n*[2025 EHM Brochure 열람 안내]*\n• 유네코레일\n• 장민우\n• <mailto:jmu5250@gmail.com|jmu5250@gmail.com>\n• 01083293807\n\n<https://featpaper.com/dashboard/documents/undefined|상세정보 보기>",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1777288125.055789",
+      "type": "message",
+      "subtype": "bot_message",
+      "user": "B06971EEQJV",
+      "text": "<@U03NJDDPZPZ>\n\n*[2025 EHM Brochure 열람 안내]*\n• 미라콤아이앤씨 \n• 서필재\n• <mailto:violetdaniel@naver.com|violetdaniel@naver.com>\n• 01063245643\n\n<https://featpaper.com/dashboard/documents/undefined|상세정보 보기>",
+      "thread_ts": "1777288125.055789",
+      "reply_count": 1,
+      "reply_users": [
+        "U03NJDDPZPZ"
+      ],
+      "latest_reply": "1777357431.042109",
+      "reactions": [
+        {
+          "name": "white_check_mark",
+          "users": [
+            "U03NJDDPZPZ"
+          ],
+          "count": 1
+        }
+      ],
+      "edited": null,
+      "files": [],
+      "thread_replies": [
+        {
+          "ts": "1777357431.042109",
+          "type": "message",
+          "subtype": null,
+          "user": "U03NJDDPZPZ",
+          "text": "cc <!subteam^S0A8KJGN4DC>\n통화완료. 당장 필요한 건 아니고, AI 솔루션 관심 있어서 탐색. 지인의 소개로 RTM 알게되어 브로슈어 열람해보심. 필요 시 연락 달라고 하였음",
+          "thread_ts": "1777288125.055789",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [
+            {
+              "name": "+1",
+              "users": [
+                "U04C3UYFY1F"
+              ],
+              "count": 1
+            }
+          ],
+          "edited": null,
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1777363150.864689",
+      "type": "message",
+      "subtype": null,
+      "user": "U07KMNPPYMR",
+      "text": "<https://app.relate.so/relate/rtm/forms/rVKhjl/responses|RTM 홈페이지 문의> *received* a new response. &gt;Form response details\n&gt;이름: *장보령*\n&gt;업무용 이메일: *boryung@kmacsub.co.kr*\n&gt;휴대폰 번호: *01054149335*\n&gt;회사명: *KMAC*\n&gt;부서명: *사업가치진단본부*\n&gt;직책: *BA*\n&gt;관심 솔루션: *Hubble*\n&gt;문의내용: *[AXIS 2026] 비즈니스 협업 제안을 드리고자 합니다. 본 행사는 비즈니스 생태계를 설계하는 컨퍼런스로, 귀사와의 시너지를 기대하고 있습니다. 관련 내용을 검토하실 담당 부서의 공식 이메일 주소를 요청드립니다.*",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [
+        {
+          "name": "eyes",
+          "users": [
+            "U049Z3PQ2KA"
+          ],
+          "count": 1
+        }
+      ],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1777366276.107139",
+      "type": "message",
+      "subtype": "bot_message",
+      "user": "B06971EEQJV",
+      "text": "<@U04C3UYFY1F><@U025MG70MNX>\n\n*[2025 Hubble Brochure 열람 안내]*\n• ㅇ\n• ㅇ\n• <mailto:2@naver.com|2@naver.com>\n• 01000000000\n\n<https://featpaper.com/dashboard/documents/1gndaF|상세정보 보기>",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1777514018.879889",
+      "type": "message",
+      "subtype": "bot_message",
+      "user": "B06971EEQJV",
+      "text": "<@U04C3UYFY1F><@U025MG70MNX>\n\n*[2025 Hubble Brochure 열람 안내]*\n• 삼연글로벌\n• 강연일\n• <mailto:yeonil.kang@syglobalcorp.co.kr|yeonil.kang@syglobalcorp.co.kr>\n• 01047098988\n\n<https://featpaper.com/dashboard/documents/1gndaF|상세정보 보기>",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    }
+  ],
+  "routed_messages": [
+    {
+      "ts": "1776727653.178109",
+      "bucket": "project",
+      "reason": "channel_project_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Project_Intake",
+      "text": "<@U03NJDDPZPZ>\n\n*[2025 EHM Brochure 열람 안내]*\n• 엘지 디스플레이\n• 여태선\n• <mailto:brian.yeo@lgdisplay.com|brian.yeo@lgdisplay.com>\n• 01055193387\n\n<https://featpaper.com/dashboard/documents/undefined|상세정보 보기>"
+    },
+    {
+      "ts": "1776926273.743569",
+      "bucket": "company_news",
+      "reason": "company_keywords",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "홈페이지 엔진 데모 신청\n1. 연락처01096590414\n2.회사 이메일\n\n\n\n_<https://zapier.com/webintent/edit-zap/301715340?source=slack|Sent by Zapier>_"
+    },
+    {
+      "ts": "1776926289.699339",
+      "bucket": "company_news",
+      "reason": "company_keywords",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Company_News",
+      "text": "홈페이지 엔진 데모 신청\n1. 연락처01096590414\n2.회사 이메일\n\n\n\n_<https://zapier.com/webintent/edit-zap/301715340?source=slack|Sent by Zapier>_"
+    },
+    {
+      "ts": "1776995173.083949",
+      "bucket": "project",
+      "reason": "channel_project_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Project_Intake",
+      "text": "<@U03NJDDPZPZ>\n\n*[2025 EHM Brochure 열람 안내]*\n• 유네코레일\n• 장민우\n• <mailto:jmu5250@gmail.com|jmu5250@gmail.com>\n• 01083293807\n\n<https://featpaper.com/dashboard/documents/undefined|상세정보 보기>"
+    },
+    {
+      "ts": "1776995553.570359",
+      "bucket": "project",
+      "reason": "channel_project_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Project_Intake",
+      "text": "<@U03NJDDPZPZ>\n\n*[2025 EHM Brochure 열람 안내]*\n• 유네코레일\n• 장민우\n• <mailto:jmu5250@gmail.com|jmu5250@gmail.com>\n• 01083293807\n\n<https://featpaper.com/dashboard/documents/undefined|상세정보 보기>"
+    },
+    {
+      "ts": "1777288125.055789",
+      "bucket": "project",
+      "reason": "channel_project_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Project_Intake",
+      "text": "<@U03NJDDPZPZ>\n\n*[2025 EHM Brochure 열람 안내]*\n• 미라콤아이앤씨 \n• 서필재\n• <mailto:violetdaniel@naver.com|violetdaniel@naver.com>\n• 01063245643\n\n<https://featpaper.com/dashboard/documents/undefined|상세정보 보기>"
+    },
+    {
+      "ts": "1777363150.864689",
+      "bucket": "project",
+      "reason": "project_keywords",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Project_Intake",
+      "text": "<https://app.relate.so/relate/rtm/forms/rVKhjl/responses|RTM 홈페이지 문의> *received* a new response. &gt;Form response details\n&gt;이름: *장보령*\n&gt;업무용 이메일: *boryung@kmacsub.co.kr*\n&gt;휴대폰 번호: *01054149335*\n&gt;회사명: *KMAC*\n&gt;부서명: *사업가치진단본부*\n&gt;직책: *BA*\n&gt;관심 솔루션: *Hubble*\n&gt;문의내용: *[AXIS 2026] 비즈니스 협업 제안을 드리고자 합니다. 본 행사는 비즈니스 생태계를 설계하는 컨퍼런스로, 귀사와의 시너지를 기대하고 있습니다. 관련 내용을 검토하실 담당 부서의 공식 이메일 주소를 요청드립니다.*"
+    },
+    {
+      "ts": "1777366276.107139",
+      "bucket": "project",
+      "reason": "channel_project_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Project_Intake",
+      "text": "<@U04C3UYFY1F><@U025MG70MNX>\n\n*[2025 Hubble Brochure 열람 안내]*\n• ㅇ\n• ㅇ\n• <mailto:2@naver.com|2@naver.com>\n• 01000000000\n\n<https://featpaper.com/dashboard/documents/1gndaF|상세정보 보기>"
+    },
+    {
+      "ts": "1777514018.879889",
+      "bucket": "project",
+      "reason": "channel_project_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Project_Intake",
+      "text": "<@U04C3UYFY1F><@U025MG70MNX>\n\n*[2025 Hubble Brochure 열람 안내]*\n• 삼연글로벌\n• 강연일\n• <mailto:yeonil.kang@syglobalcorp.co.kr|yeonil.kang@syglobalcorp.co.kr>\n• 01047098988\n\n<https://featpaper.com/dashboard/documents/1gndaF|상세정보 보기>"
+    }
+  ],
+  "excluded_messages": []
+}

@@ -1,0 +1,38 @@
+{
+  "type": "slack_channel_export",
+  "workspace": "RTM Slack",
+  "collected_at": "2026-04-30T03:12:03.517731+00:00",
+  "channel": {
+    "id": "C074V175V37",
+    "name": "pjt_zeus_ai바우처",
+    "type": "public_channel",
+    "is_archived": false,
+    "is_private": false,
+    "created": "2024-05-24T03:56:03+00:00",
+    "topic": "",
+    "purpose": "",
+    "member_count": 12
+  },
+  "history_window": {
+    "oldest_ts": "1777345924.853962",
+    "limit_per_channel": 50,
+    "include_threads": true,
+    "include_files": true
+  },
+  "messages": [
+    {
+      "ts": "1777518725.494209",
+      "type": "message",
+      "subtype": "channel_join",
+      "user": "U0B15H1AQJV",
+      "text": "<@U0B15H1AQJV> has joined the channel",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    }
+  ]
+}

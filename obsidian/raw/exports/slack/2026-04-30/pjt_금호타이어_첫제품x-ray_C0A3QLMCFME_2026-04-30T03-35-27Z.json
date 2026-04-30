@@ -1,0 +1,2415 @@
+{
+  "type": "slack_channel_export",
+  "workspace": "RTM Slack",
+  "collected_at": "2026-04-30T03:35:27.248712+00:00",
+  "channel": {
+    "id": "C0A3QLMCFME",
+    "name": "pjt_금호타이어_첫제품x-ray",
+    "type": "public_channel",
+    "is_archived": false,
+    "is_private": false,
+    "created": "2025-12-11T03:35:43+00:00",
+    "topic": "",
+    "purpose": "",
+    "member_count": 12,
+    "routing": {
+      "channel_bucket": "project",
+      "conversation_mode": "project_updates",
+      "rationale": "project_channel_prefix",
+      "wiki_workspace": "rtm",
+      "wiki_target_root": "obsidian/Wiki/Common/Slack_Project_Intake",
+      "wiki_target_kind": "common"
+    }
+  },
+  "routing": {
+    "channel_bucket": "project",
+    "conversation_mode": "project_updates",
+    "rationale": "project_channel_prefix",
+    "wiki_workspace": "rtm",
+    "wiki_target_root": "obsidian/Wiki/Common/Slack_Project_Intake",
+    "wiki_target_kind": "common",
+    "project_wiki_target_root": "obsidian/Wiki/Common/Slack_Project_Intake",
+    "company_wiki_target_root": "obsidian/Wiki/Common/Slack_Company_News"
+  },
+  "history_window": {
+    "oldest_ts": "1776656298.455345",
+    "limit_per_channel": 500,
+    "include_threads": true,
+    "include_files": true
+  },
+  "messages": [
+    {
+      "ts": "1776664665.406549",
+      "type": "message",
+      "subtype": null,
+      "user": "U0354SL90UV",
+      "text": "<@U0328CH80JV>\n원격접속 완료되었습니다, 설치 완료되면 쓰레드로 불러주시거나 전화주시면 감사하겠습니다.",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [
+        {
+          "name": "+1",
+          "users": [
+            "U0328CH80JV"
+          ],
+          "count": 1
+        },
+        {
+          "name": "white_check_mark",
+          "users": [
+            "U0328CH80JV"
+          ],
+          "count": 1
+        }
+      ],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1776670051.120999",
+      "type": "message",
+      "subtype": null,
+      "user": "U0354SL90UV",
+      "text": "<@U0328CH80JV>\n설정값 변경 로그\n• 공통\n    ◦ 증폭조절(Gain) 1.5\n    ◦ 밝기: 230\n• 밝기 조절 (Exposure) 카메라별 세팅\n    ◦ 카메라1: 17만 \n    ◦ 카메라2: 26만",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1776694102.674119",
+      "type": "message",
+      "subtype": null,
+      "user": "U0328CH80JV",
+      "text": "2026.04.20(월) 금호타이어 현장 미팅\n참석 : 김현석, 이인재, 김효빈, 정민균, 송고은, 주권일, 배명식\n\n* 업무 진행 방향\n - 데모를 통해 사용자 의견을 충분히 수집한 후 실제 솔루션에 반영/설치 하기로 함.\n\n■ Action Items 및 향후 계획\n[RTM]\n1. 사용자 의견 반영 화면 구성 및 프로세스 변경 요청 사항을 데모 버전에 업데이트\n2. 차주 화요일(04/28) X-RAY 하드웨어 현장 납품\n3. 중간 산출물 리뷰 후 중도금 정산 진행하기로 함.(X-RAY 하드웨어 납품 후)\n4. 연동 기능 추가 검토 및 수정\n - 광학계 설정값 연동 재확인\n - RFID 헬스 체크로직 수정\n5. 데모 화면 캡쳐 후 문서 공유\n\n[금호타이어]\n1. 첫제품 검사 현장 요구사항 공유.(금일 리뷰 자료)\n2. 첫제품 검사 RFID 태그 밸리데이션 로직 공유.\n3. 금호타이어 프린터 범용 사양 공유\n\n■ 첫제품 검사 솔루션 사용자 의견\n1. 규격 데이터 예외 처리\n - 타이어 규격 텍스트에 포함된 'Z' 문자는 시스템 판독 시 무시하고 처리하도록 로직을 수정합니다.\n2. 검사 대상 선택 방식 변경\n - 전체 태그를 읽어오는 방식에서, 리스트업 된 내역 중 작업자가 검사할 항목을 직접 선택(Select)하는 방식으로 변경합니다.\n3. 이미지 뷰어 레이아웃 최적화\n - 기존 두 장으로 나뉘어 노출되던 사진을 한 화면으로 통합하고, 작업자가 마우스로 확대/축소할 수 있는 기능을 추가합니다.\n  => 금일 배포 버전에 추가됨\n4. 특이사항 수기 입력란 신설\n - 비드 토링 등 AI 검사 항목에서 제외된 예외 사항을 작업자가 직접 텍스트로 기입할 수 있는 '노트(Note)' 기능을 추가합니다.\n5. 시인성 대폭 강화\n - 현장 작업 환경을 고려하여 데모 화면 내 모든 데이터와 텍스트의 글씨 크기를 대폭 확대합니다.\n6. 현장 의뢰서 연동\n - 타 부서에서 접수된 '첫 제품 검사 의뢰서(레포트)'의 세부 정보를 화면에 그대로 불러와 검사 기준에 적용합니다.\n7. 내부 규격 명칭 자동 매핑\n - 현장에서 쓰이는 별칭(예: 에코잉)을 시스템이 인식할 수 있는 정식 규격 코드(예: ES01)로 자동 변환하여 판정하도록 설정합니다.\n\n■ x-ray 초안 리뷰에 대한 사용자 의견\n1. 필수 검사 항목 간소화\n - 불필요한 나트 번호 등은 제외하고, '검사 일자', '규격', '제품 번호' 세 가지 핵심 데이터 중심으로 화면을 재구성합니다.\n2. 엑스레이 판독 스크롤 동기화\n - 엑스레이 화면 이동 시 자동 스크롤을 기본으로 제공하되, 수동 확인이 필요할 때는 스페이스바를 활용하여 제어할 수 있도록 설정합니다.\n\n■ 첫제품 검사 데모 설치 및 연동 테스트\n1. 데모 프로그램 업데이트 완료.\n - 화면에 보여지는 이미지 한장씩 보여지도록 수정.\n - 마우스 휠 확대/축소기능 추가 반영.\n - 이력 조회 화면\n\n2. 연동 테스트\n - 광학계 설정값 연동 재확인 필요.\n - RFID 헬스 체크로직 수정 필요.\n\n3. 광학계 설정값 수정.\n 1) 공통\n  - 증폭조절(Gain) 1.5\n  - 밝기: 230\n 2) 밝기 조절 (Exposure) 카메라별 세팅\n  - 카메라1: 17만\n  - 카메라2: 26만",
+      "thread_ts": "1776694102.674119",
+      "reply_count": 9,
+      "reply_users": [
+        "U0328CH80JV",
+        "U035802E4UA",
+        "U049Z3PQ2KA"
+      ],
+      "latest_reply": "1776920740.869749",
+      "reactions": [
+        {
+          "name": "eyes",
+          "users": [
+            "U035802E4UA"
+          ],
+          "count": 1
+        },
+        {
+          "name": "감사콩",
+          "users": [
+            "U035802E4UA"
+          ],
+          "count": 1
+        }
+      ],
+      "edited": {
+        "user": "U0328CH80JV",
+        "ts": "1776694317.000000"
+      },
+      "files": [],
+      "thread_replies": [
+        {
+          "ts": "1776736675.259469",
+          "type": "message",
+          "subtype": null,
+          "user": "U0328CH80JV",
+          "text": "<@U035802E4UA>\n5. 데모 화면 캡쳐 후 문서 공유\n\n이것좀 지원해줄수 있나요? ppt 로 만들면 됩니다. 피그마 화면 있으면 제가 할게요. 링크로 알려주세요.",
+          "thread_ts": "1776694102.674119",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776738563.036289",
+          "type": "message",
+          "subtype": null,
+          "user": "U035802E4UA",
+          "text": "제가 캡쳐해서 드리겠습니다! 데모 기준으로 캡쳐해서 전달 드리겠습니다.",
+          "thread_ts": "1776694102.674119",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [
+            {
+              "name": "+1",
+              "users": [
+                "U0328CH80JV"
+              ],
+              "count": 1
+            }
+          ],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776742272.579449",
+          "type": "message",
+          "subtype": null,
+          "user": "U0328CH80JV",
+          "text": "고은님 감사합니다.~!",
+          "thread_ts": "1776694102.674119",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776751017.629589",
+          "type": "message",
+          "subtype": null,
+          "user": "U049Z3PQ2KA",
+          "text": "오늘 보여주신 문서 및 메일 등 공유부탁드립니다!",
+          "thread_ts": "1776694102.674119",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [
+            {
+              "name": "eyes",
+              "users": [
+                "U035802E4UA"
+              ],
+              "count": 1
+            }
+          ],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776751474.136609",
+          "type": "message",
+          "subtype": null,
+          "user": "U035802E4UA",
+          "text": "전달 드렸습니다.",
+          "thread_ts": "1776694102.674119",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776751827.377419",
+          "type": "message",
+          "subtype": null,
+          "user": "U035802E4UA",
+          "text": "<@U0328CH80JV> 명식님 캡쳐본 전달드립니다",
+          "thread_ts": "1776694102.674119",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [
+            {
+              "name": "+1",
+              "users": [
+                "U0328CH80JV"
+              ],
+              "count": 1
+            }
+          ],
+          "edited": null,
+          "files": [
+            {
+              "id": "F0AU18NLG3D",
+              "name": "kumho tire.zip",
+              "title": "kumho tire.zip",
+              "mimetype": "application/zip",
+              "filetype": "zip",
+              "pretty_type": "Zip",
+              "size": 4831509,
+              "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0AU18NLG3D/kumho_tire.zip",
+              "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0AU18NLG3D/kumho_tire.zip"
+            }
+          ]
+        },
+        {
+          "ts": "1776752049.258139",
+          "type": "message",
+          "subtype": null,
+          "user": "U0328CH80JV",
+          "text": "감사합니다.",
+          "thread_ts": "1776694102.674119",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776761145.541999",
+          "type": "message",
+          "subtype": "thread_broadcast",
+          "user": "U0328CH80JV",
+          "text": "어제 리뷰했던 자료와 MES DB 칼럼 자료 회신받아 공유합니다.\n\n메일 참고 바라며, 업무 진행간 문의해야 할 사항은 본 메일에 저를 참조로 넣고 직접 문의하여 주시기 바랍니다. <@U03S8T88QGP>",
+          "thread_ts": "1776694102.674119",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": [
+            {
+              "id": "F0AV2SXLNP2",
+              "name": "첫제품 AI 요청사항_20260421.docx",
+              "title": "첫제품 AI 요청사항_20260421.docx",
+              "mimetype": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+              "filetype": "docx",
+              "pretty_type": "Word Document",
+              "size": 115677,
+              "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0AV2SXLNP2/__________ai______________20260421.docx",
+              "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0AV2SXLNP2/__________ai______________20260421.docx"
+            },
+            {
+              "id": "F0AU56W5U13",
+              "name": "첫제품AI 작업자 요청사항_20260420.docx",
+              "title": "첫제품AI 작업자 요청사항_20260420.docx",
+              "mimetype": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+              "filetype": "docx",
+              "pretty_type": "Word Document",
+              "size": 7572730,
+              "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0AU56W5U13/_________ai________________________20260420.docx",
+              "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0AU56W5U13/_________ai________________________20260420.docx"
+            },
+            {
+              "id": "F0AU27Z6LKD",
+              "name": "image.png",
+              "title": "image.png",
+              "mimetype": "image/png",
+              "filetype": "png",
+              "pretty_type": "PNG",
+              "size": 40916,
+              "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0AU27Z6LKD/image.png",
+              "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0AU27Z6LKD/image.png"
+            }
+          ]
+        },
+        {
+          "ts": "1776920740.869749",
+          "type": "message",
+          "subtype": null,
+          "user": "U035802E4UA",
+          "text": "<https://www.figma.com/design/hk2F8TNtElMm7ho5jmuXZn/-%EA%B8%88%ED%98%B8%ED%83%80%EC%9D%B4%EC%96%B4--%EC%B2%AB%EC%A0%9C%ED%92%88%EA%B2%80%EC%82%AC?node-id=3704-7121&amp;m=dev|https://www.figma.com/design/hk2F8TNtElMm7ho5jmuXZn/-%EA%B8%88%ED%98%B8%ED%83%80%EC[…]AB%EC%A0%9C%ED%92%88%EA%B2%80%EC%82%AC?node-id=3704-7121&amp;m=dev>",
+          "thread_ts": "1776694102.674119",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1776761145.541999",
+      "type": "message",
+      "subtype": "thread_broadcast",
+      "user": "U0328CH80JV",
+      "text": "어제 리뷰했던 자료와 MES DB 칼럼 자료 회신받아 공유합니다.\n\n메일 참고 바라며, 업무 진행간 문의해야 할 사항은 본 메일에 저를 참조로 넣고 직접 문의하여 주시기 바랍니다. <@U03S8T88QGP>",
+      "thread_ts": "1776694102.674119",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": [
+        {
+          "id": "F0AV2SXLNP2",
+          "name": "첫제품 AI 요청사항_20260421.docx",
+          "title": "첫제품 AI 요청사항_20260421.docx",
+          "mimetype": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "filetype": "docx",
+          "pretty_type": "Word Document",
+          "size": 115677,
+          "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0AV2SXLNP2/__________ai______________20260421.docx",
+          "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0AV2SXLNP2/__________ai______________20260421.docx"
+        },
+        {
+          "id": "F0AU56W5U13",
+          "name": "첫제품AI 작업자 요청사항_20260420.docx",
+          "title": "첫제품AI 작업자 요청사항_20260420.docx",
+          "mimetype": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "filetype": "docx",
+          "pretty_type": "Word Document",
+          "size": 7572730,
+          "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0AU56W5U13/_________ai________________________20260420.docx",
+          "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0AU56W5U13/_________ai________________________20260420.docx"
+        },
+        {
+          "id": "F0AU27Z6LKD",
+          "name": "image.png",
+          "title": "image.png",
+          "mimetype": "image/png",
+          "filetype": "png",
+          "pretty_type": "PNG",
+          "size": 40916,
+          "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0AU27Z6LKD/image.png",
+          "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0AU27Z6LKD/image.png"
+        }
+      ]
+    },
+    {
+      "ts": "1776837086.192309",
+      "type": "message",
+      "subtype": null,
+      "user": "U049Z3PQ2KA",
+      "text": "<@U0328CH80JV>\n현장에 설비 설치된 사진은 없죠?",
+      "thread_ts": "1776837086.192309",
+      "reply_count": 29,
+      "reply_users": [
+        "U035802E4UA",
+        "U049Z3PQ2KA",
+        "U0328CH80JV"
+      ],
+      "latest_reply": "1776838765.853209",
+      "reactions": [],
+      "edited": null,
+      "files": [],
+      "thread_replies": [
+        {
+          "ts": "1776837107.182579",
+          "type": "message",
+          "subtype": null,
+          "user": "U035802E4UA",
+          "text": "제가 그려드릴 수 는 있어요",
+          "thread_ts": "1776837086.192309",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776837116.162289",
+          "type": "message",
+          "subtype": null,
+          "user": "U049Z3PQ2KA",
+          "text": "피카소 ㄷㄷㄷ",
+          "thread_ts": "1776837086.192309",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776837119.121149",
+          "type": "message",
+          "subtype": null,
+          "user": "U035802E4UA",
+          "text": "ㅋㅋ",
+          "thread_ts": "1776837086.192309",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776837119.311489",
+          "type": "message",
+          "subtype": null,
+          "user": "U049Z3PQ2KA",
+          "text": "렛츠고~",
+          "thread_ts": "1776837086.192309",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776837520.954639",
+          "type": "message",
+          "subtype": null,
+          "user": "U0328CH80JV",
+          "text": "첫제품이요?",
+          "thread_ts": "1776837086.192309",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776837570.148419",
+          "type": "message",
+          "subtype": null,
+          "user": "U049Z3PQ2KA",
+          "text": "넵",
+          "thread_ts": "1776837086.192309",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776837811.285009",
+          "type": "message",
+          "subtype": null,
+          "user": "U035802E4UA",
+          "text": "이렇게 생겼습니다..",
+          "thread_ts": "1776837086.192309",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": [
+            {
+              "id": "F0AUECJ137G",
+              "name": "image.png",
+              "title": "image.png",
+              "mimetype": "image/png",
+              "filetype": "png",
+              "pretty_type": "PNG",
+              "size": 1074746,
+              "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0AUECJ137G/image.png",
+              "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0AUECJ137G/image.png"
+            }
+          ]
+        },
+        {
+          "ts": "1776837862.227979",
+          "type": "message",
+          "subtype": null,
+          "user": "U0328CH80JV",
+          "text": "ㅋㅋㅋ",
+          "thread_ts": "1776837086.192309",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776837870.574479",
+          "type": "message",
+          "subtype": null,
+          "user": "U035802E4UA",
+          "text": "똑같죠 명식님",
+          "thread_ts": "1776837086.192309",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776837877.831629",
+          "type": "message",
+          "subtype": null,
+          "user": "U0328CH80JV",
+          "text": "납품할때 찍은 사진이 있긴 한데 찾아보고 있음.",
+          "thread_ts": "1776837086.192309",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776837883.356709",
+          "type": "message",
+          "subtype": null,
+          "user": "U0328CH80JV",
+          "text": "고은님 잘 그리심",
+          "thread_ts": "1776837086.192309",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776837893.930569",
+          "type": "message",
+          "subtype": null,
+          "user": "U0328CH80JV",
+          "text": "저기 벽은 막혀있음.",
+          "thread_ts": "1776837086.192309",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776837910.708049",
+          "type": "message",
+          "subtype": null,
+          "user": "U0328CH80JV",
+          "text": "저 현장 사진이 필요한거에요?? 아니면 설비 사진이 필요한거에요?",
+          "thread_ts": "1776837086.192309",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776837921.710089",
+          "type": "message",
+          "subtype": null,
+          "user": "U049Z3PQ2KA",
+          "text": "현장에 설비가 설치된 사진!",
+          "thread_ts": "1776837086.192309",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776837932.505679",
+          "type": "message",
+          "subtype": null,
+          "user": "U049Z3PQ2KA",
+          "text": "그 중간보고 PPT에 설비사진은 있어서 봤어용",
+          "thread_ts": "1776837086.192309",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776837942.971939",
+          "type": "message",
+          "subtype": null,
+          "user": "U049Z3PQ2KA",
+          "text": "",
+          "thread_ts": "1776837086.192309",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": [
+            {
+              "id": "F0AUED61UQN",
+              "name": "image.png",
+              "title": "image.png",
+              "mimetype": "image/png",
+              "filetype": "png",
+              "pretty_type": "PNG",
+              "size": 1180496,
+              "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0AUED61UQN/image.png",
+              "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0AUED61UQN/image.png"
+            }
+          ]
+        },
+        {
+          "ts": "1776837990.500749",
+          "type": "message",
+          "subtype": null,
+          "user": "U0328CH80JV",
+          "text": "현장에 설비가 설치된 사진은 찍기 어려워요. 공간이 너무 협소해.",
+          "thread_ts": "1776837086.192309",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776838001.928229",
+          "type": "message",
+          "subtype": null,
+          "user": "U0328CH80JV",
+          "text": "저 사진에서 벽도 막아놨고",
+          "thread_ts": "1776837086.192309",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776838013.897039",
+          "type": "message",
+          "subtype": null,
+          "user": "U035802E4UA",
+          "text": "찍어도 되나요?",
+          "thread_ts": "1776837086.192309",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776838021.671799",
+          "type": "message",
+          "subtype": null,
+          "user": "U0328CH80JV",
+          "text": "홍철님 4번째 사진이 현장에 설치된 사진임",
+          "thread_ts": "1776837086.192309",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776838031.094729",
+          "type": "message",
+          "subtype": null,
+          "user": "U0328CH80JV",
+          "text": "저기서 모니터만 옮겨놨다고 보면 됩니다.",
+          "thread_ts": "1776837086.192309",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776838045.874619",
+          "type": "message",
+          "subtype": null,
+          "user": "U0328CH80JV",
+          "text": "원하는 구도를 알려주면 찍어올게요..ㅋㅋ",
+          "thread_ts": "1776837086.192309",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776838084.584819",
+          "type": "message",
+          "subtype": null,
+          "user": "U0328CH80JV",
+          "text": "허락받고 찍을수 있음",
+          "thread_ts": "1776837086.192309",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776838145.589779",
+          "type": "message",
+          "subtype": null,
+          "user": "U049Z3PQ2KA",
+          "text": "첫제품은 저정도면 대충 맥락 파악돼서 괜찮고 현재 X-ray 검사 환경 촬영 가능하면 부탁드림다...!\n\n그리고 위에 중간보고 PPT에 사용된 사진들 원본 공유해주세용",
+          "thread_ts": "1776837086.192309",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776838160.771559",
+          "type": "message",
+          "subtype": null,
+          "user": "U0328CH80JV",
+          "text": "x-ray 는 현장사진이 없어요.",
+          "thread_ts": "1776837086.192309",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776838179.067599",
+          "type": "message",
+          "subtype": null,
+          "user": "U0328CH80JV",
+          "text": "다음에 방문하면 요청해볼수는 있을것 같은데 다음주에 줘도 되나요?",
+          "thread_ts": "1776837086.192309",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776838183.827809",
+          "type": "message",
+          "subtype": null,
+          "user": "U049Z3PQ2KA",
+          "text": "넵넵",
+          "thread_ts": "1776837086.192309",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776838495.747149",
+          "type": "message",
+          "subtype": null,
+          "user": "U0328CH80JV",
+          "text": "완벽하지는 않으나, 이거랑 비슷하다고 생각하면 됨.",
+          "thread_ts": "1776837086.192309",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [
+            {
+              "name": "eyes",
+              "users": [
+                "U049Z3PQ2KA"
+              ],
+              "count": 1
+            }
+          ],
+          "edited": null,
+          "files": [
+            {
+              "id": "F0AUGGCBJ5Q",
+              "name": "image.png",
+              "title": "image.png",
+              "mimetype": "image/png",
+              "filetype": "png",
+              "pretty_type": "PNG",
+              "size": 1084023,
+              "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0AUGGCBJ5Q/image.png",
+              "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0AUGGCBJ5Q/image.png"
+            }
+          ]
+        },
+        {
+          "ts": "1776838765.853209",
+          "type": "message",
+          "subtype": null,
+          "user": "U0328CH80JV",
+          "text": "이게 더 비슷한거 같다.",
+          "thread_ts": "1776837086.192309",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [
+            {
+              "name": "eyes",
+              "users": [
+                "U049Z3PQ2KA"
+              ],
+              "count": 1
+            }
+          ],
+          "edited": null,
+          "files": [
+            {
+              "id": "F0AUL5213TN",
+              "name": "image.png",
+              "title": "image.png",
+              "mimetype": "image/png",
+              "filetype": "png",
+              "pretty_type": "PNG",
+              "size": 1197639,
+              "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0AUL5213TN/image.png",
+              "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0AUL5213TN/image.png"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "ts": "1776862051.535589",
+      "type": "message",
+      "subtype": null,
+      "user": "U0328CH80JV",
+      "text": "첫제품/ X-RAY 중간 산출물 관련하여 현재까지 완료한 파일을\n1. VISION_NAS\\00_프로젝트\\2026_금호타이어\\00. Management\\산출물 List\n2. 또는 클릭업 각 산출물 티켓에 첨부하여 주세요. \n내일 1차 정리하겠습니다.",
+      "thread_ts": "1776862051.535589",
+      "reply_count": 5,
+      "reply_users": [
+        "U0354SL90UV",
+        "U035802E4UA",
+        "U0328CH80JV"
+      ],
+      "latest_reply": "1776916740.049039",
+      "reactions": [
+        {
+          "name": "우씽",
+          "users": [
+            "U0354SL90UV"
+          ],
+          "count": 1
+        },
+        {
+          "name": "done",
+          "users": [
+            "U03S8T88QGP"
+          ],
+          "count": 1
+        }
+      ],
+      "edited": null,
+      "files": [],
+      "thread_replies": [
+        {
+          "ts": "1776869852.259949",
+          "type": "message",
+          "subtype": null,
+          "user": "U0354SL90UV",
+          "text": "현재까지 진행된 사항 없습니다.. 준비해보겠습니다.",
+          "thread_ts": "1776862051.535589",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776916674.018709",
+          "type": "message",
+          "subtype": null,
+          "user": "U035802E4UA",
+          "text": "명식님 그 상준님이 올려주신 엑셀 파일들은 다 깨져있는 것 같아요",
+          "thread_ts": "1776862051.535589",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776916698.953519",
+          "type": "message",
+          "subtype": null,
+          "user": "U0328CH80JV",
+          "text": "상준님이 올리는거 아니에요..ㅋㅋ",
+          "thread_ts": "1776862051.535589",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776916719.009629",
+          "type": "message",
+          "subtype": null,
+          "user": "U035802E4UA",
+          "text": "아 진짜여?",
+          "thread_ts": "1776862051.535589",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776916740.049039",
+          "type": "message",
+          "subtype": null,
+          "user": "U0328CH80JV",
+          "text": "첨부된것들 제가 다 확인해볼겁니다.",
+          "thread_ts": "1776862051.535589",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [
+            {
+              "name": "man-gesturing-ok",
+              "users": [
+                "U035802E4UA"
+              ],
+              "count": 1
+            }
+          ],
+          "edited": null,
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1776926939.208709",
+      "type": "message",
+      "subtype": null,
+      "user": "U0354SL90UV",
+      "text": "OCR 모델 성능 착실히 올라가는 중.. 다음주까지 모델 개선하고\n안정적으로 잘 나오는 항목은 몇가지 추가할 수 있을 것 같습니다.",
+      "thread_ts": "1776926939.208709",
+      "reply_count": 6,
+      "reply_users": [
+        "U0354SL90UV",
+        "U02MA1AEU8K"
+      ],
+      "latest_reply": "1776927091.094109",
+      "reactions": [
+        {
+          "name": "+1",
+          "users": [
+            "UBKL1FZ28",
+            "U0328CH80JV",
+            "U05AWGZ1TRD",
+            "U04C3UYFY1F"
+          ],
+          "count": 4
+        }
+      ],
+      "edited": null,
+      "files": [
+        {
+          "id": "F0B061ZHK6C",
+          "name": "image.png",
+          "title": "image.png",
+          "mimetype": "image/png",
+          "filetype": "png",
+          "pretty_type": "PNG",
+          "size": 666080,
+          "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0B061ZHK6C/image.png",
+          "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0B061ZHK6C/image.png"
+        }
+      ],
+      "thread_replies": [
+        {
+          "ts": "1776926951.370829",
+          "type": "message",
+          "subtype": null,
+          "user": "U0354SL90UV",
+          "text": "",
+          "thread_ts": "1776926939.208709",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [
+            {
+              "name": "+1",
+              "users": [
+                "U02MA1AEU8K",
+                "U03S8T88QGP",
+                "UBKL1FZ28"
+              ],
+              "count": 3
+            }
+          ],
+          "edited": null,
+          "files": [
+            {
+              "id": "F0AUKCC0FEX",
+              "name": "image.png",
+              "title": "image.png",
+              "mimetype": "image/png",
+              "filetype": "png",
+              "pretty_type": "PNG",
+              "size": 895589,
+              "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0AUKCC0FEX/image.png",
+              "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0AUKCC0FEX/image.png"
+            }
+          ]
+        },
+        {
+          "ts": "1776926952.993859",
+          "type": "message",
+          "subtype": null,
+          "user": "U02MA1AEU8K",
+          "text": "결과물이",
+          "thread_ts": "1776926939.208709",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776926972.733539",
+          "type": "message",
+          "subtype": null,
+          "user": "U02MA1AEU8K",
+          "text": "대소문자 구분도하는군요",
+          "thread_ts": "1776926939.208709",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776927021.099609",
+          "type": "message",
+          "subtype": null,
+          "user": "U0354SL90UV",
+          "text": "검증과정에는 필요 없어서 필요한 케이스만 넣었습니다. 저희가 직접 라벨링하는 정도의 데이터양으로는 형태가 다르면 학습이 잘 안되더라구요",
+          "thread_ts": "1776926939.208709",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776927047.002449",
+          "type": "message",
+          "subtype": null,
+          "user": "U02MA1AEU8K",
+          "text": "나중에 성능 좀 올라오면, 일반 영문 pdf 스크린샷 하나 넣어서 성능도 보고싶네요.\n\n물론 학습에 없는 문자는 못잡겠지만, 학습된 글자는 과연 잡는지...?",
+          "thread_ts": "1776926939.208709",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776927091.094109",
+          "type": "message",
+          "subtype": null,
+          "user": "U0354SL90UV",
+          "text": "촬영환경 고정되기 전에 찍은 것들은 배경이 완전 흰색인것도 있어서 어느정도는 잡을지도..?",
+          "thread_ts": "1776926939.208709",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [
+            {
+              "name": "thinking_face",
+              "users": [
+                "U02MA1AEU8K"
+              ],
+              "count": 1
+            }
+          ],
+          "edited": null,
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1776928430.150389",
+      "type": "message",
+      "subtype": "channel_join",
+      "user": "U0AJYQK4QM6",
+      "text": "<@U0AJYQK4QM6> has joined the channel",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1776932207.018659",
+      "type": "message",
+      "subtype": null,
+      "user": "U0328CH80JV",
+      "text": "*<@U03S8T88QGP> 문의 내용 답변 왔으니 메일함 확인해보세요.*\n--------------------------------------------------------\n보내드린 화면에 맨 위 발행정보 쪽에는 KEC.ECAFHST0 테이블의 MLDNO1, MLDNO2 컬럼을 조회 하시면 됩니다.\n아래 결과값에는 AI 판정 값을 넣어주시면 됩니다. MOLD NO 의 판정 값은 KEC.ECAFHCV0 테이블의 MOLDNO, MOLDNOFL 컬럼에 넣어주시면 됩니다.\n- 실제 각인 된 값 → MOLDNO\n- Inside, Outside 가 같을 시 OK / 다를 시 NG 와 같은 판정 값→ MOLDNOFL\n\n*<@U0354SL90UV>* *<@U03S8T88QGP> 추가 요청사항도 가능여부 피드백 바랍니다.*\n--------------------------------------------------------\n추가로 업로드 해주시는 이미지 관련하여 검토 후 가능여부 회신 부탁드립니다.\n * 165.141.66.100번 SFTP 서버에 이미지 저장하는 파일 기준\n1. 현재 .webp 확장자 파일을 .png로 변경하여 업로드, 단순 확장자 변경이 아닌 실제 이미지 포맷을 PNG로 변환하여 저장 필요\n2. 업로드 되는 사진에서 불필요한 외각(판 바깥 영역)을 제거하여 저장\n3. 이미지 병합 가능 여부 - 두장의 사진을 한장으로 만드는 것이 가능한지\n4. 원본 파일이 아닌, 객체 탐지 등 처리 결과(초록/빨간 박스 표시)가 포함된 이미지를 업로드\n\n* 파일 명명 재 정의\n(일자별로 파일 생성 - wdate 기준)\n    FIRST_CURE\\WDATE\\SPL_WSEQ_IN_yyyyMMdd_HHmmss\n    FIRST_CURE\\WDATE\\SPL_WSEQ_OUT_yyyyMMdd_HHmmss\n\n    ex) SPL_1_IN_20260423_044800",
+      "thread_ts": "1776932207.018659",
+      "reply_count": 33,
+      "reply_users": [
+        "U03S8T88QGP",
+        "U0354SL90UV",
+        "U0328CH80JV",
+        "U035802E4UA"
+      ],
+      "latest_reply": "1776934398.083319",
+      "reactions": [],
+      "edited": null,
+      "files": [],
+      "thread_replies": [
+        {
+          "ts": "1776932286.332489",
+          "type": "message",
+          "subtype": null,
+          "user": "U03S8T88QGP",
+          "text": "확인하여, <@U035802E4UA> 님께 화면 표시 데이터 형태 전달 완료하였습니다.",
+          "thread_ts": "1776932207.018659",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": {
+            "user": "U03S8T88QGP",
+            "ts": "1776932312.000000"
+          },
+          "files": []
+        },
+        {
+          "ts": "1776932380.637719",
+          "type": "message",
+          "subtype": null,
+          "user": "U0354SL90UV",
+          "text": "1. png 문제 없습니다. \n    a. 다만 용량을 줄이기 위해서 webp로 바꾼 것인데.. 다시 롤백하는겁니다. <@U0328CH80JV> \n2. 가능합니다. \n    a. 생각해보니 이것도 실 구현은 권일님이랑 같이 이야기해야할 것 같습니다. 기술적으로는 가능합니다.\n3. 현재 상황으로는 불가능합니다. \n    a. 제가 제일 하고싶었습니다.. 추가 실험을 진행해볼 순 있으나 실험성이기에 공수가 얼마나 들어갈지 모름\n    b. 연결 부분의 오차를 해결하지 못함\n4. 기술상으로는 문제 없다고 생각되는데, 개발쪽에서 다뤄야할 것 같습니다. <@U035802E4UA> <@U03S8T88QGP> ",
+          "thread_ts": "1776932207.018659",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": {
+            "user": "U0354SL90UV",
+            "ts": "1776932501.000000"
+          },
+          "files": []
+        },
+        {
+          "ts": "1776932530.550389",
+          "type": "message",
+          "subtype": null,
+          "user": "U0328CH80JV",
+          "text": "기존 bmp -&gt; webp 변환 이었던것 같은데.\npng 도 bmp 와 별반 차이가 없나봐요.",
+          "thread_ts": "1776932207.018659",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776932560.678049",
+          "type": "message",
+          "subtype": null,
+          "user": "U0354SL90UV",
+          "text": "bmp보단 png가 용량은 확실히 적습니다.",
+          "thread_ts": "1776932207.018659",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776932565.897929",
+          "type": "message",
+          "subtype": null,
+          "user": "U0354SL90UV",
+          "text": "webp가 더 작을뿐",
+          "thread_ts": "1776932207.018659",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776932585.565129",
+          "type": "message",
+          "subtype": null,
+          "user": "U0354SL90UV",
+          "text": "이미지 format별 용량 확인\n• bmp (무손실, 100%)\n• png (무손실, 약 26%)\n• webp (매우 적은 손실율, 약 6%)\n    ◦ 육안상으로는 최대 확대해도 차이를 알 수 없음\n    ◦ pixel 단위로는 png로 저장된 이미지와 약 8.9%의 픽셀들에서 값의 차이가 존재함, \n        ▪︎ 차이가 있는 픽셀들의 평균 차이는 1.18로, 압축된 이미지와 원본 이미지의 차이를 충분히 대응할 수 있을 것으로 예상됨\n        ▪︎ 최대 차이 이상치 +-4\n",
+          "thread_ts": "1776932207.018659",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776932601.668949",
+          "type": "message",
+          "subtype": null,
+          "user": "U0354SL90UV",
+          "text": "용량은 webp보다 약 4배 증가합니다.",
+          "thread_ts": "1776932207.018659",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [
+            {
+              "name": "white_check_mark",
+              "users": [
+                "U0328CH80JV"
+              ],
+              "count": 1
+            }
+          ],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776932682.372089",
+          "type": "message",
+          "subtype": null,
+          "user": "U03S8T88QGP",
+          "text": "4번은 AI팀에서 코드를 제공해주시거나, 인터페이스에서 visualized_img로 직접 주시는게 좋을 것 같습니다.",
+          "thread_ts": "1776932207.018659",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776932723.348729",
+          "type": "message",
+          "subtype": null,
+          "user": "U0328CH80JV",
+          "text": "데이터를 얼마나 쌓아놔야 하는지 보고 판단해봐야겠네요.\n확장자별로 추론이나 솔루션 처리 속도 영향도도 봐야 할것 같은데 영향도가 클까요?",
+          "thread_ts": "1776932207.018659",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776932773.375559",
+          "type": "message",
+          "subtype": null,
+          "user": "U0354SL90UV",
+          "text": "붉은색/초록색은 정답과 비교해야하는데 request에 db에서 가져온 정답지가 들어있었나요? 들어있다면 가능합니다.\n\nai 추론 속도는 차이가 없습니다.",
+          "thread_ts": "1776932207.018659",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776932814.478089",
+          "type": "message",
+          "subtype": null,
+          "user": "U03S8T88QGP",
+          "text": "Sftp로 금호쪽 전송에만 png를 사용하고, 솔루션이 설치될 PC에는 webp로 따로 저장하는 방법도 있습니다.\n고려해보셔도 될 것 같습니다.",
+          "thread_ts": "1776932207.018659",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776932876.459069",
+          "type": "message",
+          "subtype": null,
+          "user": "U03S8T88QGP",
+          "text": "정답 비교 부분은 내일 확인하도록 하겠습니다.\n만약 안되면, 그리는 함수만 제공해주셔도 좋을 것 같습니다.",
+          "thread_ts": "1776932207.018659",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776932985.563749",
+          "type": "message",
+          "subtype": null,
+          "user": "U0328CH80JV",
+          "text": "SFTP 서버에만 확장자 변경된걸로 올리는거라면 기술적으로 문제될건 없죠?\\",
+          "thread_ts": "1776932207.018659",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776933009.292759",
+          "type": "message",
+          "subtype": null,
+          "user": "U03S8T88QGP",
+          "text": "넵 없습니다.",
+          "thread_ts": "1776932207.018659",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776933028.866719",
+          "type": "message",
+          "subtype": null,
+          "user": "U03S8T88QGP",
+          "text": "로직 수정만 들어가면 됩니다",
+          "thread_ts": "1776932207.018659",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776933047.815129",
+          "type": "message",
+          "subtype": null,
+          "user": "U0328CH80JV",
+          "text": "위에 권일님이 코멘트 해주셨네요. 메일상에서도 SFTP 에 업로드 하는 기준이라고 되어 있어서 용량 부분만 언급해주면 될것 같네요.",
+          "thread_ts": "1776932207.018659",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [
+            {
+              "name": "white_check_mark",
+              "users": [
+                "U03S8T88QGP"
+              ],
+              "count": 1
+            }
+          ],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776933372.772939",
+          "type": "message",
+          "subtype": null,
+          "user": "U0328CH80JV",
+          "text": "4. 원본 파일이 아닌, 객체 탐지 등 처리 결과(초록/빨간 박스 표시)가 포함된 이미지를 업로드\n =&gt; 바운딩 박스 말고 히트맵 같은 형태도 가능한가요? 앞선 요구사항에서 히트맵 형태로 보여달라는 내용도 있어서요.",
+          "thread_ts": "1776932207.018659",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776933438.161949",
+          "type": "message",
+          "subtype": null,
+          "user": "U0328CH80JV",
+          "text": "X-RAY 염두해서 물어보는거임...요..",
+          "thread_ts": "1776932207.018659",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776933456.449369",
+          "type": "message",
+          "subtype": null,
+          "user": "U0354SL90UV",
+          "text": "X-ray는 Anomaly Score를 기반으로 보여줄 수 있으니 충분히 의미가 있습니다.",
+          "thread_ts": "1776932207.018659",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [
+            {
+              "name": "eyes",
+              "users": [
+                "U035802E4UA"
+              ],
+              "count": 1
+            },
+            {
+              "name": "+1",
+              "users": [
+                "U0328CH80JV"
+              ],
+              "count": 1
+            }
+          ],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776933461.669319",
+          "type": "message",
+          "subtype": null,
+          "user": "U0328CH80JV",
+          "text": "히트맵 요구사항은 X-RAY",
+          "thread_ts": "1776932207.018659",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776933477.355429",
+          "type": "message",
+          "subtype": null,
+          "user": "U035802E4UA",
+          "text": "히트맵도 좌표 값 나올 수 있나요?",
+          "thread_ts": "1776932207.018659",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776933511.746879",
+          "type": "message",
+          "subtype": null,
+          "user": "U0354SL90UV",
+          "text": "아뇨, 좌표값 없습니다, 만약 구현하면 원본 이미지와 같은 size의 heat map 이미지를 쌍으로 드리면, 위에 투명도 적용해서 올려두는 수밖에 없으실 것 같아요",
+          "thread_ts": "1776932207.018659",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776933548.310339",
+          "type": "message",
+          "subtype": null,
+          "user": "U0354SL90UV",
+          "text": "억지로 구현은 가능하나,\n(Anomaly Map을 특정 값 이상인 경우로 thresholding 건 다음 min, max 빼내는 식으로) 그건 이제 heat map이 아니라서요",
+          "thread_ts": "1776932207.018659",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776933601.672059",
+          "type": "message",
+          "subtype": null,
+          "user": "U0354SL90UV",
+          "text": "약간 이런게 히트맵입니다.",
+          "thread_ts": "1776932207.018659",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": [
+            {
+              "id": "F0AV5CZ4XSM",
+              "name": "image.png",
+              "title": "image.png",
+              "mimetype": "image/png",
+              "filetype": "png",
+              "pretty_type": "PNG",
+              "size": 985234,
+              "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0AV5CZ4XSM/image.png",
+              "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0AV5CZ4XSM/image.png"
+            }
+          ]
+        },
+        {
+          "ts": "1776933608.741359",
+          "type": "message",
+          "subtype": null,
+          "user": "U035802E4UA",
+          "text": "오버레이 기능이 있고, (원본 이미지, 히트맵 이미지 위에 씌워서 토글) 누르면 해당 검출 부분으로 확대 기능이 필요해서요\n <@U0328CH80JV> 불량 유형으로 확대를 제외해도 되나요? 그냥 확대 축소 기능은 두되, 불량 유형 클릭시 해당 부분으로 확대를 제외",
+          "thread_ts": "1776932207.018659",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": {
+            "user": "U035802E4UA",
+            "ts": "1776933641.000000"
+          },
+          "files": []
+        },
+        {
+          "ts": "1776933691.454329",
+          "type": "message",
+          "subtype": null,
+          "user": "U0354SL90UV",
+          "text": "이야기가 길어지는데, x-ray는 2개 메인 유형만 불량 클래스 지정 (open, close) 해서 segmentation으로 구현하고 나머지는 Anomaly로 구현하는 것 아니었나요?\n\n2개 불량 유형은 검출부분 확대용 bbox 가능합니다. Anomaly heatmap은 안되구요",
+          "thread_ts": "1776932207.018659",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [
+            {
+              "name": "eyes",
+              "users": [
+                "U035802E4UA"
+              ],
+              "count": 1
+            }
+          ],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776933752.804969",
+          "type": "message",
+          "subtype": null,
+          "user": "U0328CH80JV",
+          "text": "X-RAY ANOMALY 판정이라면 이미지 크롭해서 판정하는 걸로 이해했는데 이 크롭 이미지를 확대해주면 어떨까 하는데요.",
+          "thread_ts": "1776932207.018659",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776933889.914409",
+          "type": "message",
+          "subtype": null,
+          "user": "U0354SL90UV",
+          "text": "기술상 가능하지만 유저가 원한 불량 영역 확대로는 이어지지 않을 것 같습니다.\n\n명식님이 말씀하신대로 구현하면 crop된 이미지들 중 Anomaly Score가 가장 높은 crop 이미지를 확대하는 방식으로 구현\n• 그러나 여전히 crop된 이미지 속에서 불량 영역을 위주로 확대해주진 않음.",
+          "thread_ts": "1776932207.018659",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776934056.824189",
+          "type": "message",
+          "subtype": null,
+          "user": "U0328CH80JV",
+          "text": "실제로 크롭이미지 확대되는 수준이 얼마일지는 봐야 판단 가능하겠네요.\n제 생각에 크롭이미지 확대는 불량이 발생한 영역을 특정하는건 장담 못하나, 최소한 범위 제한은 볼수 있다.\n이정로도 정리하시죠. 데모 의견 수렴 과정에서 이부분도 같이 얘기해봅시다.",
+          "thread_ts": "1776932207.018659",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [
+            {
+              "name": "man-gesturing-ok",
+              "users": [
+                "U0354SL90UV",
+                "U03S8T88QGP"
+              ],
+              "count": 2
+            }
+          ],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776934223.324099",
+          "type": "message",
+          "subtype": null,
+          "user": "U035802E4UA",
+          "text": "화면 상으로 어떻게 흘러가야 할지 살짝 이해가 안가서 내일 오전에 자리에서 잠깐 설명 해주실 수 있으실까요? <@U0354SL90UV> <@U0328CH80JV> ",
+          "thread_ts": "1776932207.018659",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [
+            {
+              "name": "man-gesturing-ok",
+              "users": [
+                "U0328CH80JV",
+                "U0354SL90UV"
+              ],
+              "count": 2
+            }
+          ],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776934303.687749",
+          "type": "message",
+          "subtype": null,
+          "user": "U0328CH80JV",
+          "text": "언제든지",
+          "thread_ts": "1776932207.018659",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [
+            {
+              "name": "감사콩",
+              "users": [
+                "U035802E4UA"
+              ],
+              "count": 1
+            }
+          ],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776934378.025829",
+          "type": "message",
+          "subtype": null,
+          "user": "U0354SL90UV",
+          "text": "내일 오전 10시에 ai쪽 회의가 하나 있어서, 그때만 제외하면 자리에 있을때 바로 불러주세요",
+          "thread_ts": "1776932207.018659",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": {
+            "user": "U0354SL90UV",
+            "ts": "1776934387.000000"
+          },
+          "files": []
+        },
+        {
+          "ts": "1776934398.083319",
+          "type": "message",
+          "subtype": null,
+          "user": "U03S8T88QGP",
+          "text": "저도 참여하겠습니다",
+          "thread_ts": "1776932207.018659",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [
+            {
+              "name": "man-gesturing-ok",
+              "users": [
+                "U035802E4UA"
+              ],
+              "count": 1
+            }
+          ],
+          "edited": null,
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1776932861.535679",
+      "type": "message",
+      "subtype": null,
+      "user": "U0328CH80JV",
+      "text": "x-ray  하드웨어 설치 간 확인 사항\n1. 원격 연결 : pc 내부에 radmin 설치 필요. 기존 vdi 에서 원격 접속 가능. >> 출장시 현장에서 지원 예정\n2. 모니터 설치 : 기본 받침대로는 설치가 불가하고 현장 확인 후 모니터암 규격 확인 후 거치 필요.",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": {
+        "user": "U0328CH80JV",
+        "ts": "1776932879.000000"
+      },
+      "files": []
+    },
+    {
+      "ts": "1776934888.008259",
+      "type": "message",
+      "subtype": null,
+      "user": "U0328CH80JV",
+      "text": "중간점검 산출물 일일이 확인하지는 않았는데, 클릭업 STATUS 만 보면 하나 남아있습니다.\n\n<@U049Z3PQ2KA> (CC. <@U035802E4UA>)",
+      "thread_ts": "1776934888.008259",
+      "reply_count": 8,
+      "reply_users": [
+        "U035802E4UA",
+        "U049Z3PQ2KA",
+        "U0328CH80JV"
+      ],
+      "latest_reply": "1777002699.782589",
+      "reactions": [],
+      "edited": null,
+      "files": [
+        {
+          "id": "F0AV5HAHDJM",
+          "name": "image.png",
+          "title": "image.png",
+          "mimetype": "image/png",
+          "filetype": "png",
+          "pretty_type": "PNG",
+          "size": 8572,
+          "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0AV5HAHDJM/image.png",
+          "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0AV5HAHDJM/image.png"
+        }
+      ],
+      "thread_replies": [
+        {
+          "ts": "1776934948.489849",
+          "type": "message",
+          "subtype": null,
+          "user": "U035802E4UA",
+          "text": "<@U049Z3PQ2KA> 작업 가능하신가요?",
+          "thread_ts": "1776934888.008259",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776934984.869159",
+          "type": "message",
+          "subtype": null,
+          "user": "U049Z3PQ2KA",
+          "text": "내일까지 가능!",
+          "thread_ts": "1776934888.008259",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776934989.647729",
+          "type": "message",
+          "subtype": null,
+          "user": "U0328CH80JV",
+          "text": "몇시?",
+          "thread_ts": "1776934888.008259",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776935022.201489",
+          "type": "message",
+          "subtype": null,
+          "user": "U049Z3PQ2KA",
+          "text": "12:30",
+          "thread_ts": "1776934888.008259",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776935035.850199",
+          "type": "message",
+          "subtype": null,
+          "user": "U0328CH80JV",
+          "text": "와우~!",
+          "thread_ts": "1776934888.008259",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776935042.714479",
+          "type": "message",
+          "subtype": null,
+          "user": "U035802E4UA",
+          "text": "감사합니다 :감사콩:",
+          "thread_ts": "1776934888.008259",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776935050.576499",
+          "type": "message",
+          "subtype": null,
+          "user": "U0328CH80JV",
+          "text": "캄사",
+          "thread_ts": "1776934888.008259",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1777002699.782589",
+          "type": "message",
+          "subtype": null,
+          "user": "U049Z3PQ2KA",
+          "text": "나름대로 작성해서 클릭업에 첨부해놓았습니다!",
+          "thread_ts": "1776934888.008259",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [
+            {
+              "name": "감사콩",
+              "users": [
+                "U0328CH80JV"
+              ],
+              "count": 1
+            },
+            {
+              "name": "white_check_mark",
+              "users": [
+                "U0328CH80JV"
+              ],
+              "count": 1
+            }
+          ],
+          "edited": null,
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1777378357.565809",
+      "type": "message",
+      "subtype": null,
+      "user": "U0328CH80JV",
+      "text": "2026.04.28(화) 금호타이어 곡성공장 현장 방문\n\n참석 :\n - 금호타이어 : 김현석, 정민균, 김효빈, 이인재\n - 알티엠 : 송고은, 주권일, 배명식\n\n*■협의 내용 요약*\n1. 첫제품 검사\n 1) 검사 결과 이미지 병합 및 불량 영역 표기하여 SFTP 로 전송\n\n2. X-RAY\n 1) 모니터  설치 위한 타공 및 브라켓 작업\n 2) X-RAY 검사실 내부 네트웍공사(LAN 선 확보)\n 3) 현장 업무 프로세스 내부 조율\n\n*3. 중도금 정산*\n *1) 5월 중 첫제품 검사 솔루션 배포 후 진행.*\n *2) 중간 산출물 공유 및 컨펌 하기로함.*\n\n4. 학습 솔루션\n - 5월 연휴 이후 사용자 시나리오 리뷰하며 요구사항 수렴하기로함.\n\n*■ 첫제품 검사*\n1. 첫제품 검사 RFID 테스트, 조명 수정포인트 확인\n - 설정 관련 LED가 작동하지 않던 문제를 확인. 원인 확인 완료. 추후 배포시 수정 예정.\n - RFID 데이터 처리 프로세스: 유링크(U-link)와 직접 소켓 통신을 연결할 필요 없음.\n - 처리 흐름: 유링크가 DB 테이블에 태그값을 넣어줌 -&gt; 해당 태그값을 기준으로 SQL 데이터 조회(Select)-&gt; AI 검사 수행 -&gt; 검사 결과값을 DB에 업데이트(Update)하는 방식으로 진행.\n\n2. 검사 이미지 병합 및 데이터 보관 주기이미지 병합(합치기):\n - 현장 작업자의 편의성을 위해 cam1,2 두 개의 이미지를 하나로 합쳐서 전송하기로 결정 (원본 이미지는 그대로 유지하고 SFTP 전송 결과값만 병합).\n\n3. 데이터 보관 주기\n 1) 서버 보관 용량을 고려하여 기본 2년으로 했으면함. (인프라 팀에 용량 증설 요청 예정)\n 2) 데이터 삭제 정책\n  - 프로그램상에서 자동으로 삭제되도록 당장 구현하지 않음.\n  - 2년 경과 후 시스템 운영 현황을 보고, QA 부서와 협의하여 명확한 룰을 정한 뒤 삭제 여부 및 방식을 결정하기로 함.\n\n4. 첫제품 검사 데모 시연 및 업데이트\n - 의뢰 선택 -&gt; '검사 시작'  -&gt; RFID 스캔 대기  -&gt; 스캔 일치 시 이미지 출력 (불일치 시 의뢰 재선택 또는 타이어 교체).\n - 타이어 규격 데이터: 현재 테이블에 기록된 타이어 규격은 직접적인 특정보다는 공장 물류 흐름의 기준 키(Key) 값으로 활용되며, 향후 데이터 누적 시 분석에 활용 예정.\n - 수기 입력란('토링' 등)의 글자 수 제한은 현재 없음. 운영상 개선 필요여부 확인후 추가 개선\n\n*■ X-RAY*\n1. X-RAY 데모 리뷰\n - 불량(의심) 영역 붉은색 표시, 오버레이 온/오프, 원본 이미지 확인, 마우스 휠 조작 가능.\n\n2. 장비 설치 위치 논의(미확정)\n - 작업자 동선을 고려한 모니터 중앙 배치 및 암(Arm) 브라켓 고정 방식(기존 리벳/타공 홀 활용 등) 논의\n - 워크스테이션은 설비 상단에 위치시키기로함.\n\n3. 네트워크 인프라 확인(금호타이어 내부 진행)\n - 솔루션 원격 지원 및 데이터 전송을 위한 네트워크 허브 위치 파악 및 랜선 연결 논의\n\n4. 현장 업무 프로세스:\n - AI 딥러닝 고도화를 위한 원본 데이터 수집 필요성 및 검사 지연(딜레이) 방지를 위한 작업자 판단 프로세스 조율\n\n*■ 프로젝트 관리*\n1. 중간 산출물\n - 고용량 파일 특성을 고려하여 구글 드라이브를 통해 압축 파일을 공유하기로 함.\n2. 중도금 정산\n - 5월 중 첫 제품 관련 기능을 실제 공정에 적용하고, 이에 따른 중도금 청구 절차를 진행 하기로함.",
+      "thread_ts": "1777378357.565809",
+      "reply_count": 12,
+      "reply_users": [
+        "U0328CH80JV",
+        "U0354SL90UV",
+        "U035802E4UA"
+      ],
+      "latest_reply": "1777437501.085879",
+      "reactions": [
+        {
+          "name": "eyes",
+          "users": [
+            "U04C3UYFY1F",
+            "U049Z3PQ2KA"
+          ],
+          "count": 2
+        },
+        {
+          "name": "감사콩",
+          "users": [
+            "U04C3UYFY1F"
+          ],
+          "count": 1
+        }
+      ],
+      "edited": null,
+      "files": [],
+      "thread_replies": [
+        {
+          "ts": "1777425389.938559",
+          "type": "message",
+          "subtype": null,
+          "user": "U0328CH80JV",
+          "text": "현장사진 참조.",
+          "thread_ts": "1777378357.565809",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [
+            {
+              "name": "eyes",
+              "users": [
+                "U04C3UYFY1F"
+              ],
+              "count": 1
+            }
+          ],
+          "edited": null,
+          "files": [
+            {
+              "id": "F0B1BMTUN4Q",
+              "name": "첫제품_1.jpg",
+              "title": "첫제품_1.jpg",
+              "mimetype": "image/jpeg",
+              "filetype": "jpg",
+              "pretty_type": "JPEG",
+              "size": 1042990,
+              "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0B1BMTUN4Q/__________1.jpg",
+              "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0B1BMTUN4Q/__________1.jpg"
+            },
+            {
+              "id": "F0B0M1LD128",
+              "name": "Xray_1.jpg",
+              "title": "Xray_1.jpg",
+              "mimetype": "image/jpeg",
+              "filetype": "jpg",
+              "pretty_type": "JPEG",
+              "size": 326587,
+              "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0B0M1LD128/xray_1.jpg",
+              "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0B0M1LD128/xray_1.jpg"
+            },
+            {
+              "id": "F0B0B2D3G4T",
+              "name": "Xray_2.jpg",
+              "title": "Xray_2.jpg",
+              "mimetype": "image/jpeg",
+              "filetype": "jpg",
+              "pretty_type": "JPEG",
+              "size": 387510,
+              "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0B0B2D3G4T/xray_2.jpg",
+              "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0B0B2D3G4T/xray_2.jpg"
+            }
+          ]
+        },
+        {
+          "ts": "1777426060.975769",
+          "type": "message",
+          "subtype": null,
+          "user": "U0354SL90UV",
+          "text": "작업자의 편의성을 위한 병합 이미지의 용도는 어떻게 되나요?\n병합 이미지를 여기저기 확대해가면서 작업자가 각인 결과를 확인할 수 있어야 하나요?",
+          "thread_ts": "1777378357.565809",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1777426215.043829",
+          "type": "message",
+          "subtype": null,
+          "user": "U0328CH80JV",
+          "text": "추론은 그대로 할꺼고, mes 에 올리는 이미지를 병합해서 전달해줄겁니다.",
+          "thread_ts": "1777378357.565809",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1777426248.562939",
+          "type": "message",
+          "subtype": null,
+          "user": "U0354SL90UV",
+          "text": "온전한 타이어 1개처럼 보여지지 않고, 좌/우에 그냥 합치는 형식으로도 괜찮나요?",
+          "thread_ts": "1777378357.565809",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1777426283.092799",
+          "type": "message",
+          "subtype": null,
+          "user": "U0328CH80JV",
+          "text": "기존 실험에서 문제되었던 부분은 충분히 설명해주었고, 모양만 합쳐져 있고, 검출 영역 표시만 되어 있으면 됩니다.",
+          "thread_ts": "1777378357.565809",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [
+            {
+              "name": "white_check_mark",
+              "users": [
+                "U0354SL90UV"
+              ],
+              "count": 1
+            }
+          ],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1777435160.934649",
+          "type": "message",
+          "subtype": null,
+          "user": "U035802E4UA",
+          "text": "<@U049Z3PQ2KA> 현장 작업 사진 입니다.",
+          "thread_ts": "1777378357.565809",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1777435202.234349",
+          "type": "message",
+          "subtype": null,
+          "user": "U035802E4UA",
+          "text": "<@U0328CH80JV> 금일 온 메일 확인하였는데, 플로우를 조금 수정해야 할 듯 합니다. (outside / inside 선택 관련",
+          "thread_ts": "1777378357.565809",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1777437143.803369",
+          "type": "message",
+          "subtype": null,
+          "user": "U0328CH80JV",
+          "text": "메일 확인했습니다. in/out 판단을 우리가 하는걸로 제안해보는건 어때요? 모델에서 탐지 가능할건데.",
+          "thread_ts": "1777378357.565809",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1777437198.094149",
+          "type": "message",
+          "subtype": null,
+          "user": "U035802E4UA",
+          "text": "그러면 좋긴한데, 만약 잘못 탐지할 경우 수정할 수 있는 케이스를 추가로 넣어주는 것이 좋아 보입니다.",
+          "thread_ts": "1777378357.565809",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1777437339.046509",
+          "type": "message",
+          "subtype": null,
+          "user": "U0354SL90UV",
+          "text": "outside 마크 탐지율은 나쁘지 않은 편이지만 고은님 말씀대로 케이스가 필요해보입니다.",
+          "thread_ts": "1777378357.565809",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1777437424.607329",
+          "type": "message",
+          "subtype": null,
+          "user": "U0328CH80JV",
+          "text": "그러면 사용자가 선택하는걸로 스텝을 구분하는걸로 하고,\n향후 모델 탐지 성능이 우수할 경우 해당 스텝은 SKIP 하도록 하시죠.",
+          "thread_ts": "1777378357.565809",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [
+            {
+              "name": "man-gesturing-ok",
+              "users": [
+                "U035802E4UA"
+              ],
+              "count": 1
+            }
+          ],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1777437501.085879",
+          "type": "message",
+          "subtype": null,
+          "user": "U0328CH80JV",
+          "text": "기본적으로는 사용자가 IN/OUT 을 선택해야 한다.\n우리가 지향할 것은 이 선택하는 과정을 굳이 하지 않아도 되게 모델 개선을 해준다.",
+          "thread_ts": "1777378357.565809",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1777442850.621849",
+      "type": "message",
+      "subtype": null,
+      "user": "U0328CH80JV",
+      "text": "금호타이어에서 받은 merge-test 파일을 보니 4월 3일자 데이터네요.\n이 데이터로 이미지 합치는 실험을 해봤을때 합친 모양이 이상한게 있었다고 하는데 어떤 케이스에서 문제가 나올수 있는지 확인 부탁드립니다.\n겹쳐지는 부분의 왜곡까지 볼 필요는 없고, 둥근 타이어 형태가 안되는 케이스를 봐주시면 됩니다.  <@U0354SL90UV>",
+      "thread_ts": "1777442850.621849",
+      "reply_count": 6,
+      "reply_users": [
+        "U0354SL90UV",
+        "U0328CH80JV"
+      ],
+      "latest_reply": "1777447465.113819",
+      "reactions": [
+        {
+          "name": "man-gesturing-ok",
+          "users": [
+            "U0354SL90UV"
+          ],
+          "count": 1
+        }
+      ],
+      "edited": null,
+      "files": [],
+      "thread_replies": [
+        {
+          "ts": "1777443491.749759",
+          "type": "message",
+          "subtype": null,
+          "user": "U0354SL90UV",
+          "text": "폴더 안에 있는 다운로드 (5).png 및 다운로드.png는 저희 데모에서 다운로드한건가요?\n혹은 금호측 AI쪽에서 우리도 이렇게 해봤다고 보여준건가요?",
+          "thread_ts": "1777442850.621849",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": [
+            {
+              "id": "F0B0JGP7DKL",
+              "name": "image.png",
+              "title": "image.png",
+              "mimetype": "image/png",
+              "filetype": "png",
+              "pretty_type": "PNG",
+              "size": 242396,
+              "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0B0JGP7DKL/image.png",
+              "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0B0JGP7DKL/image.png"
+            }
+          ]
+        },
+        {
+          "ts": "1777443566.405499",
+          "type": "message",
+          "subtype": null,
+          "user": "U0328CH80JV",
+          "text": "이건 버리셔도 됩니다. 자체 실험해본 이미지래요.",
+          "thread_ts": "1777442850.621849",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1777446083.775639",
+          "type": "message",
+          "subtype": null,
+          "user": "U0354SL90UV",
+          "text": "과거 실험했던 concat 실험 코드로 적용해본 결과, 10장중 4장은 저희도 제대로 concat이 되지 않는 것으로 파악되었습니다.",
+          "thread_ts": "1777442850.621849",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": [
+            {
+              "id": "F0B0JNXH0RY",
+              "name": "image.png",
+              "title": "image.png",
+              "mimetype": "image/png",
+              "filetype": "png",
+              "pretty_type": "PNG",
+              "size": 252617,
+              "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0B0JNXH0RY/image.png",
+              "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0B0JNXH0RY/image.png"
+            },
+            {
+              "id": "F0B0CBN4F2P",
+              "name": "image.png",
+              "title": "image.png",
+              "mimetype": "image/png",
+              "filetype": "png",
+              "pretty_type": "PNG",
+              "size": 442570,
+              "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0B0CBN4F2P/image.png",
+              "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0B0CBN4F2P/image.png"
+            },
+            {
+              "id": "F0B0JNZ7DC2",
+              "name": "image.png",
+              "title": "image.png",
+              "mimetype": "image/png",
+              "filetype": "png",
+              "pretty_type": "PNG",
+              "size": 481484,
+              "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0B0JNZ7DC2/image.png",
+              "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0B0JNZ7DC2/image.png"
+            },
+            {
+              "id": "F0B0XKXU75X",
+              "name": "image.png",
+              "title": "image.png",
+              "mimetype": "image/png",
+              "filetype": "png",
+              "pretty_type": "PNG",
+              "size": 656192,
+              "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0B0XKXU75X/image.png",
+              "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0B0XKXU75X/image.png"
+            }
+          ]
+        },
+        {
+          "ts": "1777446126.587959",
+          "type": "message",
+          "subtype": null,
+          "user": "U0354SL90UV",
+          "text": "",
+          "thread_ts": "1777442850.621849",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": [
+            {
+              "id": "F0B0JP1FZCJ",
+              "name": "image.png",
+              "title": "image.png",
+              "mimetype": "image/png",
+              "filetype": "png",
+              "pretty_type": "PNG",
+              "size": 830048,
+              "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0B0JP1FZCJ/image.png",
+              "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0B0JP1FZCJ/image.png"
+            },
+            {
+              "id": "F0B039HAJGP",
+              "name": "image.png",
+              "title": "image.png",
+              "mimetype": "image/png",
+              "filetype": "png",
+              "pretty_type": "PNG",
+              "size": 810086,
+              "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0B039HAJGP/image.png",
+              "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0B039HAJGP/image.png"
+            },
+            {
+              "id": "F0B039HKDFH",
+              "name": "image.png",
+              "title": "image.png",
+              "mimetype": "image/png",
+              "filetype": "png",
+              "pretty_type": "PNG",
+              "size": 806835,
+              "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0B039HKDFH/image.png",
+              "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0B039HKDFH/image.png"
+            },
+            {
+              "id": "F0B0FB6J561",
+              "name": "image.png",
+              "title": "image.png",
+              "mimetype": "image/png",
+              "filetype": "png",
+              "pretty_type": "PNG",
+              "size": 835851,
+              "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0B0FB6J561/image.png",
+              "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0B0FB6J561/image.png"
+            },
+            {
+              "id": "F0B0CBTP4G3",
+              "name": "image.png",
+              "title": "image.png",
+              "mimetype": "image/png",
+              "filetype": "png",
+              "pretty_type": "PNG",
+              "size": 827224,
+              "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0B0CBTP4G3/image.png",
+              "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0B0CBTP4G3/image.png"
+            },
+            {
+              "id": "F0B0XL1V5G9",
+              "name": "image.png",
+              "title": "image.png",
+              "mimetype": "image/png",
+              "filetype": "png",
+              "pretty_type": "PNG",
+              "size": 831200,
+              "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0B0XL1V5G9/image.png",
+              "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0B0XL1V5G9/image.png"
+            }
+          ]
+        },
+        {
+          "ts": "1777446954.536909",
+          "type": "message",
+          "subtype": null,
+          "user": "U0354SL90UV",
+          "text": "<@U0328CH80JV>\n\"/VISION_NAS/00_프로젝트/2026_금호타이어/01. 첫제품검사/03_AI/산출물/mergetest_concat\" 에 올려놓았습니다.\n\nfeature_test 폴더가 위 쓰레드에 공유된 내용이고,\n타이어 정 중앙을 기준으로 냅다 잘라서 붙인건 mask_test 폴더에 있습니다.\n\n• feature_test\n    ◦ 이미지상 특징(feature)을 기준으로 매칭, 불안정하지만 올바른 특징이 매칭되었을 때 합성 이미지의 왜곡 정도가 덜함\n• mask_test\n    ◦ 타이어의 길이를 기준으로 위/아래를 concat한 것, 정밀도는 낮지만 안정적임. ",
+          "thread_ts": "1777442850.621849",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [
+            {
+              "name": "+1",
+              "users": [
+                "U0328CH80JV"
+              ],
+              "count": 1
+            }
+          ],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1777447465.113819",
+          "type": "message",
+          "subtype": null,
+          "user": "U0328CH80JV",
+          "text": "폴더명 앞에 날짜 붙여서 수정했습니다. 참고해주세요.\n\"Z:\\00_프로젝트\\2026_금호타이어\\01. 첫제품검사\\03_AI\\산출물\\*260429_mergetest_concat\"*",
+          "thread_ts": "1777442850.621849",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1777520299.039689",
+      "type": "message",
+      "subtype": "channel_join",
+      "user": "U0B15H1AQJV",
+      "text": "<@U0B15H1AQJV> has joined the channel",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    }
+  ]
+}

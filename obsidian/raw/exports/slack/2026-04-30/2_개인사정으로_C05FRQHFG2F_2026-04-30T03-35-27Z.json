@@ -1,0 +1,2564 @@
+{
+  "type": "slack_channel_export",
+  "workspace": "RTM Slack",
+  "collected_at": "2026-04-30T03:35:27.248712+00:00",
+  "channel": {
+    "id": "C05FRQHFG2F",
+    "name": "2_개인사정으로",
+    "type": "public_channel",
+    "is_archived": false,
+    "is_private": false,
+    "created": "2023-07-06T07:37:33+00:00",
+    "topic": "시차/연차/자리비움/외근/출장 등 근무와 관련된 내용을 알려주세요!",
+    "purpose": "",
+    "member_count": 40,
+    "routing": {
+      "channel_bucket": "company_news",
+      "conversation_mode": "company_updates",
+      "rationale": "default_company_updates",
+      "wiki_workspace": "rtm",
+      "wiki_target_root": "obsidian/Wiki/Common/Slack_Company_News",
+      "wiki_target_kind": "common"
+    }
+  },
+  "routing": {
+    "channel_bucket": "company_news",
+    "conversation_mode": "company_updates",
+    "rationale": "default_company_updates",
+    "wiki_workspace": "rtm",
+    "wiki_target_root": "obsidian/Wiki/Common/Slack_Company_News",
+    "wiki_target_kind": "common",
+    "project_wiki_target_root": "obsidian/Wiki/Common/Slack_Project_Intake",
+    "company_wiki_target_root": "obsidian/Wiki/Common/Slack_Company_News"
+  },
+  "history_window": {
+    "oldest_ts": "1776656145.666347",
+    "limit_per_channel": 500,
+    "include_threads": true,
+    "include_files": true
+  },
+  "messages": [
+    {
+      "ts": "1776667114.068489",
+      "type": "message",
+      "subtype": null,
+      "user": "U07RPDCF0DR",
+      "text": "잠시휴게합니다",
+      "thread_ts": "1776667114.068489",
+      "reply_count": 1,
+      "reply_users": [
+        "U07RPDCF0DR"
+      ],
+      "latest_reply": "1776670147.068119",
+      "reactions": [],
+      "edited": null,
+      "files": [],
+      "thread_replies": [
+        {
+          "ts": "1776670147.068119",
+          "type": "message",
+          "subtype": null,
+          "user": "U07RPDCF0DR",
+          "text": "종료합니다",
+          "thread_ts": "1776667114.068489",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1776667239.106579",
+      "type": "message",
+      "subtype": null,
+      "user": "U04MGQUE6U8",
+      "text": "잠시 자리비움 하겠습니다",
+      "thread_ts": "1776667239.106579",
+      "reply_count": 1,
+      "reply_users": [
+        "U04MGQUE6U8"
+      ],
+      "latest_reply": "1776671497.276059",
+      "reactions": [],
+      "edited": null,
+      "files": [],
+      "thread_replies": [
+        {
+          "ts": "1776671497.276059",
+          "type": "message",
+          "subtype": null,
+          "user": "U04MGQUE6U8",
+          "text": "복귀했습니다",
+          "thread_ts": "1776667239.106579",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1776670519.269039",
+      "type": "message",
+      "subtype": null,
+      "user": "U0354SL90UV",
+      "text": "휴게 시작합니다",
+      "thread_ts": "1776670519.269039",
+      "reply_count": 1,
+      "reply_users": [
+        "U0354SL90UV"
+      ],
+      "latest_reply": "1776676038.602829",
+      "reactions": [],
+      "edited": null,
+      "files": [],
+      "thread_replies": [
+        {
+          "ts": "1776676038.602829",
+          "type": "message",
+          "subtype": null,
+          "user": "U0354SL90UV",
+          "text": "업무 종료합니다",
+          "thread_ts": "1776670519.269039",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1776673492.493739",
+      "type": "message",
+      "subtype": null,
+      "user": "U093SP8GFFU",
+      "text": "잠시 휴게합니다",
+      "thread_ts": "1776673492.493739",
+      "reply_count": 1,
+      "reply_users": [
+        "U093SP8GFFU"
+      ],
+      "latest_reply": "1776675293.146039",
+      "reactions": [],
+      "edited": null,
+      "files": [],
+      "thread_replies": [
+        {
+          "ts": "1776675293.146039",
+          "type": "message",
+          "subtype": null,
+          "user": "U093SP8GFFU",
+          "text": "복귀합니다",
+          "thread_ts": "1776673492.493739",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1776673976.497719",
+      "type": "message",
+      "subtype": null,
+      "user": "U033Z97MZ3N",
+      "text": "원격 근무 시작합니다",
+      "thread_ts": "1776673976.497719",
+      "reply_count": 1,
+      "reply_users": [
+        "U033Z97MZ3N"
+      ],
+      "latest_reply": "1776676332.850089",
+      "reactions": [],
+      "edited": null,
+      "files": [],
+      "thread_replies": [
+        {
+          "ts": "1776676332.850089",
+          "type": "message",
+          "subtype": null,
+          "user": "U033Z97MZ3N",
+          "text": "근무 종료합니다",
+          "thread_ts": "1776673976.497719",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1776730511.060319",
+      "type": "message",
+      "subtype": null,
+      "user": "U035802E4UA",
+      "text": "오전 시차 사용합니다. 12시 30분 출근 예정입니다.",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1776731438.035459",
+      "type": "message",
+      "subtype": null,
+      "user": "U057ES3QMS6",
+      "text": "외근 시작합니다. ",
+      "thread_ts": "1776731438.035459",
+      "reply_count": 1,
+      "reply_users": [
+        "U057ES3QMS6"
+      ],
+      "latest_reply": "1776771774.111899",
+      "reactions": [],
+      "edited": null,
+      "files": [],
+      "thread_replies": [
+        {
+          "ts": "1776771774.111899",
+          "type": "message",
+          "subtype": null,
+          "user": "U057ES3QMS6",
+          "text": "근무 종료합니다. ",
+          "thread_ts": "1776731438.035459",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1776731856.060549",
+      "type": "message",
+      "subtype": null,
+      "user": "U0A4WTXD15L",
+      "text": "외근 시작합니다",
+      "thread_ts": "1776731856.060549",
+      "reply_count": 3,
+      "reply_users": [
+        "U0A4WTXD15L"
+      ],
+      "latest_reply": "1776761994.043909",
+      "reactions": [],
+      "edited": null,
+      "files": [],
+      "thread_replies": [
+        {
+          "ts": "1776747032.341749",
+          "type": "message",
+          "subtype": null,
+          "user": "U0A4WTXD15L",
+          "text": "오후 시차 사용합니다",
+          "thread_ts": "1776731856.060549",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776757600.103029",
+          "type": "message",
+          "subtype": null,
+          "user": "U0A4WTXD15L",
+          "text": "원격근무 시작합니다",
+          "thread_ts": "1776731856.060549",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776761994.043909",
+          "type": "message",
+          "subtype": null,
+          "user": "U0A4WTXD15L",
+          "text": "종료합니다",
+          "thread_ts": "1776731856.060549",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1776732079.406619",
+      "type": "message",
+      "subtype": null,
+      "user": "U0AFU3CAXM0",
+      "text": "외근 시작합니다",
+      "thread_ts": "1776732079.406619",
+      "reply_count": 1,
+      "reply_users": [
+        "U0AFU3CAXM0"
+      ],
+      "latest_reply": "1776761039.637599",
+      "reactions": [],
+      "edited": null,
+      "files": [],
+      "thread_replies": [
+        {
+          "ts": "1776761039.637599",
+          "type": "message",
+          "subtype": null,
+          "user": "U0AFU3CAXM0",
+          "text": "종료합니다",
+          "thread_ts": "1776732079.406619",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1776732722.614479",
+      "type": "message",
+      "subtype": null,
+      "user": "U09CVJJHK7U",
+      "text": "외근 시작합니다",
+      "thread_ts": "1776732722.614479",
+      "reply_count": 1,
+      "reply_users": [
+        "U09CVJJHK7U"
+      ],
+      "latest_reply": "1776764052.412979",
+      "reactions": [],
+      "edited": null,
+      "files": [],
+      "thread_replies": [
+        {
+          "ts": "1776764052.412979",
+          "type": "message",
+          "subtype": null,
+          "user": "U09CVJJHK7U",
+          "text": "근무 종료합니다",
+          "thread_ts": "1776732722.614479",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1776732827.482689",
+      "type": "message",
+      "subtype": null,
+      "user": "U090RJV3ALU",
+      "text": "외근시작합니다",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1776733288.905039",
+      "type": "message",
+      "subtype": null,
+      "user": "U03S8T88QGP",
+      "text": "~오전 시차 사용합니다. 12시 30분 출근 예정입니다.~\n연차로 변경합니다.",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": {
+        "user": "U03S8T88QGP",
+        "ts": "1776738966.000000"
+      },
+      "files": []
+    },
+    {
+      "ts": "1776733880.094279",
+      "type": "message",
+      "subtype": null,
+      "user": "U082RGK8J15",
+      "text": "오전 시차 사용합니다. 12시 30분 출근 예정입니다.",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1776734556.155559",
+      "type": "message",
+      "subtype": null,
+      "user": "U07DYT1V7UH",
+      "text": "외근 시작합니다",
+      "thread_ts": "1776734556.155559",
+      "reply_count": 1,
+      "reply_users": [
+        "U07DYT1V7UH"
+      ],
+      "latest_reply": "1776759319.915529",
+      "reactions": [],
+      "edited": null,
+      "files": [],
+      "thread_replies": [
+        {
+          "ts": "1776759319.915529",
+          "type": "message",
+          "subtype": null,
+          "user": "U07DYT1V7UH",
+          "text": "종료합니다",
+          "thread_ts": "1776734556.155559",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1776751973.473869",
+      "type": "message",
+      "subtype": null,
+      "user": "U03NJDDPZPZ",
+      "text": "병원 진료가 길어져, 시차 사용합니다. (15:55 복귀)",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1776762667.151859",
+      "type": "message",
+      "subtype": null,
+      "user": "U0354SL90UV",
+      "text": "휴게 시작합니다",
+      "thread_ts": "1776762667.151859",
+      "reply_count": 1,
+      "reply_users": [
+        "U0354SL90UV"
+      ],
+      "latest_reply": "1776765626.255639",
+      "reactions": [],
+      "edited": null,
+      "files": [],
+      "thread_replies": [
+        {
+          "ts": "1776765626.255639",
+          "type": "message",
+          "subtype": null,
+          "user": "U0354SL90UV",
+          "text": "업무 재개합니다",
+          "thread_ts": "1776762667.151859",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1776772866.986709",
+      "type": "message",
+      "subtype": null,
+      "user": "U093SP8GFFU",
+      "text": "원격근무 시작합니다",
+      "thread_ts": "1776772866.986709",
+      "reply_count": 1,
+      "reply_users": [
+        "U093SP8GFFU"
+      ],
+      "latest_reply": "1776780972.626939",
+      "reactions": [
+        {
+          "name": "fire",
+          "users": [
+            "U03NJDDPZPZ"
+          ],
+          "count": 1
+        }
+      ],
+      "edited": null,
+      "files": [],
+      "thread_replies": [
+        {
+          "ts": "1776780972.626939",
+          "type": "message",
+          "subtype": null,
+          "user": "U093SP8GFFU",
+          "text": "근무 종료합니다.",
+          "thread_ts": "1776772866.986709",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1776778087.364829",
+      "type": "message",
+      "subtype": null,
+      "user": "U035802E4UA",
+      "text": "원격 근무 시작합니다.",
+      "thread_ts": "1776778087.364829",
+      "reply_count": 1,
+      "reply_users": [
+        "U035802E4UA"
+      ],
+      "latest_reply": "1776788341.707749",
+      "reactions": [
+        {
+          "name": "fire",
+          "users": [
+            "U03NJDDPZPZ"
+          ],
+          "count": 1
+        }
+      ],
+      "edited": null,
+      "files": [],
+      "thread_replies": [
+        {
+          "ts": "1776788341.707749",
+          "type": "message",
+          "subtype": null,
+          "user": "U035802E4UA",
+          "text": "종료합니다.",
+          "thread_ts": "1776778087.364829",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": {
+            "user": "U035802E4UA",
+            "ts": "1776788346.000000"
+          },
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1776812723.128789",
+      "type": "message",
+      "subtype": null,
+      "user": "U025MG70MNX",
+      "text": "외근시작합니다",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1776814193.625649",
+      "type": "message",
+      "subtype": null,
+      "user": "U0A4WTXD15L",
+      "text": "외근 시작합니다",
+      "thread_ts": "1776814193.625649",
+      "reply_count": 1,
+      "reply_users": [
+        "U0A4WTXD15L"
+      ],
+      "latest_reply": "1776847685.254749",
+      "reactions": [],
+      "edited": null,
+      "files": [],
+      "thread_replies": [
+        {
+          "ts": "1776847685.254749",
+          "type": "message",
+          "subtype": null,
+          "user": "U0A4WTXD15L",
+          "text": "종료합니다",
+          "thread_ts": "1776814193.625649",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1776817934.770059",
+      "type": "message",
+      "subtype": null,
+      "user": "U07M5E33KDW",
+      "text": "외근 시작합니다",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1776818624.330779",
+      "type": "message",
+      "subtype": null,
+      "user": "U0AFU3CAXM0",
+      "text": "외근 시작합니다",
+      "thread_ts": "1776818624.330779",
+      "reply_count": 1,
+      "reply_users": [
+        "U0AFU3CAXM0"
+      ],
+      "latest_reply": "1776847637.368879",
+      "reactions": [],
+      "edited": null,
+      "files": [],
+      "thread_replies": [
+        {
+          "ts": "1776847637.368879",
+          "type": "message",
+          "subtype": null,
+          "user": "U0AFU3CAXM0",
+          "text": "종료합니다",
+          "thread_ts": "1776818624.330779",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1776818932.784629",
+      "type": "message",
+      "subtype": null,
+      "user": "U049Z3PQ2KA",
+      "text": "오전 시차 사용합니다. 12시 30분 출근 예정입니다.",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1776819446.258129",
+      "type": "message",
+      "subtype": null,
+      "user": "U09CVJJHK7U",
+      "text": "외근 시작합니다",
+      "thread_ts": "1776819446.258129",
+      "reply_count": 1,
+      "reply_users": [
+        "U09CVJJHK7U"
+      ],
+      "latest_reply": "1776851060.448269",
+      "reactions": [],
+      "edited": null,
+      "files": [],
+      "thread_replies": [
+        {
+          "ts": "1776851060.448269",
+          "type": "message",
+          "subtype": null,
+          "user": "U09CVJJHK7U",
+          "text": "종료합니다",
+          "thread_ts": "1776819446.258129",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1776820361.835599",
+      "type": "message",
+      "subtype": null,
+      "user": "U07DYT1V7UH",
+      "text": "외근 시작합니다",
+      "thread_ts": "1776820361.835599",
+      "reply_count": 1,
+      "reply_users": [
+        "U07DYT1V7UH"
+      ],
+      "latest_reply": "1776849047.355479",
+      "reactions": [],
+      "edited": null,
+      "files": [],
+      "thread_replies": [
+        {
+          "ts": "1776849047.355479",
+          "type": "message",
+          "subtype": null,
+          "user": "U07DYT1V7UH",
+          "text": "종료합니다",
+          "thread_ts": "1776820361.835599",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1776821146.616339",
+      "type": "message",
+      "subtype": null,
+      "user": "U082RGK8J15",
+      "text": "병원 진료가 길어져 오전 시차 사용합니다",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1776833118.363109",
+      "type": "message",
+      "subtype": null,
+      "user": "U0328CH80JV",
+      "text": "외근 종료 후 시차 사용합니다. (13:30~)",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [
+        {
+          "name": "eyes",
+          "users": [
+            "U02MA1AEU8K",
+            "U05AWGZ1TRD"
+          ],
+          "count": 2
+        }
+      ],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1776863349.262699",
+      "type": "message",
+      "subtype": null,
+      "user": "U0235585LTZ",
+      "text": "원격 근무 시작합니다",
+      "thread_ts": "1776863349.262699",
+      "reply_count": 1,
+      "reply_users": [
+        "U0235585LTZ"
+      ],
+      "latest_reply": "1776873564.838509",
+      "reactions": [],
+      "edited": null,
+      "files": [],
+      "thread_replies": [
+        {
+          "ts": "1776873564.838509",
+          "type": "message",
+          "subtype": null,
+          "user": "U0235585LTZ",
+          "text": "종료합니다",
+          "thread_ts": "1776863349.262699",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1776869807.763139",
+      "type": "message",
+      "subtype": null,
+      "user": "U049Z3PQ2KA",
+      "text": "원격근무 시작합니다.",
+      "thread_ts": "1776869807.763139",
+      "reply_count": 1,
+      "reply_users": [
+        "U049Z3PQ2KA"
+      ],
+      "latest_reply": "1776877530.036389",
+      "reactions": [],
+      "edited": null,
+      "files": [],
+      "thread_replies": [
+        {
+          "ts": "1776877530.036389",
+          "type": "message",
+          "subtype": null,
+          "user": "U049Z3PQ2KA",
+          "text": "종료합니다.",
+          "thread_ts": "1776869807.763139",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1776902656.549229",
+      "type": "message",
+      "subtype": null,
+      "user": "U04C3UYFY1F",
+      "text": "원격근무시작합니다.\n(11시경 외근으로 전환)",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1776903981.590509",
+      "type": "message",
+      "subtype": null,
+      "user": "U09CVJJHK7U",
+      "text": "외근 시작합니다",
+      "thread_ts": "1776903981.590509",
+      "reply_count": 3,
+      "reply_users": [
+        "U09CVJJHK7U"
+      ],
+      "latest_reply": "1776945170.107689",
+      "reactions": [],
+      "edited": null,
+      "files": [],
+      "thread_replies": [
+        {
+          "ts": "1776934227.405549",
+          "type": "message",
+          "subtype": null,
+          "user": "U09CVJJHK7U",
+          "text": "잠시 휴게합니다",
+          "thread_ts": "1776903981.590509",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776935540.745539",
+          "type": "message",
+          "subtype": null,
+          "user": "U09CVJJHK7U",
+          "text": "근무 재개합니다",
+          "thread_ts": "1776903981.590509",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776945170.107689",
+          "type": "message",
+          "subtype": null,
+          "user": "U09CVJJHK7U",
+          "text": "종료합니다",
+          "thread_ts": "1776903981.590509",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1776905717.020869",
+      "type": "message",
+      "subtype": null,
+      "user": "U0AFU3CAXM0",
+      "text": "외근 시작합니다",
+      "thread_ts": "1776905717.020869",
+      "reply_count": 3,
+      "reply_users": [
+        "U0AFU3CAXM0"
+      ],
+      "latest_reply": "1776940259.122269",
+      "reactions": [],
+      "edited": null,
+      "files": [],
+      "thread_replies": [
+        {
+          "ts": "1776934243.862289",
+          "type": "message",
+          "subtype": null,
+          "user": "U0AFU3CAXM0",
+          "text": "휴게합니다",
+          "thread_ts": "1776905717.020869",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776935505.434899",
+          "type": "message",
+          "subtype": null,
+          "user": "U0AFU3CAXM0",
+          "text": "휴게 종료합니다",
+          "thread_ts": "1776905717.020869",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776940259.122269",
+          "type": "message",
+          "subtype": null,
+          "user": "U0AFU3CAXM0",
+          "text": "근무 종료합니다(18:35)",
+          "thread_ts": "1776905717.020869",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1776905793.809079",
+      "type": "message",
+      "subtype": null,
+      "user": "U0A4WTXD15L",
+      "text": "외근 시작합니다",
+      "thread_ts": "1776905793.809079",
+      "reply_count": 3,
+      "reply_users": [
+        "U0A4WTXD15L"
+      ],
+      "latest_reply": "1776940176.698989",
+      "reactions": [],
+      "edited": null,
+      "files": [],
+      "thread_replies": [
+        {
+          "ts": "1776934228.500339",
+          "type": "message",
+          "subtype": null,
+          "user": "U0A4WTXD15L",
+          "text": "휴게합니다",
+          "thread_ts": "1776905793.809079",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776935199.604619",
+          "type": "message",
+          "subtype": null,
+          "user": "U0A4WTXD15L",
+          "text": "재개합니다",
+          "thread_ts": "1776905793.809079",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": {
+            "user": "U0A4WTXD15L",
+            "ts": "1776935208.000000"
+          },
+          "files": []
+        },
+        {
+          "ts": "1776940176.698989",
+          "type": "message",
+          "subtype": null,
+          "user": "U0A4WTXD15L",
+          "text": "종료합니다",
+          "thread_ts": "1776905793.809079",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1776907666.313969",
+      "type": "message",
+      "subtype": null,
+      "user": "U07DYT1V7UH",
+      "text": "외근 시작합니다",
+      "thread_ts": "1776907666.313969",
+      "reply_count": 1,
+      "reply_users": [
+        "U07DYT1V7UH"
+      ],
+      "latest_reply": "1776938316.499929",
+      "reactions": [],
+      "edited": null,
+      "files": [],
+      "thread_replies": [
+        {
+          "ts": "1776938316.499929",
+          "type": "message",
+          "subtype": null,
+          "user": "U07DYT1V7UH",
+          "text": "종료합니다",
+          "thread_ts": "1776907666.313969",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1776908121.778789",
+      "type": "message",
+      "subtype": null,
+      "user": "U035802E4UA",
+      "text": "오전 시차 사용합니다. 12시 30분 출근 예정입니다.",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1776919210.253699",
+      "type": "message",
+      "subtype": null,
+      "user": "U016489PE5S",
+      "text": "재택 전환하여 근무 중입니다. 편하게 연락 주세요~ (12:30~)",
+      "thread_ts": "1776919210.253699",
+      "reply_count": 1,
+      "reply_users": [
+        "U016489PE5S"
+      ],
+      "latest_reply": "1776930774.123929",
+      "reactions": [],
+      "edited": null,
+      "files": [],
+      "thread_replies": [
+        {
+          "ts": "1776930774.123929",
+          "type": "message",
+          "subtype": null,
+          "user": "U016489PE5S",
+          "text": "근무 종료합니다.",
+          "thread_ts": "1776919210.253699",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1776933336.215529",
+      "type": "message",
+      "subtype": null,
+      "user": "U07RPDCF0DR",
+      "text": "잠시휴게합니다",
+      "thread_ts": "1776933336.215529",
+      "reply_count": 1,
+      "reply_users": [
+        "U07RPDCF0DR"
+      ],
+      "latest_reply": "1776934370.175729",
+      "reactions": [],
+      "edited": null,
+      "files": [],
+      "thread_replies": [
+        {
+          "ts": "1776934370.175729",
+          "type": "message",
+          "subtype": null,
+          "user": "U07RPDCF0DR",
+          "text": "종료합니다",
+          "thread_ts": "1776933336.215529",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1776950702.250999",
+      "type": "message",
+      "subtype": null,
+      "user": "U035802E4UA",
+      "text": "원격 근무 시작합니다",
+      "thread_ts": "1776950702.250999",
+      "reply_count": 1,
+      "reply_users": [
+        "U035802E4UA"
+      ],
+      "latest_reply": "1776959550.488489",
+      "reactions": [],
+      "edited": null,
+      "files": [],
+      "thread_replies": [
+        {
+          "ts": "1776959550.488489",
+          "type": "message",
+          "subtype": null,
+          "user": "U035802E4UA",
+          "text": "종료합니다.",
+          "thread_ts": "1776950702.250999",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1776951062.580399",
+      "type": "message",
+      "subtype": null,
+      "user": "U049Z3PQ2KA",
+      "text": "원격 근무 시작합니다",
+      "thread_ts": "1776951062.580399",
+      "reply_count": 1,
+      "reply_users": [
+        "U049Z3PQ2KA"
+      ],
+      "latest_reply": "1776958797.853449",
+      "reactions": [],
+      "edited": null,
+      "files": [],
+      "thread_replies": [
+        {
+          "ts": "1776958797.853449",
+          "type": "message",
+          "subtype": null,
+          "user": "U049Z3PQ2KA",
+          "text": "~휴게합니다.~\n12:41 종료",
+          "thread_ts": "1776951062.580399",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": {
+            "user": "U049Z3PQ2KA",
+            "ts": "1776973944.000000"
+          },
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1776951282.337449",
+      "type": "message",
+      "subtype": null,
+      "user": "U0235585LTZ",
+      "text": "원격 근무 시작합니다",
+      "thread_ts": "1776951282.337449",
+      "reply_count": 1,
+      "reply_users": [
+        "U0235585LTZ"
+      ],
+      "latest_reply": "1776955238.645219",
+      "reactions": [],
+      "edited": null,
+      "files": [],
+      "thread_replies": [
+        {
+          "ts": "1776955238.645219",
+          "type": "message",
+          "subtype": null,
+          "user": "U0235585LTZ",
+          "text": "종료합니다",
+          "thread_ts": "1776951282.337449",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1776990681.308629",
+      "type": "message",
+      "subtype": null,
+      "user": "U049Z3PQ2KA",
+      "text": "오전 시차 사용합니다. 12시 30분 출근 예정입니다.",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1776991211.305459",
+      "type": "message",
+      "subtype": null,
+      "user": "U09CVJJHK7U",
+      "text": "외근 시작합니다",
+      "thread_ts": "1776991211.305459",
+      "reply_count": 1,
+      "reply_users": [
+        "U09CVJJHK7U"
+      ],
+      "latest_reply": "1777026711.114769",
+      "reactions": [
+        {
+          "name": "fire",
+          "users": [
+            "U04MGQUE6U8",
+            "U04FRP4PQF5"
+          ],
+          "count": 2
+        }
+      ],
+      "edited": null,
+      "files": [],
+      "thread_replies": [
+        {
+          "ts": "1777026711.114769",
+          "type": "message",
+          "subtype": null,
+          "user": "U09CVJJHK7U",
+          "text": "종료합니다",
+          "thread_ts": "1776991211.305459",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1776992054.917019",
+      "type": "message",
+      "subtype": null,
+      "user": "U0AFU3CAXM0",
+      "text": "외근 시작합니다",
+      "thread_ts": "1776992054.917019",
+      "reply_count": 1,
+      "reply_users": [
+        "U0AFU3CAXM0"
+      ],
+      "latest_reply": "1777023557.384569",
+      "reactions": [
+        {
+          "name": "fire",
+          "users": [
+            "U04MGQUE6U8",
+            "U04FRP4PQF5"
+          ],
+          "count": 2
+        }
+      ],
+      "edited": null,
+      "files": [],
+      "thread_replies": [
+        {
+          "ts": "1777023557.384569",
+          "type": "message",
+          "subtype": null,
+          "user": "U0AFU3CAXM0",
+          "text": "종료합니다",
+          "thread_ts": "1776992054.917019",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1776992688.193839",
+      "type": "message",
+      "subtype": null,
+      "user": "U0A4WTXD15L",
+      "text": "외근 시작합니다",
+      "thread_ts": "1776992688.193839",
+      "reply_count": 1,
+      "reply_users": [
+        "U0A4WTXD15L"
+      ],
+      "latest_reply": "1777035037.341539",
+      "reactions": [
+        {
+          "name": "fire",
+          "users": [
+            "U04FRP4PQF5",
+            "U04MGQUE6U8"
+          ],
+          "count": 2
+        }
+      ],
+      "edited": null,
+      "files": [],
+      "thread_replies": [
+        {
+          "ts": "1777035037.341539",
+          "type": "message",
+          "subtype": null,
+          "user": "U0A4WTXD15L",
+          "text": "종료합니다",
+          "thread_ts": "1776992688.193839",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1776993838.212919",
+      "type": "message",
+      "subtype": null,
+      "user": "U082RGK8J15",
+      "text": "오전기타 사용합니다 11:00 출근 예정입니다",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [
+        {
+          "name": "guitar",
+          "users": [
+            "U04FRP4PQF5",
+            "U04MGQUE6U8",
+            "U035802E4UA",
+            "U019E51R1DM",
+            "U049Z3PQ2KA",
+            "U04C3UYFY1F",
+            "U02MA1AEU8K"
+          ],
+          "count": 7
+        }
+      ],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1776993957.436299",
+      "type": "message",
+      "subtype": null,
+      "user": "U07DYT1V7UH",
+      "text": "외근 시작합니다",
+      "thread_ts": "1776993957.436299",
+      "reply_count": 1,
+      "reply_users": [
+        "U07DYT1V7UH"
+      ],
+      "latest_reply": "1777035683.912129",
+      "reactions": [],
+      "edited": null,
+      "files": [],
+      "thread_replies": [
+        {
+          "ts": "1777035683.912129",
+          "type": "message",
+          "subtype": null,
+          "user": "U07DYT1V7UH",
+          "text": "종료합니다",
+          "thread_ts": "1776993957.436299",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1777115974.801329",
+      "type": "message",
+      "subtype": null,
+      "user": "U035802E4UA",
+      "text": "원격 근무 시작합니다",
+      "thread_ts": "1777115974.801329",
+      "reply_count": 1,
+      "reply_users": [
+        "U035802E4UA"
+      ],
+      "latest_reply": "1777135393.911299",
+      "reactions": [
+        {
+          "name": "fire",
+          "users": [
+            "U057ES3QMS6",
+            "U02MA1AEU8K",
+            "U03NJDDPZPZ",
+            "U05AWGZ1TRD"
+          ],
+          "count": 4
+        }
+      ],
+      "edited": null,
+      "files": [],
+      "thread_replies": [
+        {
+          "ts": "1777135393.911299",
+          "type": "message",
+          "subtype": null,
+          "user": "U035802E4UA",
+          "text": "종료합니다",
+          "thread_ts": "1777115974.801329",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1777189740.426999",
+      "type": "message",
+      "subtype": null,
+      "user": "U035802E4UA",
+      "text": "원격 근무 시작합니다",
+      "thread_ts": "1777189740.426999",
+      "reply_count": 3,
+      "reply_users": [
+        "U035802E4UA"
+      ],
+      "latest_reply": "1777223138.940809",
+      "reactions": [
+        {
+          "name": "fire",
+          "users": [
+            "U082RGK8J15",
+            "U019E51R1DM"
+          ],
+          "count": 2
+        }
+      ],
+      "edited": null,
+      "files": [],
+      "thread_replies": [
+        {
+          "ts": "1777196921.295009",
+          "type": "message",
+          "subtype": null,
+          "user": "U035802E4UA",
+          "text": "휴게 시작합니다",
+          "thread_ts": "1777189740.426999",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1777200317.284289",
+          "type": "message",
+          "subtype": null,
+          "user": "U035802E4UA",
+          "text": "재개합니다",
+          "thread_ts": "1777189740.426999",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1777223138.940809",
+          "type": "message",
+          "subtype": null,
+          "user": "U035802E4UA",
+          "text": "종료합니다",
+          "thread_ts": "1777189740.426999",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1777242509.454769",
+      "type": "message",
+      "subtype": null,
+      "user": "U0328CH80JV",
+      "text": "시차사용후 오후출근합니다.",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1777249225.187929",
+      "type": "message",
+      "subtype": null,
+      "user": "U0AFU3CAXM0",
+      "text": "외근 시작합니다",
+      "thread_ts": "1777249225.187929",
+      "reply_count": 1,
+      "reply_users": [
+        "U0AFU3CAXM0"
+      ],
+      "latest_reply": "1777289852.373189",
+      "reactions": [],
+      "edited": null,
+      "files": [],
+      "thread_replies": [
+        {
+          "ts": "1777289852.373189",
+          "type": "message",
+          "subtype": null,
+          "user": "U0AFU3CAXM0",
+          "text": "종료합니다",
+          "thread_ts": "1777249225.187929",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1777249342.582139",
+      "type": "message",
+      "subtype": null,
+      "user": "U09CVJJHK7U",
+      "text": "외근 시작합니다",
+      "thread_ts": "1777249342.582139",
+      "reply_count": 1,
+      "reply_users": [
+        "U09CVJJHK7U"
+      ],
+      "latest_reply": "1777280076.772179",
+      "reactions": [],
+      "edited": null,
+      "files": [],
+      "thread_replies": [
+        {
+          "ts": "1777280076.772179",
+          "type": "message",
+          "subtype": null,
+          "user": "U09CVJJHK7U",
+          "text": "근무 종료합니다",
+          "thread_ts": "1777249342.582139",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1777249438.218269",
+      "type": "message",
+      "subtype": null,
+      "user": "U07RPDCF0DR",
+      "text": "오전 시차 사용합니다. 12시 30분 출근 예정입니다.",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1777249964.282789",
+      "type": "message",
+      "subtype": null,
+      "user": "U07DYT1V7UH",
+      "text": "외근 시작합니다",
+      "thread_ts": "1777249964.282789",
+      "reply_count": 1,
+      "reply_users": [
+        "U07DYT1V7UH"
+      ],
+      "latest_reply": "1777280977.002339",
+      "reactions": [],
+      "edited": null,
+      "files": [],
+      "thread_replies": [
+        {
+          "ts": "1777280977.002339",
+          "type": "message",
+          "subtype": null,
+          "user": "U07DYT1V7UH",
+          "text": "종료합니다",
+          "thread_ts": "1777249964.282789",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1777250072.328169",
+      "type": "message",
+      "subtype": null,
+      "user": "U0A4WTXD15L",
+      "text": "외근 시작합니다",
+      "thread_ts": "1777250072.328169",
+      "reply_count": 1,
+      "reply_users": [
+        "U0A4WTXD15L"
+      ],
+      "latest_reply": "1777280621.330839",
+      "reactions": [],
+      "edited": null,
+      "files": [],
+      "thread_replies": [
+        {
+          "ts": "1777280621.330839",
+          "type": "message",
+          "subtype": null,
+          "user": "U0A4WTXD15L",
+          "text": "종료합니다",
+          "thread_ts": "1777250072.328169",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1777251658.812409",
+      "type": "message",
+      "subtype": null,
+      "user": "U04FRP4PQF5",
+      "text": "12:30 출근 예정입니다",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1777272260.035909",
+      "type": "message",
+      "subtype": null,
+      "user": "U07RPDCF0DR",
+      "text": "잠시휴게합니다",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1777277329.079049",
+      "type": "message",
+      "subtype": null,
+      "user": "U04FRP4PQF5",
+      "text": "잠시 휴게합니다",
+      "thread_ts": "1777277329.079049",
+      "reply_count": 1,
+      "reply_users": [
+        "U04FRP4PQF5"
+      ],
+      "latest_reply": "1777278811.002219",
+      "reactions": [],
+      "edited": null,
+      "files": [],
+      "thread_replies": [
+        {
+          "ts": "1777278811.002219",
+          "type": "message",
+          "subtype": null,
+          "user": "U04FRP4PQF5",
+          "text": "복귀했습니다",
+          "thread_ts": "1777277329.079049",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1777281075.210139",
+      "type": "message",
+      "subtype": null,
+      "user": "U093SP8GFFU",
+      "text": "잠시 휴게합니다",
+      "thread_ts": "1777281075.210139",
+      "reply_count": 1,
+      "reply_users": [
+        "U093SP8GFFU"
+      ],
+      "latest_reply": "1777282910.665369",
+      "reactions": [],
+      "edited": null,
+      "files": [],
+      "thread_replies": [
+        {
+          "ts": "1777282910.665369",
+          "type": "message",
+          "subtype": null,
+          "user": "U093SP8GFFU",
+          "text": "복귀합니다",
+          "thread_ts": "1777281075.210139",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1777331088.610619",
+      "type": "message",
+      "subtype": null,
+      "user": "U090RJV3ALU",
+      "text": "외근 시작합니다",
+      "thread_ts": "1777331088.610619",
+      "reply_count": 1,
+      "reply_users": [
+        "U090RJV3ALU"
+      ],
+      "latest_reply": "1777362796.003359",
+      "reactions": [],
+      "edited": null,
+      "files": [],
+      "thread_replies": [
+        {
+          "ts": "1777362796.003359",
+          "type": "message",
+          "subtype": null,
+          "user": "U090RJV3ALU",
+          "text": "업무종료합니다",
+          "thread_ts": "1777331088.610619",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1777332143.537709",
+      "type": "message",
+      "subtype": null,
+      "user": "U07M5E33KDW",
+      "text": "외근 시작합니다",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1777336933.698689",
+      "type": "message",
+      "subtype": null,
+      "user": "U09CVJJHK7U",
+      "text": "외근 시작합니다",
+      "thread_ts": "1777336933.698689",
+      "reply_count": 1,
+      "reply_users": [
+        "U09CVJJHK7U"
+      ],
+      "latest_reply": "1777371076.249689",
+      "reactions": [],
+      "edited": null,
+      "files": [],
+      "thread_replies": [
+        {
+          "ts": "1777371076.249689",
+          "type": "message",
+          "subtype": null,
+          "user": "U09CVJJHK7U",
+          "text": "종료합니다",
+          "thread_ts": "1777336933.698689",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1777337281.044189",
+      "type": "message",
+      "subtype": null,
+      "user": "U0A4WTXD15L",
+      "text": "외근 시작합니다",
+      "thread_ts": "1777337281.044189",
+      "reply_count": 1,
+      "reply_users": [
+        "U0A4WTXD15L"
+      ],
+      "latest_reply": "1777364575.767649",
+      "reactions": [],
+      "edited": null,
+      "files": [],
+      "thread_replies": [
+        {
+          "ts": "1777364575.767649",
+          "type": "message",
+          "subtype": null,
+          "user": "U0A4WTXD15L",
+          "text": "종료합니다",
+          "thread_ts": "1777337281.044189",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1777337365.972249",
+      "type": "message",
+      "subtype": null,
+      "user": "U0AFU3CAXM0",
+      "text": "외근 시작합니다",
+      "thread_ts": "1777337365.972249",
+      "reply_count": 1,
+      "reply_users": [
+        "U0AFU3CAXM0"
+      ],
+      "latest_reply": "1777362622.790639",
+      "reactions": [],
+      "edited": null,
+      "files": [],
+      "thread_replies": [
+        {
+          "ts": "1777362622.790639",
+          "type": "message",
+          "subtype": null,
+          "user": "U0AFU3CAXM0",
+          "text": "종료합니다",
+          "thread_ts": "1777337365.972249",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1777339124.822099",
+      "type": "message",
+      "subtype": null,
+      "user": "U082RGK8J15",
+      "text": "오전시차 사용합니다 11:00 출근 예정입니다",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1777339573.770869",
+      "type": "message",
+      "subtype": null,
+      "user": "U07DYT1V7UH",
+      "text": "외근 시작합니다",
+      "thread_ts": "1777339573.770869",
+      "reply_count": 1,
+      "reply_users": [
+        "U07DYT1V7UH"
+      ],
+      "latest_reply": "1777362905.456319",
+      "reactions": [],
+      "edited": null,
+      "files": [],
+      "thread_replies": [
+        {
+          "ts": "1777362905.456319",
+          "type": "message",
+          "subtype": null,
+          "user": "U07DYT1V7UH",
+          "text": "종료합니다",
+          "thread_ts": "1777339573.770869",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1777339702.184619",
+      "type": "message",
+      "subtype": null,
+      "user": "U049Z3PQ2KA",
+      "text": "오전 시차 사용합니다. 12시 30분 출근 예정입니다.",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1777381215.607219",
+      "type": "message",
+      "subtype": null,
+      "user": "U0235585LTZ",
+      "text": "원격 근무 시작합니다",
+      "thread_ts": "1777381215.607219",
+      "reply_count": 1,
+      "reply_users": [
+        "U0235585LTZ"
+      ],
+      "latest_reply": "1777387015.389959",
+      "reactions": [],
+      "edited": null,
+      "files": [],
+      "thread_replies": [
+        {
+          "ts": "1777387015.389959",
+          "type": "message",
+          "subtype": null,
+          "user": "U0235585LTZ",
+          "text": "종료합니다",
+          "thread_ts": "1777381215.607219",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1777382133.668879",
+      "type": "message",
+      "subtype": null,
+      "user": "U03SF6T6RL0",
+      "text": "원격 근무 시작합니다",
+      "thread_ts": "1777382133.668879",
+      "reply_count": 1,
+      "reply_users": [
+        "U03SF6T6RL0"
+      ],
+      "latest_reply": "1777415489.498429",
+      "reactions": [],
+      "edited": null,
+      "files": [],
+      "thread_replies": [
+        {
+          "ts": "1777415489.498429",
+          "type": "message",
+          "subtype": null,
+          "user": "U03SF6T6RL0",
+          "text": "종료합니다",
+          "thread_ts": "1777382133.668879",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1777418284.952109",
+      "type": "message",
+      "subtype": null,
+      "user": "U093SP8GFFU",
+      "text": "외근 시작합니다",
+      "thread_ts": "1777418284.952109",
+      "reply_count": 1,
+      "reply_users": [
+        "U093SP8GFFU"
+      ],
+      "latest_reply": "1777445921.382429",
+      "reactions": [
+        {
+          "name": "fire",
+          "users": [
+            "U05AWGZ1TRD",
+            "U04FRP4PQF5"
+          ],
+          "count": 2
+        }
+      ],
+      "edited": null,
+      "files": [],
+      "thread_replies": [
+        {
+          "ts": "1777445921.382429",
+          "type": "message",
+          "subtype": null,
+          "user": "U093SP8GFFU",
+          "text": "근무 종료합니다",
+          "thread_ts": "1777418284.952109",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1777423219.171239",
+      "type": "message",
+      "subtype": null,
+      "user": "U035802E4UA",
+      "text": "오전 시차 사용합니다. 12시 30분 출근 예정입니다.",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1777423416.605499",
+      "type": "message",
+      "subtype": null,
+      "user": "U0A4WTXD15L",
+      "text": "외근 시작합니다",
+      "thread_ts": "1777423416.605499",
+      "reply_count": 1,
+      "reply_users": [
+        "U0A4WTXD15L"
+      ],
+      "latest_reply": "1777457912.665839",
+      "reactions": [
+        {
+          "name": "fire",
+          "users": [
+            "U05AWGZ1TRD",
+            "U04FRP4PQF5"
+          ],
+          "count": 2
+        }
+      ],
+      "edited": null,
+      "files": [],
+      "thread_replies": [
+        {
+          "ts": "1777457912.665839",
+          "type": "message",
+          "subtype": null,
+          "user": "U0A4WTXD15L",
+          "text": "종료합니다",
+          "thread_ts": "1777423416.605499",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1777424001.556369",
+      "type": "message",
+      "subtype": null,
+      "user": "U09CVJJHK7U",
+      "text": "외근 시작합니다",
+      "thread_ts": "1777424001.556369",
+      "reply_count": 1,
+      "reply_users": [
+        "U09CVJJHK7U"
+      ],
+      "latest_reply": "1777455253.318529",
+      "reactions": [
+        {
+          "name": "fire",
+          "users": [
+            "U05AWGZ1TRD",
+            "U04FRP4PQF5"
+          ],
+          "count": 2
+        }
+      ],
+      "edited": null,
+      "files": [],
+      "thread_replies": [
+        {
+          "ts": "1777455253.318529",
+          "type": "message",
+          "subtype": null,
+          "user": "U09CVJJHK7U",
+          "text": "종료합니다",
+          "thread_ts": "1777424001.556369",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1777424039.644449",
+      "type": "message",
+      "subtype": null,
+      "user": "U0AFU3CAXM0",
+      "text": "외근 시작합니다",
+      "thread_ts": "1777424039.644449",
+      "reply_count": 1,
+      "reply_users": [
+        "U0AFU3CAXM0"
+      ],
+      "latest_reply": "1777447719.727939",
+      "reactions": [
+        {
+          "name": "fire",
+          "users": [
+            "U05AWGZ1TRD",
+            "U04FRP4PQF5"
+          ],
+          "count": 2
+        }
+      ],
+      "edited": null,
+      "files": [],
+      "thread_replies": [
+        {
+          "ts": "1777447719.727939",
+          "type": "message",
+          "subtype": null,
+          "user": "U0AFU3CAXM0",
+          "text": "종료합니다",
+          "thread_ts": "1777424039.644449",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1777424742.248459",
+      "type": "message",
+      "subtype": null,
+      "user": "U049Z3PQ2KA",
+      "text": "~오전 시차 사용합니다. 12시 30분 출근 예정입니다.~\n연차로 전환합니다. 업무 연락 언제든지 편하게 주세요!",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": {
+        "user": "U049Z3PQ2KA",
+        "ts": "1777428225.000000"
+      },
+      "files": []
+    },
+    {
+      "ts": "1777425252.655379",
+      "type": "message",
+      "subtype": null,
+      "user": "U07DYT1V7UH",
+      "text": "외근 시작합니다",
+      "thread_ts": "1777425252.655379",
+      "reply_count": 1,
+      "reply_users": [
+        "U07DYT1V7UH"
+      ],
+      "latest_reply": "1777454164.110369",
+      "reactions": [
+        {
+          "name": "fire",
+          "users": [
+            "U05AWGZ1TRD",
+            "U04FRP4PQF5"
+          ],
+          "count": 2
+        }
+      ],
+      "edited": null,
+      "files": [],
+      "thread_replies": [
+        {
+          "ts": "1777454164.110369",
+          "type": "message",
+          "subtype": null,
+          "user": "U07DYT1V7UH",
+          "text": "종료합니다",
+          "thread_ts": "1777425252.655379",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1777445844.899229",
+      "type": "message",
+      "subtype": null,
+      "user": "U07RPDCF0DR",
+      "text": "잠시휴게합니다",
+      "thread_ts": "1777445844.899229",
+      "reply_count": 1,
+      "reply_users": [
+        "U07RPDCF0DR"
+      ],
+      "latest_reply": "1777449622.331999",
+      "reactions": [],
+      "edited": null,
+      "files": [],
+      "thread_replies": [
+        {
+          "ts": "1777449622.331999",
+          "type": "message",
+          "subtype": null,
+          "user": "U07RPDCF0DR",
+          "text": "종료합니다",
+          "thread_ts": "1777445844.899229",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": {
+            "user": "U07RPDCF0DR",
+            "ts": "1777449626.000000"
+          },
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1777453680.032009",
+      "type": "message",
+      "subtype": null,
+      "user": "U04MGQUE6U8",
+      "text": "잠시 자리비움 합니다",
+      "thread_ts": "1777453680.032009",
+      "reply_count": 1,
+      "reply_users": [
+        "U04MGQUE6U8"
+      ],
+      "latest_reply": "1777462613.882239",
+      "reactions": [],
+      "edited": null,
+      "files": [],
+      "thread_replies": [
+        {
+          "ts": "1777462613.882239",
+          "type": "message",
+          "subtype": null,
+          "user": "U04MGQUE6U8",
+          "text": "복귀했습니다",
+          "thread_ts": "1777453680.032009",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1777454800.047769",
+      "type": "message",
+      "subtype": null,
+      "user": "U04FRP4PQF5",
+      "text": "휴게시작",
+      "thread_ts": "1777454800.047769",
+      "reply_count": 1,
+      "reply_users": [
+        "U04FRP4PQF5"
+      ],
+      "latest_reply": "1777462102.984059",
+      "reactions": [],
+      "edited": null,
+      "files": [],
+      "thread_replies": [
+        {
+          "ts": "1777462102.984059",
+          "type": "message",
+          "subtype": null,
+          "user": "U04FRP4PQF5",
+          "text": "복귀",
+          "thread_ts": "1777454800.047769",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1777467562.755289",
+      "type": "message",
+      "subtype": null,
+      "user": "U03SF6T6RL0",
+      "text": "원격 근무 시작합니다.",
+      "thread_ts": "1777467562.755289",
+      "reply_count": 1,
+      "reply_users": [
+        "U03SF6T6RL0"
+      ],
+      "latest_reply": "1777492203.763479",
+      "reactions": [],
+      "edited": null,
+      "files": [],
+      "thread_replies": [
+        {
+          "ts": "1777492203.763479",
+          "type": "message",
+          "subtype": null,
+          "user": "U03SF6T6RL0",
+          "text": "종료합니다",
+          "thread_ts": "1777467562.755289",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1777505463.899349",
+      "type": "message",
+      "subtype": null,
+      "user": "U093SP8GFFU",
+      "text": "잠시 휴게합니다",
+      "thread_ts": "1777505463.899349",
+      "reply_count": 1,
+      "reply_users": [
+        "U093SP8GFFU"
+      ],
+      "latest_reply": "1777507260.481369",
+      "reactions": [],
+      "edited": null,
+      "files": [],
+      "thread_replies": [
+        {
+          "ts": "1777507260.481369",
+          "type": "message",
+          "subtype": null,
+          "user": "U093SP8GFFU",
+          "text": "복귀합니다",
+          "thread_ts": "1777505463.899349",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1777509730.524469",
+      "type": "message",
+      "subtype": null,
+      "user": "U049Z3PQ2KA",
+      "text": "오전 시차 사용합니다. 12시 30분 출근 예정입니다.",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1777510036.794929",
+      "type": "message",
+      "subtype": null,
+      "user": "U025MG70MNX",
+      "text": "오전 시차 사용합니다. 11:30 출근 예정입니다.",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1777510360.122589",
+      "type": "message",
+      "subtype": null,
+      "user": "U07DYT1V7UH",
+      "text": "외근 시작합니다",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1777510609.666159",
+      "type": "message",
+      "subtype": null,
+      "user": "U09CVJJHK7U",
+      "text": "외근 시작합니다",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1777510879.619299",
+      "type": "message",
+      "subtype": null,
+      "user": "U0A4WTXD15L",
+      "text": "외근 시작합니다",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1777511835.946849",
+      "type": "message",
+      "subtype": null,
+      "user": "U05AWGZ1TRD",
+      "text": "오전시차 사용합니다",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": {
+        "user": "U05AWGZ1TRD",
+        "ts": "1777513435.000000"
+      },
+      "files": []
+    }
+  ]
+}

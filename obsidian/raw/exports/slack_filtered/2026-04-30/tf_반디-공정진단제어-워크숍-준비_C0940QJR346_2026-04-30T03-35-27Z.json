@@ -1,0 +1,66 @@
+{
+  "type": "slack_channel_filtered_export",
+  "workspace": "RTM Slack",
+  "collected_at": "2026-04-30T03:35:27.248712+00:00",
+  "channel": {
+    "id": "C0940QJR346",
+    "name": "tf_반디-공정진단제어-워크숍-준비",
+    "type": "public_channel",
+    "is_archived": false,
+    "is_private": false,
+    "created": "2025-07-03T01:47:06+00:00",
+    "topic": "2025 반디 워크숍 발표자료 기획, 제작을 위한 tf",
+    "purpose": "[2025년 반도체·디스플레이 공정진단제어 기술연구회 워크숍] 발표 준비",
+    "member_count": 7,
+    "routing": {
+      "channel_bucket": "mixed",
+      "conversation_mode": "mixed_triage",
+      "rationale": "mixed_channel_prefix",
+      "wiki_workspace": "rtm",
+      "wiki_target_root": "obsidian/Wiki/Common/Slack_Project_Intake",
+      "wiki_target_kind": "common"
+    }
+  },
+  "routing": {
+    "channel_profile": {
+      "channel_bucket": "mixed",
+      "conversation_mode": "mixed_triage",
+      "rationale": "mixed_channel_prefix",
+      "wiki_workspace": "rtm",
+      "wiki_target_root": "obsidian/Wiki/Common/Slack_Project_Intake",
+      "wiki_target_kind": "common",
+      "project_wiki_target_root": "obsidian/Wiki/Common/Slack_Project_Intake",
+      "company_wiki_target_root": "obsidian/Wiki/Common/Slack_Company_News"
+    },
+    "primary_bucket": "mixed",
+    "bucket_counts": {
+      "project": 0,
+      "company_news": 0,
+      "casual": 1
+    },
+    "wiki_targets": []
+  },
+  "history_window": {
+    "oldest_ts": "1776656409.516742",
+    "limit_per_channel": 500,
+    "include_threads": true,
+    "include_files": true
+  },
+  "filter": {
+    "provider": "local_rule",
+    "summary": "GLM unavailable; local rule filter applied",
+    "kept_count": 0,
+    "excluded_count": 1
+  },
+  "messages": [],
+  "routed_messages": [],
+  "excluded_messages": [
+    {
+      "ts": "1777520410.118359",
+      "reason": "system_membership_event",
+      "bucket": "casual",
+      "text": "<@U0B15H1AQJV> has joined the channel",
+      "subtype": "channel_join"
+    }
+  ]
+}

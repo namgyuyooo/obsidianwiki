@@ -1,0 +1,203 @@
+{
+  "type": "slack_channel_export",
+  "workspace": "RTM Slack",
+  "collected_at": "2026-04-30T03:35:27.248712+00:00",
+  "channel": {
+    "id": "C03LCMK5DA8",
+    "name": "hubble-backend",
+    "type": "public_channel",
+    "is_archived": false,
+    "is_private": false,
+    "created": "2022-06-20T03:18:32+00:00",
+    "topic": "",
+    "purpose": "",
+    "member_count": 7,
+    "routing": {
+      "channel_bucket": "company_news",
+      "conversation_mode": "company_updates",
+      "rationale": "default_company_updates",
+      "wiki_workspace": "rtm",
+      "wiki_target_root": "obsidian/Wiki/Common/Slack_Company_News",
+      "wiki_target_kind": "common"
+    }
+  },
+  "routing": {
+    "channel_bucket": "company_news",
+    "conversation_mode": "company_updates",
+    "rationale": "default_company_updates",
+    "wiki_workspace": "rtm",
+    "wiki_target_root": "obsidian/Wiki/Common/Slack_Company_News",
+    "wiki_target_kind": "common",
+    "project_wiki_target_root": "obsidian/Wiki/Common/Slack_Project_Intake",
+    "company_wiki_target_root": "obsidian/Wiki/Common/Slack_Company_News"
+  },
+  "history_window": {
+    "oldest_ts": "1776656220.561009",
+    "limit_per_channel": 500,
+    "include_threads": true,
+    "include_files": true
+  },
+  "messages": [
+    {
+      "ts": "1776663059.687499",
+      "type": "message",
+      "subtype": null,
+      "user": "U02DK38UJ95",
+      "text": "",
+      "thread_ts": "1776663059.687499",
+      "reply_count": 1,
+      "reply_users": [
+        "U02DK38UJ95"
+      ],
+      "latest_reply": "1776663059.933919",
+      "reactions": [],
+      "edited": {
+        "user": "B02DZQCB92P",
+        "ts": "1776663060.000000"
+      },
+      "files": [],
+      "thread_replies": [
+        {
+          "ts": "1776663059.933919",
+          "type": "message",
+          "subtype": "thread_broadcast",
+          "user": "U02DK38UJ95",
+          "text": "",
+          "thread_ts": "1776663059.687499",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1776663059.933919",
+      "type": "message",
+      "subtype": "thread_broadcast",
+      "user": "U02DK38UJ95",
+      "text": "",
+      "thread_ts": "1776663059.687499",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1776663418.576979",
+      "type": "message",
+      "subtype": null,
+      "user": "U02DK38UJ95",
+      "text": "",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1776818739.456169",
+      "type": "message",
+      "subtype": null,
+      "user": "U02DK38UJ95",
+      "text": "",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1776936000.888809",
+      "type": "message",
+      "subtype": null,
+      "user": "U02DK38UJ95",
+      "text": "",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1777003983.843169",
+      "type": "message",
+      "subtype": null,
+      "user": "U02DK38UJ95",
+      "text": "",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1777005933.955519",
+      "type": "message",
+      "subtype": null,
+      "user": "U02DK38UJ95",
+      "text": "",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1777016973.476729",
+      "type": "message",
+      "subtype": null,
+      "user": "U02DK38UJ95",
+      "text": "",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1777448793.258489",
+      "type": "message",
+      "subtype": null,
+      "user": "U02DK38UJ95",
+      "text": "",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1777520221.174959",
+      "type": "message",
+      "subtype": "channel_join",
+      "user": "U0B15H1AQJV",
+      "text": "<@U0B15H1AQJV> has joined the channel",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    }
+  ]
+}

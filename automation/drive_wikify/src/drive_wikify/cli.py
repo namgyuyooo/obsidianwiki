@@ -121,8 +121,6 @@ def main() -> int:
     if args.command == "refresh-global":
         payload = refresh_global_artifacts(config)
         if args.json:
-            import json
-
             print(json.dumps(payload, ensure_ascii=False, indent=2))
         else:
             print("Global wiki artifacts refreshed.")
@@ -155,6 +153,7 @@ def main() -> int:
                 checkers=args.checkers if args.checkers is not None else config.rclone_checkers,
                 transfers=args.transfers if args.transfers is not None else config.rclone_transfers,
                 exclude_patterns=config.rclone_exclude_patterns,
+                allowed_file_types=config.allowed_file_types,
                 dry_run=args.dry_run,
             )
         except ValueError as exc:

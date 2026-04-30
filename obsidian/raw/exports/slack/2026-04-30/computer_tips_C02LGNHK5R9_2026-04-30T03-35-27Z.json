@@ -1,0 +1,150 @@
+{
+  "type": "slack_channel_export",
+  "workspace": "RTM Slack",
+  "collected_at": "2026-04-30T03:35:27.248712+00:00",
+  "channel": {
+    "id": "C02LGNHK5R9",
+    "name": "computer_tips",
+    "type": "public_channel",
+    "is_archived": false,
+    "is_private": false,
+    "created": "2021-11-08T06:50:15+00:00",
+    "topic": "",
+    "purpose": "코딩 팁, 컴퓨팅 팁, 노하우를 공유하는 채널입니다~",
+    "member_count": 21,
+    "routing": {
+      "channel_bucket": "company_news",
+      "conversation_mode": "company_updates",
+      "rationale": "default_company_updates",
+      "wiki_workspace": "rtm",
+      "wiki_target_root": "obsidian/Wiki/Common/Slack_Company_News",
+      "wiki_target_kind": "common"
+    }
+  },
+  "routing": {
+    "channel_bucket": "company_news",
+    "conversation_mode": "company_updates",
+    "rationale": "default_company_updates",
+    "wiki_workspace": "rtm",
+    "wiki_target_root": "obsidian/Wiki/Common/Slack_Company_News",
+    "wiki_target_kind": "common",
+    "project_wiki_target_root": "obsidian/Wiki/Common/Slack_Project_Intake",
+    "company_wiki_target_root": "obsidian/Wiki/Common/Slack_Company_News"
+  },
+  "history_window": {
+    "oldest_ts": "1776656210.861019",
+    "limit_per_channel": 500,
+    "include_threads": true,
+    "include_files": true
+  },
+  "messages": [
+    {
+      "ts": "1776838602.225679",
+      "type": "message",
+      "subtype": null,
+      "user": "U025MG70MNX",
+      "text": "해결방법 아시는분(구글드라이브 스트리밍 씀)",
+      "thread_ts": "1776838602.225679",
+      "reply_count": 4,
+      "reply_users": [
+        "U07RPDCF0DR",
+        "U025MG70MNX",
+        "U04FRP4PQF5"
+      ],
+      "latest_reply": "1776842378.563159",
+      "reactions": [
+        {
+          "name": "question",
+          "users": [
+            "U0354SL90UV"
+          ],
+          "count": 1
+        }
+      ],
+      "edited": null,
+      "files": [
+        {
+          "id": "F0AU139AWF9",
+          "name": "image.png",
+          "title": "image.png",
+          "mimetype": "image/png",
+          "filetype": "png",
+          "pretty_type": "PNG",
+          "size": 98802,
+          "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0AU139AWF9/image.png",
+          "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0AU139AWF9/image.png"
+        }
+      ],
+      "thread_replies": [
+        {
+          "ts": "1776838646.189279",
+          "type": "message",
+          "subtype": null,
+          "user": "U07RPDCF0DR",
+          "text": ":moneybag:",
+          "thread_ts": "1776838602.225679",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776838652.160619",
+          "type": "message",
+          "subtype": null,
+          "user": "U025MG70MNX",
+          "text": "저장용량 X\n램 가용량 X\n토큰 X\n\n일을 못해요 <@U0235585LTZ>",
+          "thread_ts": "1776838602.225679",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776840313.046079",
+          "type": "message",
+          "subtype": null,
+          "user": "U025MG70MNX",
+          "text": "OmniDiskSweeper",
+          "thread_ts": "1776838602.225679",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776842378.563159",
+          "type": "message",
+          "subtype": null,
+          "user": "U04FRP4PQF5",
+          "text": "저돈디",
+          "thread_ts": "1776838602.225679",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": [
+            {
+              "id": "F0AUVQLLRND",
+              "name": "image.png",
+              "title": "image.png",
+              "mimetype": "image/png",
+              "filetype": "png",
+              "pretty_type": "PNG",
+              "size": 249008,
+              "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0AUVQLLRND/image.png",
+              "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0AUVQLLRND/image.png"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

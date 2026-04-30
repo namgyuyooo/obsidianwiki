@@ -1,0 +1,754 @@
+{
+  "type": "slack_channel_filtered_export",
+  "workspace": "RTM Slack",
+  "collected_at": "2026-04-30T03:35:27.248712+00:00",
+  "channel": {
+    "id": "C01U3ANN3DH",
+    "name": "hubble-pjt-seoulsemicon",
+    "type": "public_channel",
+    "is_archived": false,
+    "is_private": false,
+    "created": "2021-04-13T01:20:24+00:00",
+    "topic": "",
+    "purpose": "서울반도체",
+    "member_count": 19,
+    "routing": {
+      "channel_bucket": "project",
+      "conversation_mode": "project_updates",
+      "rationale": "project_channel_prefix",
+      "wiki_workspace": "rtm",
+      "wiki_target_root": "obsidian/Wiki/Common/Slack_Project_Intake",
+      "wiki_target_kind": "common"
+    }
+  },
+  "routing": {
+    "channel_profile": {
+      "channel_bucket": "project",
+      "conversation_mode": "project_updates",
+      "rationale": "project_channel_prefix",
+      "wiki_workspace": "rtm",
+      "wiki_target_root": "obsidian/Wiki/Common/Slack_Project_Intake",
+      "wiki_target_kind": "common",
+      "project_wiki_target_root": "obsidian/Wiki/Common/Slack_Project_Intake",
+      "company_wiki_target_root": "obsidian/Wiki/Common/Slack_Company_News"
+    },
+    "primary_bucket": "project",
+    "bucket_counts": {
+      "project": 5,
+      "company_news": 0,
+      "casual": 1
+    },
+    "wiki_targets": [
+      {
+        "path": "obsidian/Wiki/Common/Slack_Project_Intake",
+        "count": 5
+      }
+    ]
+  },
+  "history_window": {
+    "oldest_ts": "1776656228.926146",
+    "limit_per_channel": 500,
+    "include_threads": true,
+    "include_files": true
+  },
+  "filter": {
+    "provider": "local_rule",
+    "summary": "GLM unavailable; local rule filter applied",
+    "kept_count": 5,
+    "excluded_count": 1
+  },
+  "messages": [
+    {
+      "ts": "1776828214.327249",
+      "type": "message",
+      "subtype": null,
+      "user": "U090RJV3ALU",
+      "text": "<@U0328CH80JV> 내일 배포 있나요?\n제가 내일 이사때문에 연차를 내서 확인차 여쭤봅니다",
+      "thread_ts": "1776828214.327249",
+      "reply_count": 4,
+      "reply_users": [
+        "U02MA1AEU8K",
+        "U0328CH80JV",
+        "U090RJV3ALU"
+      ],
+      "latest_reply": "1776829588.968269",
+      "reactions": [],
+      "edited": null,
+      "files": [],
+      "thread_replies": [
+        {
+          "ts": "1776828417.708689",
+          "type": "message",
+          "subtype": null,
+          "user": "U02MA1AEU8K",
+          "text": "<@U0328CH80JV> 어제 요청한 오버킬 데이터 아직 안와서 저도 추가 학습은 진행하지 않은 상태입니다\n(유형 추가 실험과는 별개)",
+          "thread_ts": "1776828214.327249",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776829505.984949",
+          "type": "message",
+          "subtype": null,
+          "user": "U0328CH80JV",
+          "text": "혹시라도 배포 필요하면 금요일에 하지요. 금요일도 혹시 연차신가요?",
+          "thread_ts": "1776828214.327249",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [
+            {
+              "name": "man-gesturing-ok",
+              "users": [
+                "U090RJV3ALU"
+              ],
+              "count": 1
+            }
+          ],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776829539.420829",
+          "type": "message",
+          "subtype": null,
+          "user": "U090RJV3ALU",
+          "text": "금요일 출근합니다!",
+          "thread_ts": "1776828214.327249",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776829588.968269",
+          "type": "message",
+          "subtype": null,
+          "user": "U0328CH80JV",
+          "text": "내일 편하게 연차 쓰세요. 추가 학습건은 데이터가 와야 진행될꺼라..",
+          "thread_ts": "1776828214.327249",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [
+            {
+              "name": "woman-bowing",
+              "users": [
+                "U090RJV3ALU"
+              ],
+              "count": 1
+            }
+          ],
+          "edited": null,
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1777004097.219079",
+      "type": "message",
+      "subtype": null,
+      "user": "U02MA1AEU8K",
+      "text": "이번에 서울반도체 불량 유형 추가되면서, 추론 코드 쪽도 변경 필요할 것 같은데,\n<https://github.com/teamRTM/SS_Xray_Module> 이 레포 사용 중이신거 맞나요?\n이 레포에 수정 후 메인브랜치 최신화 해두면 되는 구조 맞을까요? <@U090RJV3ALU>",
+      "thread_ts": "1777004097.219079",
+      "reply_count": 21,
+      "reply_users": [
+        "U090RJV3ALU",
+        "U02MA1AEU8K",
+        "U0328CH80JV"
+      ],
+      "latest_reply": "1777255755.270419",
+      "reactions": [],
+      "edited": null,
+      "files": [],
+      "thread_replies": [
+        {
+          "ts": "1777004500.140109",
+          "type": "message",
+          "subtype": null,
+          "user": "U090RJV3ALU",
+          "text": "하 여기 건드리면 좀 복잡한데 우선 fix/submodule 브랜치를 베이스로 작업해주세요",
+          "thread_ts": "1777004097.219079",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1777004554.953909",
+          "type": "message",
+          "subtype": null,
+          "user": "U02MA1AEU8K",
+          "text": "네 알겠습니다",
+          "thread_ts": "1777004097.219079",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1777004615.707729",
+          "type": "message",
+          "subtype": null,
+          "user": "U090RJV3ALU",
+          "text": "fix/update_torch\n• 신규 PC에 배포나간 것은 이거 기반으로 도커 이미지 생성\nfeature/df_index\n• 이전 PC에 배포 나간 것은 이거 기반으로 도커 이미지 생성\n---\n이렇게 인수인계 받아서 관리가 어렵길래\nfix/submodule 에 두 브랜치의 내용을 합쳤는데 검증을 못해서 dev 브랜치로 머지를 못했습니다  ㅋㅋㅋ",
+          "thread_ts": "1777004097.219079",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [
+            {
+              "name": "우씽",
+              "users": [
+                "U02MA1AEU8K"
+              ],
+              "count": 1
+            }
+          ],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1777004648.293739",
+          "type": "message",
+          "subtype": null,
+          "user": "U02MA1AEU8K",
+          "text": "네 그러면 일단 그 브랜치 기반으로 수정하겠습니다",
+          "thread_ts": "1777004097.219079",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [
+            {
+              "name": "woman-bowing",
+              "users": [
+                "U090RJV3ALU"
+              ],
+              "count": 1
+            }
+          ],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1777252428.444919",
+          "type": "message",
+          "subtype": null,
+          "user": "U02MA1AEU8K",
+          "text": "예전에 신규 유형 추가건으로 개발팀과 논의했을 때,\n\n신규 클래스 번호를 그대로 전달하면(기존엔 0/1/2 만 전달. 추가되면 0/1/2/3/4 전달),\n솔루션 로직 쪽에서 추가된 3/4번 유형(노리플로우/틀어짐)에 대해서 1번 유형(Bad)로 사용자에게 보이도록 하겠다고 했던 것으로 알고있습니다. (사용자에게는 여전히 Good/Bad/Empty만 구분되어 보이지지만, 내부에서는 추가된 유형까지 구분. 혹시 결정 사항이 이와 다르다면 말씀주세요. <@U0328CH80JV>)\n\n현재 제가 AI 모듈 로직 수정해서 0-4번 클래스 번호로 확장하여 전달해도 괜찮은 상황인가요? <@U090RJV3ALU>",
+          "thread_ts": "1777004097.219079",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [
+            {
+              "name": "eyes",
+              "users": [
+                "U090RJV3ALU"
+              ],
+              "count": 1
+            }
+          ],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1777253291.471589",
+          "type": "message",
+          "subtype": null,
+          "user": "U090RJV3ALU",
+          "text": "코드 수정이 필요하긴 합니다! 간단한거라 나중에 작업 완료되시면 이어서 하겠습니다",
+          "thread_ts": "1777004097.219079",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1777253546.299579",
+          "type": "message",
+          "subtype": null,
+          "user": "U02MA1AEU8K",
+          "text": "그러면, 다음과 같은 내용이 수정될 예정입니다.\n\nSS_Xray_Module 에서,\n• `model.RESNET` 함수에서 기존 모델은 호환되지 않고, 신규 모델만 호환\n• `inference.inference` 함수가 아래와 같이 변함\n    ◦ `(n, 4)` 형태의 `ndarray`에서 `(n, 6)` 형태의 `ndarray` 로 수정\n    ◦ `n` 은 배치의 개수\n    ◦ 기존 4는 다음과 같은 형태 `[클래스 번호(0-2), 확률, 확률, 확률]`\n    ◦ 변경될 6은 다음과 같은 형태 `[클래스 번호(0-4), 확률, 확률, 확률, 확률, 확률]`\n제가 알기로는 저 두 함수만 모듈에서 쓰는 것으로 알고 있는데, 혹시 다른 함수도 사용 중이시면 말씀주세요",
+          "thread_ts": "1777004097.219079",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1777254311.815909",
+          "type": "message",
+          "subtype": null,
+          "user": "U090RJV3ALU",
+          "text": "넵!\n\n사용하는 함수 확인해보니 main.py 두개 쓰고 있네요\n(말씀하신 두 함수가 main.py 의 핵심 로직들)",
+          "thread_ts": "1777004097.219079",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1777254317.368329",
+          "type": "message",
+          "subtype": null,
+          "user": "U090RJV3ALU",
+          "text": "이거 언제 나가는거에요?",
+          "thread_ts": "1777004097.219079",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1777254332.002609",
+          "type": "message",
+          "subtype": null,
+          "user": "U02MA1AEU8K",
+          "text": "내일 가능한가요?",
+          "thread_ts": "1777004097.219079",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1777254342.188409",
+          "type": "message",
+          "subtype": null,
+          "user": "U090RJV3ALU",
+          "text": "헉 내일은 저 대덕 외근이라",
+          "thread_ts": "1777004097.219079",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1777254348.659829",
+          "type": "message",
+          "subtype": null,
+          "user": "U090RJV3ALU",
+          "text": "목욜,,,?",
+          "thread_ts": "1777004097.219079",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1777254380.896059",
+          "type": "message",
+          "subtype": null,
+          "user": "U02MA1AEU8K",
+          "text": "<@U0328CH80JV>\n현지님께서 내일 외근 이신데, 일정 조정 가능할까요?",
+          "thread_ts": "1777004097.219079",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1777254406.902589",
+          "type": "message",
+          "subtype": null,
+          "user": "U0328CH80JV",
+          "text": "하루이틀이야 문제없습니다.",
+          "thread_ts": "1777004097.219079",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1777254446.034099",
+          "type": "message",
+          "subtype": null,
+          "user": "U02MA1AEU8K",
+          "text": "넵 그러면 목욜 배포 부탁드립니다. <@U090RJV3ALU>\n\n위에 말씀드린 내용 수정은 오늘 13시 이전에는 완료될 예정입니다.",
+          "thread_ts": "1777004097.219079",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [
+            {
+              "name": "man-gesturing-ok",
+              "users": [
+                "U090RJV3ALU"
+              ],
+              "count": 1
+            }
+          ],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1777255133.140599",
+          "type": "message",
+          "subtype": null,
+          "user": "U02MA1AEU8K",
+          "text": "<@U090RJV3ALU>\n\n• `SS_Xray_Module`의 `fix/submodule` 브랜치에 수정 사항 푸시해두었습니다.\n• 업데이트된 코드와 호환되는 모델은 15번 나스의 `/volume1/VISION_NAS/00_프로젝트/2025_서울반도체_VINA/05. Results/sse-xray-v2.7.0.pth` 에 업로드 해두었습니다.",
+          "thread_ts": "1777004097.219079",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1777255327.229629",
+          "type": "message",
+          "subtype": null,
+          "user": "U090RJV3ALU",
+          "text": "main.py/do_inference() 에서 inference.inference 결과를 legacy_prediction_data_frame에 덮어쓸 때 컬럼 명도 추가해야 합니다.\n```infer_results = inference.inference(\n    _get_model(), pytorch_data_loader, temperature, softmax_threshold\n)\n\nlegacy_prediction_data_frame.loc[\n    :, [\"labelUser\", \"normalProb\", \"faultProb\", \"ncProb\"] # 여기에 컬럼 추가 필요!!!\n] = infer_results```\n",
+          "thread_ts": "1777004097.219079",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [
+            {
+              "name": "white_check_mark",
+              "users": [
+                "U02MA1AEU8K"
+              ],
+              "count": 1
+            }
+          ],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1777255546.297129",
+          "type": "message",
+          "subtype": null,
+          "user": "U02MA1AEU8K",
+          "text": "위 내용까지 수정해서 다시 푸시하겠습니다. 감사합니다",
+          "thread_ts": "1777004097.219079",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [
+            {
+              "name": "woman-gesturing-ok",
+              "users": [
+                "U090RJV3ALU"
+              ],
+              "count": 1
+            }
+          ],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1777255668.800969",
+          "type": "message",
+          "subtype": null,
+          "user": "U02MA1AEU8K",
+          "text": "저 컬럼명은 딱히 규칙이나 제약은 없는거죠?\n대략적으로 `&lt;불량명&gt;Prob` 같은 형태니, `rflProb`, `misalignProb` 로 해서 아래와 같이 하려고합니다.\n\n```legacy_prediction_data_frame.loc[\n    :, [\"labelUser\", \"normalProb\", \"faultProb\", \"ncProb\", \"rflProb\", \"misalignProb\"]\n] = infer_results```\n혹시 문제가 있다면 말씀주세요.",
+          "thread_ts": "1777004097.219079",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1777255731.620369",
+          "type": "message",
+          "subtype": null,
+          "user": "U090RJV3ALU",
+          "text": "네 규칙이나 제약 없고 인환님이 정하신거에 저도 맞추려구요!",
+          "thread_ts": "1777004097.219079",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1777255755.270419",
+          "type": "message",
+          "subtype": null,
+          "user": "U02MA1AEU8K",
+          "text": "넵 반영해서 푸시했습니다. 위에 언급한 저 내용입니다.",
+          "thread_ts": "1777004097.219079",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [
+            {
+              "name": "white_check_mark",
+              "users": [
+                "U090RJV3ALU"
+              ],
+              "count": 1
+            },
+            {
+              "name": "woman-bowing",
+              "users": [
+                "U090RJV3ALU"
+              ],
+              "count": 1
+            }
+          ],
+          "edited": null,
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1777442917.910829",
+      "type": "message",
+      "subtype": null,
+      "user": "U090RJV3ALU",
+      "text": "<@U0328CH80JV> 내일 서울반도체 배포 해야하는데 용량이 큰 파일은 그냥 쪼개서 울트라뷰어로 옮기면 되나요? 아니면 미리 전달해야하나요?",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1777443082.317809",
+      "type": "message",
+      "subtype": null,
+      "user": "U0328CH80JV",
+      "text": "현지님 편한 방식으로 하세요. 전송 속도가 답답한 수준이면 메일로 보내서 다운받아달라고 요청하는게 가장 효율적일겁니다.",
+      "thread_ts": "1777443082.317809",
+      "reply_count": 7,
+      "reply_users": [
+        "U090RJV3ALU",
+        "U0328CH80JV"
+      ],
+      "latest_reply": "1777520161.260249",
+      "reactions": [],
+      "edited": null,
+      "files": [],
+      "thread_replies": [
+        {
+          "ts": "1777443195.639929",
+          "type": "message",
+          "subtype": null,
+          "user": "U090RJV3ALU",
+          "text": "기가 단위라서 메일 요청 드려야겠어요\n메일은 제가 보내면 되나요? 아니면 파일 준비해서 명식님께 말씀드리면 되나요?",
+          "thread_ts": "1777443082.317809",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1777443393.780919",
+          "type": "message",
+          "subtype": null,
+          "user": "U0328CH80JV",
+          "text": "직접 보내주세요. 저 참조 넣어주시고",
+          "thread_ts": "1777443082.317809",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [
+            {
+              "name": "white_check_mark",
+              "users": [
+                "U090RJV3ALU"
+              ],
+              "count": 1
+            }
+          ],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1777448221.350099",
+          "type": "message",
+          "subtype": null,
+          "user": "U090RJV3ALU",
+          "text": "이거 근데 누구한테 보내면 되는건가요?",
+          "thread_ts": "1777443082.317809",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1777448590.586689",
+          "type": "message",
+          "subtype": null,
+          "user": "U0328CH80JV",
+          "text": "duc, 김윤규 선임",
+          "thread_ts": "1777443082.317809",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [
+            {
+              "name": "woman-bowing",
+              "users": [
+                "U090RJV3ALU"
+              ],
+              "count": 1
+            }
+          ],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1777448610.366289",
+          "type": "message",
+          "subtype": null,
+          "user": "U0328CH80JV",
+          "text": "*NGUYEN MINH DUC(NGUYEN, MINHDUC/ASSOCIATE)* &lt;<mailto:709309@seoulsemicon.com|709309@seoulsemicon.com>&gt;",
+          "thread_ts": "1777443082.317809",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1777520135.033169",
+          "type": "message",
+          "subtype": null,
+          "user": "U090RJV3ALU",
+          "text": "설반에서 대응을 안해주는데,, 우선 놔둘까요,,,?\n오후에 대덕 배포 대응해야하긴 하는데",
+          "thread_ts": "1777443082.317809",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1777520161.260249",
+          "type": "message",
+          "subtype": null,
+          "user": "U0328CH80JV",
+          "text": "그러게. 제가 통화한번 해볼게요.",
+          "thread_ts": "1777443082.317809",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [
+            {
+              "name": "woman-bowing",
+              "users": [
+                "U090RJV3ALU"
+              ],
+              "count": 1
+            }
+          ],
+          "edited": null,
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1777510279.762099",
+      "type": "message",
+      "subtype": null,
+      "user": "U02MA1AEU8K",
+      "text": "모델 업데이트 진행했습니다.\n\nㅁ 업데이트 내역\n• misalign 과검 조절\n이번 유형 추가 관련 배포 시, 모델은 15번 나스의 `/volume1/VISION_NAS/00_프로젝트/2025_서울반도체_VINA/05. Results/sse-xray-v2.8.0.pth` 경로에 있는 v2.8.0 버전으로 부탁드립니다. <@U090RJV3ALU>",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [
+        {
+          "name": "white_check_mark",
+          "users": [
+            "U090RJV3ALU"
+          ],
+          "count": 1
+        }
+      ],
+      "edited": null,
+      "files": []
+    }
+  ],
+  "routed_messages": [
+    {
+      "ts": "1776828214.327249",
+      "bucket": "project",
+      "reason": "project_keywords",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Project_Intake",
+      "text": "<@U0328CH80JV> 내일 배포 있나요?\n제가 내일 이사때문에 연차를 내서 확인차 여쭤봅니다"
+    },
+    {
+      "ts": "1777004097.219079",
+      "bucket": "project",
+      "reason": "channel_project_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Project_Intake",
+      "text": "이번에 서울반도체 불량 유형 추가되면서, 추론 코드 쪽도 변경 필요할 것 같은데,\n<https://github.com/teamRTM/SS_Xray_Module> 이 레포 사용 중이신거 맞나요?\n이 레포에 수정 후 메인브랜치 최신화 해두면 되는 구조 맞을까요? <@U090RJV3ALU>"
+    },
+    {
+      "ts": "1777442917.910829",
+      "bucket": "project",
+      "reason": "project_keywords",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Project_Intake",
+      "text": "<@U0328CH80JV> 내일 서울반도체 배포 해야하는데 용량이 큰 파일은 그냥 쪼개서 울트라뷰어로 옮기면 되나요? 아니면 미리 전달해야하나요?"
+    },
+    {
+      "ts": "1777443082.317809",
+      "bucket": "project",
+      "reason": "channel_project_default",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Project_Intake",
+      "text": "현지님 편한 방식으로 하세요. 전송 속도가 답답한 수준이면 메일로 보내서 다운받아달라고 요청하는게 가장 효율적일겁니다."
+    },
+    {
+      "ts": "1777510279.762099",
+      "bucket": "project",
+      "reason": "project_keywords",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Project_Intake",
+      "text": "모델 업데이트 진행했습니다.\n\nㅁ 업데이트 내역\n• misalign 과검 조절\n이번 유형 추가 관련 배포 시, 모델은 15번 나스의 `/volume1/VISION_NAS/00_프로젝트/2025_서울반도체_VINA/05. Results/sse-xray-v2.8.0.pth` 경로에 있는 v2.8.0 버전으로 부탁드립니다. <@U090RJV3ALU>"
+    }
+  ],
+  "excluded_messages": [
+    {
+      "ts": "1777520229.658079",
+      "reason": "system_membership_event",
+      "bucket": "casual",
+      "text": "<@U0B15H1AQJV> has joined the channel",
+      "subtype": "channel_join"
+    }
+  ]
+}

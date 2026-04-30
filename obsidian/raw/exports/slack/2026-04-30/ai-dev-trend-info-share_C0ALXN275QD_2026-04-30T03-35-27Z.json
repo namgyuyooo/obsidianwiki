@@ -1,0 +1,751 @@
+{
+  "type": "slack_channel_export",
+  "workspace": "RTM Slack",
+  "collected_at": "2026-04-30T03:35:27.248712+00:00",
+  "channel": {
+    "id": "C0ALXN275QD",
+    "name": "ai-dev-trend-info-share",
+    "type": "public_channel",
+    "is_archived": false,
+    "is_private": false,
+    "created": "2026-03-17T06:08:04+00:00",
+    "topic": "",
+    "purpose": "",
+    "member_count": 28,
+    "routing": {
+      "channel_bucket": "company_news",
+      "conversation_mode": "company_updates",
+      "rationale": "company_channel_prefix",
+      "wiki_workspace": "rtm",
+      "wiki_target_root": "obsidian/Wiki/Common/Slack_Company_News",
+      "wiki_target_kind": "common"
+    }
+  },
+  "routing": {
+    "channel_bucket": "company_news",
+    "conversation_mode": "company_updates",
+    "rationale": "company_channel_prefix",
+    "wiki_workspace": "rtm",
+    "wiki_target_root": "obsidian/Wiki/Common/Slack_Company_News",
+    "wiki_target_kind": "common",
+    "project_wiki_target_root": "obsidian/Wiki/Common/Slack_Project_Intake",
+    "company_wiki_target_root": "obsidian/Wiki/Common/Slack_Company_News"
+  },
+  "history_window": {
+    "oldest_ts": "1776656179.554713",
+    "limit_per_channel": 500,
+    "include_threads": true,
+    "include_files": true
+  },
+  "messages": [
+    {
+      "ts": "1776819642.316369",
+      "type": "message",
+      "subtype": null,
+      "user": "U019E51R1DM",
+      "text": "이제 프로 요금제는 클로코드를 사용하지 못 하네요...?\n\n<https://claude.com/pricing>",
+      "thread_ts": "1776819642.316369",
+      "reply_count": 4,
+      "reply_users": [
+        "U02MA1AEU8K",
+        "U019E51R1DM",
+        "U05TZEH8FS9"
+      ],
+      "latest_reply": "1776821329.218049",
+      "reactions": [
+        {
+          "name": "question",
+          "users": [
+            "U041D9G5FLH",
+            "U04MGQUE6U8",
+            "U048M5F5MUY"
+          ],
+          "count": 3
+        },
+        {
+          "name": "우씽",
+          "users": [
+            "U02MA1AEU8K",
+            "U04MGQUE6U8",
+            "U048M5F5MUY",
+            "U05AWGZ1TRD"
+          ],
+          "count": 4
+        }
+      ],
+      "edited": null,
+      "files": [
+        {
+          "id": "F0AV9D79E1W",
+          "name": "image.png",
+          "title": "image.png",
+          "mimetype": "image/png",
+          "filetype": "png",
+          "pretty_type": "PNG",
+          "size": 135432,
+          "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0AV9D79E1W/image.png",
+          "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0AV9D79E1W/image.png"
+        }
+      ],
+      "thread_replies": [
+        {
+          "ts": "1776819670.709519",
+          "type": "message",
+          "subtype": null,
+          "user": "U02MA1AEU8K",
+          "text": "앤트로픽이 서버 감당이 안되나 보네요 ㄷㄷ",
+          "thread_ts": "1776819642.316369",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776820164.705629",
+          "type": "message",
+          "subtype": null,
+          "user": "U019E51R1DM",
+          "text": "팀계정으로 인당 20 달러 짜리는 claude code 는 사용가능하네요",
+          "thread_ts": "1776819642.316369",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1776821318.998689",
+          "type": "message",
+          "subtype": null,
+          "user": "U05TZEH8FS9",
+          "text": "",
+          "thread_ts": "1776819642.316369",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": [
+            {
+              "id": "F0AU8T7QNAF",
+              "name": "스크린샷 2026-04-22 오전 10.28.07.png",
+              "title": "스크린샷 2026-04-22 오전 10.28.07.png",
+              "mimetype": "image/png",
+              "filetype": "png",
+              "pretty_type": "PNG",
+              "size": 44181,
+              "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0AU8T7QNAF/_______________________________2026-04-22_________________10.28.07.png",
+              "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0AU8T7QNAF/_______________________________2026-04-22_________________10.28.07.png"
+            }
+          ]
+        },
+        {
+          "ts": "1776821329.218049",
+          "type": "message",
+          "subtype": null,
+          "user": "U05TZEH8FS9",
+          "text": "가능으로 바뀐듯합니다.",
+          "thread_ts": "1776819642.316369",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1776823268.933549",
+      "type": "message",
+      "subtype": null,
+      "user": "U02MA1AEU8K",
+      "text": "kimi 2.6 출시 <https://news.hada.io/topic?id=28736>\n\n아래 html (또는 pdf)는 클로드에게 보고서 작성 시킨 내용입니다.\n\n저 가격으로 gpt 5.4 만큼의 성능을 낸다고 하는데 (코딩에서),\n\nopus 오케스트레이션 + 하위작업 kimi로 어느정도까지 가능할지 보긴해야겠네요...",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [
+        {
+          "name": "eyes",
+          "users": [
+            "U019E51R1DM",
+            "U0354SL90UV",
+            "U05AWGZ1TRD"
+          ],
+          "count": 3
+        }
+      ],
+      "edited": null,
+      "files": [
+        {
+          "id": "F0AUFCZ2WP4",
+          "name": "Kimi K2.6 분석 보고서 v2.pdf",
+          "title": "Kimi K2.6 분석 보고서 v2.pdf",
+          "mimetype": "application/pdf",
+          "filetype": "pdf",
+          "pretty_type": "PDF",
+          "size": 639065,
+          "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0AUFCZ2WP4/kimi_k2.6_______________________________________v2.pdf",
+          "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0AUFCZ2WP4/kimi_k2.6_______________________________________v2.pdf"
+        },
+        {
+          "id": "F0AUC0V7KEH",
+          "name": "kimi-k2-6-report-v2.html",
+          "title": "kimi-k2-6-report-v2.html",
+          "mimetype": "text/plain",
+          "filetype": "html",
+          "pretty_type": "HTML",
+          "size": 14311,
+          "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0AUC0V7KEH/kimi-k2-6-report-v2.html",
+          "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0AUC0V7KEH/kimi-k2-6-report-v2.html"
+        },
+        {
+          "id": "F0ATZV5AD8X",
+          "name": "스크린샷 2026-04-22 11.00.07.png",
+          "title": "스크린샷 2026-04-22 11.00.07.png",
+          "mimetype": "image/png",
+          "filetype": "png",
+          "pretty_type": "PNG",
+          "size": 61539,
+          "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0ATZV5AD8X/_______________________________2026-04-22_11.00.07.png",
+          "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0ATZV5AD8X/_______________________________2026-04-22_11.00.07.png"
+        }
+      ]
+    },
+    {
+      "ts": "1776900011.573339",
+      "type": "message",
+      "subtype": null,
+      "user": "U07M5E33KDW",
+      "text": "ML intern agent가 있네요\n\n<https://github.com/huggingface/ml-intern>\n\n<https://huggingface.co/spaces/smolagents/ml-intern>",
+      "thread_ts": "1776900011.573339",
+      "reply_count": 1,
+      "reply_users": [
+        "U019E51R1DM"
+      ],
+      "latest_reply": "1776906279.507339",
+      "reactions": [
+        {
+          "name": "eyes",
+          "users": [
+            "U033Z97MZ3N",
+            "U048M5F5MUY",
+            "U04FRP4PQF5"
+          ],
+          "count": 3
+        }
+      ],
+      "edited": null,
+      "files": [],
+      "thread_replies": [
+        {
+          "ts": "1776906279.507339",
+          "type": "message",
+          "subtype": null,
+          "user": "U019E51R1DM",
+          "text": "이런게 정말 많이 나오는데 실제로 이걸 사용해서 효과를 보는 곳이 있을까라는 궁금증과 내가 활용을 못 하고 있는건가라는 생각이 동시에 들어요",
+          "thread_ts": "1776900011.573339",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1776918204.338589",
+      "type": "message",
+      "subtype": null,
+      "user": "U019E51R1DM",
+      "text": "올 여름 하나씩 장만하시죠\n\n<https://youtu.be/wGrayIFVInc?si=2XjJirHHFnZ0NnYE|https://youtu.be/wGrayIFVInc?si=2XjJirHHFnZ0NnYE> ",
+      "thread_ts": "1776918204.338589",
+      "reply_count": 1,
+      "reply_users": [
+        "U049Z3PQ2KA"
+      ],
+      "latest_reply": "1776918276.498719",
+      "reactions": [
+        {
+          "name": "mosquito",
+          "users": [
+            "U04FRP4PQF5"
+          ],
+          "count": 1
+        }
+      ],
+      "edited": null,
+      "files": [],
+      "thread_replies": [
+        {
+          "ts": "1776918276.498719",
+          "type": "message",
+          "subtype": null,
+          "user": "U049Z3PQ2KA",
+          "text": "30년 후\n순식간에 30명 '치직'\nAI 레이저 인간 사냥꾼 등장...",
+          "thread_ts": "1776918204.338589",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [
+            {
+              "name": "scream",
+              "users": [
+                "U04FRP4PQF5",
+                "U07RPDCF0DR"
+              ],
+              "count": 2
+            }
+          ],
+          "edited": null,
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1777077241.617969",
+      "type": "message",
+      "subtype": null,
+      "user": "U0235585LTZ",
+      "text": "개발팀 클로드 계정 괜찮나요? 도메인 정지 당한 것 같은데...",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [
+        {
+          "name": "shake",
+          "users": [
+            "U07M5E33KDW",
+            "U0354SL90UV",
+            "U02MA1AEU8K",
+            "U05AWGZ1TRD",
+            "U04FRP4PQF5",
+            "U048M5F5MUY"
+          ],
+          "count": 6
+        }
+      ],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1777083576.180859",
+      "type": "message",
+      "subtype": null,
+      "user": "UBKL1FZ28",
+      "text": "우리 공용계정들 모두 막힌건가요",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [
+        {
+          "name": "man-gesturing-ok::skin-tone-2",
+          "users": [
+            "U0235585LTZ"
+          ],
+          "count": 1
+        }
+      ],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1777262332.707259",
+      "type": "message",
+      "subtype": null,
+      "user": "U04FRP4PQF5",
+      "text": "관심 있으신분 신청하셔요\n\n<https://toss.im/builder/to/42278127682f422fb569cedb077abe15>",
+      "thread_ts": "1777262332.707259",
+      "reply_count": 2,
+      "reply_users": [
+        "U019E51R1DM",
+        "U04FRP4PQF5"
+      ],
+      "latest_reply": "1777366223.835159",
+      "reactions": [
+        {
+          "name": "+1",
+          "users": [
+            "U093SP8GFFU",
+            "U0354SL90UV"
+          ],
+          "count": 2
+        }
+      ],
+      "edited": null,
+      "files": [],
+      "thread_replies": [
+        {
+          "ts": "1777267850.311109",
+          "type": "message",
+          "subtype": null,
+          "user": "U019E51R1DM",
+          "text": "재밌을거같군여!",
+          "thread_ts": "1777262332.707259",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [
+            {
+              "name": "blob-dance",
+              "users": [
+                "U04FRP4PQF5"
+              ],
+              "count": 1
+            }
+          ],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1777366223.835159",
+          "type": "message",
+          "subtype": null,
+          "user": "U04FRP4PQF5",
+          "text": "<https://www.youtube.com/live/GfC-PcXO4ek?si=2L5xBRGuPIef0TK2|https://www.youtube.com/live/GfC-PcXO4ek?si=2L5xBRGuPIef0TK2> ",
+          "thread_ts": "1777262332.707259",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1777277618.500089",
+      "type": "message",
+      "subtype": null,
+      "user": "U02MA1AEU8K",
+      "text": "내일 (28일, 화), ~13:00~ 13:30부터 1시간 정도 LLM 엔지니어링 관련해서 경험한 내용들 공유하는 세션 가져보려고 합니다.\n\n관심있으신 분들은 와주시면 감사하겠습니다. :감사콩:",
+      "thread_ts": "1777277618.500089",
+      "reply_count": 6,
+      "reply_users": [
+        "U0235585LTZ",
+        "U02MA1AEU8K",
+        "U05AWGZ1TRD",
+        "U019E51R1DM"
+      ],
+      "latest_reply": "1777355780.040119",
+      "reactions": [
+        {
+          "name": "man-raising-hand",
+          "users": [
+            "U04MGQUE6U8",
+            "U07RPDCF0DR",
+            "U05AWGZ1TRD",
+            "U0354SL90UV",
+            "U048M5F5MUY",
+            "U049Z3PQ2KA"
+          ],
+          "count": 6
+        },
+        {
+          "name": "man-raising-hand::skin-tone-2",
+          "users": [
+            "U0235585LTZ"
+          ],
+          "count": 1
+        }
+      ],
+      "edited": {
+        "user": "U02MA1AEU8K",
+        "ts": "1777278676.000000"
+      },
+      "files": [
+        {
+          "id": "F0B01EA71U2",
+          "name": "poster.png",
+          "title": "poster.png",
+          "mimetype": "image/png",
+          "filetype": "png",
+          "pretty_type": "PNG",
+          "size": 1383646,
+          "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0B01EA71U2/poster.png",
+          "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0B01EA71U2/poster.png"
+        },
+        {
+          "id": "F0B01EAN290",
+          "name": "llm-harness-seminar.pdf",
+          "title": "llm-harness-seminar.pdf",
+          "mimetype": "application/pdf",
+          "filetype": "pdf",
+          "pretty_type": "PDF",
+          "size": 914312,
+          "url_private": "https://files.slack.com/files-pri/TBL1JAWKF-F0B01EAN290/llm-harness-seminar.pdf",
+          "permalink": "https://rtm-universe.slack.com/files/U0B15H1AQJV/F0B01EAN290/llm-harness-seminar.pdf"
+        }
+      ],
+      "thread_replies": [
+        {
+          "ts": "1777277956.620319",
+          "type": "message",
+          "subtype": null,
+          "user": "U0235585LTZ",
+          "text": "회의실 부족할 것 같아요",
+          "thread_ts": "1777277618.500089",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1777277988.514439",
+          "type": "message",
+          "subtype": null,
+          "user": "U02MA1AEU8K",
+          "text": "10명 정도는 가능하지 않을까요...?",
+          "thread_ts": "1777277618.500089",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1777278064.655769",
+          "type": "message",
+          "subtype": null,
+          "user": "U05AWGZ1TRD",
+          "text": "번거롭겠지만 원격 참석도 열어주세여",
+          "thread_ts": "1777277618.500089",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [
+            {
+              "name": "man-gesturing-ok",
+              "users": [
+                "U02MA1AEU8K"
+              ],
+              "count": 1
+            }
+          ],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1777278074.031779",
+          "type": "message",
+          "subtype": null,
+          "user": "U0235585LTZ",
+          "text": "AI팀만 10명 넘을 것 같은데..",
+          "thread_ts": "1777277618.500089",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1777278489.874139",
+          "type": "message",
+          "subtype": null,
+          "user": "U02MA1AEU8K",
+          "text": "13시 30분으로 변경해서 ab 회의실로 잡았습니다\n\n13시 30분으로 변경입니다",
+          "thread_ts": "1777277618.500089",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1777355780.040119",
+          "type": "message",
+          "subtype": null,
+          "user": "U019E51R1DM",
+          "text": "LLM 을 사용하면서 항상 있는 고민이지만,\n애가 잘한다, 못한다는 관점을 구체화시키는 능력? 정량적으로 바꾸는 능력? 이런것들이 참 어려운거 같아요\n\n누군가는 애가 코딩을 더 잘하더라 뭐를 더 못 하더라 라고 하는데 저한테는 그런것들이 참 모호한 영역인거 같습니다.\n\n그런 관점에서 소개해주신 방법같이 나만의 방향? 길? 을 만들어 놓고 나오는 결과물을 평가하고 개선하는 과정은 위 능력을 키울 수있는 방법 중 하나라고 생각이 드네요.",
+          "thread_ts": "1777277618.500089",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [
+            {
+              "name": "+1",
+              "users": [
+                "U02MA1AEU8K"
+              ],
+              "count": 1
+            }
+          ],
+          "edited": null,
+          "files": []
+        }
+      ]
+    },
+    {
+      "ts": "1777510718.745659",
+      "type": "message",
+      "subtype": null,
+      "user": "U02MA1AEU8K",
+      "text": "<https://rtm-universe.slack.com/archives/C04HHRZLY73/p1777507735754379>\n\n건영님께서 올려주신 자료인데, 앤트로픽에서 구독제를 없애고 모두 종량제로 가버린다면, 개인적으로도 대비가 필요할 수 있을 듯 하네요.\n\n일단, 앤트로픽이 현재 트래픽 비용을 감당하지 못하는 것은 거의 확실한 듯 합니다.\n전면 종량제를 하지 않더라도 구독제 사용량이 감소하거나 하는 방향으로도 갈 수도 있을 것 같습니다.",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [
+        {
+          "name": "+1",
+          "users": [
+            "U093SP8GFFU"
+          ],
+          "count": 1
+        },
+        {
+          "name": "eyes",
+          "users": [
+            "U019E51R1DM",
+            "U0354SL90UV"
+          ],
+          "count": 2
+        }
+      ],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1777511419.592629",
+      "type": "message",
+      "subtype": null,
+      "user": "U019E51R1DM",
+      "text": "클로드 코드 잘 되시나요?",
+      "thread_ts": "1777511419.592629",
+      "reply_count": 6,
+      "reply_users": [
+        "U02MA1AEU8K",
+        "U019E51R1DM",
+        "U07N3NGH7TR"
+      ],
+      "latest_reply": "1777512636.544019",
+      "reactions": [
+        {
+          "name": "x",
+          "users": [
+            "U033Z97MZ3N",
+            "U07N3NGH7TR",
+            "U02MA1AEU8K"
+          ],
+          "count": 3
+        }
+      ],
+      "edited": null,
+      "files": [],
+      "thread_replies": [
+        {
+          "ts": "1777511933.125829",
+          "type": "message",
+          "subtype": null,
+          "user": "U02MA1AEU8K",
+          "text": "안됩니다.\n\n회사 계정은 안되고, 개인 계정은 되네요.",
+          "thread_ts": "1777511419.592629",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1777512048.098689",
+          "type": "message",
+          "subtype": null,
+          "user": "U019E51R1DM",
+          "text": "로그인 인증 화면에서 오류가 계속 생기네요",
+          "thread_ts": "1777511419.592629",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1777512054.449059",
+          "type": "message",
+          "subtype": null,
+          "user": "U02MA1AEU8K",
+          "text": "저도 동일합니다",
+          "thread_ts": "1777511419.592629",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1777512123.920619",
+          "type": "message",
+          "subtype": null,
+          "user": "U019E51R1DM",
+          "text": ":monkeyhaha:",
+          "thread_ts": "1777511419.592629",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1777512560.421409",
+          "type": "message",
+          "subtype": null,
+          "user": "U07N3NGH7TR",
+          "text": "저도 동일",
+          "thread_ts": "1777511419.592629",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [],
+          "edited": null,
+          "files": []
+        },
+        {
+          "ts": "1777512636.544019",
+          "type": "message",
+          "subtype": null,
+          "user": "U07N3NGH7TR",
+          "text": "이제 됨",
+          "thread_ts": "1777511419.592629",
+          "reply_count": 0,
+          "reply_users": [],
+          "latest_reply": "",
+          "reactions": [
+            {
+              "name": "+1",
+              "users": [
+                "U02MA1AEU8K",
+                "U0354SL90UV"
+              ],
+              "count": 2
+            },
+            {
+              "name": "+1::skin-tone-2",
+              "users": [
+                "U033Z97MZ3N"
+              ],
+              "count": 1
+            }
+          ],
+          "edited": null,
+          "files": []
+        }
+      ]
+    }
+  ]
+}

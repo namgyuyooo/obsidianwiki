@@ -15,3 +15,38 @@ source: "Slack thread + local report config"
 - PoC 원본 PDF 기준 설비 종류, 촬영 조건, 불량 정의, 고객 pain point를 추가 확보
 - `D_3310`, `D_2324` 미탐 사례를 미팅 설명용 리스크 카드로 정리
 - 방문 미팅 후 유남규 -> 이욱 이사 논의용 1페이지 요약 포맷 준비
+
+## Decision Queue Approval - 2026-04-30T03:40:14.363Z
+- 원천: wiki_signal
+- 제목: Next Meeting Prep
+- 처리: approve
+- 내용: - 현장 적용 시 필요한 해상도, 촬영 속도, 조명, ROI 조건이 무엇인지
+- 근거 경로: obsidian/Wiki/Sawnics_ManufacturingAI_Project/Next_Meeting_Prep.md
+
+## Decision Queue Approval - 2026-04-30T03:40:16.375Z
+- 원천: wiki_signal
+- 제목: Next Meeting Prep
+- 처리: approve
+- 내용: - 검사 결과를 MES/설비/리포트와 어떤 방식으로 연결해야 하는지
+- 근거 경로: obsidian/Wiki/Sawnics_ManufacturingAI_Project/Next_Meeting_Prep.md
+
+## Decision Queue Approval - 2026-04-30T03:42:23.203Z
+- 원천: wiki_signal
+- 제목: Action Items
+- 처리: approve
+- 내용: - 내용: - 현장 적용 시 필요한 해상도, 촬영 속도, 조명, ROI 조건이 무엇인지
+- 근거 경로: obsidian/Wiki/Sawnics_ManufacturingAI_Project/Action_Items.md
+
+## Decision Queue Approval - 2026-04-30T03:45:32.586Z
+- 원천: wiki_signal
+- 제목: Action Items
+- 처리: approve
+- 내용: - 내용: - 검사 결과를 MES/설비/리포트와 어떤 방식으로 연결해야 하는지
+- 근거 경로: obsidian/Wiki/Sawnics_ManufacturingAI_Project/Action_Items.md
+
+## Decision Queue Approval - 2026-04-30T03:47:39.652Z
+- 원천: wiki_signal
+- 제목: Action Items
+- 처리: approve
+- 내용: - 내용: - 내용: - 현장 적용 시 필요한 해상도, 촬영 속도, 조명, ROI 조건이 무엇인지
+- 근거 경로: obsidian/Wiki/Sawnics_ManufacturingAI_Project/Action_Items.md
