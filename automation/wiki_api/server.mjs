@@ -3,6 +3,7 @@ import { readFile, readdir, stat, writeFile, mkdir, unlink, rm } from "node:fs/p
 import { createReadStream, existsSync } from "node:fs";
 import { spawn } from "node:child_process";
 import { basename, dirname, extname, isAbsolute, join, normalize, relative, resolve } from "node:path";
+import { createHash } from "node:crypto";
 
 const defaultRepoRoot = resolve(new URL("../../", import.meta.url).pathname);
 const repoRoot = resolve(process.env.WIKI_OPS_REPO_ROOT || defaultRepoRoot);
@@ -32,6 +33,7 @@ const wikiContextCachePath = join(apiRuntime, "wiki_context_cache.json");
 const knowledgePromotionPath = join(apiRuntime, "knowledge_promotions.json");
 const knowledgePromotionRoot = join(apiRuntime, "knowledge_promotions");
 const skillOutputsRoot = join(apiRuntime, "skill_outputs");
+const paperclipRunsRoot = join(apiRuntime, "paperclip_runs");
 const chatUploadsRoot = join(apiRuntime, "chat_uploads");
 const chatUploadMirrorRoot = join(driveRuntime, "mirror", "assistant_ui_uploads");
 const wikiStatusesPath = join(apiRuntime, "wiki_statuses.json");
@@ -112,6 +114,8 @@ const editableSettings = new Set([
   "GLM_FILE_ANALYSIS_MODEL",
   "GLM_VLM_MODEL",
   "GLM_PAPERCLIP_MODEL",
+  "GLM_PAPERCLIP_PLAN_MODE",
+  "GLM_PAPERCLIP_CHUNK_CHARS",
   "GLM_SLACK_FILTER_MODEL",
   "GLM_SLACK_FILTER_MAX_TOKENS",
   "GLM_AVAILABLE_MODELS",
@@ -1343,7 +1347,7 @@ function llmPolicyCatalog(env = {}, usage = []) {
       recommendedModel: "glm-4.5",
       maxTokens: Number(current("GLM_CHAT_MAX_TOKENS", 10000)),
       thinking: "enabled",
-      envKeys: ["GLM_PAPERCLIP_MODEL", "GLM_CHAT_MAX_TOKENS", "GLM_PAPERCLIP_TIMEOUT_MS", "PAPERCLIP_EXTRACTION_TIMEOUT_MS"],
+      envKeys: ["GLM_PAPERCLIP_MODEL", "GLM_CHAT_MAX_TOKENS", "GLM_PAPERCLIP_PLAN_MODE", "GLM_PAPERCLIP_CHUNK_CHARS", "GLM_PAPERCLIP_TIMEOUT_MS", "PAPERCLIP_EXTRACTION_TIMEOUT_MS"],
       currentModel: current("GLM_PAPERCLIP_MODEL", current("GLM_MODEL", "glm-5.1")),
       prompt: "템플릿별 전문 역할을 적용하되 사실/해석/전략/가정/추가 요청을 분리하고 증거 위치가 없으면 근거 위치 미확인으로 표시한다.",
       usageCount: countFeature([/paperclip/]),
@@ -2149,6 +2153,22 @@ async function spotliteSummary(scope = "work") {
   const projects = [...projectMap.values()]
     .sort((a, b) => (b.actions + b.risks * 2 + b.count) - (a.actions + a.risks * 2 + a.count))
     .slice(0, 10);
+  const commandCenter = await projectCommandCenter(workspace.id).catch(() => ({ projects: [], summary: {} }));
+  const operations = (commandCenter.projects || [])
+    .filter((project) => project.workflowStatus === "ongoing" || (project.opsActions || []).length || (project.missingOperationalDocs || []).length)
+    .map((project) => ({
+      project: project.projectLabel || project.projectKey,
+      projectKey: project.projectKey,
+      coverage: project.operationalCoverage || 0,
+      decisionQueueCount: project.decisionQueueCount || 0,
+      missingDocs: project.missingOperationalDocs || [],
+      actions: (project.opsActions || []).slice(0, 4),
+      latestStatusMemo: (project.statusMemos || [])[0] || "",
+      rawEvidence: (project.rawEvidence || [])[0] || "",
+      hubPath: project.hubPath || "",
+    }))
+    .sort((a, b) => (b.decisionQueueCount - a.decisionQueueCount) || (a.coverage - b.coverage))
+    .slice(0, 12);
   const cachedGlm = await readJsonFile(spotliteGlmPath, null).catch(() => null);
   const digest = cachedGlm?.scope === scope && cachedGlm?.digestVersion === 2 ? cachedGlm.digest : null;
   return {
@@ -2174,6 +2194,8 @@ async function spotliteSummary(scope = "work") {
       risks: risks.length,
       projects: projects.length,
       ongoingProjects: focusProjectKeys.size,
+      operationalReady: commandCenter.summary?.operationalReady || 0,
+      operationalGaps: commandCenter.summary?.operationalGaps || 0,
     },
     analysis: [
       focusProjectKeys.size ? `진행 중 프로젝트 ${focusProjectKeys.size}개만 기준으로 봅니다.` : "진행 중으로 지정된 프로젝트가 없습니다.",
@@ -2187,6 +2209,7 @@ async function spotliteSummary(scope = "work") {
     risks,
     memos,
     watch,
+    operations,
     projects,
     digest,
   };
@@ -2222,6 +2245,7 @@ async function refreshSpotliteGlm(scope = "work") {
     week: summary.week.slice(0, 10),
     risks: summary.risks.slice(0, 8),
     memos: summary.memos.slice(0, 8),
+    operations: summary.operations.slice(0, 8),
   };
   try {
     const { payload, endpoint } = await requestGlmChatCompletion(apiUrl, apiKey, {
@@ -2888,6 +2912,242 @@ async function wikiGraph() {
       .slice(0, 180),
     edges: edges.slice(0, 420),
   };
+}
+
+function wikiMergeTokenSet(value = "") {
+  return new Set(String(value || "")
+    .toLowerCase()
+    .replace(/[_/.-]+/g, " ")
+    .split(/[^가-힣a-z0-9]+/i)
+    .map((item) => item.trim())
+    .filter((item) => item.length >= 2)
+    .filter((item) => !["wiki", "project", "account", "status", "sources", "evidence", "log", "hub", "md", "rtm"].includes(item)));
+}
+
+function tokenOverlapRatio(left = new Set(), right = new Set()) {
+  if (!left.size || !right.size) return 0;
+  let intersection = 0;
+  for (const token of left) if (right.has(token)) intersection += 1;
+  const union = new Set([...left, ...right]).size || 1;
+  return intersection / union;
+}
+
+function changeEventMemo({ timestamp = new Date().toISOString(), source = "wiki_ops", change = "", action = "", status = "기록됨" } = {}) {
+  const when = timestamp.replace("T", " ").slice(0, 16);
+  return `${when} ${source} 기준으로 ${change || "상태 변화 후보"}가 ${status}되었고 ${action || "후속 검토 대기"}가 수행/대기됨`;
+}
+
+async function appendOperationalChangeEventFromDecision(resolved = {}, target = {}, options = {}) {
+  const action = options.action || resolved.resolvedAction || "";
+  if (!["approve", "edit_approve"].includes(action)) return [];
+  const projectKey = resolved.projectKey || target.projectKey || "";
+  if (!projectKey) return [];
+  const workspaceId = resolved.workspace || options.workspace || "rtm";
+  const now = options.timestamp || new Date().toISOString();
+  const projectDir = projectDirForKey(projectKey, workspaceId);
+  const source = resolved.sourceType || "decision_queue";
+  const original = resolved.original || {};
+  const originalPlan = original.mergePlan || {};
+  const memo = originalPlan.changeMemo || changeEventMemo({
+    timestamp: now,
+    source,
+    change: resolved.title || resolved.kind || "Decision Queue 승인",
+    action: resolved.note || "운영 문서 반영",
+  });
+  const files = [
+    {
+      fileName: "Status.md",
+      title: "상태 변화 메모",
+      lines: [
+        `- ${memo}`,
+        `  - Decision: ${resolved.title || resolved.id}`,
+        `  - 처리: ${action}`,
+        resolved.path ? `  - 근거: ${resolved.path}` : "",
+        original.primary?.path ? `  - Primary: ${original.primary.path}` : "",
+        original.secondary?.path ? `  - Secondary: ${original.secondary.path}` : "",
+        resolved.note ? `  - 메모: ${resolved.note}` : "",
+      ],
+    },
+    {
+      fileName: "Change_Log.md",
+      title: "Decision Queue 운영 변화",
+      lines: [
+        `- 일시: ${now}`,
+        `- 변화 메모: ${memo}`,
+        `- 원천: ${source}`,
+        `- Decision ID: ${resolved.id || ""}`,
+        `- 처리: ${action}`,
+        resolved.path ? `- 근거 경로: ${resolved.path}` : "",
+        original.primary?.path ? `- Primary: ${original.primary.path}` : "",
+        original.secondary?.path ? `- Secondary: ${original.secondary.path}` : "",
+      ],
+    },
+  ];
+  const changed = [];
+  for (const file of files) {
+    const path = join(projectDir, file.fileName);
+    await mkdir(dirname(path), { recursive: true });
+    const current = await readFile(path, "utf-8").catch(() => "");
+    const heading = current.trim() ? "" : `---\ntype: ${file.fileName.replace(/\.md$/, "").toLowerCase()}\ncreated: ${now.slice(0, 10)}\nupdated: ${now.slice(0, 10)}\nsource: "decision queue operational event"\n---\n\n# ${file.fileName.replace(/_/g, " ").replace(/\.md$/, "")}\n\n`;
+    const block = [
+      heading,
+      `\n## ${file.title} - ${now}`,
+      ...file.lines.filter(Boolean),
+      "",
+    ].join("\n");
+    await writeFile(path, `${current}${block}`, "utf-8");
+    changed.push(relative(repoRoot, path));
+  }
+  return changed;
+}
+
+async function wikiMergeCandidateScan(workspaceId = "rtm", options = {}) {
+  const limit = Math.min(Number(options.limit || 24), 80);
+  const pages = (await wikiIndex(workspaceId))
+    .filter((page) => ["project", "account", "common"].includes(page.division || ""))
+    .filter((page) => !["changelog", "log", "memory"].includes(page.docKind || ""))
+    .slice(0, 520);
+  const graph = await wikiGraph().catch(() => ({ nodes: [], edges: [] }));
+  const adjacency = new Map();
+  for (const edge of graph.edges || []) {
+    if (!adjacency.has(edge.source)) adjacency.set(edge.source, new Set());
+    if (!adjacency.has(edge.target)) adjacency.set(edge.target, new Set());
+    adjacency.get(edge.source).add(edge.target);
+    adjacency.get(edge.target).add(edge.source);
+  }
+  const records = [];
+  for (const page of pages) {
+    const markdown = await readFile(resolve(repoRoot, page.path), "utf-8").catch(() => "");
+    const keyLines = extractMeaningfulLines(markdown, page.projectLabel || page.title, contextBudget("economy")).slice(0, 8);
+    const keywordText = [
+      page.title,
+      page.path,
+      page.projectKey,
+      page.projectLabel,
+      page.docKind,
+      page.division,
+      ...(page.workflowTags || []),
+      page.workflowNote || "",
+      keyLines.join(" "),
+      extractPatternLines(markdown, /\d{4}-\d{1,2}-\d{1,2}|\d+\.?\d*\s*(%|억|만|천|원|개|건|회|분|초|시간)|고객|미팅|제안|계약|PoC|리스크|결정|충돌|불일치/i, 8).join(" "),
+    ].join(" ");
+    records.push({
+      page,
+      keyLines,
+      tokens: wikiMergeTokenSet(keywordText),
+      hasConflictSignal: /충돌|불일치|상이|상충|미확정|버전 차이|값 차이|수치 차이|일정 차이/i.test(markdown),
+    });
+  }
+
+  const candidates = [];
+  for (let i = 0; i < records.length; i += 1) {
+    for (let j = i + 1; j < records.length; j += 1) {
+      const left = records[i];
+      const right = records[j];
+      if (left.page.path === right.page.path) continue;
+      const tokenScore = tokenOverlapRatio(left.tokens, right.tokens);
+      const graphLinked = adjacency.get(left.page.path)?.has(right.page.path) || adjacency.get(right.page.path)?.has(left.page.path);
+      const sameProject = left.page.projectKey && left.page.projectKey === right.page.projectKey;
+      const sameKind = left.page.docKind && left.page.docKind === right.page.docKind;
+      const titleScore = tokenOverlapRatio(wikiMergeTokenSet(left.page.title), wikiMergeTokenSet(right.page.title));
+      const score = tokenScore * 70 + titleScore * 18 + (graphLinked ? 18 : 0) + (sameProject ? 10 : 0) + (sameKind ? 6 : 0);
+      if (score < 22) continue;
+      const conflictRisk = left.hasConflictSignal || right.hasConflictSignal || left.page.docKind === "conflict" || right.page.docKind === "conflict";
+      const primary = (left.page.docKind === "hub" || left.page.size >= right.page.size) ? left : right;
+      const secondary = primary === left ? right : left;
+      const id = `merge-${Buffer.from(`${left.page.path}|${right.page.path}`).toString("base64url").slice(0, 32)}`;
+      candidates.push({
+        id,
+        score: Math.round(score),
+        similarity: Number(tokenScore.toFixed(3)),
+        graphLinked: Boolean(graphLinked),
+        conflictRisk,
+        strategy: conflictRisk ? "conflict_register_then_manual_merge" : sameProject ? "append_secondary_into_primary" : "link_or_promote_under_project_hub",
+        reason: [
+          tokenScore >= 0.18 ? "태그/키워드 유사도 높음" : "",
+          titleScore >= 0.2 ? "제목 토큰 유사" : "",
+          graphLinked ? "그래프맵 직접 연결" : "",
+          sameProject ? "동일 프로젝트 범위" : "",
+          sameKind ? "동일 문서 유형" : "",
+          conflictRisk ? "충돌/불일치 신호 포함" : "",
+        ].filter(Boolean),
+        primary: {
+          title: primary.page.title,
+          path: primary.page.path,
+          projectKey: primary.page.projectKey,
+          projectLabel: primary.page.projectLabel,
+          docKind: primary.page.docKind,
+          keyLines: primary.keyLines.slice(0, 4),
+        },
+        secondary: {
+          title: secondary.page.title,
+          path: secondary.page.path,
+          projectKey: secondary.page.projectKey,
+          projectLabel: secondary.page.projectLabel,
+          docKind: secondary.page.docKind,
+          keyLines: secondary.keyLines.slice(0, 4),
+        },
+        mergePlan: {
+          targetPath: conflictRisk ? decisionTargetPathFromContext({ path: primary.page.path, projectKey: primary.page.projectKey }, workspaceId).targetPath ? relative(repoRoot, decisionTargetPathFromContext({ path: primary.page.path, projectKey: primary.page.projectKey }, workspaceId).targetPath) : primary.page.path : primary.page.path,
+          steps: conflictRisk
+            ? ["원문/수치/일정 차이를 Conflict_Register에 먼저 보존", "GLM 병합안 생성", "사용자 승인 후 Status/Decisions/Hub에 반영"]
+            : ["Secondary 문서의 원문 위치를 Raw_Evidence_Index에 연결", "중복되는 요약은 primary 문서에 링크로 정리", "상태 변화 메모를 Status/Change_Log에 append"],
+          changeMemo: changeEventMemo({
+            source: "similarity+graph merge scan",
+            change: `${primary.page.title} / ${secondary.page.title} 병합 후보`,
+            action: conflictRisk ? "Conflict_Register 검토" : "프로젝트 허브 연결",
+          }),
+        },
+      });
+    }
+  }
+
+  const deduped = [...new Map(candidates
+    .sort((a, b) => b.score - a.score || Number(b.conflictRisk) - Number(a.conflictRisk))
+    .map((item) => [item.id, item])).values()]
+    .slice(0, limit);
+  return {
+    generatedAt: new Date().toISOString(),
+    workspace: workspaceId,
+    strategy: "tags_keywords_graph_similarity",
+    summary: {
+      scannedPages: records.length,
+      candidates: deduped.length,
+      conflictRisk: deduped.filter((item) => item.conflictRisk).length,
+    },
+    candidates: deduped,
+  };
+}
+
+async function enqueueMergeCandidate(candidate = {}, workspaceId = "rtm") {
+  if (!candidate?.id) throw new Error("candidate is required");
+  const projectKey = candidate.primary?.projectKey || candidate.secondary?.projectKey || "";
+  const projectLabel = candidate.primary?.projectLabel || candidate.secondary?.projectLabel || projectKey;
+  const item = await enqueueDecisionQueueItem({
+    id: `similarity-${candidate.id}`,
+    workspace: workspaceId,
+    sourceType: "similarity_graph_merge_scan",
+    kind: candidate.conflictRisk ? "conflict_merge" : "similarity_merge",
+    title: `병합 전략 검토: ${candidate.primary?.title || "primary"} ↔ ${candidate.secondary?.title || "secondary"}`,
+    projectKey,
+    projectLabel,
+    path: candidate.primary?.path || candidate.secondary?.path || "",
+    content: [
+      `전략: ${candidate.strategy || ""}`,
+      `점수: ${candidate.score || 0}`,
+      `Primary: ${candidate.primary?.path || ""}`,
+      `Secondary: ${candidate.secondary?.path || ""}`,
+      `사유: ${(candidate.reason || []).join(", ")}`,
+      `변화 메모: ${candidate.mergePlan?.changeMemo || ""}`,
+      "",
+      "사용자 액션 후보:",
+      "- 보류: 아직 병합하지 않음",
+      "- 추가 조사: 원문/수치/일정 확인",
+      "- 승인 반영: Conflict_Register 또는 대상 문서에 append",
+    ].join("\n"),
+    original: candidate,
+  });
+  return item;
 }
 
 function localSearchBrief(query, results) {
@@ -3782,6 +4042,14 @@ async function projectCommandCenter(workspaceId = "rtm") {
   const pages = await wikiIndex(workspaceId);
   const core = await coreDocuments(workspaceId).catch(() => ({ documents: [], summary: {} }));
   const queue = await decisionQueue(workspaceId).catch(() => ({ items: [] }));
+  const operationalDocNames = [
+    "Status.md",
+    "Business_Flow.md",
+    "CEO_Brief.md",
+    "PM_Action_Plan.md",
+    "Customer_Followup.md",
+    "Raw_Evidence_Index.md",
+  ];
   const groups = new Map();
   for (const page of pages.filter((item) => item.division === "project" || item.division === "account")) {
     if (!groups.has(page.projectKey)) {
@@ -3804,6 +4072,23 @@ async function projectCommandCenter(workspaceId = "rtm") {
   const projects = [];
   for (const group of groups.values()) {
     const bundle = await projectMarkdownBundle(group.projectKey, workspaceId).catch(() => ({}));
+    const operationalDocs = operationalDocNames.map((file) => {
+      const text = String(bundle[file] || "");
+      const page = group.pages.find((item) => (item.path || "").endsWith(`/${file}`));
+      return {
+        file,
+        label: file.replace(".md", ""),
+        path: page?.path || `obsidian/Wiki/${group.projectKey}/${file}`,
+        present: text.trim().length > 0,
+        hasContent: text.replace(/^---[\s\S]*?---/, "").trim().split("\n").filter((line) => line.trim() && !/^#/.test(line.trim())).length > 1,
+        updatedAt: page?.updatedAt || "",
+        docKind: page?.docKind || classifyWikiPage(`obsidian/Wiki/${group.projectKey}/${file}`, {}).docKind,
+      };
+    });
+    const missingOperationalDocs = operationalDocs.filter((doc) => !doc.present || !doc.hasContent).map((doc) => doc.file);
+    const operationalCoverage = operationalDocs.length
+      ? Math.round(((operationalDocs.length - missingOperationalDocs.length) / operationalDocs.length) * 100)
+      : 0;
     const pick = (file, regex, limit = 4) => extractPatternLines(bundle[file] || "", regex, limit * 3)
       .filter((line) => isSpotliteBusinessLine(line, `${group.projectKey}/${file}`))
       .slice(0, limit);
@@ -3813,6 +4098,24 @@ async function projectCommandCenter(workspaceId = "rtm") {
       .slice(0, 4);
     const coreDocs = (core.documents || []).filter((doc) => doc.projectKey === group.projectKey).slice(0, 6);
     const decisionsWaiting = (queue.items || []).filter((item) => item.projectKey === group.projectKey && item.status === "pending");
+    const statusMemos = extractPatternLines(bundle["Status.md"] || "", /상태\s*변화|현재\s*단계|다음\s*액션|수행\/대기|Decision Queue|검토\s*대기/i, 16)
+      .slice(0, 5);
+    const businessFlow = extractPatternLines(bundle["Business_Flow.md"] || "", /단계|흐름|게이트|현재|다음|고객|공정|일정|담당|상업|검토/i, 16)
+      .slice(0, 5);
+    const ceoBrief = extractPatternLines(bundle["CEO_Brief.md"] || "", /판단|의사결정|사업|리스크|고객|매출|비용|확인|보류|승인/i, 16)
+      .slice(0, 5);
+    const pmActions = extractPatternLines(bundle["PM_Action_Plan.md"] || "", /액션|owner|담당|기한|선행조건|상태|검토|결정/i, 16)
+      .slice(0, 5);
+    const customerFollowups = extractPatternLines(bundle["Customer_Followup.md"] || "", /고객|접점|연락|요청|관심사|다음|커뮤니케이션|준비물/i, 16)
+      .slice(0, 5);
+    const rawEvidence = extractPatternLines(bundle["Raw_Evidence_Index.md"] || "", /full extracted text|원문|추출|표|수치|버전|pending review|보존/i, 16)
+      .slice(0, 5);
+    const opsActions = [
+      missingOperationalDocs.length ? `운영 문서 누락/빈 문서: ${missingOperationalDocs.join(", ")}` : "",
+      !rawEvidence.length ? "Raw_Evidence_Index 원문 보존 상태 확인 필요" : "",
+      decisionsWaiting.length ? `Decision Queue ${decisionsWaiting.length}건 승인/보류 필요` : "",
+      ...(pmActions.length ? pmActions : ["PM_Action_Plan 액션 보강 필요"]),
+    ].filter(Boolean).slice(0, 6);
     projects.push({
       ...group,
       oneLine: memoLines[0] || `${group.projectLabel} 운영 메모 보강 필요`,
@@ -3822,10 +4125,22 @@ async function projectCommandCenter(workspaceId = "rtm") {
       decisions: pick("Decisions.md", /결정|확정|승인|채택|선택|완료/i, 5),
       conflicts: pick("Conflict_Register.md", /충돌|불일치|상이|확인 필요|미확정/i, 5),
       coreDocuments: coreDocs,
+      operationalDocs,
+      missingOperationalDocs,
+      operationalCoverage,
+      statusMemos,
+      businessFlow,
+      ceoBrief,
+      pmActions,
+      customerFollowups,
+      rawEvidence,
+      opsActions,
       decisionQueueCount: decisionsWaiting.length,
-      score: (group.workflowStatus === "ongoing" ? 60 : 0) + (decisionsWaiting.length * 12) + (coreDocs.filter((doc) => doc.priority === "high").length * 8) + (group.lastActivityAt ? 5 : 0),
+      score: (group.workflowStatus === "ongoing" ? 60 : 0) + (decisionsWaiting.length * 12) + (coreDocs.filter((doc) => doc.priority === "high").length * 8) + Math.round(operationalCoverage / 12) + (group.lastActivityAt ? 5 : 0),
     });
   }
+  const operationalReady = projects.filter((item) => (item.operationalCoverage || 0) >= 80).length;
+  const operationalGaps = projects.reduce((sum, item) => sum + (item.missingOperationalDocs || []).length, 0);
   return {
     generatedAt: new Date().toISOString(),
     workspace: workspaceId,
@@ -3834,6 +4149,8 @@ async function projectCommandCenter(workspaceId = "rtm") {
       ongoing: projects.filter((item) => item.workflowStatus === "ongoing").length,
       decisionQueue: (queue.items || []).filter((item) => item.status === "pending").length,
       highPriorityDocuments: (core.documents || []).filter((item) => item.priority === "high").length,
+      operationalReady,
+      operationalGaps,
     },
     projects: projects.sort((a, b) => b.score - a.score || String(b.lastActivityAt).localeCompare(String(a.lastActivityAt))).slice(0, 80),
   };
@@ -4208,17 +4525,26 @@ async function resolveDecisionQueueItem(id, body = {}) {
       ? `반영 경로를 계산하지 못했습니다. 근거 경로 ${resolved.path} 가 프로젝트/계정 위키 문서인지 확인하세요.`
       : "반영 경로를 계산하지 못했습니다. projectKey 또는 근거 path가 필요합니다.";
   }
+  const operationalChangePaths = await appendOperationalChangeEventFromDecision(resolved, target, {
+    action,
+    workspace: workspaceId,
+    timestamp: now,
+  }).catch((error) => {
+    note = [note, `운영 상태 메모 append 실패: ${error.message}`].filter(Boolean).join(" ");
+    return [];
+  });
   await appendJsonl(decisionQueueAuditPath, {
     timestamp: now,
     id,
     action,
     item: resolved,
     appliedPath,
+    operationalChangePaths,
     targetFile,
     finalVerification,
     note,
   });
-  return { status: "resolved", action, item: resolved, appliedPath, targetFile, finalVerification, note };
+  return { status: "resolved", action, item: resolved, appliedPath, operationalChangePaths, targetFile, finalVerification, note };
 }
 
 async function enqueueDecisionQueueItem(item = {}) {
@@ -5323,6 +5649,12 @@ async function applyBusinessOpsConversion(entry, operation, targetPages, dryRun)
   ];
 
   for (const root of roots) {
+    const eventMemo = changeEventMemo({
+      timestamp: now,
+      source: "wiki management business ops conversion",
+      change: `${root.projectLabel} 운영형 허브/상태 문서 생성`,
+      action: "Status, Business_Flow, CEO_Brief, PM_Action_Plan, Customer_Followup, Raw_Evidence_Index 연결",
+    });
     const hubResult = await upsertManagedMarkdown(root.hubPath, (before) => {
       const base = before || baseHubMarkdown("hub", `${root.projectLabel} Project Hub`, `${root.projectLabel} 운영형 프로젝트 허브입니다.`);
       const lines = [
@@ -5334,6 +5666,7 @@ async function applyBusinessOpsConversion(entry, operation, targetPages, dryRun)
         "- 중복 방지: 프로젝트 허브를 기준 앵커로 삼고 새 자료는 Status/Business_Flow/CEO_Brief/PM_Action_Plan/Customer_Followup/Raw_Evidence_Index 후보로 라우팅",
         "- 충돌 방지: 상충 수치/일정/버전/주장은 Conflict_Register 또는 Decision Queue 검토 대상으로 유지",
         "- 원문 보존: 파일 원문과 긴 추출문은 요약 대체 금지. Raw_Evidence_Index와 Evidence_Log에 원천 경로, 추출 산출물, 버전, 한계를 남김",
+        `- 상태 변화 메모: ${eventMemo}`,
         "",
         "### 운영 링크",
         `- Status: ${wikiLinkFromPath(`${root.root}/Status.md`)}`,
@@ -5370,6 +5703,7 @@ async function applyBusinessOpsConversion(entry, operation, targetPages, dryRun)
           `- 프로젝트 허브: ${wikiLinkFromPath(root.hubPath)}`,
           "- 실무 의미: 수집 자료를 CEO/PM 운영 판단에 쓰기 위한 구조화 후보를 생성",
           "- 보존 원칙: 원문/긴 추출문을 요약으로 대체하지 않고 Raw_Evidence_Index/Evidence_Log에서 추적",
+          `- 상태 변화 메모: ${eventMemo}`,
           `- 대표 연결 증적: ${evidenceSummary}`,
         ];
         return appendManagedBlock(base, marker, `Business Ops Conversion ${now}`, lines);
@@ -9923,6 +10257,61 @@ async function paperclipSkillExtraction(task) {
   return { paths: [], extracted: "" };
 }
 
+function paperclipPlanModeEnabled(env = {}) {
+  const raw = String(process.env.GLM_PAPERCLIP_PLAN_MODE || env.GLM_PAPERCLIP_PLAN_MODE || "true").toLowerCase();
+  return !["0", "false", "off", "no"].includes(raw);
+}
+
+function chunkTextForPaperclip(text = "", maxChars = 7000) {
+  const raw = String(text || "");
+  const size = Math.max(2000, Number(maxChars || 7000));
+  if (raw.length <= size) return raw ? [raw] : [];
+  const chunks = [];
+  let index = 0;
+  while (index < raw.length) {
+    let end = Math.min(raw.length, index + size);
+    if (end < raw.length) {
+      const boundary = raw.lastIndexOf("\n", end);
+      if (boundary > index + Math.floor(size * 0.6)) end = boundary;
+    }
+    chunks.push(raw.slice(index, end).trim());
+    index = end;
+  }
+  return chunks.filter(Boolean);
+}
+
+function shortHash(value = "") {
+  return createHash("sha256").update(String(value)).digest("hex").slice(0, 16);
+}
+
+function paperclipStableRunId(task = {}, extraction = {}) {
+  return [
+    slugifyName(task.templateId || "paperclip"),
+    shortHash([
+      task.templateId || "",
+      task.title || "",
+      task.payload?.note || "",
+      extraction.extracted || "",
+    ].join("\n---\n")),
+  ].join("_");
+}
+
+async function writePaperclipRunState(runDir, state = {}) {
+  const next = {
+    ...state,
+    updatedAt: new Date().toISOString(),
+  };
+  await writeJsonFile(join(runDir, "state.json"), next);
+  return next;
+}
+
+async function writePaperclipRunArtifact(runDir, fileName, content = "") {
+  await mkdir(runDir, { recursive: true });
+  const path = join(runDir, fileName);
+  await writeFile(path, String(content || ""), "utf-8");
+  return path;
+}
+
 async function runPaperclipGlmSkill(task) {
   const { values: env } = await readEnvFile();
   const apiKey = process.env.GLM_API_KEY || env.GLM_API_KEY;
@@ -9946,23 +10335,237 @@ async function runPaperclipGlmSkill(task) {
   let markdown = "";
   let provider = "glm";
   let endpoint = "";
+  const planMode = paperclipPlanModeEnabled(env);
+  const chunkChars = Number(process.env.GLM_PAPERCLIP_CHUNK_CHARS || env.GLM_PAPERCLIP_CHUNK_CHARS || 7000);
+  const extractedChunks = planMode ? chunkTextForPaperclip(extraction.extracted || "", chunkChars) : [];
+  const runId = paperclipStableRunId(task, extraction);
+  const runDir = join(paperclipRunsRoot, runId);
+  await writePaperclipRunArtifact(runDir, "extraction.txt", extraction.extracted || "");
+  await writePaperclipRunState(runDir, {
+    runId,
+    taskId: task.id,
+    templateId: task.templateId,
+    title: task.title,
+    phase: "extraction_completed",
+    provider: "local",
+    sourcePaths: extraction.paths.map((path) => displayPath(path)),
+    extractedChars: (extraction.extracted || "").length,
+    chunkCount: extractedChunks.length,
+    chunkChars,
+    planMode,
+  });
   try {
-    completion = await requestGlmChatCompletion(apiUrl, apiKey, {
-      model,
-      messages: [
-        { role: "system", content: paperclipSkillSystemPrompt(task.templateId) },
-        { role: "user", content: input },
-      ],
-      temperature: 0.2,
-      max_tokens: glmChatMaxTokens(env),
-      thinking: glmThinkingOptions(env),
-    }, {
-      feature: `paperclip_skill:${task.templateId || "unknown"}`,
-      reason: "approved Paperclip GLM skill execution",
-      timeoutMs: paperclipTimeoutMs,
-    });
-    endpoint = completion.endpoint;
-    markdown = glmMessageContent(completion.payload) || "GLM 응답이 비어 있습니다.";
+    if (planMode && extractedChunks.length > 1) {
+      const partials = [];
+      for (let index = 0; index < extractedChunks.length; index += 1) {
+        const chunkNo = String(index + 1).padStart(3, "0");
+        const chunkMarkdownPath = join(runDir, `chunk-${chunkNo}.md`);
+        const chunkStatePath = join(runDir, `chunk-${chunkNo}.json`);
+        const cachedChunk = await readJsonFile(chunkStatePath, null);
+        if (cachedChunk?.status === "completed" && existsSync(chunkMarkdownPath)) {
+          const cachedMarkdown = await readFile(chunkMarkdownPath, "utf-8");
+          partials.push(cachedMarkdown);
+          continue;
+        }
+        const stageInput = [
+          "# Paperclip Plan Mode Chunk",
+          `template: ${task.templateId}`,
+          `title: ${task.title}`,
+          `chunk: ${index + 1}/${extractedChunks.length}`,
+          "",
+          "## 사용자 입력",
+          task.payload?.note || "- 없음",
+          "",
+          "## 이 chunk에서만 추출할 것",
+          "- 사업계획서/문서 구조",
+          "- 핵심 사실과 수치",
+          "- 결정/리스크/충돌/확인 필요",
+          "- 최종 사업계획서 작성에 반영할 문장 후보",
+          "",
+          "## Chunk Text",
+          extractedChunks[index],
+        ].join("\n");
+        await writePaperclipRunState(runDir, {
+          runId,
+          taskId: task.id,
+          templateId: task.templateId,
+          title: task.title,
+          phase: "chunk_analysis_running",
+          currentChunk: index + 1,
+          chunkCount: extractedChunks.length,
+          sourcePaths: extraction.paths.map((path) => displayPath(path)),
+        });
+        try {
+          const started = Date.now();
+          const partial = await requestGlmChatCompletion(apiUrl, apiKey, {
+            model,
+            messages: [
+              { role: "system", content: `${paperclipSkillSystemPrompt(task.templateId)}\n\n지금은 Plan Mode의 부분 분석 단계입니다. 이 chunk 밖의 내용을 추정하지 말고, 다음 최종 종합 단계가 재사용하기 쉬운 Markdown으로 압축하십시오.` },
+              { role: "user", content: stageInput },
+            ],
+            temperature: 0.15,
+            max_tokens: Math.min(glmChatMaxTokens(env), 4000),
+            thinking: glmThinkingOptions(env),
+          }, {
+            feature: `paperclip_skill:${task.templateId || "unknown"}:chunk`,
+            reason: "approved Paperclip GLM plan-mode chunk analysis",
+            timeoutMs: paperclipTimeoutMs,
+          });
+          endpoint = endpoint || partial.endpoint;
+          const partialMarkdown = `## Chunk ${index + 1}/${extractedChunks.length}\n\n${glmMessageContent(partial.payload) || "GLM 응답이 비어 있습니다."}`;
+          await writePaperclipRunArtifact(runDir, `chunk-${chunkNo}.md`, partialMarkdown);
+          await writeJsonFile(chunkStatePath, {
+            status: "completed",
+            chunk: index + 1,
+            chunkCount: extractedChunks.length,
+            model,
+            endpoint: partial.endpoint,
+            inputHash: shortHash(stageInput),
+            durationMs: Date.now() - started,
+            completedAt: new Date().toISOString(),
+          });
+          partials.push(partialMarkdown);
+        } catch (error) {
+          const partialMarkdown = [
+            `## Chunk ${index + 1}/${extractedChunks.length}`,
+            "",
+            `- 상태: GLM 부분 분석 실패 (${error.message})`,
+            "- 처리: 로컬 추출 원문 일부를 보존합니다.",
+            "",
+            "```text",
+            extractedChunks[index].slice(0, 2500),
+            "```",
+          ].join("\n");
+          await writePaperclipRunArtifact(runDir, `chunk-${chunkNo}.md`, partialMarkdown);
+          await writeJsonFile(chunkStatePath, {
+            status: "failed",
+            chunk: index + 1,
+            chunkCount: extractedChunks.length,
+            model,
+            inputHash: shortHash(stageInput),
+            error: error.message,
+            failedAt: new Date().toISOString(),
+          });
+          partials.push(partialMarkdown);
+        }
+      }
+      await writePaperclipRunState(runDir, {
+        runId,
+        taskId: task.id,
+        templateId: task.templateId,
+        title: task.title,
+        phase: "final_synthesis_running",
+        chunkCount: extractedChunks.length,
+        sourcePaths: extraction.paths.map((path) => displayPath(path)),
+      });
+      try {
+        completion = await requestGlmChatCompletion(apiUrl, apiKey, {
+          model,
+          messages: [
+            { role: "system", content: `${paperclipSkillSystemPrompt(task.templateId)}\n\n지금은 Plan Mode의 최종 종합 단계입니다. 아래 chunk별 분석만 근거로 삼고, 추정/확인 필요를 분리하십시오.` },
+            { role: "user", content: [
+              "# Paperclip Plan Mode Final Synthesis",
+              `template: ${task.templateId}`,
+              `title: ${task.title}`,
+              "",
+              "## 사용자 입력",
+              task.payload?.note || "- 없음",
+              "",
+              "## Chunk Summaries",
+              partials.join("\n\n---\n\n"),
+            ].join("\n") },
+          ],
+          temperature: 0.2,
+          max_tokens: glmChatMaxTokens(env),
+          thinking: glmThinkingOptions(env),
+        }, {
+          feature: `paperclip_skill:${task.templateId || "unknown"}:final`,
+          reason: "approved Paperclip GLM plan-mode final synthesis",
+          timeoutMs: paperclipTimeoutMs,
+        });
+        endpoint = completion.endpoint || endpoint;
+        markdown = [
+          "<!-- paperclip_plan_mode: enabled -->",
+          "",
+          glmMessageContent(completion.payload) || "GLM 응답이 비어 있습니다.",
+          "",
+          "## Plan Mode 부분 분석 로그",
+          partials.join("\n\n---\n\n"),
+        ].join("\n");
+        await writePaperclipRunArtifact(runDir, "final.md", markdown);
+        await writePaperclipRunState(runDir, {
+          runId,
+          taskId: task.id,
+          templateId: task.templateId,
+          title: task.title,
+          phase: "completed",
+          provider: "glm-plan-mode",
+          model,
+          endpoint,
+          chunkCount: extractedChunks.length,
+          sourcePaths: extraction.paths.map((path) => displayPath(path)),
+        });
+      } catch (error) {
+        provider = "glm-partial";
+        endpoint = endpoint || "partial";
+        markdown = [
+          "<!-- paperclip_plan_mode: partial -->",
+          "",
+          "# Paperclip Plan Mode 부분 분석 리포트",
+          "",
+          "최종 종합 GLM 호출은 실패했지만, chunk별 분석 결과는 보존되었습니다.",
+          "",
+          `- 최종 종합 상태: 실패 (${error.message})`,
+          `- chunk 수: ${partials.length}`,
+          "",
+          "## Plan Mode 부분 분석 로그",
+          partials.join("\n\n---\n\n"),
+        ].join("\n");
+        await writePaperclipRunArtifact(runDir, "partial_report.md", markdown);
+        await writePaperclipRunState(runDir, {
+          runId,
+          taskId: task.id,
+          templateId: task.templateId,
+          title: task.title,
+          phase: "partial_completed",
+          provider,
+          model,
+          endpoint,
+          finalError: error.message,
+          chunkCount: extractedChunks.length,
+          sourcePaths: extraction.paths.map((path) => displayPath(path)),
+        });
+      }
+    } else {
+      completion = await requestGlmChatCompletion(apiUrl, apiKey, {
+        model,
+        messages: [
+          { role: "system", content: paperclipSkillSystemPrompt(task.templateId) },
+          { role: "user", content: input },
+        ],
+        temperature: 0.2,
+        max_tokens: glmChatMaxTokens(env),
+        thinking: glmThinkingOptions(env),
+      }, {
+        feature: `paperclip_skill:${task.templateId || "unknown"}`,
+        reason: "approved Paperclip GLM skill execution",
+        timeoutMs: paperclipTimeoutMs,
+      });
+      endpoint = completion.endpoint;
+      markdown = glmMessageContent(completion.payload) || "GLM 응답이 비어 있습니다.";
+      await writePaperclipRunArtifact(runDir, "final.md", markdown);
+      await writePaperclipRunState(runDir, {
+        runId,
+        taskId: task.id,
+        templateId: task.templateId,
+        title: task.title,
+        phase: "completed",
+        provider: "glm",
+        model,
+        endpoint,
+        sourcePaths: extraction.paths.map((path) => displayPath(path)),
+      });
+    }
   } catch (error) {
     if (!extraction.extracted) throw error;
     provider = "local-extraction";
@@ -9982,6 +10585,19 @@ async function runPaperclipGlmSkill(task) {
       "## 로컬 추출문",
       extraction.extracted.slice(0, 24000),
     ].join("\n");
+    await writePaperclipRunArtifact(runDir, "partial_report.md", markdown);
+    await writePaperclipRunState(runDir, {
+      runId,
+      taskId: task.id,
+      templateId: task.templateId,
+      title: task.title,
+      phase: "partial_completed",
+      provider,
+      model,
+      endpoint,
+      finalError: error.message,
+      sourcePaths: extraction.paths.map((path) => displayPath(path)),
+    });
   }
   await mkdir(skillOutputsRoot, { recursive: true });
   const outputPath = join(skillOutputsRoot, `${new Date().toISOString().replace(/[:.]/g, "-")}_${slugifyName(task.templateId)}_${slugifyName(task.title)}.md`);
@@ -10003,6 +10619,8 @@ async function runPaperclipGlmSkill(task) {
     model,
     endpoint,
     path: relative(repoRoot, outputPath),
+    runId,
+    runPath: relative(repoRoot, runDir),
     markdown: payload,
     extractedSources: extraction.paths.map((path) => displayPath(path)),
   };
@@ -10137,6 +10755,24 @@ const server = createServer(async (req, res) => {
       const id = decodeURIComponent(pathname.split("/")[3]);
       const body = await readBody(req);
       return sendJson(res, 200, await resolveDecisionQueueItem(id, body));
+    }
+    if (pathname === "/api/decision-queue/merge-candidates" && req.method === "POST") {
+      const body = await readBody(req);
+      const workspace = body.workspace || "rtm";
+      const scan = await wikiMergeCandidateScan(workspace, body);
+      if (body.enqueueTop) {
+        const count = Math.min(Number(body.enqueueTop || 0), scan.candidates.length);
+        const enqueued = [];
+        for (const candidate of scan.candidates.slice(0, count)) {
+          enqueued.push(await enqueueMergeCandidate(candidate, workspace));
+        }
+        return sendJson(res, 200, { ...scan, enqueued });
+      }
+      return sendJson(res, 200, scan);
+    }
+    if (pathname === "/api/decision-queue/merge-candidates/enqueue" && req.method === "POST") {
+      const body = await readBody(req);
+      return sendJson(res, 200, { item: await enqueueMergeCandidate(body.candidate, body.workspace || "rtm") });
     }
     if (pathname === "/api/spotlite" && req.method === "GET") {
       const scope = url.searchParams.get("scope") || "work";
