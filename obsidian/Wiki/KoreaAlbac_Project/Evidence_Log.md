@@ -13,6 +13,7 @@ source: "public Slack evidence sweep (2024-04-21 to 2026-04-21)"
 - 충돌 가능성이 보이면 즉시 [[Wiki/KoreaAlbac_Project/Conflict_Register]]에 연결합니다.
 
 ## 활용 연결
+- 참조 레지스터: [[Wiki/KoreaAlbac_Project/Reference_Register]]
 - 상태 레지스터: [[Wiki/KoreaAlbac_Project/Status]]
 - 실무 판단: [[Wiki/KoreaAlbac_Project/Decisions]]
 - 실행 항목: [[Wiki/KoreaAlbac_Project/Action_Items]]

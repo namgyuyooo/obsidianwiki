@@ -26,16 +26,6 @@ export function Thread({ chatContext, workspace }: ThreadProps) {
 
   return (
     <ThreadPrimitive.Root className="aui-thread-root">
-      <header className="aui-topbar">
-        <div>
-          <span className="aui-kicker">GLM</span>
-          <strong>{workspace.activeProject?.name || chatContext.projectId}</strong>
-        </div>
-        <div className="aui-topbar-actions" aria-label="thread status">
-          <span className="aui-model-pill">Local GLM</span>
-          <span className="aui-model-pill muted">{workspace.selectedSkillTags.length} skills</span>
-        </div>
-      </header>
       <PersistedThreadHydrator workspace={workspace} />
       <ThreadPrimitive.Viewport className="aui-viewport" autoScroll>
         <div className="aui-viewport-inner">
@@ -59,6 +49,7 @@ export function Thread({ chatContext, workspace }: ThreadProps) {
           chatContext={chatContext}
           skills={skills}
           selectedSkillTags={workspace.selectedSkillTags}
+          wikiProjectOptions={workspace.wikiProjectOptions}
           onSelectSkillTag={workspace.selectSkillTag}
           onRemoveSkillTag={workspace.removeSkillTag}
         />
@@ -87,13 +78,16 @@ function PersistedThreadHydrator({ workspace }: { workspace: ChatWorkspaceState 
   const appliedSignatureRef = useRef("");
   const signature = useMemo(() => persistedMessagesSignature(workspace), [workspace]);
   const initialMessages = useMemo(() => {
-    return (workspace.activeProject?.messages || []).map((message) => ({
-      id: message.id,
-      role: message.role === "assistant" ? "assistant" : "user",
-      content: message.content,
-      createdAt: message.createdAt ? new Date(message.createdAt) : undefined,
-      status: "complete" as const,
-    }));
+    return (workspace.activeProject?.messages || []).map((message) => {
+      const role = message.role === "assistant" ? "assistant" : "user";
+      return {
+        id: message.id,
+        role,
+        content: message.content,
+        createdAt: message.createdAt ? new Date(message.createdAt) : undefined,
+        ...(role === "assistant" ? { status: "complete" as const } : {}),
+      };
+    });
   }, [workspace.activeProject?.messages]);
 
   useEffect(() => {

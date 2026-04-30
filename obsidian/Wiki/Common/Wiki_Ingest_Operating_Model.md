@@ -40,7 +40,22 @@ source: "2026-04-21 ingest redesign discussion; 2026-04-30 practical operations 
 
 이 다섯 질문을 더 선명하게 만들지 못하는 편집은 운영 가치가 낮습니다.
 
-## 1. 원문 보존 계층
+## 1. 참조 보존 계층
+
+모든 내용을 위키 본문에 복제하지 않고, 어디를 다시 열어봐야 하는지 추적하는 층입니다.
+
+- 보관 대상
+  - Slack 링크
+  - 웹 링크
+  - Google Drive 링크
+  - 로컬 파일 경로
+  - 링크를 남기기 어려울 때의 파일명 fallback
+  - 이 참조가 어디에 설명되어 있는지에 대한 위키 링크
+  - 접근 메모와 읽기 상태
+- 대표 문서
+  - `Reference_Register.md`
+
+## 2. 원문 보존 계층
 
 문서에서 실제로 읽은 내용을 보존하는 층입니다.
 
@@ -58,7 +73,7 @@ source: "2026-04-21 ingest redesign discussion; 2026-04-30 practical operations 
   - `Evidence_Log.md`
   - `Document Notes/문서명.md`
 
-## 2. 정제 지식 계층
+## 3. 정제 지식 계층
 
 원문을 프로젝트 실행과 재사용에 맞게 구조화하는 층입니다.
 
@@ -72,7 +87,7 @@ source: "2026-04-21 ingest redesign discussion; 2026-04-30 practical operations 
   - `Equipment.md`
   - `Architecture.md`
 
-## 3. 이력 및 변경 관리 계층
+## 4. 이력 및 변경 관리 계층
 
 무엇이 언제 어떻게 바뀌었는지 추적하는 층입니다.
 
@@ -86,7 +101,7 @@ source: "2026-04-21 ingest redesign discussion; 2026-04-30 practical operations 
   - `Conflict_Register.md`
   - 기존 문서 하단 업데이트 블록
 
-## 4. 실행 현황 계층
+## 5. 실행 현황 계층
 
 실무자가 위키를 열었을 때 가장 먼저 보는 층입니다.
 
@@ -110,14 +125,15 @@ source: "2026-04-21 ingest redesign discussion; 2026-04-30 practical operations 
 새로운 업무 이벤트가 생기면 바로 정제 문서에 결론을 쓰지 않고 아래 순서로 승격합니다.
 
 1. 원본 이벤트를 캡처합니다.
-2. 관련 파일, 메모, Drive 경로, 회의록을 `Sources.md`에 등록합니다.
-3. 실제 문장, 수치, 결정사항, 제약 조건을 `Evidence_Log.md`에 추출합니다.
-4. 기존 값과 다른 수치, 일정, 요구사항은 `Conflict_Register.md`에 보류 상태로 등록합니다.
-5. 실제 위키 문서나 보고서를 수정했으면 `Change_Log.md`에 기록합니다.
-6. `Action_Items.md`, `Decisions.md`, `Risks.md`에 실무 판단과 다음 행동을 반영합니다.
-7. `Status.md`에 상태 라벨, 단계, 헬스, 오너, 막힘, 다음 게이트를 갱신합니다.
-8. 허브 상단의 실행 현황판, 막힘/충돌, 다음 액션을 갱신합니다.
-9. 프로젝트 상태, 핵심 결정, 미해결 이슈가 바뀌면 `obsidian/L1_memory/{ProjectName}.md`를 갱신합니다.
+2. 관련 파일, 메모, Drive 경로, Slack 링크, 웹 링크를 `Reference_Register.md`에 링크 우선으로 등록합니다.
+3. 링크를 안정적으로 남기기 어렵다면 `Sources.md`에 파일명, 경로, 접근 메모를 fallback으로 기록합니다.
+4. 실제 문장, 수치, 결정사항, 제약 조건을 `Evidence_Log.md`에 추출합니다.
+5. 기존 값과 다른 수치, 일정, 요구사항은 `Conflict_Register.md`에 보류 상태로 등록합니다.
+6. 실제 위키 문서나 보고서를 수정했으면 `Change_Log.md`에 기록합니다.
+7. `Action_Items.md`, `Decisions.md`, `Risks.md`에 실무 판단과 다음 행동을 반영합니다.
+8. `Status.md`에 상태 라벨, 단계, 헬스, 오너, 막힘, 다음 게이트를 갱신합니다.
+9. 허브 상단의 실행 현황판, 막힘/충돌, 다음 액션을 갱신합니다.
+10. 프로젝트 상태, 핵심 결정, 미해결 이슈가 바뀌면 `obsidian/L1_memory/{ProjectName}.md`를 갱신합니다.
 
 개인 기록은 이 업무 위키에 저장하지 않습니다. 개인/업무가 섞인 이벤트는 업무상 필요한 사실만 프로젝트 문서에 남기고, 개인 맥락은 별도 개인 공간에 둡니다.
 
@@ -132,6 +148,8 @@ source: "2026-04-21 ingest redesign discussion; 2026-04-30 practical operations 
 - `RTM`이 없더라도 파일명 또는 문서 내용이 프로젝트 핵심 키워드와 강하게 일치하면 후보에 포함합니다.
 - `hwp`와 `hwpx`는 예외 없이 조사 대상에 포함합니다.
 - `hwp`와 `hwpx`는 필요 시 `rhwp` 기반 점검 절차를 사용해 파일 정보, 구조 덤프, 페이지 구조, SVG 렌더 결과를 확인합니다.
+- 모든 내용을 위키 본문에 복제하지 않습니다.
+- 먼저 `Reference_Register.md`에 다시 찾아갈 링크와 fallback 파일명을 남기고, 위키 본문에는 실행 판단에 필요한 요약만 남깁니다.
 - 요약만 저장하지 않고, 핵심 문장과 근거를 함께 남깁니다.
 - 해석과 원문 근거를 분리합니다.
 - 숫자는 반드시 문서명과 날짜를 함께 기록합니다.
@@ -176,6 +194,7 @@ Wiki/
 └── Project_X/
     ├── hub.md
     ├── Status.md
+    ├── Reference_Register.md
     ├── Project_Overview.md
     ├── KPI.md
     ├── Decisions.md
@@ -203,8 +222,9 @@ Wiki/
 3. `현재 막힘 / 충돌`
 4. `다음 액션`
 5. `최근 업데이트`
-6. `증적/근거 링크`
-7. `운영 링크`
+6. `참조 링크`
+7. `증적/근거 링크`
+8. `운영 링크`
 
 `account` 허브는 아래를 기본으로 둡니다.
 

@@ -14,6 +14,8 @@ tags:
 
 # 한양대 / 반도체 자율지능형 에이전트
 
+- [[Wiki/Common/RTM_YNG_한양대_반도체_자율지능형_에이전트_Reference_Register]]
+
 - [[Wiki/Common/RTM_YNG_한양대_반도체_자율지능형_에이전트_Status]]
 
 ## Project Overview

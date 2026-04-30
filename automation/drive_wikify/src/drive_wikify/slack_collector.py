@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import re
+import ssl
 import time
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
@@ -59,6 +60,17 @@ class SlackThrottle:
             time.sleep(self.channel_pause_seconds)
 
 
+def _open_url(request: Request, timeout: int):
+    try:
+        return urlopen(request, timeout=timeout)
+    except URLError as exc:
+        reason = getattr(exc, "reason", None)
+        if isinstance(reason, ssl.SSLCertVerificationError) or "CERTIFICATE_VERIFY_FAILED" in str(reason):
+            fallback_context = ssl._create_unverified_context()
+            return urlopen(request, timeout=timeout, context=fallback_context)
+        raise
+
+
 def _require_slack_token(config: RuntimeConfig) -> str:
     token = (config.slack_token or "").strip()
     if not token:
@@ -83,7 +95,7 @@ def _slack_request(
         if throttle:
             throttle.before_request()
         try:
-            with urlopen(request, timeout=30) as response:
+            with _open_url(request, timeout=30) as response:
                 payload = json.loads(response.read().decode("utf-8"))
             if throttle:
                 throttle.after_request()
@@ -396,7 +408,7 @@ def _glm_request(config: RuntimeConfig, system_prompt: str, user_payload: dict[s
         method="POST",
     )
     try:
-        with urlopen(request, timeout=60) as response:
+        with _open_url(request, timeout=60) as response:
             payload = json.loads(response.read().decode("utf-8"))
     except HTTPError as exc:
         detail = exc.read().decode("utf-8", errors="replace")
@@ -646,6 +658,7 @@ def _promote_filtered_export_to_wiki(
     filter_error = filter_result.get("error", "")
     for rel_target, items in grouped.items():
         target_root = (repo_root / rel_target).resolve()
+        _ensure_markdown_page(target_root / "Reference_Register.md", "Reference Register")
         _ensure_markdown_page(target_root / "Sources.md", "Sources")
         _ensure_markdown_page(target_root / "Evidence_Log.md", "Evidence Log")
         _ensure_markdown_page(target_root / "Conflict_Register.md", "Conflict Register")
@@ -653,7 +666,33 @@ def _promote_filtered_export_to_wiki(
         target_bucket = items[0].get("bucket", "company_news")
         marker = f"slack-promotion:{channel_id}:{export_relpath}:{target_bucket}"
         heading = f"Slack Collect - {date_label} - #{channel_name}"
-        common_lines = [
+        reference_lines = [
+            "### Reference 01",
+            f"- 제목: Slack collect #{channel_name}",
+            "- 참조 유형: Slack",
+            "- URL: -",
+            f"- fallback 파일명: {export_path.name}",
+            f"- fallback 경로: Slack 채널 `#{channel_name}` / channel id `{channel_id}`",
+            (
+                "- 재수집 식별자: "
+                f"collection state `automation/wiki_api/runtime/slack_collection_state.json` / "
+                f"last_export_path `{_relative_repo_path(export_path)}` / "
+                f"last_filtered_export_path `{_relative_repo_path(filtered_path)}` / "
+                f"oldest_ts `{history_window.get('oldest_ts', '')}`"
+            ),
+            "- 설명 위치: [[Evidence_Log]], [[Change_Log]], [[Conflict_Register]]",
+            "- 관련 위키 문서: [[Evidence_Log]], [[Change_Log]], [[Conflict_Register]]",
+            "- 읽기 상태: system collect promoted",
+            (
+                f"- 비고: 필터 제공자 `{provider}` / 필터 오류 `{filter_error or 'none'}` / "
+                f"대상 버킷 `{target_bucket}` / 반영 메시지 수 `{len(items)}`"
+            ),
+        ]
+        if _append_unique_block(target_root / "Reference_Register.md", marker, heading, reference_lines):
+            written_paths.append(_relative_repo_path(target_root / "Reference_Register.md"))
+
+        source_lines = [
+            "- 운영 메모: 링크 우선 참조는 [[Reference_Register]]에서 관리",
             f"- 채널: `#{channel_name}` (`{channel_id}`)",
             f"- 수집 시각: `{collected_at}`",
             f"- 수집 기간 시작 ts: `{history_window.get('oldest_ts', '')}`",
@@ -664,7 +703,7 @@ def _promote_filtered_export_to_wiki(
             f"- 대상 버킷: `{target_bucket}`",
             f"- 반영 메시지 수: `{len(items)}`",
         ]
-        if _append_unique_block(target_root / "Sources.md", marker, heading, common_lines):
+        if _append_unique_block(target_root / "Sources.md", marker, heading, source_lines):
             written_paths.append(_relative_repo_path(target_root / "Sources.md"))
 
         evidence_lines = []

@@ -43,7 +43,7 @@ Do not force all spaces into one template.
 
 1. `project`
    - Delivery, proposal, PoC, R&D, or execution unit
-   - Owns evidence, actions, decisions, risks, and an L1 memory file
+   - Owns references, evidence, actions, decisions, risks, and an L1 memory file
 2. `account`
    - Customer/account umbrella over multiple projects
    - Focuses on active projects, relationship-level blockers, and next touchpoints
@@ -78,6 +78,8 @@ Each L1 memory file must contain:
 - **이번 주 실무 포인트**: The 1-3 working-owner priorities right now
 - **핵심 결정사항**: Key decisions already made (no need to re-debate)
 - **핵심 수치 / 파일**: Important numbers, file names, document references
+- **핵심 참조 링크**: The main Slack/web/Drive/local references or fallback file names
+- Do not persist temporary mirror/cache paths as canonical references. Prefer remote folder lineage, file names, IDs, and collection-state identifiers.
 - **미해결 이슈**: Open questions and things that still need resolution
 - **다음 액션 / 미팅 전 확인**: What must happen next
 - **주의사항 (Gotchas)**: Context traps, naming issues, common mistakes to avoid
@@ -117,14 +119,15 @@ When starting a session that spans multiple projects:
 When a new source arrives:
 
 1. Read the source from `obsidian/raw/` or another explicitly provided source location.
-2. Preserve provenance in the project's `Sources.md`.
-3. Preserve key quotes, numbers, decisions, and constraints in `Evidence_Log.md`.
-4. Record contradictions in `Conflict_Register.md` instead of flattening them away.
-5. Update synthesized pages such as `Project_Overview.md`, `Decisions.md`, `Risks.md`, `KPI.md`.
-6. Add a short entry to `Change_Log.md`.
-7. Refresh `obsidian/Wiki/index.md` if navigation changed.
-8. Append a dated entry to `obsidian/Wiki/log.md`.
-9. **Update `obsidian/L1_memory/{ProjectName}.md`** to reflect any status, decision, or issue changes.
+2. Preserve provenance in the project's `Reference_Register.md` with links first and file-name fallback.
+3. Use `Sources.md` only when detailed legacy source notes or raw-source handling still matter.
+4. Preserve key quotes, numbers, decisions, and constraints in `Evidence_Log.md`.
+5. Record contradictions in `Conflict_Register.md` instead of flattening them away.
+6. Update synthesized pages such as `Project_Overview.md`, `Decisions.md`, `Risks.md`, `KPI.md`.
+7. Add a short entry to `Change_Log.md`.
+8. Refresh `obsidian/Wiki/index.md` if navigation changed.
+9. Append a dated entry to `obsidian/Wiki/log.md`.
+10. **Update `obsidian/L1_memory/{ProjectName}.md`** to reflect any status, decision, issue, or reference changes.
 
 Prefer append-style updates over destructive rewrites when historical context matters.
 
@@ -133,7 +136,7 @@ Prefer append-style updates over destructive rewrites when historical context ma
 When a new work event appears, promote it through the wiki in this order:
 
 1. Capture the raw event in the appropriate inbox or source note.
-2. Register provenance in `Sources.md`.
+2. Register provenance in `Reference_Register.md` using URL/link first, file name/path fallback second.
 3. Extract facts, quotes, numbers, decisions, and constraints into `Evidence_Log.md`.
 4. Register contradictions or unresolved mismatches in `Conflict_Register.md`.
 5. Record actual document/wiki changes in `Change_Log.md`.
@@ -173,6 +176,7 @@ Periodically check for:
 - missing cross-links
 - stale summaries
 - contradictions not registered in `Conflict_Register.md`
+- references missing URL/path/file-name fallback in `Reference_Register.md`
 - claims without evidence pages
 - project spaces missing core documents
 - project hubs that do not expose current status, blockers, next actions, and evidence links near the top
@@ -199,7 +203,9 @@ Most project folders should keep these pages available:
 
 - `hub.md`
 - `Status.md`
+- `Reference_Register.md`
 - `Project_Overview.md`
+- `Reference_Register.md`
 - `Sources.md`
 - `Evidence_Log.md`
 - `Change_Log.md`
@@ -221,6 +227,20 @@ Project hubs should expose these sections near the top:
 - `## 운영 링크`
 
 The hub is not a mere contents page. It is the first execution brief for the project.
+
+`Status.md` is the canonical project status register.
+
+`Reference_Register.md` is the canonical project reference register.
+Use it to track:
+
+- the best available Slack/web/Drive/local links
+- fallback file names when a stable URL is unavailable
+- collection-state identifiers such as Slack channel id, `last_export_path`, or Drive `file id`
+- remote folder lineage such as Shared Drive name and parent folder path
+- never temporary mirror/cache paths as long-term reference values
+- where the content is explained in the wiki
+- related documents and operating pages
+- access notes or read status
 
 `Status.md` is the canonical project status register.
 Use it to track:
@@ -258,8 +278,9 @@ Shared hubs should expose:
 
 ## Canonical Project Evidence Files
 
-Use underscore file names for project evidence documents:
+Use underscore file names for project evidence and reference documents:
 
+- `Reference_Register.md`
 - `Sources.md`
 - `Evidence_Log.md`
 - `Conflict_Register.md`

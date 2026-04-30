@@ -39,6 +39,10 @@ source: "public Slack evidence sweep (2024-04-21 to 2026-04-21)"
 
 ## 상태 기준 링크
 - [[Wiki/KumhoTire_CMS_Project/Status]]
+- [[Wiki/KumhoTire_CMS_Project/Reference_Register]]
+
+## 참조 링크
+- [[Wiki/KumhoTire_CMS_Project/Reference_Register]]
 
 ## 증적/근거 링크
 - [[Wiki/KumhoTire_CMS_Project/Sources]]
@@ -47,6 +51,7 @@ source: "public Slack evidence sweep (2024-04-21 to 2026-04-21)"
 
 ## 운영 링크
 - [[Wiki/KumhoTire_CMS_Project/Status]]
+- [[Wiki/KumhoTire_CMS_Project/Reference_Register]]
 - [[Wiki/KumhoTire_CMS_Project/Project_Overview]]
 - [[Wiki/KumhoTire_CMS_Project/Sources]]
 - [[Wiki/KumhoTire_CMS_Project/Evidence_Log]]

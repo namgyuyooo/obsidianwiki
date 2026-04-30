@@ -45,6 +45,7 @@ Pre-PoC → PoC 결과발표 → 단계별 제안서 → 근거자료 보강 →
 - 수요예측 계열 제안의 템플릿 사례로 재사용 가치 높음
 
 ## 드릴다운
+- [[Wiki/Mecaro_Forecast_Project/Reference_Register]]
 - [[Wiki/Mecaro_Forecast_Project/Status]]
 - [[Wiki/Mecaro_Forecast_Project/hub]]
 - [[Wiki/Mecaro_Forecast_Project/Evidence_Log]]

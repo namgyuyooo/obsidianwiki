@@ -47,6 +47,7 @@ updated: 2026-04-30
 - 특별 주의사항 확인 필요
 
 ## 드릴다운
+- [[Wiki/Business_Plan_Project/Reference_Register]]
 - [[Wiki/Business_Plan_Project/Status]]
 - [[Wiki/Business_Plan_Project/hub]]
 - [[Wiki/Business_Plan_Project/Writing_Guidelines]]

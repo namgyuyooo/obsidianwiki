@@ -30,6 +30,7 @@ const knowledgePromotionPath = join(apiRuntime, "knowledge_promotions.json");
 const knowledgePromotionRoot = join(apiRuntime, "knowledge_promotions");
 const skillOutputsRoot = join(apiRuntime, "skill_outputs");
 const chatUploadsRoot = join(apiRuntime, "chat_uploads");
+const chatUploadMirrorRoot = join(driveRuntime, "mirror", "assistant_ui_uploads");
 const wikiStatusesPath = join(apiRuntime, "wiki_statuses.json");
 const wikiStatusAuditPath = join(apiRuntime, "wiki_status_audit.jsonl");
 const chatRetractionsPath = join(apiRuntime, "chat_message_retractions.jsonl");
@@ -738,6 +739,60 @@ async function manifestSnapshot(env = {}) {
     documents: docs.length,
     filePaths: docs.map((doc) => doc.file_path).filter(Boolean),
     updatedAt: manifest.generated_at || manifest.updated_at || "",
+  };
+}
+
+async function collectionStatusSnapshot(env = {}) {
+  const manifestPath = resolveRepoPath(env.MANIFEST_PATH || "automation/drive_wikify/runtime/manifest.json");
+  const runOutputPath = resolveRepoPath(env.RUN_OUTPUT_PATH || "automation/drive_wikify/runtime/run_output.json");
+  const manifest = await readJsonFile(manifestPath, { documents: [] });
+  const runOutput = await readJsonFile(runOutputPath, { results: [] });
+  const manifestFolders = new Set();
+  const manifestFiles = new Set();
+  const processedFolders = new Set();
+  const processedFiles = new Set();
+  for (const doc of manifest.documents || []) {
+    const folderPath = String(doc.folder_path || "").replace(/^\/+|\/+$/g, "");
+    const filePath = String(doc.file_path || "");
+    if (folderPath) manifestFolders.add(folderPath);
+    if (filePath) {
+      const normalizedFile = filePath.replace(/\\/g, "/");
+      const marker = "/runtime/mirror/";
+      const idx = normalizedFile.indexOf(marker);
+      if (idx > -1) {
+        const relativeFile = normalizedFile.slice(idx + marker.length).replace(/^\/+/, "");
+        const relativeFolder = relativeFile.split("/").slice(0, -1).join("/");
+        manifestFiles.add(relativeFile);
+        if (relativeFolder) manifestFolders.add(relativeFolder);
+      }
+    }
+  }
+  for (const result of runOutput.results || []) {
+    const record = result.record || {};
+    const filePath = String(record.file_path || result.file_path || "").replace(/\\/g, "/");
+    if (filePath) {
+      const marker = "/runtime/mirror/";
+      const idx = filePath.indexOf(marker);
+      if (idx > -1) {
+        const relativeFile = filePath.slice(idx + marker.length).replace(/^\/+/, "");
+        const relativeFolder = relativeFile.split("/").slice(0, -1).join("/");
+        processedFiles.add(relativeFile);
+        if (relativeFolder) processedFolders.add(relativeFolder);
+      }
+    }
+    const folderPath = String(record.folder_path || result.folder_path || "").replace(/^\/+|\/+$/g, "");
+    if (folderPath) processedFolders.add(folderPath);
+  }
+  return {
+    manifestPath: displayPath(manifestPath),
+    runOutputPath: displayPath(runOutputPath),
+    manifestFolders: [...manifestFolders].sort(),
+    manifestFiles: [...manifestFiles].sort(),
+    processedFolders: [...processedFolders].sort(),
+    processedFiles: [...processedFiles].sort(),
+    documents: (manifest.documents || []).length,
+    processed: (runOutput.results || []).length,
+    updatedAt: runOutput.generated_at || runOutput.updated_at || manifest.generated_at || manifest.updated_at || "",
   };
 }
 
@@ -2789,6 +2844,80 @@ function parseRcloneLsd(stdout) {
     .filter(Boolean);
 }
 
+async function browseRemoteDrive(remotePath = "") {
+  const { values: env } = await readEnvFile();
+  const remote = env.RCLONE_REMOTE || "gdrive";
+  const remoteRoot = String(env.RCLONE_REMOTE_PATH || "").replace(/^\/+|\/+$/g, "");
+  const requested = String(remotePath || "").replace(/^\/+|\/+$/g, "");
+  if (requested && isExcludedDrivePath(requested, env)) {
+    return {
+      remote,
+      root: remoteRoot,
+      currentPath: requested,
+      blocked: true,
+      items: [],
+      error: `Excluded Drive path: ${requested}`,
+    };
+  }
+  const fullPath = [remoteRoot, requested].filter(Boolean).join("/");
+  const source = `${remote}:${fullPath}`.replace(/:$/, ":");
+  const result = await runCapture("rclone", [
+    "lsjson",
+    source,
+    "--max-depth",
+    "1",
+    "--no-mimetype",
+    "--metadata",
+    "--tpslimit",
+    String(env.RCLONE_TPSLIMIT || 1),
+    "--tpslimit-burst",
+    "1",
+  ], { timeoutMs: 35_000 });
+  if (result.code !== 0) {
+    return {
+      remote,
+      root: remoteRoot,
+      currentPath: requested,
+      blocked: false,
+      items: [],
+      error: result.stderr.slice(-2000) || result.stdout.slice(-2000) || `rclone lsjson failed: ${source}`,
+    };
+  }
+  let parsed = [];
+  try {
+    parsed = JSON.parse(result.stdout || "[]");
+  } catch {
+    parsed = [];
+  }
+  const items = parsed
+    .map((item) => {
+      const name = String(item.Name || item.Path || "").replace(/\/+$/g, "");
+      const childPath = [requested, name].filter(Boolean).join("/");
+      return {
+        name,
+        remotePath: childPath,
+        type: item.IsDir ? "directory" : "file",
+        size: Number(item.Size || 0),
+        updatedAt: item.ModTime || "",
+      };
+    })
+    .filter((item) => item.name)
+    .filter((item) => !isExcludedDrivePath(item.remotePath, env))
+    .sort((a, b) => {
+      if (a.type !== b.type) return a.type === "directory" ? -1 : 1;
+      return a.name.localeCompare(b.name);
+    });
+  const parentPath = requested.includes("/") ? requested.split("/").slice(0, -1).join("/") : "";
+  return {
+    remote,
+    root: remoteRoot,
+    currentPath: requested,
+    parentPath,
+    blocked: false,
+    items,
+  };
+}
+
 function tokenSet(value) {
   return new Set(String(value || "")
     .toLowerCase()
@@ -4642,13 +4771,30 @@ async function suggestConflictMerge(body = {}) {
 function routeChatSkills(message, evidence = [], paperclip = null, options = {}) {
   const text = String(message || "");
   const lower = text.toLowerCase();
+  const browserBlock = inspectBrowserPathBlock(text);
+  const uploadContext = inspectUploadContextBlock(text);
   const localPaths = extractLocalPaths(text, ["hwp", "hwpx", "pdf", "docx", "pptx", "xlsx", "xls", "csv", "html", "htm"]);
-  const needsFileBrowsing = /os 파일|파일 브라우징|파일 브라우저|폴더 조회|디렉터리 조회|directory|folder|browse|tree|ls\b|find\b|manifest|경로 분석|파일 구조/i.test(text);
+  const needsFileBrowsing = browserBlock.hasBlock
+    || uploadContext.hasBlock
+    || /os 파일|파일 브라우징|파일 브라우저|폴더 조회|디렉터리 조회|directory|folder|browse|tree|ls\b|find\b|manifest|경로 분석|파일 구조/i.test(text);
   const needsFilesystemWikiIntake = /(rclone|로컬 파일시스템|내부 파일시스템|local filesystem).*(위키화|반영|ingest|수집)|((위키화|반영|ingest).*(폴더|디렉터리|파일시스템|filesystem))/i.test(text);
-  const needsHwp = localPaths.some((path) => [".hwp", ".hwpx"].includes(extname(path).toLowerCase())) || /\.(hwp|hwpx)\b/i.test(text);
-  const needsSpreadsheet = localPaths.some((path) => [".xlsx", ".xls", ".csv"].includes(extname(path).toLowerCase())) || /\.(xlsx|xls|csv)\b/i.test(text);
-  const needsGrantRfp = /공고|rfp|사업계획서|연구개발계획서|작성양식|평가방안|심사표|평가기준|지원 가능|지원가능|support gate|kpi|성과지표|연차계획|예산 전략|국책과제|바우처/i.test(text);
-  const needsValidation = /검수|검증|coverage|커버리지|누락|충돌|conflict|정합|리스크 점검|근거 점검/i.test(lower)
+  const needsHwp = localPaths.some((path) => [".hwp", ".hwpx"].includes(extname(path).toLowerCase()))
+    || browserBlock.extensions.some((ext) => [".hwp", ".hwpx"].includes(ext))
+    || uploadContext.extensions.some((ext) => [".hwp", ".hwpx"].includes(ext))
+    || uploadContext.routes.includes("rhwp-hwp-reader")
+    || /\.(hwp|hwpx)\b/i.test(text);
+  const needsSpreadsheet = localPaths.some((path) => [".xlsx", ".xls", ".csv"].includes(extname(path).toLowerCase()))
+    || browserBlock.extensions.some((ext) => [".xlsx", ".xls", ".csv"].includes(ext))
+    || uploadContext.extensions.some((ext) => [".xlsx", ".xls", ".csv"].includes(ext))
+    || uploadContext.routes.includes("spreadsheet-stat-analyzer")
+    || /\.(xlsx|xls|csv)\b/i.test(text);
+  const needsGrantRfp = /공고|rfp|사업계획서|연구개발계획서|작성양식|평가방안|심사표|평가기준|지원 가능|지원가능|support gate|kpi|성과지표|연차계획|예산 전략|국책과제|바우처/i.test(text)
+    || uploadContext.files.some((item) => /공고|rfp|사업계획서|평가기준|작성양식|지원자격|지원 규모/i.test(`${item.path} ${item.summary}`));
+  const totalContextFiles = browserBlock.fileCount + uploadContext.fileCount;
+  const wantsComprehensiveAnalysis = totalContextFiles >= 3
+    || (totalContextFiles >= 2 && (needsGrantRfp || needsHwp || needsSpreadsheet));
+  const needsValidation = wantsComprehensiveAnalysis
+    || /검수|검증|coverage|커버리지|누락|충돌|conflict|정합|리스크 점검|근거 점검/i.test(lower)
     || evidence.some((item) => item.docKind === "conflict" || (item.conflicts || []).length);
   const blockedWriteActions = [];
   const suggestedTemplateIds = [];
@@ -4676,6 +4822,7 @@ function routeChatSkills(message, evidence = [], paperclip = null, options = {})
     blocked_write_actions: [...new Set(blockedWriteActions)],
     reason: [
       forcedTemplateIds.length ? `사용자 태그 요청: ${forcedTemplateIds.join(", ")}` : "",
+      wantsComprehensiveAnalysis ? `다중 파일 종합 분석 요청(${totalContextFiles} files)` : "",
       needsFileBrowsing ? "OS 파일/폴더 구조 조회 필요" : "",
       needsFilesystemWikiIntake ? "로컬 파일시스템 위키화 intake 필요" : "",
       needsGrantRfp ? "공고/RFP/사업계획서 전략 분석 필요" : "",
@@ -4686,6 +4833,8 @@ function routeChatSkills(message, evidence = [], paperclip = null, options = {})
     ].filter(Boolean).join(" / "),
     user_selected_template_ids: forcedTemplateIds,
     raw_message: text,
+    browser_block: browserBlock,
+    upload_context: uploadContext,
     local_paths: localPaths.map((path) => ({
       path,
       allowed: localPathAllowedForAutoSkill(path),
@@ -4835,9 +4984,75 @@ async function createPaperclipAgentDrafts(route, message, project = {}) {
   return drafts;
 }
 
+function extractComposerWikiMentions(message = "", workspaceId = "rtm") {
+  const mentions = [];
+  const seen = new Set();
+  const blockRegex = /\[위키프로젝트 멘션\]([\s\S]*?)\[\/위키프로젝트 멘션\]/g;
+  for (const match of String(message || "").matchAll(blockRegex)) {
+    const blocks = String(match[1] || "").split(/\n(?=- project_key:)/);
+    for (const block of blocks) {
+      const projectKey = block.match(/project_key:\s*(.+)/)?.[1]?.trim();
+      if (!projectKey) continue;
+      const projectLabel = block.match(/project_label:\s*(.+)/)?.[1]?.trim() || projectKey;
+      const workspace = block.match(/workspace:\s*(.+)/)?.[1]?.trim() || workspaceId;
+      const path = block.match(/path:\s*(.+)/)?.[1]?.trim() || "";
+      const key = `${workspace}:${projectKey}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      mentions.push(normalizeLinkedWikiProject({ workspace, projectKey, projectLabel, path }, workspaceId));
+    }
+  }
+  return mentions.filter(Boolean);
+}
+
+function uniqueLinkedWikiProjects(projects = []) {
+  const seen = new Set();
+  const unique = [];
+  for (const project of projects.filter(Boolean)) {
+    const key = `${project.workspace || "rtm"}:${project.projectKey}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    unique.push(project);
+  }
+  return unique;
+}
+
+async function linkedProjectContextForProject(linkedWikiProject, workspaceId = "rtm", mode = "standard") {
+  if (!linkedWikiProject?.projectKey) return null;
+  const pages = await wikiIndex(linkedWikiProject.workspace || workspaceId).catch(() => []);
+  const projectPages = pages.filter((page) => page.projectKey === linkedWikiProject.projectKey);
+  const bundle = await projectMarkdownBundle(linkedWikiProject.projectKey, linkedWikiProject.workspace || workspaceId).catch(() => ({}));
+  return {
+    projectKey: linkedWikiProject.projectKey,
+    projectLabel: linkedWikiProject.projectLabel,
+    workspace: linkedWikiProject.workspace || workspaceId,
+    path: linkedWikiProject.path || projectPages.find((page) => page.docKind === "hub")?.path || "",
+    summary: {
+      hub: compactLine(bundle["hub.md"] || bundle["Project_Overview.md"] || "", 320),
+      evidence: extractMeaningfulLines(bundle["Evidence_Log.md"] || "", linkedWikiProject.projectLabel, contextBudget(mode)).slice(0, 6),
+      decisions: extractPatternLines(bundle["Decisions.md"] || bundle["Action_Items.md"] || "", /결정|완료|진행|리스크|이슈|다음|액션|납기|고객|일정/i, 6),
+    },
+    relatedPages: projectPages
+      .filter((page) => ["hub", "overview", "sources", "evidence", "conflict", "actions", "decisions", "risks"].includes(page.docKind))
+      .slice(0, 12)
+      .map((page) => ({
+        title: page.title,
+        path: page.path,
+        docKind: page.docKind,
+        updatedAt: page.updatedAt,
+      })),
+  };
+}
+
 async function buildGlmChatContext(message, project, workspaceId = "rtm", mode = "standard", options = {}) {
   const budget = contextBudget(mode);
-  const sparseHits = await sparseWikiSearch(`${project?.name || ""} ${message}`, workspaceId, Math.max(budget.maxCards + 2, 8));
+  const linkedWikiProject = normalizeLinkedWikiProject(project?.linkedWikiProject, workspaceId);
+  const explicitWikiMentions = extractComposerWikiMentions(message, workspaceId);
+  const wikiContextProjects = uniqueLinkedWikiProjects([linkedWikiProject, ...explicitWikiMentions]);
+  const wikiMentionSearchHint = wikiContextProjects
+    .map((item) => [item.projectKey, item.projectLabel, item.path].filter(Boolean).join(" "))
+    .join(" ");
+  const sparseHits = await sparseWikiSearch(`${project?.name || ""} ${wikiMentionSearchHint} ${message}`, workspaceId, Math.max(budget.maxCards + 2, 8));
   const seedPaths = sparseHits.slice(0, Math.min(6, sparseHits.length)).map((item) => item.path);
   const graphExpandedHits = await expandGraphNeighbors(seedPaths, workspaceId, {
     seedLimit: Math.min(6, sparseHits.length),
@@ -4873,6 +5088,28 @@ async function buildGlmChatContext(message, project, workspaceId = "rtm", mode =
       division: classification.division,
       projectKey: classification.projectKey,
     });
+  }
+  for (const contextProject of wikiContextProjects) {
+    const pages = await wikiIndex(contextProject.workspace || workspaceId).catch(() => []);
+    for (const page of pages.filter((item) => item.projectKey === contextProject.projectKey).slice(0, 14)) {
+      if (candidateMap.has(page.path)) continue;
+      const classification = classifyWikiPage(page.path, {});
+      candidateMap.set(page.path, {
+        title: page.title,
+        path: page.path,
+        frontmatter: {},
+        snippet: `${contextProject.projectLabel || contextProject.projectKey} 명시 멘션 컨텍스트`,
+        score: 1.35,
+        matched_terms: [contextProject.projectKey],
+        retrieval_source: "composer_project_mention",
+        graph_hops: 0,
+        priority_reason: "composer @project mention",
+        classification,
+        docKind: page.docKind || classification.docKind,
+        division: page.division || classification.division,
+        projectKey: page.projectKey || classification.projectKey,
+      });
+    }
   }
   const reranked = rerankEvidenceCandidates([...candidateMap.values()], { mode: "evidence_l1_first" });
   const evidence = [];
@@ -4913,33 +5150,12 @@ async function buildGlmChatContext(message, project, workspaceId = "rtm", mode =
       title: item.title,
       conflicts: (item.conflicts || []).slice(0, 3),
     }));
-  const linkedWikiProject = normalizeLinkedWikiProject(project?.linkedWikiProject, workspaceId);
-  let linkedProjectContext = null;
-  if (linkedWikiProject?.projectKey) {
-    const pages = await wikiIndex(linkedWikiProject.workspace || workspaceId).catch(() => []);
-    const projectPages = pages.filter((page) => page.projectKey === linkedWikiProject.projectKey);
-    const bundle = await projectMarkdownBundle(linkedWikiProject.projectKey, linkedWikiProject.workspace || workspaceId).catch(() => ({}));
-    linkedProjectContext = {
-      projectKey: linkedWikiProject.projectKey,
-      projectLabel: linkedWikiProject.projectLabel,
-      workspace: linkedWikiProject.workspace || workspaceId,
-      path: linkedWikiProject.path || projectPages.find((page) => page.docKind === "hub")?.path || "",
-      summary: {
-        hub: compactLine(bundle["hub.md"] || bundle["Project_Overview.md"] || "", 320),
-        evidence: extractMeaningfulLines(bundle["Evidence_Log.md"] || "", linkedWikiProject.projectLabel, contextBudget(mode)).slice(0, 6),
-        decisions: extractPatternLines(bundle["Decisions.md"] || bundle["Action_Items.md"] || "", /결정|완료|진행|리스크|이슈|다음|액션|납기|고객|일정/i, 6),
-      },
-      relatedPages: projectPages
-        .filter((page) => ["hub", "overview", "sources", "evidence", "conflict", "actions", "decisions", "risks"].includes(page.docKind))
-        .slice(0, 12)
-        .map((page) => ({
-          title: page.title,
-          path: page.path,
-          docKind: page.docKind,
-          updatedAt: page.updatedAt,
-        })),
-    };
-  }
+  const mentionedProjectContexts = (await Promise.all(
+    wikiContextProjects.slice(0, 4).map((contextProject) => linkedProjectContextForProject(contextProject, workspaceId, mode)),
+  )).filter(Boolean);
+  const linkedProjectContext = linkedWikiProject?.projectKey
+    ? mentionedProjectContexts.find((context) => context.projectKey === linkedWikiProject.projectKey) || null
+    : mentionedProjectContexts[0] || null;
   return {
     tokenBudget: {
       mode,
@@ -4988,6 +5204,8 @@ async function buildGlmChatContext(message, project, workspaceId = "rtm", mode =
       chatProjectName: project?.name || "",
       linkedWikiProject,
       linkedProjectContext,
+      explicitWikiMentions,
+      mentionedProjectContexts,
     },
     ops: {
       running: automation.running,
@@ -6624,6 +6842,72 @@ function extractDirectoryLikePaths(text) {
     .filter((item) => existsSync(item));
 }
 
+function inspectBrowserPathBlock(text) {
+  const match = String(text || "").match(/\[파일브라우징 경로\]([\s\S]*?)\[\/파일브라우징 경로\]/);
+  if (!match) {
+    return {
+      hasBlock: false,
+      fileCount: 0,
+      directoryCount: 0,
+      fileHints: [],
+      directoryHints: [],
+      extensions: [],
+    };
+  }
+  const lines = match[1].split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+  const fileHints = lines
+    .filter((line) => line.startsWith("- file:"))
+    .map((line) => line.replace(/^- file:\s*/, "").trim())
+    .filter(Boolean);
+  const directoryHints = lines
+    .filter((line) => line.startsWith("- directory:"))
+    .map((line) => line.replace(/^- directory:\s*/, "").trim())
+    .filter(Boolean);
+  return {
+    hasBlock: true,
+    fileCount: fileHints.length,
+    directoryCount: directoryHints.length,
+    fileHints,
+    directoryHints,
+    extensions: [...new Set(fileHints.map((item) => extname(item).toLowerCase()).filter(Boolean))],
+  };
+}
+
+function inspectUploadContextBlock(text) {
+  const raw = String(text || "");
+  const contextMatch = raw.match(/\[파일 해석 컨텍스트\]([\s\S]*?)\[\/파일 해석 컨텍스트\]/);
+  const contextLines = contextMatch ? contextMatch[1].split(/\r?\n/).map((line) => line.trim()) : [];
+  const contextFiles = [];
+  let current = null;
+  for (const line of contextLines.filter(Boolean)) {
+    if (line.startsWith("- file:")) {
+      if (current) contextFiles.push(current);
+      current = { path: line.replace(/^- file:\s*/, "").trim(), route: "", summary: "" };
+      continue;
+    }
+    if (!current) continue;
+    if (line.startsWith("route:")) current.route = line.replace(/^route:\s*/, "").trim();
+    if (line.startsWith("summary:")) current.summary = line.replace(/^summary:\s*/, "").trim();
+  }
+  if (current) contextFiles.push(current);
+  const attachmentSummaryFiles = [...raw.matchAll(/\[첨부 파일\]\s+([^\n]+)/g)].map((match) => ({
+    name: String(match[1] || "").trim(),
+  }));
+  const extensions = [
+    ...contextFiles.map((item) => extname(item.path || "").toLowerCase()).filter(Boolean),
+    ...attachmentSummaryFiles.map((item) => extname(item.name || "").toLowerCase()).filter(Boolean),
+  ];
+  const routes = contextFiles.map((item) => item.route).filter(Boolean);
+  return {
+    hasBlock: Boolean(contextMatch),
+    fileCount: contextFiles.length || attachmentSummaryFiles.length,
+    files: contextFiles,
+    attachmentSummaryFiles,
+    routes,
+    extensions: [...new Set(extensions)],
+  };
+}
+
 async function collectFilesFromDirectory(rootPath, allowedExtensions = [], options = {}) {
   const maxDepth = Number(options.maxDepth || 4);
   const maxFiles = Number(options.maxFiles || 80);
@@ -6927,12 +7211,80 @@ async function summarizeAttachmentWithGlm({ templateId, fileName, extracted, ima
   return glmMessageContent(completion.payload) || "GLM 파일 분석 응답이 비어 있습니다.";
 }
 
-async function analyzeUploadedChatFile(file, fields = {}) {
+function normalizeChatUploadWorkspace(value) {
+  return String(value || "").trim() === "personal" ? "personal" : "work";
+}
+
+function normalizeChatUploadProjectSegment(fields = {}) {
+  return slugifyName(fields.projectKey || fields.projectId || fields.projectHint || "default_project") || "default_project";
+}
+
+function sanitizeUploadRelativePath(rawPath, fallbackName = "upload") {
+  const normalized = String(rawPath || "")
+    .replace(/\\/g, "/")
+    .split("/")
+    .map((segment) => segment.trim())
+    .filter((segment) => segment && segment !== "." && segment !== "..");
+  const safeSegments = normalized.map((segment, index) => {
+    const parsedExt = extname(segment);
+    const base = parsedExt ? segment.slice(0, -parsedExt.length) : segment;
+    const safeBase = slugifyName(base) || (index === normalized.length - 1 ? slugifyName(fallbackName) : "folder");
+    const safeExt = parsedExt.toLowerCase();
+    return safeExt ? `${safeBase}${safeExt}` : safeBase;
+  });
+  if (!safeSegments.length) {
+    const fallbackExt = extname(fallbackName || "").toLowerCase();
+    const fallbackBase = slugifyName(fallbackName || "upload") || "upload";
+    return fallbackExt ? `${fallbackBase}${fallbackExt}` : fallbackBase;
+  }
+  return safeSegments.join("/");
+}
+
+function compactChatUploadAnalysis(text = "", maxChars = 800) {
+  return String(text || "")
+    .replace(/\r/g, "")
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .join(" ")
+    .slice(0, maxChars);
+}
+
+function buildChatUploadContextBlock(attachments = [], fields = {}, batchMirrorPath = "") {
+  if (!attachments.length) return "";
+  const lines = [
+    "[파일 해석 컨텍스트]",
+    `- source: ${fields.source || "chat_upload"}`,
+    `- workspace: ${normalizeChatUploadWorkspace(fields.workspace)}`,
+    fields.projectHint ? `- project_hint: ${fields.projectHint}` : "",
+    fields.projectKey ? `- project_key: ${fields.projectKey}` : "",
+    batchMirrorPath ? `- mirror_batch: ${batchMirrorPath}` : "",
+  ].filter(Boolean);
+  for (const attachment of attachments.slice(0, 8)) {
+    lines.push(`- file: ${attachment.mirrorPath || attachment.path || attachment.fileName}`);
+    if (attachment.originalPath) lines.push(`  original_path: ${attachment.originalPath}`);
+    if (attachment.route) lines.push(`  route: ${attachment.route}`);
+    if (attachment.analysisPath) lines.push(`  analysis_md: ${attachment.analysisPath}`);
+    const summary = compactChatUploadAnalysis(attachment.analysis, 700);
+    if (summary) lines.push(`  summary: ${summary}`);
+  }
+  lines.push("[/파일 해석 컨텍스트]");
+  return lines.join("\n");
+}
+
+async function analyzeUploadedChatFile(file, fields = {}, fileMeta = {}, batchId = "") {
   await mkdir(chatUploadsRoot, { recursive: true });
   const ext = extname(file.filename || "").toLowerCase();
   const savedName = `${Date.now()}_${slugifyName(file.filename || "upload") || "upload"}${ext && !file.filename.endsWith(ext) ? ext : ""}`;
   const savedPath = join(chatUploadsRoot, savedName);
   await writeFile(savedPath, file.buffer);
+  const workspaceSegment = normalizeChatUploadWorkspace(fields.workspace);
+  const projectSegment = normalizeChatUploadProjectSegment(fields);
+  const effectiveBatchId = slugifyName(batchId || fields.batchId || `${Date.now()}-${projectSegment}`) || `${Date.now()}-${projectSegment}`;
+  const relativeMirrorPath = sanitizeUploadRelativePath(fileMeta.relativePath || file.filename || savedName, file.filename || savedName);
+  const mirrorPath = join(chatUploadMirrorRoot, workspaceSegment, projectSegment, effectiveBatchId, relativeMirrorPath);
+  await mkdir(dirname(mirrorPath), { recursive: true });
+  await writeFile(mirrorPath, file.buffer);
   const fileName = file.filename || savedName;
   let route = "text";
   let templateId = "attachment-reader";
@@ -6965,6 +7317,10 @@ async function analyzeUploadedChatFile(file, fields = {}) {
     size: file.buffer.length,
     route,
     path: relative(repoRoot, savedPath),
+    mirrorPath: relative(repoRoot, mirrorPath),
+    mirrorBatchPath: relative(repoRoot, join(chatUploadMirrorRoot, workspaceSegment, projectSegment, effectiveBatchId)),
+    originalPath: fileMeta.originalPath || "",
+    selectionKind: fileMeta.kind || "file",
     analysis,
     extractedPreview: extracted.slice(0, 1600),
     createdAt: new Date().toISOString(),
@@ -6990,11 +7346,32 @@ async function handleChatFileUpload(req) {
   const raw = await readRawBody(req);
   const { fields, files } = parseMultipartForm(raw, req.headers["content-type"] || "");
   if (!files.length) throw new Error("file is required");
+  let browserManifest = [];
+  if (fields.browser_manifest) {
+    try {
+      const parsed = JSON.parse(fields.browser_manifest);
+      if (Array.isArray(parsed)) browserManifest = parsed;
+    } catch {
+      browserManifest = [];
+    }
+  }
+  const browserManifestByField = new Map(
+    browserManifest
+      .filter((item) => item && typeof item === "object")
+      .map((item) => [String(item.fieldName || ""), item]),
+  );
+  const batchId = slugifyName(fields.batchId || `${Date.now()}_${fields.projectKey || fields.projectId || fields.projectHint || "chat_upload"}`) || `${Date.now()}_chat_upload`;
   const attachments = [];
   for (const file of files.slice(0, 5)) {
-    attachments.push(await analyzeUploadedChatFile(file, fields));
+    attachments.push(await analyzeUploadedChatFile(file, fields, browserManifestByField.get(file.fieldName) || {}, batchId));
   }
-  return { status: "completed", attachments };
+  const batchMirrorPath = attachments[0]?.mirrorBatchPath || "";
+  return {
+    status: "completed",
+    attachments,
+    mirrorBatchPath: batchMirrorPath,
+    contextBlock: buildChatUploadContextBlock(attachments, fields, batchMirrorPath),
+  };
 }
 
 async function paperclipSkillExtraction(task) {
@@ -7149,7 +7526,15 @@ async function serveStatic(req, res, pathname) {
   const info = await stat(filePath);
   if (!info.isFile()) throw new Error("Not found");
   const type = contentTypes[extname(filePath)] || "application/octet-stream";
-  res.writeHead(200, { "Content-Type": type });
+  const headers = { "Content-Type": type };
+  if (extname(filePath) === ".html") {
+    headers["Cache-Control"] = "no-cache, no-store, must-revalidate";
+    headers.Pragma = "no-cache";
+    headers.Expires = "0";
+  } else if (targetPath.includes("/assets/")) {
+    headers["Cache-Control"] = "public, max-age=31536000, immutable";
+  }
+  res.writeHead(200, headers);
   createReadStream(filePath).pipe(res);
 }
 
@@ -7322,6 +7707,10 @@ const server = createServer(async (req, res) => {
       const result = await targetRcloneCopy(body.remotePath, body.dryRun !== false);
       return sendJson(res, ["completed", "blocked"].includes(result.status) ? 200 : 500, result);
     }
+    if (pathname === "/api/collection/status" && req.method === "GET") {
+      const { values: env } = await readEnvFile();
+      return sendJson(res, 200, await collectionStatusSnapshot(env));
+    }
     if (pathname === "/api/skills/catalog" && req.method === "GET") {
       return sendJson(res, 200, { skills: skillCatalog() });
     }
@@ -7340,6 +7729,10 @@ const server = createServer(async (req, res) => {
         maxTreeEntries: body.maxTreeEntries || 200,
       });
       return sendJson(res, 200, result);
+    }
+    if (pathname === "/api/drive/remote-browser" && req.method === "POST") {
+      const body = await readBody(req);
+      return sendJson(res, 200, await browseRemoteDrive(body.path || ""));
     }
     if (pathname === "/api/chat/projects" && req.method === "GET") {
       return sendJson(res, 200, { projects: await listChatProjects(), global: await getGlobalChatSettings() });

@@ -12,6 +12,8 @@ tags:
 
 # 아사히카세히
 
+- [[Wiki/Common/RTM_YNG_아사히카세이_Reference_Register]]
+
 - [[Wiki/Common/RTM_YNG_아사히카세이_Status]]
 
 ## Project Overview

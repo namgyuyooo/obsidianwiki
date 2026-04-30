@@ -3,12 +3,16 @@ import { ACCEPTED_ATTACHMENT_TYPES, CHAT_API_ENDPOINTS } from "../constants";
 
 type UploadResponse = {
   error?: string;
+  contextBlock?: string;
+  mirrorBatchPath?: string;
   attachments?: Array<{
     id?: string;
     analysis?: string;
     analysisPath?: string;
     route?: string;
     path?: string;
+    mirrorPath?: string;
+    originalPath?: string;
   }>;
 };
 
@@ -17,6 +21,9 @@ type AttachmentMetadata = {
   analysisPath?: string;
   route?: string;
   savedPath?: string;
+  mirrorPath?: string;
+  originalPath?: string;
+  contextBlock?: string;
 };
 
 export class WikiAttachmentAdapter implements AttachmentAdapter {
@@ -47,6 +54,9 @@ export class WikiAttachmentAdapter implements AttachmentAdapter {
         analysisPath: uploaded.analysisPath || "",
         route: uploaded.route || "",
         savedPath: uploaded.path || "",
+        mirrorPath: uploaded.mirrorPath || "",
+        originalPath: uploaded.originalPath || "",
+        contextBlock: payload.contextBlock || "",
       } satisfies AttachmentMetadata,
     } as PendingAttachment;
   }
@@ -57,6 +67,8 @@ export class WikiAttachmentAdapter implements AttachmentAdapter {
       `[첨부 파일] ${attachment.name}`,
       metadata.route ? `route: ${metadata.route}` : "",
       metadata.savedPath ? `saved_path: ${metadata.savedPath}` : "",
+      metadata.mirrorPath ? `mirror_path: ${metadata.mirrorPath}` : "",
+      metadata.originalPath ? `original_path: ${metadata.originalPath}` : "",
       metadata.analysisPath ? `analysis_md: ${metadata.analysisPath}` : "",
       metadata.analysis || "파일 분석 결과 없음",
     ].filter(Boolean).join("\n");

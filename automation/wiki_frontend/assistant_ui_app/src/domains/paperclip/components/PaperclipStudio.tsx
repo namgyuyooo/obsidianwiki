@@ -1,4 +1,6 @@
+import { useState } from "react";
 import type { ChatContext } from "../../chat/constants";
+import { promoteKnowledge } from "../../knowledge/api/knowledgeApi";
 import type { PaperclipTask } from "../api/paperclipApi";
 import { usePaperclipStudio } from "../hooks/usePaperclipStudio";
 
@@ -6,8 +8,20 @@ type PaperclipStudioProps = {
   chatContext: ChatContext;
 };
 
+type ResultActionState = {
+  phase: "idle" | "promoting" | "success" | "error";
+  message: string;
+};
+
+const RESULT_PREVIEW_LIMIT = 5200;
+
 function shortDate(value = "") {
   return value ? value.slice(0, 16).replace("T", " ") : "-";
+}
+
+function resultString(task: PaperclipTask, key: string) {
+  const value = task.result?.[key];
+  return typeof value === "string" ? value : "";
 }
 
 function taskResultPath(task: PaperclipTask) {
@@ -18,11 +32,78 @@ function taskResultPath(task: PaperclipTask) {
   return decisionQueueItemId ? `Decision Queue: ${decisionQueueItemId}` : "";
 }
 
+function taskResultText(task: PaperclipTask) {
+  const markdown = resultString(task, "markdown");
+  if (markdown) return markdown;
+  const summary = resultString(task, "summary");
+  if (summary) return summary;
+  const error = resultString(task, "error");
+  if (error) return error;
+  const result = task.result || {};
+  return Object.keys(result).length ? JSON.stringify(result, null, 2) : "";
+}
+
+function taskResultFileName(task: PaperclipTask) {
+  const rawName = task.title || task.id || "paperclip-result";
+  const safeName = rawName.replace(/[^\w.-]+/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "");
+  return `${safeName || "paperclip-result"}${resultString(task, "markdown") ? ".md" : ".json"}`;
+}
+
+function taskProjectHint(task: PaperclipTask) {
+  const payload = task.payload || {};
+  const candidate = payload.projectHint || payload.projectKey || payload.project || task.result?.projectHint;
+  return typeof candidate === "string" ? candidate : "";
+}
+
+function downloadTaskResult(task: PaperclipTask) {
+  const text = taskResultText(task);
+  const type = resultString(task, "markdown") ? "text/markdown;charset=utf-8" : "application/json;charset=utf-8";
+  const blob = new Blob([text], { type });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = taskResultFileName(task);
+  anchor.click();
+  URL.revokeObjectURL(url);
+}
+
 export function PaperclipStudio({ chatContext }: PaperclipStudioProps) {
   const studio = usePaperclipStudio();
+  const [activeResultId, setActiveResultId] = useState("");
+  const [resultAction, setResultAction] = useState<ResultActionState>({
+    phase: "idle",
+    message: "완료 결과를 열거나 다운로드하고, 검토된 결과는 지식 승격 후보로 보낼 수 있습니다.",
+  });
   const { snapshot, activeTemplate } = studio;
   const queuedTasks = snapshot.tasks.filter((task) => !["completed", "failed"].includes(task.status || ""));
   const finishedTasks = snapshot.tasks.filter((task) => ["completed", "failed"].includes(task.status || ""));
+  const activeResultTask = finishedTasks.find((task) => task.id === activeResultId) || finishedTasks[0] || null;
+
+  const promoteTaskResult = async (task: PaperclipTask) => {
+    const content = taskResultText(task);
+    if (!content.trim()) {
+      setResultAction({ phase: "error", message: "승격할 Paperclip 결과 본문이 없습니다." });
+      return;
+    }
+
+    setResultAction({ phase: "promoting", message: "Paperclip 결과를 지식 승격 후보로 변환하는 중입니다." });
+    try {
+      const result = await promoteKnowledge({
+        content,
+        projectHint: taskProjectHint(task),
+        source: "assistant_ui_paperclip_result",
+        sourceProjectId: chatContext.projectId,
+        tool: task.command || task.templateId,
+      });
+      const path = result.path || result.promotion?.path || "path 없음";
+      setResultAction({ phase: "success", message: `지식 승격 후보 생성 완료: ${path}` });
+    } catch (error) {
+      setResultAction({
+        phase: "error",
+        message: error instanceof Error ? error.message : "Paperclip 결과 승격 실패",
+      });
+    }
+  };
 
   return (
     <main className="aui-paperclip-studio">
@@ -146,14 +227,36 @@ export function PaperclipStudio({ chatContext }: PaperclipStudioProps) {
           </div>
           <div className="aui-paperclip-result-list">
             {finishedTasks.slice(0, 8).map((task) => (
-              <div key={task.id}>
+              <article className={task.id === activeResultTask?.id ? "active" : ""} key={task.id}>
                 <strong>{task.title || task.id}</strong>
                 <span>{task.status} · {shortDate(task.finishedAt || task.updatedAt)}</span>
                 {taskResultPath(task) ? <code>{taskResultPath(task)}</code> : null}
-              </div>
+                <div className="aui-paperclip-result-actions">
+                  <button onClick={() => setActiveResultId(task.id)} type="button">열기</button>
+                  <button disabled={!taskResultText(task)} onClick={() => downloadTaskResult(task)} type="button">다운로드</button>
+                  <button
+                    disabled={!taskResultText(task) || resultAction.phase === "promoting"}
+                    onClick={() => promoteTaskResult(task)}
+                    type="button"
+                  >
+                    지식승격
+                  </button>
+                </div>
+              </article>
             ))}
             {!finishedTasks.length ? <p>아직 완료된 Paperclip 결과가 없습니다.</p> : null}
           </div>
+          {activeResultTask ? (
+            <section className="aui-paperclip-result-preview">
+              <div>
+                <span>Live Result Preview</span>
+                <strong>{activeResultTask.title || activeResultTask.id}</strong>
+              </div>
+              {taskResultPath(activeResultTask) ? <code>{taskResultPath(activeResultTask)}</code> : null}
+              <pre>{taskResultText(activeResultTask).slice(0, RESULT_PREVIEW_LIMIT) || "표시할 결과 본문이 없습니다."}</pre>
+            </section>
+          ) : null}
+          <p className={`aui-paperclip-status ${resultAction.phase}`}>{resultAction.message}</p>
         </article>
       </section>
     </main>

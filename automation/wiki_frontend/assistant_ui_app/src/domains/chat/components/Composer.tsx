@@ -7,7 +7,7 @@ import {
   useThreadRuntime,
 } from "@assistant-ui/react";
 import { useEffect, useMemo, useRef, useState, type ChangeEvent, type KeyboardEvent } from "react";
-import { stopChatProjectRun, type SkillCatalogItem } from "../api/chatWorkspaceApi";
+import { stopChatProjectRun, type SkillCatalogItem, type WikiProjectOption } from "../api/chatWorkspaceApi";
 import type { ChatContext } from "../constants";
 import { ACCEPTED_ATTACHMENT_TYPES } from "../constants";
 
@@ -23,8 +23,43 @@ type BrowserPathSelection = {
   absolute: boolean;
 };
 
+type BrowserPendingFile = {
+  key: string;
+  selection: BrowserPathSelection;
+  file: BrowserFile;
+};
+
+type BrowserImportAttachment = {
+  id?: string;
+  fileName?: string;
+  route?: string;
+  path?: string;
+  mirrorPath?: string;
+  originalPath?: string;
+  analysis?: string;
+  analysisPath?: string;
+};
+
+type BrowserImportResponse = {
+  error?: string;
+  contextBlock?: string;
+  mirrorBatchPath?: string;
+  attachments?: BrowserImportAttachment[];
+};
+
+type WikiMentionSelection = {
+  projectKey: string;
+  projectLabel: string;
+  workspace: string;
+  path?: string;
+};
+
 const BROWSER_PATH_BLOCK_START = "[파일브라우징 경로]";
 const BROWSER_PATH_BLOCK_END = "[/파일브라우징 경로]";
+const IMPORT_CONTEXT_BLOCK_START = "[파일 해석 컨텍스트]";
+const IMPORT_CONTEXT_BLOCK_END = "[/파일 해석 컨텍스트]";
+const WIKI_MENTION_BLOCK_START = "[위키프로젝트 멘션]";
+const WIKI_MENTION_BLOCK_END = "[/위키프로젝트 멘션]";
 
 function normalizedBrowserPath(value: string) {
   return value.replace(/\\/g, "/").replace(/\/+/g, "/").trim();
@@ -54,9 +89,49 @@ function stripBrowserPathBlock(text: string) {
   ).replace(/\n{3,}/g, "\n\n").trim();
 }
 
+function stripImportContextBlock(text: string) {
+  return text.replace(
+    new RegExp(`\\n?${escapeRegex(IMPORT_CONTEXT_BLOCK_START)}[\\s\\S]*?${escapeRegex(IMPORT_CONTEXT_BLOCK_END)}\\n?`, "g"),
+    "\n",
+  ).replace(/\n{3,}/g, "\n\n").trim();
+}
+
 function buildPathSelectionText(baseText: string, selections: readonly BrowserPathSelection[]) {
   const stripped = stripBrowserPathBlock(baseText);
   const block = browserPathBlock(selections);
+  return [stripped, block].filter(Boolean).join("\n\n").trim();
+}
+
+function applyImportContextText(baseText: string, contextBlock: string) {
+  const stripped = stripImportContextBlock(baseText);
+  return [stripped, contextBlock.trim()].filter(Boolean).join("\n\n").trim();
+}
+
+function wikiMentionBlock(selections: readonly WikiMentionSelection[]) {
+  if (!selections.length) return "";
+  return [
+    WIKI_MENTION_BLOCK_START,
+    "- source: composer_project_mention",
+    ...selections.map((selection) => [
+      `- project_key: ${selection.projectKey}`,
+      `  project_label: ${selection.projectLabel}`,
+      `  workspace: ${selection.workspace}`,
+      selection.path ? `  path: ${selection.path}` : "",
+    ].filter(Boolean).join("\n")),
+    WIKI_MENTION_BLOCK_END,
+  ].join("\n");
+}
+
+function stripWikiMentionBlock(text: string) {
+  return text.replace(
+    new RegExp(`\\n?${escapeRegex(WIKI_MENTION_BLOCK_START)}[\\s\\S]*?${escapeRegex(WIKI_MENTION_BLOCK_END)}\\n?`, "g"),
+    "\n",
+  ).replace(/\n{3,}/g, "\n\n").trim();
+}
+
+function buildWikiMentionText(baseText: string, selections: readonly WikiMentionSelection[]) {
+  const stripped = stripWikiMentionBlock(baseText);
+  const block = wikiMentionBlock(selections);
   return [stripped, block].filter(Boolean).join("\n\n").trim();
 }
 
@@ -82,6 +157,60 @@ function browserSelectionsFromFiles(files: BrowserFile[], kind: "file" | "direct
   return selections.sort((a, b) => a.path.localeCompare(b.path, "ko"));
 }
 
+function pendingBrowserFilesFromFiles(files: BrowserFile[], kind: "file" | "directory") {
+  return browserSelectionsFromFiles(files, kind).map((selection) => {
+    const match = files.find((file) => {
+      const absolutePath = normalizedBrowserPath(file.path || "");
+      const relativePath = normalizedBrowserPath(file.webkitRelativePath || file.name || "");
+      const bestPath = absolutePath || relativePath;
+      return bestPath === selection.path;
+    }) || files[0];
+    return {
+      key: `${selection.kind}:${selection.path}`,
+      selection,
+      file: match,
+    };
+  }).filter((item): item is BrowserPendingFile => Boolean(item.file));
+}
+
+async function importBrowserFilesToChat(input: {
+  files: BrowserPendingFile[];
+  workspace: string;
+  projectId: string;
+  projectHint: string;
+  projectKey?: string;
+}) {
+  const form = new FormData();
+  const browserManifest = input.files.map((item, index) => {
+    const fieldName = `file_${index}`;
+    form.append(fieldName, item.file);
+    return {
+      fieldName,
+      originalPath: item.selection.path,
+      relativePath: item.file.webkitRelativePath || item.file.name,
+      kind: item.selection.kind,
+    };
+  });
+  form.append("note", "assistant-ui browser import");
+  form.append("source", "composer_file_browser_import");
+  form.append("workspace", input.workspace);
+  form.append("projectId", input.projectId);
+  form.append("projectHint", input.projectHint);
+  if (input.projectKey) form.append("projectKey", input.projectKey);
+  form.append("batchId", `${Date.now()}-${input.projectKey || input.projectId || "chat"}`);
+  form.append("browser_manifest", JSON.stringify(browserManifest));
+  const response = await fetch("/api/chat/files", {
+    method: "POST",
+    body: form,
+  });
+  const text = await response.text();
+  const payload = text ? JSON.parse(text) as BrowserImportResponse : {};
+  if (!response.ok || payload.error) {
+    throw new Error(payload.error || `HTTP ${response.status}`);
+  }
+  return payload;
+}
+
 function ComposerAttachments() {
   return (
     <div className="aui-composer-attachments">
@@ -103,15 +232,18 @@ type ComposerProps = {
   chatContext: ChatContext;
   skills: readonly SkillCatalogItem[];
   selectedSkillTags: readonly string[];
+  wikiProjectOptions: readonly WikiProjectOption[];
   onSelectSkillTag: (skillId: string) => void;
   onRemoveSkillTag: (skillId: string) => void;
 };
 
-type SkillSuggestion = {
+type MentionSuggestion = {
   id: string;
+  kind: "skill" | "wiki-project";
   label: string;
   description: string;
   searchText: string;
+  wikiProject?: WikiMentionSelection;
 };
 
 function skillLabel(skill: SkillCatalogItem) {
@@ -155,7 +287,7 @@ function subsequenceScore(query: string, text: string) {
   return Math.max(0.1, 1 - gaps / Math.max(text.length, 1));
 }
 
-function scoreSkillSuggestion(query: string, skill: SkillSuggestion) {
+function scoreMentionSuggestion(query: string, skill: MentionSuggestion) {
   const normalizedQuery = normalizeSearchText(query);
   if (!normalizedQuery) return 1;
   const normalizedLabel = normalizeSearchText(skill.label);
@@ -208,6 +340,7 @@ export function Composer({
   chatContext,
   skills,
   selectedSkillTags,
+  wikiProjectOptions,
   onSelectSkillTag,
   onRemoveSkillTag,
 }: ComposerProps) {
@@ -221,31 +354,60 @@ export function Composer({
   const [caret, setCaret] = useState<number | null>(null);
   const [highlightedIndex, setHighlightedIndex] = useState(0);
   const [manualSuggestionsOpen, setManualSuggestionsOpen] = useState(false);
+  const [manualSuggestionScope, setManualSuggestionScope] = useState<"all" | "skill" | "wiki-project">("all");
   const [browseMenuOpen, setBrowseMenuOpen] = useState(false);
   const [browserSelections, setBrowserSelections] = useState<BrowserPathSelection[]>([]);
+  const [pendingBrowserFiles, setPendingBrowserFiles] = useState<BrowserPendingFile[]>([]);
+  const [browserSelectionsExpanded, setBrowserSelectionsExpanded] = useState(false);
+  const [browserImportPhase, setBrowserImportPhase] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [browserImportMessage, setBrowserImportMessage] = useState("");
+  const [wikiMentions, setWikiMentions] = useState<WikiMentionSelection[]>([]);
 
-  const skillSuggestions = useMemo<SkillSuggestion[]>(
-    () => skills.map((skill) => ({
-      id: skill.id,
-      label: skillLabel(skill),
-      description: skillDescription(skill),
-      searchText: [skill.id, skillLabel(skill), skillDescription(skill)].join(" "),
-    })),
-    [skills],
+  const mentionSuggestions = useMemo<MentionSuggestion[]>(
+    () => {
+      const skillItems: MentionSuggestion[] = skills.map((skill) => ({
+        id: skill.id,
+        kind: "skill",
+        label: skillLabel(skill),
+        description: skillDescription(skill),
+        searchText: [skill.id, skillLabel(skill), skillDescription(skill)].join(" "),
+      }));
+      const wikiProjectItems: MentionSuggestion[] = wikiProjectOptions.map((project) => ({
+        id: project.projectKey,
+        kind: "wiki-project",
+        label: project.projectLabel || project.projectKey,
+        description: project.path || "위키 프로젝트를 이번 질문의 우선 컨텍스트로 지정",
+        searchText: [project.projectKey, project.projectLabel, project.path].filter(Boolean).join(" "),
+        wikiProject: {
+          projectKey: project.projectKey,
+          projectLabel: project.projectLabel || project.projectKey,
+          workspace: project.workspace,
+          path: project.path,
+        },
+      }));
+      return [...wikiProjectItems, ...skillItems];
+    },
+    [skills, wikiProjectOptions],
   );
 
   const mention = activeMentionState(composerText, caret);
   const filteredSuggestions = useMemo(() => {
     const query = (mention?.query || "").trim();
+    const scopedSuggestions = manualSuggestionsOpen && manualSuggestionScope !== "all"
+      ? mentionSuggestions.filter((suggestion) => suggestion.kind === manualSuggestionScope)
+      : mentionSuggestions;
     if (!query) {
-      return [...skillSuggestions]
-        .sort((a, b) => a.label.localeCompare(b.label, "ko"))
+      return [...scopedSuggestions]
+        .sort((a, b) => {
+          if (a.kind !== b.kind) return a.kind === "wiki-project" ? -1 : 1;
+          return a.label.localeCompare(b.label, "ko");
+        })
         .slice(0, 8);
     }
-    return skillSuggestions
+    return scopedSuggestions
       .map((skill) => ({
         skill,
-        score: scoreSkillSuggestion(query, skill),
+        score: scoreMentionSuggestion(query, skill),
       }))
       .filter((item) => item.score > 0)
       .sort((a, b) => {
@@ -254,7 +416,7 @@ export function Composer({
       })
       .map((item) => item.skill)
       .slice(0, 8);
-  }, [mention?.query, skillSuggestions]);
+  }, [manualSuggestionScope, manualSuggestionsOpen, mention?.query, mentionSuggestions]);
 
   const showSuggestions = Boolean((mention || manualSuggestionsOpen) && filteredSuggestions.length);
 
@@ -271,7 +433,16 @@ export function Composer({
   useEffect(() => {
     if (composerText.trim()) return;
     setBrowserSelections([]);
+    setPendingBrowserFiles([]);
+    setBrowserImportPhase("idle");
+    setBrowserImportMessage("");
   }, [composerText]);
+
+  useEffect(() => {
+    if (browserSelections.length <= 4) {
+      setBrowserSelectionsExpanded(false);
+    }
+  }, [browserSelections.length]);
 
   const updateCaretFromElement = (element: HTMLTextAreaElement | null) => {
     if (!element) return;
@@ -280,7 +451,16 @@ export function Composer({
 
   const closeSuggestions = () => {
     setManualSuggestionsOpen(false);
+    setManualSuggestionScope("all");
     setHighlightedIndex(0);
+  };
+
+  const clearImportedBrowserContext = () => {
+    const currentText = composerRuntime.getState().text;
+    const nextText = stripImportContextBlock(currentText);
+    if (nextText !== currentText) composerRuntime.setText(nextText);
+    setBrowserImportPhase("idle");
+    setBrowserImportMessage("");
   };
 
   const syncBrowserSelections = (nextSelections: BrowserPathSelection[]) => {
@@ -288,14 +468,18 @@ export function Composer({
     const nextText = buildPathSelectionText(currentText, nextSelections);
     composerRuntime.setText(nextText);
     setBrowserSelections(nextSelections);
-    if (nextSelections.length) onSelectSkillTag("os-file-browser");
   };
 
-  const insertSkillMention = (skillId: string) => {
+  const syncWikiMentions = (nextMentions: WikiMentionSelection[], baseText = composerRuntime.getState().text) => {
+    const nextText = buildWikiMentionText(baseText, nextMentions);
+    composerRuntime.setText(nextText);
+    setWikiMentions(nextMentions);
+  };
+
+  const replaceActiveMention = (insertLabel: string) => {
     const textarea = inputRef.current;
     const currentText = composerRuntime.getState().text;
     const nextMention = activeMentionState(currentText, textarea?.selectionStart ?? caret ?? currentText.length);
-    const insertLabel = `@${skillId} `;
     let nextText = `${currentText}${insertLabel}`;
     let nextCaret = nextText.length;
 
@@ -303,6 +487,12 @@ export function Composer({
       nextText = `${currentText.slice(0, nextMention.start)}${insertLabel}${currentText.slice(nextMention.end)}`;
       nextCaret = nextMention.start + insertLabel.length;
     }
+
+    return { nextText, nextCaret };
+  };
+
+  const insertSkillMention = (skillId: string) => {
+    const { nextText, nextCaret } = replaceActiveMention(`@${skillId} `);
 
     composerRuntime.setText(nextText);
     onSelectSkillTag(skillId);
@@ -317,7 +507,33 @@ export function Composer({
     });
   };
 
-  const handleOpenSkillPicker = () => {
+  const insertWikiProjectMention = (suggestion: MentionSuggestion) => {
+    if (!suggestion.wikiProject) return;
+    const { nextText, nextCaret } = replaceActiveMention(`@${suggestion.label} `);
+    const nextMentions = [...wikiMentions];
+    const exists = nextMentions.some((item) => item.projectKey === suggestion.wikiProject?.projectKey);
+    if (!exists) nextMentions.push(suggestion.wikiProject);
+    syncWikiMentions(nextMentions, nextText);
+    closeSuggestions();
+
+    requestAnimationFrame(() => {
+      const node = inputRef.current;
+      if (!node) return;
+      node.focus();
+      node.setSelectionRange(nextCaret, nextCaret);
+      setCaret(nextCaret);
+    });
+  };
+
+  const insertMentionSuggestion = (suggestion: MentionSuggestion) => {
+    if (suggestion.kind === "wiki-project") {
+      insertWikiProjectMention(suggestion);
+      return;
+    }
+    insertSkillMention(suggestion.id);
+  };
+
+  const handleOpenMentionPicker = (scope: "skill" | "wiki-project" | "all") => {
     const textarea = inputRef.current;
     if (!textarea) return;
     const text = composerRuntime.getState().text;
@@ -328,6 +544,7 @@ export function Composer({
     const nextText = `${text.slice(0, start)}${insertLabel}${text.slice(end)}`;
     const nextCaret = start + insertLabel.length;
     composerRuntime.setText(nextText);
+    setManualSuggestionScope(scope);
     setManualSuggestionsOpen(true);
     requestAnimationFrame(() => {
       const node = inputRef.current;
@@ -340,6 +557,7 @@ export function Composer({
 
   const mergeBrowserSelections = (incoming: BrowserPathSelection[]) => {
     if (!incoming.length) return;
+    clearImportedBrowserContext();
     const merged = [...browserSelections];
     const seen = new Set(merged.map((item) => `${item.kind}:${item.path}`));
     for (const item of incoming) {
@@ -350,6 +568,20 @@ export function Composer({
     }
     syncBrowserSelections(merged.sort((a, b) => a.path.localeCompare(b.path, "ko")));
     setBrowseMenuOpen(false);
+  };
+
+  const mergePendingBrowserFiles = (incoming: BrowserPendingFile[]) => {
+    if (!incoming.length) return;
+    setPendingBrowserFiles((current) => {
+      const merged = [...current];
+      const seen = new Set(merged.map((item) => item.key));
+      for (const item of incoming) {
+        if (seen.has(item.key)) continue;
+        seen.add(item.key);
+        merged.push(item);
+      }
+      return merged.sort((a, b) => a.selection.path.localeCompare(b.selection.path, "ko"));
+    });
   };
 
   const handleBrowseFiles = () => {
@@ -364,19 +596,73 @@ export function Composer({
 
   const handleFileBrowseChange = (event: ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || []) as BrowserFile[];
+    mergePendingBrowserFiles(pendingBrowserFilesFromFiles(files, "file"));
     mergeBrowserSelections(browserSelectionsFromFiles(files, "file"));
     event.target.value = "";
   };
 
   const handleDirectoryBrowseChange = (event: ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || []) as BrowserFile[];
+    mergePendingBrowserFiles(pendingBrowserFilesFromFiles(files, "directory"));
     mergeBrowserSelections(browserSelectionsFromFiles(files, "directory"));
     event.target.value = "";
   };
 
   const handleRemoveBrowserSelection = (target: BrowserPathSelection) => {
+    clearImportedBrowserContext();
+    setPendingBrowserFiles((current) => current.filter((item) => !(item.selection.kind === target.kind && item.selection.path === target.path)));
     const nextSelections = browserSelections.filter((item) => !(item.kind === target.kind && item.path === target.path));
     syncBrowserSelections(nextSelections);
+  };
+
+  const handleImportBrowserSelections = async () => {
+    if (!pendingBrowserFiles.length) {
+      setBrowserImportPhase("error");
+      setBrowserImportMessage("브라우징으로 고른 실제 파일이 없어 미러 복사를 실행할 수 없습니다.");
+      return;
+    }
+    setBrowserImportPhase("loading");
+    setBrowserImportMessage("선택 파일을 managed mirror로 복사하고 해석 중입니다.");
+    try {
+      const primaryProject = wikiMentions[0];
+      const result = await importBrowserFilesToChat({
+        files: pendingBrowserFiles,
+        workspace: chatContext.workspace,
+        projectId: chatContext.projectId,
+        projectHint: primaryProject?.projectLabel || chatContext.projectId || "chat_project",
+        projectKey: primaryProject?.projectKey,
+      });
+      const mirrorSelections: BrowserPathSelection[] = (result.attachments || [])
+        .flatMap((item) => {
+          const path = String(item.mirrorPath || "").trim();
+          if (!path) return [];
+          const parts = path.split("/");
+          return [{
+            kind: "file" as const,
+            label: item.fileName || parts[parts.length - 1] || path,
+            path,
+            absolute: path.startsWith("/"),
+          }];
+        });
+      if (mirrorSelections.length) syncBrowserSelections(mirrorSelections);
+      if (result.contextBlock) {
+        const currentText = composerRuntime.getState().text;
+        composerRuntime.setText(applyImportContextText(currentText, result.contextBlock));
+      }
+      setPendingBrowserFiles([]);
+      setBrowserImportPhase("success");
+      setBrowserImportMessage(result.mirrorBatchPath
+        ? `미러 복사 및 해석 완료 · ${result.attachments?.length || 0} files · ${result.mirrorBatchPath}`
+        : `미러 복사 및 해석 완료 · ${result.attachments?.length || 0} files`);
+    } catch (error) {
+      setBrowserImportPhase("error");
+      setBrowserImportMessage(error instanceof Error ? error.message : "브라우징 파일 가져오기에 실패했습니다.");
+    }
+  };
+
+  const handleRemoveWikiMention = (target: WikiMentionSelection) => {
+    const nextMentions = wikiMentions.filter((item) => item.projectKey !== target.projectKey);
+    syncWikiMentions(nextMentions);
   };
 
   const handleInputKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
@@ -393,8 +679,8 @@ export function Composer({
     }
     if (event.key === "Enter" || event.key === "Tab") {
       event.preventDefault();
-      const activeSkill = filteredSuggestions[highlightedIndex];
-      if (activeSkill) insertSkillMention(activeSkill.id);
+      const activeSuggestion = filteredSuggestions[highlightedIndex];
+      if (activeSuggestion) insertMentionSuggestion(activeSuggestion);
       return;
     }
     if (event.key === "Escape") {
@@ -417,9 +703,6 @@ export function Composer({
     <ComposerPrimitive.Root className="aui-composer-root">
       <div className="aui-composer-shell">
         <div className="aui-composer-tools" aria-label="composer skill tags">
-          <ComposerPrimitive.AddAttachment asChild>
-            <button type="button" className="aui-mini-tool">파일</button>
-          </ComposerPrimitive.AddAttachment>
           <div className={`aui-browse-tool-wrap ${browseMenuOpen ? "open" : ""}`}>
             <button
               type="button"
@@ -428,10 +711,10 @@ export function Composer({
               aria-haspopup="menu"
               onClick={() => setBrowseMenuOpen((current) => !current)}
             >
-              파일브라우징 {browserSelections.length}
+              파일 추가 {browserSelections.length}
             </button>
             {browseMenuOpen ? (
-              <div className="aui-browse-menu" role="menu" aria-label="파일브라우징 메뉴">
+              <div className="aui-browse-menu" role="menu" aria-label="파일 추가 메뉴">
                 <button type="button" role="menuitem" className="aui-browse-menu-item" onClick={handleBrowseFiles}>
                   파일 선택
                 </button>
@@ -441,10 +724,12 @@ export function Composer({
               </div>
             ) : null}
           </div>
-          <button type="button" className="aui-mini-tool" onClick={handleOpenSkillPicker}>
+          <button type="button" className="aui-mini-tool" onClick={() => handleOpenMentionPicker("skill")}>
             @스킬 {selectedSkillTags.length}
           </button>
-          <button type="button" className="aui-mini-tool">위키 근거</button>
+          <button type="button" className="aui-mini-tool" onClick={() => handleOpenMentionPicker("wiki-project")}>
+            @프로젝트 {wikiMentions.length}
+          </button>
         </div>
         <input
           ref={fileBrowseInputRef}
@@ -465,7 +750,7 @@ export function Composer({
         {selectedSkillTags.length ? (
           <div className="aui-selected-tags" aria-label="selected skill tags">
             {selectedSkillTags.map((skillTag) => {
-              const skill = skillSuggestions.find((item) => item.id === skillTag);
+              const skill = mentionSuggestions.find((item) => item.kind === "skill" && item.id === skillTag);
               return (
                 <button
                   key={skillTag}
@@ -481,9 +766,25 @@ export function Composer({
             })}
           </div>
         ) : null}
+        {wikiMentions.length ? (
+          <div className="aui-selected-tags" aria-label="selected wiki project mentions">
+            {wikiMentions.map((mentionItem) => (
+              <button
+                key={mentionItem.projectKey}
+                type="button"
+                className="aui-selected-tag context"
+                onClick={() => handleRemoveWikiMention(mentionItem)}
+                aria-label={`@${mentionItem.projectLabel} 제거`}
+              >
+                <span>@{mentionItem.projectLabel}</span>
+                <strong>x</strong>
+              </button>
+            ))}
+          </div>
+        ) : null}
         {browserSelections.length ? (
           <div className="aui-browser-paths" aria-label="selected browser paths">
-            {browserSelections.map((selection) => (
+            {(browserSelectionsExpanded ? browserSelections : browserSelections.slice(0, 4)).map((selection) => (
               <button
                 key={`${selection.kind}:${selection.path}`}
                 type="button"
@@ -496,6 +797,32 @@ export function Composer({
                 <small>{selection.path}</small>
               </button>
             ))}
+            {browserSelections.length > 4 ? (
+              <button
+                type="button"
+                className="aui-browser-path-summary"
+                onClick={() => setBrowserSelectionsExpanded((current) => !current)}
+              >
+                {browserSelectionsExpanded
+                  ? `파일 선택 ${browserSelections.length}건 접기`
+                  : `파일 선택 ${browserSelections.length}건 펼치기`}
+              </button>
+            ) : null}
+            <div className="aui-browser-path-actions">
+              <button
+                type="button"
+                className="aui-browser-path-summary"
+                disabled={!pendingBrowserFiles.length || browserImportPhase === "loading"}
+                onClick={handleImportBrowserSelections}
+              >
+                {browserImportPhase === "loading"
+                  ? "미러 복사 + 해석 중"
+                  : `미러 복사 + 해석 ${pendingBrowserFiles.length}`}
+              </button>
+            </div>
+            {browserImportMessage ? (
+              <p className={`aui-browser-import-status ${browserImportPhase}`}>{browserImportMessage}</p>
+            ) : null}
           </div>
         ) : null}
         <ComposerAttachments />
@@ -526,11 +853,11 @@ export function Composer({
                   aria-selected={index === highlightedIndex}
                   className={`aui-skill-suggestion ${index === highlightedIndex ? "active" : ""}`}
                   onMouseDown={(event) => event.preventDefault()}
-                  onClick={() => insertSkillMention(skill.id)}
+                  onClick={() => insertMentionSuggestion(skill)}
                 >
-                  <strong>@{skill.label}</strong>
+                  <strong>{skill.kind === "wiki-project" ? "@프로젝트" : "@스킬"} · {skill.label}</strong>
                   <span>{skill.description}</span>
-                  <small>{skill.id}</small>
+                  <small>{skill.kind === "wiki-project" ? skill.wikiProject?.path || skill.id : skill.id}</small>
                 </button>
               ))}
             </div>
@@ -538,12 +865,17 @@ export function Composer({
         </div>
         <div className="aui-composer-footer">
           <div className="aui-composer-left">
-            <ComposerPrimitive.AddAttachment asChild>
-              <button type="button" className="aui-icon-button secondary" aria-label="첨부 추가">
-                +
-              </button>
-            </ComposerPrimitive.AddAttachment>
-            <span className="aui-composer-hint">Enter 전송 · Shift+Enter 줄바꿈 · @스킬 자동완성</span>
+            <button
+              type="button"
+              className="aui-icon-button secondary"
+              aria-label="파일 추가"
+              aria-expanded={browseMenuOpen}
+              aria-haspopup="menu"
+              onClick={() => setBrowseMenuOpen((current) => !current)}
+            >
+              +
+            </button>
+            <span className="aui-composer-hint">Enter 전송 · Shift+Enter 줄바꿈 · @스킬/@프로젝트 자동완성</span>
           </div>
           {!isRunning ? (
             <ComposerPrimitive.Send asChild>

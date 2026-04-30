@@ -39,6 +39,10 @@ source: ""
 
 ## 상태 기준 링크
 - [[Wiki/2025_20240815545_00_1723770661746_제안요청서_Project/Status]]
+- [[Wiki/2025_20240815545_00_1723770661746_제안요청서_Project/Reference_Register]]
+
+## 참조 링크
+- [[Wiki/2025_20240815545_00_1723770661746_제안요청서_Project/Reference_Register]]
 
 ## 증적/근거 링크
 - [[Wiki/2025_20240815545_00_1723770661746_제안요청서_Project/Sources]]
@@ -47,6 +51,7 @@ source: ""
 
 ## 운영 링크
 - [[Wiki/2025_20240815545_00_1723770661746_제안요청서_Project/Status]]
+- [[Wiki/2025_20240815545_00_1723770661746_제안요청서_Project/Reference_Register]]
 - [[Wiki/2025_20240815545_00_1723770661746_제안요청서_Project/Project_Overview]]
 - [[Wiki/2025_20240815545_00_1723770661746_제안요청서_Project/Sources]]
 - [[Wiki/2025_20240815545_00_1723770661746_제안요청서_Project/Evidence_Log]]

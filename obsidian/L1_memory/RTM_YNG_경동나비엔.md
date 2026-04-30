@@ -58,6 +58,7 @@ updated: 2026-04-30
 - 검사 데이터는 엑셀→OneDrive 저장 구조 (데이터 접근 경로 중요)
 
 ## 드릴다운
+- [[Wiki/Common/RTM_YNG_경동나비엔_RTM_Reference_Register]]
 - [[Wiki/Common/RTM_YNG_경동나비엔_RTM_Status]]
 - [[RTM_YNG_경동나비엔_RTM]]
 - [[RTM_YNG_Evidence_Log_2026-04-21]]

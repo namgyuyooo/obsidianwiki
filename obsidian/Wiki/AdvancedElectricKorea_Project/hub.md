@@ -39,6 +39,10 @@ source: "public Slack evidence sweep (2024-04-21 to 2026-04-21)"
 
 ## 상태 기준 링크
 - [[Wiki/AdvancedElectricKorea_Project/Status]]
+- [[Wiki/AdvancedElectricKorea_Project/Reference_Register]]
+
+## 참조 링크
+- [[Wiki/AdvancedElectricKorea_Project/Reference_Register]]
 
 ## 증적/근거 링크
 - [[Wiki/AdvancedElectricKorea_Project/Sources]]
@@ -47,6 +51,7 @@ source: "public Slack evidence sweep (2024-04-21 to 2026-04-21)"
 
 ## 운영 링크
 - [[Wiki/AdvancedElectricKorea_Project/Status]]
+- [[Wiki/AdvancedElectricKorea_Project/Reference_Register]]
 - [[Wiki/AdvancedElectricKorea_Project/Project_Overview]]
 - [[Wiki/AdvancedElectricKorea_Project/Sources]]
 - [[Wiki/AdvancedElectricKorea_Project/Evidence_Log]]

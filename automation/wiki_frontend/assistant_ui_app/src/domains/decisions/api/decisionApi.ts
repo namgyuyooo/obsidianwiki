@@ -12,6 +12,14 @@ export type DecisionItem = {
   resolvedAction?: string;
   resolvedAt?: string;
   note?: string;
+  appliedPath?: string;
+  finalVerification?: {
+    provider?: string;
+    model?: string;
+    decision?: string;
+    reason?: string;
+    safeAppendNote?: string;
+  };
 };
 
 export type DecisionQueueSnapshot = {
@@ -25,6 +33,18 @@ export type DecisionSummary = {
   approved: number;
   held: number;
   total: number;
+};
+
+export type DecisionMergeSuggestion = {
+  provider?: string;
+  model?: string;
+  endpoint?: string;
+  upstreamStatus?: string;
+  summary?: string;
+  conflictingPoints?: string[];
+  mergeStrategy?: string[];
+  caution?: string;
+  mergedMarkdown?: string;
 };
 
 async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
@@ -59,14 +79,37 @@ export async function fetchDecisionQueue(workspace: string): Promise<DecisionQue
   return requestJson<DecisionQueueSnapshot>(`/api/decision-queue?workspace=${encodeURIComponent(workspace)}`);
 }
 
-export async function resolveDecisionItem(itemId: string, action: "approve" | "hold" | "investigate", note = "") {
+export async function resolveDecisionItem(
+  itemId: string,
+  action: "approve" | "hold" | "investigate",
+  note = "",
+  workspace = "rtm",
+) {
   return requestJson(`/api/decision-queue/${encodeURIComponent(itemId)}/resolve`, {
     method: "POST",
-    body: JSON.stringify({ action, note }),
+    body: JSON.stringify({ action, note, workspace }),
   });
 }
 
-export async function inferDecisionItem(item: DecisionItem, directive: string, signal?: AbortSignal) {
+export async function suggestDecisionMerge(input: {
+  id: string;
+  title?: string;
+  content?: string;
+  projectKey?: string;
+  projectLabel?: string;
+  sourcePath?: string;
+  targetPath?: string;
+  sourceMarkdown?: string;
+  targetMarkdown?: string;
+  workspace?: string;
+}) {
+  return requestJson<DecisionMergeSuggestion>("/api/wiki/conflict-merge", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+
+export async function inferDecisionItem(item: DecisionItem, directive: string, workspace = "rtm", signal?: AbortSignal) {
   const prompt = [
     "Decision Deck 카드에 대해 판정 보조를 수행해줘.",
     "",
@@ -93,7 +136,7 @@ export async function inferDecisionItem(item: DecisionItem, directive: string, s
     body: JSON.stringify({
       message: prompt,
       projectId: "decision-deck",
-      workspace: "rtm",
+      workspace,
       profile: "decision_triage",
       skillTags: ["wiki-ingest-operator"],
     }),

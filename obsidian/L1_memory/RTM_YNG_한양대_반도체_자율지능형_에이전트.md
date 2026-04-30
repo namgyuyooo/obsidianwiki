@@ -57,6 +57,7 @@ updated: 2026-04-30
 - PSK_Project와 연계 — PSK L1_memory 함께 참조
 
 ## 드릴다운
+- [[Wiki/Common/RTM_YNG_한양대_반도체_자율지능형_에이전트_Reference_Register]]
 - [[Wiki/Common/RTM_YNG_한양대_반도체_자율지능형_에이전트_Status]]
 - [[RTM_YNG_한양대_반도체_자율지능형_에이전트]]
 - [[RTM_YNG_Evidence_Log_2026-04-21]]

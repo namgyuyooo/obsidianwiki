@@ -10,6 +10,14 @@ source: "Global wiki operations log"
 이 파일은 위키 운영의 append-only 로그입니다.
 
 ## 2026-04-30
+- `Wiki/Common/Wiki_Reference_Operating_Model.md`, `AGENTS.md`, `CLAUDE.md`, `Wiki/Schema.md`: 위키 본문에 모든 내용을 복제하지 않고, 요약 + 설명 위치 + 관련 문서 + URL 또는 파일명 fallback을 남기는 링크 우선 참조 구조를 공식 운영 기준으로 추가
+- `Wiki/*/Reference_Register.md`: 전 프로젝트에 링크 우선 참조 레지스터를 생성하고, Slack/웹/Google Drive/로컬 경로/파일명 fallback을 기록하는 단일 진입점을 도입
+- `Wiki/Common/RTM_YNG*_Reference_Register.md`: Common 단일 페이지 기반 RTM_YNG 항목에도 참조 레지스터를 추가하고, 본문 페이지 및 L1 드릴다운과 연결
+- `Wiki/*/Sources.md`, `Wiki/*/hub.md`, `L1_memory/*.md`, `Wiki/index.md`, `Wiki/Common/hub.md`: `Sources` 중심 구조를 `Reference_Register` 우선 구조로 재배치하고, 허브/L1/전역 인덱스에서 참조 레지스터를 바로 열 수 있게 링크 보강
+- `Wiki/*/Reference_Register.md`, `Wiki/Common/RTM_YNG*_Reference_Register.md`: 기존 `Sources`와 공통 RTM_YNG source 문서에서 문서명, 채널, Drive 분류, 로컬 경로, 읽기 상태를 추출해 실제 참조 카드 형태로 채우고, 공통 RTM_YNG 항목 14건 중 11건에 대표본 참조를 반영
+- `Wiki/Common/RTM_YNG_제우스_픽셀_AI바우처_Reference_Register.md`: 위키 내부 `file id` 기록을 재활용해 실제 Google Drive URL 2건을 복원
+- `Wiki/Common/Reference_Link_Restoration_Queue.md`, `Wiki/index.md`, `Wiki/Common/hub.md`: URL 미복원 참조 96건의 복원 큐를 추가하고, Slack/Drive/Local 기준의 후속 링크 복원 작업을 전역 운영 문서에서 추적 가능하게 연결
+- `Wiki/Sawnics_ManufacturingAI_Project/Reference_Register.md`, `Wiki/Common/RTM_YNG_산업현장_에이전트_연구개발_Reference_Register.md`, `Wiki/Common/RTM_YNG_서울반도체_AI_응용제품_신속_상용화_Reference_Register.md`, `Wiki/Common/RTM_YNG_경동나비엔_RTM_Reference_Register.md`: 커넥터 재조회 전에도 재탐색 가능하도록 Slack channel id, raw export 경로, 최종 폴더, 수정일, 대표본 판단 근거를 fallback 정보에 보강
 - `AGENTS.md`, `CLAUDE.md`, `Wiki/Schema.md`: 위키 공간을 `project/account/common/shared`로 구분하고, 허브를 실무 실행 현황판으로 다루는 기준 추가
 - `Wiki/Common/Wiki_Ingest_Operating_Model.md`: 기존 3층 인제스트 모델을 실무 운영형으로 재정의하고 `실행 현황 계층`, 허브 운영 기준, 공간 유형별 운영 원칙 추가
 - `Wiki/Common/Wiki_Ingest_Templates.md`: `project/account/common/shared` 허브 템플릿과 `Action_Items.md`, `Decisions.md`, `Risks.md` 템플릿 추가
@@ -408,3 +416,21 @@ source: "Global wiki operations log"
 - `RTM_YNG_탈레스_Trust_my_Tech_HWP_Field_Pack_2026-04-27`를 생성해 `vf` 양식의 실제 칸 순서에 맞춘 붙여넣기용 문단 세트를 정리함.
 - `프로그램 특화 항목 -> 개요 요약 -> 문제인식 -> 실현가능성 -> 성장전략 -> 팀 -> ESG` 순으로 각 칸별 `본문`, `표/이미지 슬롯`, `각주 메모`를 분리함.
 - 실제 HWP 작성 시 칸별로 바로 옮겨 적을 수 있도록 `양식 칸 단위 작업본`으로 연결함.
+
+## [2026-04-30] ingest | reference-first backfill via system Slack collection and remote file verification
+
+- `Slack`, `Google Drive` 커넥터가 모두 `token_expired` 상태여서 플러그인 재조회 대신 로컬 시스템 수집 경로를 우선 사용함.
+- `automation/drive_wikify/src/drive_wikify/slack_collector.py`에 SSL 인증서 우회 fallback을 추가해 `slack-channels`, `slack-collect --dry-run`이 다시 동작하도록 보강함.
+- 시스템 Slack 상태 파일 `automation/wiki_api/runtime/slack_collection_state.json`에서 `#sales_team (C08PPRAS00P)`, `#경동나비엔 (C0ATZJWHG82)`의 `last_collected_at`, `last_export_path`, `message_count`, `filtered_message_count`를 확인함.
+- `rclone` 기반 우회 수집으로 다음 원격 폴더의 파일 실재와 대표 파일명을 검증함:
+  - `RTM_YNG/2026_RTM(drive)/5.국책과제/쏘닉스`
+  - `RTM_YNG/2026_RTM(drive)/5.국책과제/산업현장 에이전트_연구개발`
+  - `RTM_YNG/2026_RTM(drive)/5.국책과제/(중기) AI 응용제품 신속 상용화 지원사업`
+- 위 결과를 `Sawnics_ManufacturingAI_Project/Reference_Register`, `RTM_YNG_산업현장_에이전트_연구개발_Reference_Register`, `RTM_YNG_서울반도체_AI_응용제품_신속_상용화_Reference_Register`, `Common/Reference_Link_Restoration_Queue`에 반영해 permalink 없이도 `collection state path`, `last export`, `원격 폴더 분류`, `대표 파일명`을 따라 원문을 재추적할 수 있게 함.
+
+## [2026-04-30] structure | automation emits reference-first records
+
+- `automation/drive_wikify/src/drive_wikify/wiki_writer.py`가 새 프로젝트 자동 생성 시 `Reference_Register.md`를 함께 만들고, 자동 인제스트 결과를 `Sources.md`보다 먼저 `Reference_Register.md`에 기록하도록 변경함.
+- 같은 자동 인제스트에서 L1 드릴다운도 `Sources` 대신 `Reference_Register`를 우선 가리키도록 조정함.
+- `automation/drive_wikify/src/drive_wikify/slack_collector.py`가 Slack 수집 승격 시 `Reference_Register.md`를 생성/갱신하고, `channel id`, `last_export_path`, `last_filtered_export_path`, `collection state` 중심의 재수집 식별자를 남기도록 변경함.
+- 위 변경으로 자동화 산출물도 `mirror/cache 경로 금지`, `원격 분류 + 파일명 + 식별자 우선` 정책을 직접 따르게 됨.

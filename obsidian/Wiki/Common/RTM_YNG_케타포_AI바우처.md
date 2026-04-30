@@ -12,6 +12,8 @@ tags:
 
 # 케타포 AI바우처
 
+- [[Wiki/Common/RTM_YNG_케타포_AI바우처_Reference_Register]]
+
 - [[Wiki/Common/RTM_YNG_케타포_AI바우처_Status]]
 
 ## Project Overview

@@ -15,6 +15,7 @@ source: "public Slack evidence sweep (2024-04-21 to 2026-04-21)"
 - [[Wiki/PSK_Project/Conflict_Register]] 또는 고객 확인이 필요한 판단은 확정 전까지 여기나 `Conflict_Register.md`에서 분리 관리합니다.
 
 ## 운영 메모
+- 참조 기준 문서: [[Wiki/PSK_Project/Reference_Register]]
 - 결정 이후 상태 라벨/단계가 바뀌면 [[Wiki/PSK_Project/Status]]를 함께 갱신합니다.
 - 새로운 결정이 생기면 [[Wiki/PSK_Project/Action_Items]]의 항목 상태와 [[Wiki/PSK_Project/Risks]]의 영향도 함께 갱신합니다.
 - 구조 변경 자체는 [[Wiki/PSK_Project/Change_Log]]에 남기고, 실무 판단은 이 문서에 남깁니다.

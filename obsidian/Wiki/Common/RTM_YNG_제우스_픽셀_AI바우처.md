@@ -14,6 +14,8 @@ tags:
 
 # 2024 AI바우처 / 제우스 / 픽셀
 
+- [[Wiki/Common/RTM_YNG_제우스_픽셀_AI바우처_Reference_Register]]
+
 - [[Wiki/Common/RTM_YNG_제우스_픽셀_AI바우처_Status]]
 
 ## Project Overview

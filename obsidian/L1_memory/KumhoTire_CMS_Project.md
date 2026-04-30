@@ -49,6 +49,7 @@ updated: 2026-04-30
 - crop 크기 고정 학습 이력 있으므로 고해상도 입력 시 모델 동작 주의
 
 ## 드릴다운
+- [[Wiki/KumhoTire_CMS_Project/Reference_Register]]
 - [[Wiki/KumhoTire_CMS_Project/Status]]
 - [[Wiki/KumhoTire_CMS_Project/hub]]
 - [[Wiki/KumhoTire_CMS_Project/Evidence_Log]]

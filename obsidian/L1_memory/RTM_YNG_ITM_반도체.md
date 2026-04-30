@@ -52,6 +52,7 @@ POC 결과보고 / 제품 확장 전략 제안 / 영업 단계
 - 결과 zip/이미지 시트는 Drive에 있으나 미열람
 
 ## 드릴다운
+- [[Wiki/Common/RTM_YNG_ITM_반도체_Reference_Register]]
 - [[Wiki/Common/RTM_YNG_ITM_반도체_Status]]
 - [[RTM_YNG_ITM_반도체]]
 - [[RTM_YNG_Drive_Discovery_2026-04-21]]

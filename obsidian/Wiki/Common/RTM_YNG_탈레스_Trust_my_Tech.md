@@ -12,6 +12,8 @@ tags:
 
 # 탈레스 Trust my Tech
 
+- [[Wiki/Common/RTM_YNG_탈레스_Trust_my_Tech_Reference_Register]]
+
 - [[Wiki/Common/RTM_YNG_탈레스_Trust_my_Tech_Status]]
 
 ## Project Overview

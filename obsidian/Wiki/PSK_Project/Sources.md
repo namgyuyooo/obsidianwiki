@@ -8,6 +8,12 @@ source: "public Slack evidence sweep (2024-04-21 to 2026-04-21)"
 # Sources
 
 ## 운영 원칙
+- 링크 우선 참조는 [[Wiki/PSK_Project/Reference_Register]]에서 먼저 관리합니다.
+- 이 문서는 상세 출처 메타데이터, 레거시 source notes, raw-source 메모를 보조적으로 유지합니다.
+- URL을 직접 남기기 어렵거나 접근 메모가 더 중요한 경우 이 문서를 함께 사용합니다.
+
+## 상세 출처 메모
+## 운영 원칙
 - 이 문서는 출처 레지스터입니다. 문서명, 날짜, 경로, 상태, 대표본 여부를 우선 남깁니다.
 - 대표본/비교본/보류본 구분이 필요한 경우 명시합니다.
 - 실무 판단에 직접 쓰인 출처는 [[Wiki/PSK_Project/Evidence_Log]]와 교차 링크합니다.

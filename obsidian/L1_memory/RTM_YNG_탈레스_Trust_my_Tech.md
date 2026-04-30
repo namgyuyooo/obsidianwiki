@@ -54,6 +54,7 @@ Trust my Tech 프로그램 사업계획서 vf 제출 완료, 인건비 제외본
 - `TS Agent`와 `Hubble` 보안형 서술이 갈라져 있음 — 다른 제안 트랙 가능성
 
 ## 드릴다운
+- [[Wiki/Common/RTM_YNG_탈레스_Trust_my_Tech_Reference_Register]]
 - [[Wiki/Common/RTM_YNG_탈레스_Trust_my_Tech_Status]]
 - [[RTM_YNG_탈레스_Trust_my_Tech]]
 - [[RTM_YNG_Conflict_Register_2026-04-21]]

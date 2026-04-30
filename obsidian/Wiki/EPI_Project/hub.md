@@ -39,6 +39,10 @@ source: ""
 
 ## 상태 기준 링크
 - [[Wiki/EPI_Project/Status]]
+- [[Wiki/EPI_Project/Reference_Register]]
+
+## 참조 링크
+- [[Wiki/EPI_Project/Reference_Register]]
 
 ## 증적/근거 링크
 - [[Wiki/EPI_Project/Sources]]
@@ -47,6 +51,7 @@ source: ""
 
 ## 운영 링크
 - [[Wiki/EPI_Project/Status]]
+- [[Wiki/EPI_Project/Reference_Register]]
 - [[Wiki/EPI_Project/Project_Overview]]
 - [[Wiki/EPI_Project/Sources]]
 - [[Wiki/EPI_Project/Evidence_Log]]

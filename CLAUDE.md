@@ -36,7 +36,7 @@ Update L1 memory files after major ingest runs, key decisions, milestones, or is
 
 Treat top-level spaces in `obsidian/Wiki/` as one of four types:
 
-1. `project`: execution unit with evidence, actions, decisions, risks, and L1 memory
+1. `project`: execution unit with references, evidence, actions, decisions, risks, and L1 memory
 2. `account`: customer umbrella across multiple projects and relationship threads
 3. `common`: operating rules, automation, governance, and reusable system docs
 4. `shared`: reusable assets promoted from projects for broader reuse
@@ -63,7 +63,7 @@ When starting wiki work: Read `obsidian/Wiki/index.md` first, then drill into re
 When a new work event appears, promote it through the wiki in this order:
 
 1. Capture the raw event in the appropriate inbox or source note
-2. Register provenance in `Sources.md`
+2. Register provenance in `Reference_Register.md` with links first and file-name fallback
 3. Extract facts, quotes, numbers, decisions, and constraints into `Evidence_Log.md`
 4. Register contradictions or unresolved mismatches in `Conflict_Register.md`
 5. Record actual document/wiki changes in `Change_Log.md`
@@ -109,6 +109,7 @@ Periodically check for:
 - Orphan pages, missing cross-links, stale summaries
 - Contradictions not in `Conflict_Register.md`
 - Claims without evidence pages
+- Missing `Reference_Register.md` or missing link/path/file-name fallback entries
 - Project spaces missing core documents
 - Project hubs missing visible current status, blockers, next actions, and evidence links
 - Account hubs missing active project and next-touchpoint context
@@ -121,7 +122,7 @@ Document fixes in `obsidian/Wiki/log.md`.
 ## Project Space Minimum Structure
 
 Most project folders should maintain:
-- `hub.md`, `Status.md`, `Project_Overview.md`
+- `hub.md`, `Status.md`, `Reference_Register.md`, `Project_Overview.md`
 - `Sources.md`, `Evidence_Log.md`
 - `Change_Log.md`, `Conflict_Register.md`
 - `Action_Items.md`, `Decisions.md`, `Risks.md`
@@ -137,12 +138,16 @@ Project hubs should act as execution briefs, not flat indexes. Keep visible:
 - `최근 업데이트`
 - `운영 링크`
 
+`Reference_Register.md` should be the canonical project reference register for URLs, Slack links, Drive links, local paths, fallback file names, and where each reference is explained in the wiki.
+Temporary mirror/cache paths are not canonical references and should be converted into remote folder lineage, file names, IDs, or collection-state identifiers before being written to the wiki.
+
 `Status.md` should be the canonical project status register for label, stage, health, owner, blockers, next gate, and status history.
 
 ## Canonical Project Evidence Files
 
 Use underscore file names for project evidence documents:
 
+- `Reference_Register.md`
 - `Sources.md`
 - `Evidence_Log.md`
 - `Conflict_Register.md`

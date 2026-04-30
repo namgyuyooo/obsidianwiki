@@ -12,6 +12,8 @@ tags:
 
 # DMT_POC
 
+- [[Wiki/Common/RTM_YNG_DMT_POC_Reference_Register]]
+
 - [[Wiki/Common/RTM_YNG_DMT_POC_Status]]
 
 ## Project Overview

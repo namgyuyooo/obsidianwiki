@@ -11,7 +11,7 @@ source: "2026-04-21 ingest redesign discussion; 2026-04-30 practical operations 
 
 - 위키를 단순 인제스트 저장소가 아니라 실무 운영 시스템으로 다룬다.
 - 먼저 이 공간이 `project`, `account`, `common`, `shared` 중 무엇인지 판단한다.
-- `project`는 증적, 결정, 액션, 리스크, L1 메모리를 함께 갱신한다.
+- `project`는 참조, 증적, 결정, 액션, 리스크, L1 메모리를 함께 갱신한다.
 - `account`는 고객/계정 차원의 활성 프로젝트, 상업 상태, 다음 접점을 갱신한다.
 - `common`은 운영 모델, 자동화, 승격 큐, 거버넌스 상태를 갱신한다.
 - `shared`는 재사용 자산, 적용 대상, 승격 출처를 갱신한다.
@@ -31,8 +31,11 @@ source: "2026-04-21 ingest redesign discussion; 2026-04-30 practical operations 
 - 상위 폴더명에 `RTM`이 없더라도 파일명 또는 문서 내용이 프로젝트 핵심 키워드와 강하게 일치하면 후보에 포함하라.
 - `hwp`와 `hwpx`는 예외 없이 모두 조회 대상으로 포함하라.
 - `hwp`와 `hwpx`는 가능하면 원문을 직접 열어 확인하고, 필요 시 `rhwp` 계열 도구를 사용해 `info`, `dump`, `dump-pages`, `export-svg`로 구조와 본문을 점검하라.
-- `project` 공간에서는 `Status`, `Sources`, `Evidence_Log`, `Conflict_Register`, `Change_Log`, `Action_Items`, `Decisions`, `Risks`를 함께 유지하라.
+- `project` 공간에서는 `Status`, `Reference_Register`, `Sources`, `Evidence_Log`, `Conflict_Register`, `Change_Log`, `Action_Items`, `Decisions`, `Risks`를 함께 유지하라.
 - 원문 근거가 없는 결론 문서만 만들지 말고, 근거 발췌도 함께 남겨라.
+- 링크를 먼저 남기고, 링크를 남길 수 없을 때만 파일명/경로 fallback을 남겨라.
+- 임시 mirror/cache 경로는 위키의 영구 참조값으로 남기지 말고, 원격 폴더 분류, 대표 파일명, channel id, file id, last_export_path, collection state path 같은 재수집 식별자를 남겨라.
+- 위키 본문에는 내용을 다 복제하려 하지 말고, 어디를 다시 열어봐야 하는지와 어떤 문서가 핵심인지가 드러나게 써라.
 - 모든 수치에는 문서명과 날짜를 남겨라.
 - 상충되는 정보는 절대 하나로 뭉개지 말고 충돌 상태로 기록하라.
 - 기존 문서를 덮어쓰지 말고 날짜형 업데이트 블록으로 append 하라.
@@ -57,6 +60,7 @@ source: "2026-04-21 ingest redesign discussion; 2026-04-30 practical operations 
 2. 없으면 다음 기본 문서를 생성 대상으로 제안
    - hub.md
    - Status.md
+   - Reference_Register.md
    - Project_Overview.md
    - KPI.md
    - Decisions.md
@@ -66,7 +70,7 @@ source: "2026-04-21 ingest redesign discussion; 2026-04-30 practical operations 
    - Change_Log.md
    - Conflict_Register.md
    - Action_Items.md
-3. 실제 내용 보존 관점에서 Sources와 Evidence_Log를 반드시 포함
+3. 실제 내용 보존 관점에서 Reference_Register와 Evidence_Log를 반드시 포함
 4. 프로젝트 전용 내용과 Common/Shared 승격 후보를 분리
 5. 기존 문서를 덮어쓰지 말고, 날짜형 업데이트 블록 방식으로 제안
 6. `Status.md` 초안을 함께 만들고 상태 라벨, 단계, 헬스, 오너, 막힘, 다음 게이트를 채울 준비를 한다
@@ -99,22 +103,25 @@ source: "2026-04-21 ingest redesign discussion; 2026-04-30 practical operations 
    - 결정사항
    - 리스크
    - 충돌 가능 항목
-4. Sources.md에 문서 등록 초안을 작성
-5. Evidence_Log.md에 원문 발췌 초안을 작성
-6. Action_Items.md, Decisions.md, Risks.md, Status.md에 반영할 운영 판단을 구분
-7. 허브 상단의 `실행 현황판`, `현재 막힘 / 충돌`, `다음 액션`을 어떻게 바꿀지 제안
-8. 프로젝트 전용 페이지와 공통 페이지 중 어디에 반영할지 구분
-9. 기존 문서는 삭제하지 않고 날짜형 업데이트 블록으로 append
-10. 파일명과 본문이 어긋나 있으면 즉시 복구안 제시
+4. Reference_Register.md에 링크 우선 참조 등록 초안을 작성
+   - 임시 mirror 경로는 제외하고, 재수집 식별자 중심으로 작성
+5. 필요 시 Sources.md에 상세 출처 또는 fallback 파일명 초안을 작성
+6. Evidence_Log.md에 원문 발췌 초안을 작성
+7. Action_Items.md, Decisions.md, Risks.md, Status.md에 반영할 운영 판단을 구분
+8. 허브 상단의 `실행 현황판`, `현재 막힘 / 충돌`, `다음 액션`을 어떻게 바꿀지 제안
+9. 프로젝트 전용 페이지와 공통 페이지 중 어디에 반영할지 구분
+10. 기존 문서는 삭제하지 않고 날짜형 업데이트 블록으로 append
+11. 파일명과 본문이 어긋나 있으면 즉시 복구안 제시
 
 출력 형식:
-## 1. 문서 등록 초안 (Sources)
-## 2. Evidence_Log 초안
-## 3. 운영 판단 반영 대상 페이지
-## 4. 허브 상단 변경안
-## 5. 핵심 지식 정리
-## 6. 충돌/확인 필요
-## 7. Obsidian 반영용 Markdown 초안
+## 1. 참조 등록 초안 (Reference_Register)
+## 2. 상세 출처/fallback 초안 (Sources)
+## 3. Evidence_Log 초안
+## 4. 운영 판단 반영 대상 페이지
+## 5. 허브 상단 변경안
+## 6. 핵심 지식 정리
+## 7. 충돌/확인 필요
+## 8. Obsidian 반영용 Markdown 초안
 ```
 
 ## 3. 후속 업데이트
@@ -130,9 +137,10 @@ source: "2026-04-21 ingest redesign discussion; 2026-04-30 practical operations 
 3. 기존 내용을 덮어쓰지 않는다
 4. 모든 수정은 날짜형 업데이트 블록으로 append 한다
 5. 수치가 바뀐 경우 이전 값과 새 값을 모두 남긴다
-6. Conflict_Register와 Change_Log도 함께 갱신한다
-7. Action_Items, Decisions, Risks, Status, hub 상단 상태도 같이 갱신한다
-8. 공통 지식으로 승격할 항목이 있으면 분리 제안한다
+6. 임시 수집 경로가 기존 위키에 들어가 있으면 영구 참조 체계로 치환한다
+7. Conflict_Register와 Change_Log도 함께 갱신한다
+8. Action_Items, Decisions, Risks, Status, hub 상단 상태도 같이 갱신한다
+9. 공통 지식으로 승격할 항목이 있으면 분리 제안한다
 
 출력:
 ## 1. 기존 대비 변경사항

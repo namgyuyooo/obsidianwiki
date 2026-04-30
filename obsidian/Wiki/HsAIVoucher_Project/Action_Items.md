@@ -20,6 +20,7 @@ source: "public Slack evidence sweep (2024-04-21 to 2026-04-21)"
 - [x] 2026-04-30 운영형 문서 구조 반영
 
 ## 운영 메모
+- 참조 기준 문서: [[Wiki/HsAIVoucher_Project/Reference_Register]]
 - 상태가 바뀌면 [[Wiki/HsAIVoucher_Project/Status]]도 함께 갱신합니다.
 - 이 문서는 실제 실행 큐입니다. 설명형 메모보다 담당/기한/다음 행동을 우선 기록합니다.
 - 승인/회의/판단 결과가 확정되면 [[Wiki/HsAIVoucher_Project/Decisions]] 또는 [[Wiki/HsAIVoucher_Project/Change_Log]]에도 함께 반영합니다.

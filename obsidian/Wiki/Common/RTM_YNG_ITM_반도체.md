@@ -12,6 +12,8 @@ tags:
 
 # ITM 반도체
 
+- [[Wiki/Common/RTM_YNG_ITM_반도체_Reference_Register]]
+
 - [[Wiki/Common/RTM_YNG_ITM_반도체_Status]]
 
 ## Project Overview

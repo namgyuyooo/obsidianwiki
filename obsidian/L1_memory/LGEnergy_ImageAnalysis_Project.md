@@ -48,6 +48,7 @@ Li 석출 정량화 + XRM 분석 과제. 계약 확정 전 기술 요구사항·
 - LG엔솔 내부망 정책이 인프라 설계를 크게 제약할 수 있음
 
 ## 드릴다운
+- [[Wiki/LGEnergy_ImageAnalysis_Project/Reference_Register]]
 - [[Wiki/LGEnergy_ImageAnalysis_Project/Status]]
 - [[Wiki/LGEnergy_ImageAnalysis_Project/hub]]
 - [[Wiki/LGEnergy_ImageAnalysis_Project/Evidence_Log]]

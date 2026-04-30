@@ -13,6 +13,7 @@ source: "public Slack evidence sweep (2024-04-21 to 2026-04-21)"
 - 충돌 가능성이 보이면 즉시 [[Wiki/HsAIVoucher_Project/Conflict_Register]]에 연결합니다.
 
 ## 활용 연결
+- 참조 레지스터: [[Wiki/HsAIVoucher_Project/Reference_Register]]
 - 상태 레지스터: [[Wiki/HsAIVoucher_Project/Status]]
 - 실무 판단: [[Wiki/HsAIVoucher_Project/Decisions]]
 - 실행 항목: [[Wiki/HsAIVoucher_Project/Action_Items]]

@@ -53,6 +53,7 @@ updated: 2026-04-30
 - 수행기간 짧음 (7개월) — AI바우처 특성상 단기 집중 과제
 
 ## 드릴다운
+- [[Wiki/Common/RTM_YNG_케타포_AI바우처_Reference_Register]]
 - [[Wiki/Common/RTM_YNG_케타포_AI바우처_Status]]
 - [[RTM_YNG_케타포_AI바우처]]
 - [[RTM_YNG_Evidence_Log_2026-04-21]]

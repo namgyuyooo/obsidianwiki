@@ -34,8 +34,8 @@ export type SurfaceDefinition = {
 
 export const PRIMARY_SURFACES: readonly PrimarySurfaceDefinition[] = [
   { id: "chat", label: "채팅", description: "LLM 프로젝트 대화", defaultSurfaceId: "chat" },
-  { id: "wiki", label: "위키 관련", description: "Decisions · Wiki · Paperclip", defaultSurfaceId: "decisions" },
-  { id: "mission", label: "Mission Control", description: "Command Center", defaultSurfaceId: "mission" },
+  { id: "wiki", label: "위키 관련", description: "Decisions · Wiki · Ingest · Pipeline · Operations", defaultSurfaceId: "decisions" },
+  { id: "mission", label: "Mission Control", description: "Command Center · Spotlite", defaultSurfaceId: "mission" },
 ] as const;
 
 export const SURFACES: readonly SurfaceDefinition[] = [
@@ -90,7 +90,7 @@ export const SURFACES: readonly SurfaceDefinition[] = [
     shortLabel: "Ingest",
     description: "원문을 digest하고 지식 승격 후보로 보존하는 capture/promote surface입니다.",
     densityPattern: "Capture and promote",
-    status: "fallback",
+    status: "live",
     legacyHash: "#ingest",
     requiredEndpoints: ["/api/llm/digest", "/api/knowledge/promote", "/api/knowledge/promotions"],
   },
@@ -107,7 +107,7 @@ export const SURFACES: readonly SurfaceDefinition[] = [
   },
   {
     id: "pipeline",
-    primary: "mission",
+    primary: "wiki",
     label: "Pipeline Cockpit",
     shortLabel: "Pipeline",
     description: "Slack/Drive/OpenClaw/rclone 수집과 run history를 안전하게 실행합니다.",
@@ -129,7 +129,7 @@ export const SURFACES: readonly SurfaceDefinition[] = [
   },
   {
     id: "operations",
-    primary: "mission",
+    primary: "wiki",
     label: "Operations",
     shortLabel: "Operations",
     description: "설정, 스케줄, LLM policy, coverage, safety state를 관리합니다.",

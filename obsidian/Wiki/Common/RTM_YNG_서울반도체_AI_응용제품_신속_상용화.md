@@ -12,6 +12,8 @@ tags:
 
 # 서울반도체 AI 응용제품 신속 상용화
 
+- [[Wiki/Common/RTM_YNG_서울반도체_AI_응용제품_신속_상용화_Reference_Register]]
+
 - [[Wiki/Common/RTM_YNG_서울반도체_AI_응용제품_신속_상용화_Status]]
 
 ## Project Overview

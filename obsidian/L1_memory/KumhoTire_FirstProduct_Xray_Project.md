@@ -51,6 +51,7 @@ POC → 운영 전환형 / 현장 납품 단계
 - 금호타이어 CMS와 고객 동일하나 채널/workstream 완전 분리
 
 ## 드릴다운
+- [[Wiki/KumhoTire_FirstProduct_Xray_Project/Reference_Register]]
 - [[Wiki/KumhoTire_FirstProduct_Xray_Project/Status]]
 - [[Wiki/KumhoTire_FirstProduct_Xray_Project/hub]]
 - [[Wiki/KumhoTire_FirstProduct_Xray_Project/Evidence_Log]]

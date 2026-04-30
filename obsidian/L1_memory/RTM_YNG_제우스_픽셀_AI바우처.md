@@ -61,6 +61,7 @@ updated: 2026-04-30
 - 픽셀 = DMT 고객사의 정상데이터 필터링 AI 프로젝트, 현장 PC: i7-8700/48GB RAM/1080Ti
 
 ## 드릴다운
+- [[Wiki/Common/RTM_YNG_제우스_픽셀_AI바우처_Reference_Register]]
 - [[Wiki/Common/RTM_YNG_제우스_픽셀_AI바우처_Status]]
 - [[RTM_YNG_제우스_픽셀_AI바우처]]
 - [[RTM_YNG_Evidence_Log_2026-04-21]]

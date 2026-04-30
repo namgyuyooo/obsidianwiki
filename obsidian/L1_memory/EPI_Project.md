@@ -43,6 +43,7 @@ EPI 공정/장비 지식 허브. 장비 목록·조건과 MOCVD 레시피를 중
 - MOCVD 레시피는 Common에 있으므로 여기서 중복 편집 금지
 
 ## 드릴다운
+- [[Wiki/EPI_Project/Reference_Register]]
 - [[Wiki/EPI_Project/Status]]
 - [[Wiki/EPI_Project/hub]]
 - [[Wiki/EPI_Project/Equipment]]

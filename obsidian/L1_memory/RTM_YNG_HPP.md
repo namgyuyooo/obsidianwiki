@@ -56,6 +56,7 @@ PoC 결과보고 / 후속 제안 / 2026.01 완료
 - 성능 수치는 Print 검사 파트 기준 — 다른 과제 수치와 혼용 주의
 
 ## 드릴다운
+- [[Wiki/Common/RTM_YNG_HPP_Reference_Register]]
 - [[Wiki/Common/RTM_YNG_HPP_Status]]
 - [[RTM_YNG_HPP]]
 - [[RTM_YNG_Evidence_Log_2026-04-21]]

@@ -49,6 +49,7 @@ updated: 2026-04-30
 - 불량명/라벨 수정이 계속 있었으므로 최신 라벨 기준 확인 필수
 
 ## 드릴다운
+- [[Wiki/AdvancedElectricKorea_Project/Reference_Register]]
 - [[Wiki/AdvancedElectricKorea_Project/Status]]
 - [[Wiki/AdvancedElectricKorea_Project/hub]]
 - [[Wiki/AdvancedElectricKorea_Project/Evidence_Log]]

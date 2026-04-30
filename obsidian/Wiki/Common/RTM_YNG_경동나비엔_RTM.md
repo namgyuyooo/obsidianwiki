@@ -12,6 +12,8 @@ tags:
 
 # 경동나비엔 RTM
 
+- [[Wiki/Common/RTM_YNG_경동나비엔_RTM_Reference_Register]]
+
 - [[Wiki/Common/RTM_YNG_경동나비엔_RTM_Status]]
 
 ## Project Overview

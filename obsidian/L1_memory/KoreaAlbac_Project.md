@@ -43,6 +43,7 @@ PoC 제안형 / 수주 준비 단계
 - 예지보전/공정제어 제안의 기준 사례로 활용 가능 (템플릿 재사용 가치 높음)
 
 ## 드릴다운
+- [[Wiki/KoreaAlbac_Project/Reference_Register]]
 - [[Wiki/KoreaAlbac_Project/Status]]
 - [[Wiki/KoreaAlbac_Project/hub]]
 - [[Wiki/KoreaAlbac_Project/Evidence_Log]]

@@ -12,6 +12,8 @@ tags:
 
 # 산업현장 에이전트_연구개발
 
+- [[Wiki/Common/RTM_YNG_산업현장_에이전트_연구개발_Reference_Register]]
+
 - [[Wiki/Common/RTM_YNG_산업현장_에이전트_연구개발_Status]]
 
 ## Project Overview

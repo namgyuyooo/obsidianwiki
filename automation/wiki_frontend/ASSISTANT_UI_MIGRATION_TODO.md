@@ -41,35 +41,44 @@ workflow is silently collapsed into a generic page.
 
 ### Chat
 
-- [ ] Hydrate saved project message history into assistant-ui runtime.
-- [ ] Wire backend stop parity through `/api/chat/stop`.
-- [ ] Add message delete and evidence promotion actions.
-- [ ] Replace decorative skill chips with composer-level `@` mention search.
+- [x] Hydrate saved project message history into assistant-ui runtime.
+- [x] Wire backend stop parity through `/api/chat/stop`.
+- [x] Add message delete and evidence promotion actions.
+- [x] Replace decorative skill chips with composer-level `@` mention search.
+- [x] Add composer-level `@` wiki project mentions and pass them into GLM
+  retrieval/project binding.
 
 ### Wiki Related
 
-- [ ] Complete Decision Deck route and action parity.
-- [ ] Restore evidence/compare/merge/audit context in Decision Deck.
+- [x] Complete Decision Deck route and action parity.
+- [x] Restore evidence/compare/merge/audit context in Decision Deck.
 - [x] Build Paperclip Studio with live templates, tasks, events, and trigger
   controls.
-- [ ] Add Paperclip result open/download/promote actions.
+- [x] Add Paperclip result open/download/promote actions.
 - [x] Build Evidence Console with search, page preview/edit, and page status.
 - [x] Add Notion-style live Markdown preview for headings, lists, checkboxes,
   links, wiki links, blockquotes, tables, and code blocks.
 - [x] Apply Notion-like Wiki visual language with sidebar page tree, cover,
   page icon, properties row, document canvas, and lightweight inspector.
-- [ ] Add Evidence Console advanced filters, graph, and management commands.
-- [ ] Build Ingest Workbench with digest, promotion, generated path, and
+- [x] Add project/folder-centered Wiki navigation for Project, Account, Common,
+  and Memory groups.
+- [x] Add Evidence Console search filters and sorting for status, document
+  type, updated date, title, size, and relevance.
+- [x] Promote live Markdown preview to the primary reading canvas with the
+  source editor as the secondary panel.
+- [x] Add Evidence Console graph map and management command planning/apply
+  controls.
+- [x] Build Ingest Workbench with digest, promotion, generated path, and
   project hint.
 
 ### Mission Control / Command Center
 
-- [ ] Repair Mission density to include project board, risk queue, decision
+- [x] Repair Mission density to include project board, risk queue, decision
   queue, automation, document status, GLM usage/policy, and governance warnings.
-- [ ] Build Pipeline Cockpit with Slack/Drive/OpenClaw/rclone, dry-run/run,
+- [x] Build Pipeline Cockpit with Slack/Drive/OpenClaw/rclone, dry-run/run,
   stop, logs, and run history.
-- [ ] Build Spotlite work/personal board with GLM refresh and personal lock.
-- [ ] Build Operations admin console with settings, schedules, coverage, skill
+- [x] Build Spotlite work/personal board with GLM refresh and personal lock.
+- [x] Build Operations admin console with settings, schedules, coverage, skill
   draft, LLM policy, and safety state.
 
 ## Phase B: Data Ownership
@@ -83,6 +92,39 @@ workflow is silently collapsed into a generic page.
 - [ ] Create a capability registry to derive both skill catalog and Paperclip
   templates.
 - [ ] Create a shared status-family map for Mission rollups.
+
+## Screen Improvement Backlog
+
+Goal:
+
+Make each surface carry the right amount of information for its job instead of
+compressing every page into the same simplified card layout.
+
+### TODO
+
+- [x] App Shell: apply one top-level product frame for all React surfaces,
+  including full-bleed layout rules, persistent workspace/project context,
+  right-rail behavior, and mobile stacked navigation.
+- [x] Chat: rebuild the composer as a GPT/Claude-grade command surface with
+  `@` project/wiki mentions, skill tags, file chips, enter/send parity,
+  stop/regenerate/delete, and evidence promotion actions.
+- [x] Wiki: split Notion-like read mode and edit mode, add folder/project
+  tree, graph drawer, command drawer, page properties, and primary live
+  preview without stealing reading space.
+- [x] Decision Deck: convert to a 3-pane review cockpit with queue,
+  evidence compare, merge/audit trail, and explicit approve/reject/apply
+  actions.
+- [x] Paperclip: extend the current result workbench with result preview,
+  generated-file trace, Decision Queue handoff, download, and promotion
+  action.
+- [x] Mission Control: raise information density with project radar,
+  risk/decision lanes, automation timeline, document status, GLM policy,
+  and governance warnings in one central command dashboard.
+- [x] Pipeline/Spotlite/Operations: replace fallback placeholders with live
+  run controls, logs, schedules, settings, and safety state before removing
+  legacy routes.
+- [ ] State System: standardize empty, loading, error, offline, and stale-data
+  states across every surface with consistent recovery actions.
 
 ## Phase C: Legacy Retirement
 

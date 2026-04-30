@@ -13,12 +13,98 @@ source: "2026-04-27 #sales_team thread + /Users/rtm/Documents/GitHub/commonWork/
 - 충돌 가능성이 보이면 즉시 [[Wiki/Sawnics_ManufacturingAI_Project/Conflict_Register]]에 연결합니다.
 
 ## 활용 연결
+- 참조 레지스터: [[Wiki/Sawnics_ManufacturingAI_Project/Reference_Register]]
 - 상태 레지스터: [[Wiki/Sawnics_ManufacturingAI_Project/Status]]
 - 실무 판단: [[Wiki/Sawnics_ManufacturingAI_Project/Decisions]]
 - 실행 항목: [[Wiki/Sawnics_ManufacturingAI_Project/Action_Items]]
 - 리스크: [[Wiki/Sawnics_ManufacturingAI_Project/Risks]]
 
 ## 기존 정리 메모
+## 2026-04-30 / 공고·양식 로컬 추출 및 전략화
+
+### Evidence 09
+- Source: Local mirrored PDF
+- File: `★[공고] 2026년도 제조AI특화 스마트공장 구축지원사업 공고.pdf`
+- Date: 공고일 `2026-03-19`, 추출일 `2026-04-30`
+- Topic: 지원조건 및 일정
+- Type: 수치
+- Original:
+  > AI공장 구축 최대 9개월, 최대 2억원, 50% 이내 / 데이터 수집·검증 최대 6개월, 최대 0.5억원
+  >
+  > 신청 기간 `2026-03-19 ~ 2026-04-20 17:00`
+- Interpretation:
+  - 쏘닉스 건은 현재 날짜 `2026-04-30` 기준 사업신청서 단계는 종료됐고, 요건검토 통과 전제의 사업계획서 작성 단계로 해석해야 한다.
+  - 유형 선택이 제안서 전체 구조를 바꾸므로 `AI공장 구축`과 `데이터 수집·검증` 중 어떤 프레임으로 쓸지 먼저 확정해야 한다.
+- Linked Pages:
+  - [[RFP_Writing_Strategy_2026-04-30]]
+  - [[Action_Items]]
+  - [[Project_Overview]]
+
+### Evidence 10
+- Source: Local mirrored PDF
+- File: `★[공고] 2026년도 제조AI특화 스마트공장 구축지원사업 공고.pdf`
+- Date: 추출일 `2026-04-30`
+- Topic: 기술성평가 배점
+- Type: 수치
+- Original:
+  > 도입·공급기업 역량 20점 / 구축 목표 설정 타당성 25점 / 구축 내용 적절성 30점 / 구축 목표달성 가능성 25점 / 가점 5점
+- Interpretation:
+  - 최고 배점은 `구축 내용 적절성(30점)`이므로, 쏘닉스 제안서는 회사소개보다 `데이터 집계 포인트`, `AI 기능`, `연계 구조`, `검증 계획`을 가장 두껍게 써야 한다.
+- Linked Pages:
+  - [[RFP_Writing_Strategy_2026-04-30]]
+  - [[KPI]]
+  - [[Action_Items]]
+
+### Evidence 11
+- Source: Local mirrored PDF
+- File: `(필독)2026년도 제조AI특화 스마트공장 구축사업 사업계획서 제출 안내문_경기테크노파크.pdf`
+- Date: 추출일 `2026-04-30`
+- Topic: 사업계획서 제출 단계 유의사항
+- Type: 변경
+- Original:
+  > 사업계획서 제출기한 `2026-04-27 ~ 2026-05-11`
+  >
+  > 공급기업 Pool 등록이 안 되어 있으면 제출 마감 최소 10일 전까지 사전 등록 및 승인 필수
+- Interpretation:
+  - 지금 실무상 병목은 `공고 해석`보다 `제출 단계 준비 완성도`다.
+  - 공급기업 Pool, 사업관리시스템 입력값, 양식 본문 값이 어긋나면 내용이 좋아도 제출 리스크가 생긴다.
+- Linked Pages:
+  - [[RFP_Writing_Strategy_2026-04-30]]
+  - [[Action_Items]]
+  - [[Risks]]
+
+### Evidence 12
+- Source: Local mirrored HWP via `rhwp dump`
+- File: `2. [사업계획서] 제조AI특화 스마트공장 사업계획서_양식_260326_01_데이터수집검증 중복화.hwp`
+- Date: 추출일 `2026-04-30`
+- Topic: 양식 구조
+- Type: 결정
+- Original:
+  > `2.5 AI시스템 구축 계획`, `2.6 AI모델 적용 시나리오 및 성능 목표 수준`, `2.7 데이터 현황 및 수집·검증 계획`, `9. 산업안전 및 보안대책 수립 계획`
+- Interpretation:
+  - 2026 양식은 일반 스마트공장 서술이 아니라 AI 적용 시나리오와 데이터 검증을 직접 요구한다.
+  - 따라서 2025 쏘닉스 기존본을 단순 재사용하면 AI 특화 평가 포인트가 비게 된다.
+- Linked Pages:
+  - [[RFP_Writing_Strategy_2026-04-30]]
+  - [[Conflict_Register]]
+  - [[Action_Items]]
+
+### Evidence 13
+- Source: Local mirrored HWP via `rhwp dump`
+- File: `별첨#02. (신청단계), 2025년 정부일반형 스마트공장 사업계획서_쏘닉스_20250117(보완2).hwp`
+- Date: 추출일 `2026-04-30`
+- Topic: 기존본 재사용 가능 자산
+- Type: 근거
+- Original:
+  > 기존본에는 `ERP/MES`, `RMS`, `Recipe 관리`, `공정별 설비 인터페이스`, `공정 불량률`, `작업공수` 등 구조화된 현장 서술이 존재
+- Interpretation:
+  - 기존본은 버릴 문서가 아니라 `현장 베이스라인`으로 매우 유효하다.
+  - 다만 2026 제출본에서는 이를 `AI공장`, `데이터 수집`, `예측/판단`, `성능검증` 언어로 재서술해야 한다.
+- Linked Pages:
+  - [[RFP_Writing_Strategy_2026-04-30]]
+  - [[Project_Overview]]
+  - [[KPI]]
+
 ## 2026-04-29 / Sawnics 초기 위키화
 
 ### Evidence 01

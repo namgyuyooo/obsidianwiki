@@ -1,7 +1,7 @@
 ---
 type: schema
 created: 2026-04-20
-updated: 2026-04-29
+updated: 2026-04-30
 source: ""
 ---
 
@@ -51,11 +51,12 @@ source: ""
 ## Ingest Operating Principles
 
 - 위키는 구조만 관리하지 말고 실제 내용도 관리합니다.
-- 프로젝트 인제스트는 아래 3층 구조를 기본으로 운영합니다.
+- 프로젝트 인제스트는 아래 4층 구조를 기본으로 운영합니다.
+  - 참조 보존 계층: 링크, URL, Drive 분류 경로, Slack 링크, 웹 링크, 로컬 경로, 파일명 fallback, 재수집 식별자를 보존합니다.
   - 원문 보존 계층: 실제로 읽은 문장, 수치, 결정사항, 충돌, 출처 위치를 보존합니다.
   - 정제 지식 계층: Project Overview, KPI, Risks, Decisions 등 재사용 가능한 지식을 정리합니다.
   - 이력/변경 관리 계층: 날짜별 변경, 충돌, 확정 여부, 버전 변화를 기록합니다.
-- 결론 문서만 만들지 말고, 근거가 된 evidence도 반드시 함께 남깁니다.
+- 결론 문서만 만들지 말고, 근거가 된 evidence와 참조 레지스터도 반드시 함께 남깁니다.
 - 해석과 원문 근거를 분리합니다.
 - 모든 수치에는 문서명과 날짜를 함께 남깁니다.
 - 상충되는 정보는 하나로 뭉개지 말고 충돌 상태로 기록합니다.
@@ -72,8 +73,8 @@ source: ""
   - `## 현재 막힘 / 충돌`: 미확정 값, 고객 확인 필요, 내부 판단 대기, 일정 위험 등 실무 막힘을 보이게 둡니다.
   - `## 다음 액션`: 바로 실행할 일과 확인 질문을 남깁니다.
   - `## 최근 업데이트`: 언제 무엇을 했고, 그 일이 실무적으로 어떤 의미인지 표로 남깁니다.
-  - `## 증적/근거 링크`: 추진내용을 뒷받침하는 Sources, Evidence_Log, 원문 문서를 연결합니다.
-  - `## 운영 링크`: Overview, Action_Items, Risks, Decisions, Conflict_Register, Change_Log로 이동할 수 있게 합니다.
+  - `## 증적/근거 링크`: 추진내용을 뒷받침하는 Reference_Register, Evidence_Log, 원문 문서를 연결합니다.
+  - `## 운영 링크`: Status, Reference_Register, Overview, Action_Items, Risks, Decisions, Conflict_Register, Change_Log로 이동할 수 있게 합니다.
 - `운영 메모`는 아래 4줄을 우선 유지합니다.
   - `한줄 요약`: 지금 이 프로젝트/고객사/운영 단위가 어떤 상태인지 한 문장으로 씁니다.
   - `진행 맥락`: 왜 이 일이 진행 중이고 어디까지 왔는지 씁니다.
@@ -93,7 +94,7 @@ source: ""
 
 - `project` 허브
   - `운영 메모`, `실행 현황판`, `현재 막힘 / 충돌`, `다음 액션`, `최근 업데이트`, `운영 링크`를 기본 포함합니다.
-  - `Status.md`, `Project_Overview.md`, `Sources.md`, `Evidence_Log.md`, `Conflict_Register.md`, `Change_Log.md`, `Decisions.md`, `Action_Items.md`, `Risks.md`를 기본 운영 대상으로 둡니다.
+  - `Status.md`, `Reference_Register.md`, `Project_Overview.md`, `Sources.md`, `Evidence_Log.md`, `Conflict_Register.md`, `Change_Log.md`, `Decisions.md`, `Action_Items.md`, `Risks.md`를 기본 운영 대상으로 둡니다.
 - `account` 허브
   - 계정 현재 상태, 활성 프로젝트, 공통 리스크, 다음 접점, 프로젝트 관계 링크를 기본 포함합니다.
   - 계정 공간은 여러 프로젝트를 조정하는 상위 현황판이며, 모든 증적 문서를 자체 보유할 필요는 없습니다.
@@ -106,13 +107,17 @@ source: ""
 
 - 각 프로젝트에는 아래 문서를 기본 관리 대상으로 둡니다.
   - `Status.md`
+  - `Reference_Register.md`
   - `Sources.md`
   - `Evidence_Log.md`
   - `Change_Log.md`
   - `Conflict_Register.md`
 - `Status.md`는 현재 상태, 단계, 헬스, 담당, 막힘, 다음 게이트, 상태 변경 이력을 관리하는 프로젝트 상태 레지스터입니다.
+- `Reference_Register.md`는 링크 우선 참조 레지스터입니다. Slack 링크, 웹 링크, Google Drive 링크, 로컬 경로를 우선 기록하고, 안정적인 링크를 남기기 어렵다면 반드시 파일명 또는 경로 fallback을 남깁니다.
+- 임시 mirror/cache 경로는 장기 참조값으로 쓰지 않고, `channel id`, `last_export_path`, `collection state path`, `Shared Drive 이름`, `상위 폴더 경로`, `file id` 같은 재수집 식별자를 남깁니다.
 - 문서 단위 원문 메모가 필요하면 `Document Notes/` 아래에 `YYYY-MM-DD_문서명.md` 형식으로 저장합니다.
-- `Sources.md`는 문서 메타데이터와 연결 문서를 관리합니다.
+- `Reference_Register.md`는 요약된 참조 항목, 설명 위치, 관련 문서, URL/경로/fallback 파일명을 관리합니다.
+- `Sources.md`는 상세한 출처 메타데이터나 레거시 원문 관리가 필요한 경우에만 보조적으로 사용합니다.
 - `Evidence_Log.md`는 핵심 문장, 수치, 산식, 결정 이유, 제약 조건의 발췌를 보관합니다.
 - `Conflict_Register.md`는 상충 수치, 상충 주장, 미확정 판단을 보관합니다.
 - `Change_Log.md`는 위키 구조 변경, 복구 이력, 핵심 업데이트를 기록합니다.
@@ -124,7 +129,8 @@ source: ""
 
 - 새 업무 이벤트는 바로 결론 문서로 정리하지 않고 아래 순서로 승격합니다.
   - 원본 이벤트 캡처
-  - `Sources.md`에 출처 등록
+  - `Reference_Register.md`에 링크/경로/fallback 파일명 기준 참조 등록
+  - 필요 시 `Sources.md`에 상세 출처 메모 등록
   - `Evidence_Log.md`에 사실, 원문, 수치, 결정사항 추출
   - 충돌 또는 미확정 값은 `Conflict_Register.md`에 등록
   - 실제 문서 수정은 `Change_Log.md`에 기록
@@ -159,7 +165,8 @@ source: ""
 
 ## Content Preservation Rules
 
-- 요약만 저장하지 않습니다.
+- 모든 내용을 위키에 다 담으려 하지 않습니다.
+- 요약은 남기되, 어디에 설명되어 있는지, 관련 문서명이 무엇인지, URL/경로가 무엇인지, 링크가 어려우면 어떤 파일명을 찾아야 하는지를 함께 남깁니다.
 - 원문 전체를 복붙하지 않더라도, 맥락을 잃지 않을 정도의 발췌는 반드시 남깁니다.
 - 수치 원문, 계산식, 결정 이유, 제약 조건은 가능한 한 원문 표현을 유지합니다.
 - 출처 위치를 알 수 있다면 페이지, 섹션, 슬라이드 번호까지 남깁니다.

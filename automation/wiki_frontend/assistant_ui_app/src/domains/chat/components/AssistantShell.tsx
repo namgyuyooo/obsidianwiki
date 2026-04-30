@@ -12,13 +12,6 @@ type AssistantShellProps = {
   children: ReactNode;
 };
 
-const FALLBACK_SKILL_TAGS = [
-  { id: "paperclip", name: "Paperclip" },
-  { id: "wiki-graph", name: "Wiki Graph" },
-  { id: "evidence-log", name: "Evidence Log" },
-  { id: "drive-files", name: "Drive Files" },
-] as const;
-
 const RECENT_PROJECT_LIMIT = 18;
 
 function projectPreview(instructions = "") {
@@ -47,6 +40,25 @@ function linkedProjectFromKey(options: LinkedWikiProject[], projectKey: string) 
   return options.find((option) => option.projectKey === projectKey) || null;
 }
 
+function runStatusLabel(orchestration: Record<string, any>) {
+  const phase = String(orchestration.status?.phase || "");
+  if (!phase) return "대기 중";
+  if (phase === "context_building") return "근거 조립 중";
+  if (phase === "completed") return "응답 완료";
+  if (phase === "stopped") return "중지됨";
+  if (phase === "error") return "오류";
+  return phase.replace(/_/g, " ");
+}
+
+function runStatusTone(orchestration: Record<string, any>) {
+  const phase = String(orchestration.status?.phase || "");
+  if (phase === "completed") return "done";
+  if (phase === "stopped") return "stopped";
+  if (phase === "error") return "error";
+  if (phase) return "running";
+  return "idle";
+}
+
 export function AssistantShell({ chatContext, workspace, orchestration, children }: AssistantShellProps) {
   const [projectName, setProjectName] = useState("");
   const [projectInstructions, setProjectInstructions] = useState("");
@@ -54,6 +66,9 @@ export function AssistantShell({ chatContext, workspace, orchestration, children
   const [globalInstructions, setGlobalInstructions] = useState("");
   const [autoMemoryEnabled, setAutoMemoryEnabled] = useState(true);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [orchestrationOpen, setOrchestrationOpen] = useState(false);
+  const [focusMode, setFocusMode] = useState(false);
 
   useEffect(() => {
     setProjectName(workspace.activeProject?.name || "");
@@ -71,7 +86,6 @@ export function AssistantShell({ chatContext, workspace, orchestration, children
     setAutoMemoryEnabled(workspace.global.autoMemory !== false);
   }, [workspace.global.instructions, workspace.global.autoMemory]);
 
-  const skills = workspace.skills.length ? workspace.skills.slice(0, 10) : FALLBACK_SKILL_TAGS;
   const projects = workspace.projects.slice(0, RECENT_PROJECT_LIMIT);
   const wikiProjectOptions = linkedProjectOptions(
     workspace.wikiProjectOptions,
@@ -79,6 +93,16 @@ export function AssistantShell({ chatContext, workspace, orchestration, children
   );
   const linkedProject = linkedProjectFromKey(wikiProjectOptions, linkedProjectKey);
   const activeLinkedProject = workspace.activeProject?.linkedWikiProject || null;
+  const runLabel = runStatusLabel(orchestration);
+  const runTone = runStatusTone(orchestration);
+  const modelLabel = "GLM";
+  const skillCountLabel = `@${workspace.selectedSkillTags.length}`;
+  const shellClassName = [
+    "aui-chat-product-shell",
+    !sidebarOpen || focusMode ? "sidebar-collapsed" : "",
+    !orchestrationOpen || focusMode ? "orchestration-collapsed" : "",
+    focusMode ? "focus-mode" : "",
+  ].filter(Boolean).join(" ");
 
   const saveProject = async () => {
     await workspace.saveActiveProject({
@@ -106,7 +130,7 @@ export function AssistantShell({ chatContext, workspace, orchestration, children
   };
 
   return (
-    <main className="aui-chat-product-shell">
+    <main className={shellClassName}>
       <aside className="aui-project-sidebar" aria-label="GLM chat projects">
         <div className="aui-sidebar-brand">
           <span className="aui-orb">G</span>
@@ -121,17 +145,9 @@ export function AssistantShell({ chatContext, workspace, orchestration, children
           새 프로젝트 챗
         </button>
 
-        <section className="aui-linked-project-card" aria-label="연결된 위키 프로젝트">
-          <span>Wiki project link</span>
-          <strong>{activeLinkedProject?.projectLabel || "연결 없음"}</strong>
-          <small>
-            {activeLinkedProject?.path || "프로젝트 설정에서 업무 위키 프로젝트를 연결하세요."}
-          </small>
-        </section>
-
         <button className="aui-manage-project-button" onClick={() => setSettingsOpen(true)} type="button">
-          <strong>프로젝트 연결/지침</strong>
-          <span>챗 프로젝트와 업무 위키 프로젝트 연결 설정</span>
+          <strong>{activeLinkedProject?.projectLabel || "프로젝트 연결 없음"}</strong>
+          <span>{activeLinkedProject?.path || "프로젝트 연결/지침 설정"}</span>
         </button>
 
         <section className="aui-sidebar-section" aria-label="프로젝트 목록">
@@ -148,26 +164,7 @@ export function AssistantShell({ chatContext, workspace, orchestration, children
                 type="button"
               >
                 <strong>{project.name || "GLM 프로젝트"}</strong>
-                <span>{projectPreview(project.linkedWikiProject?.projectLabel || project.instructions)}</span>
-              </button>
-            ))}
-          </div>
-        </section>
-
-        <section className="aui-sidebar-section" aria-label="스킬 태그">
-          <div className="aui-sidebar-heading">
-            <span>Skills</span>
-            <small>{workspace.selectedSkillTags.length} selected</small>
-          </div>
-          <div className="aui-side-skill-list">
-            {skills.map((skill) => (
-              <button
-                className={`aui-side-skill ${workspace.selectedSkillTags.includes(skill.id) ? "active" : ""}`}
-                key={skill.id}
-                onClick={() => workspace.toggleSkillTag(skill.id)}
-                type="button"
-              >
-                @{skill.name || skill.title || skill.id}
+                <span>{project.linkedWikiProject?.projectLabel || projectPreview(project.instructions)}</span>
               </button>
             ))}
           </div>
@@ -182,15 +179,57 @@ export function AssistantShell({ chatContext, workspace, orchestration, children
       <section className="aui-chat-main" aria-label="GLM chat thread">
         <div className="aui-chat-main-utility">
           <div className="aui-chat-main-utility-copy">
-            <span>Project settings</span>
-            <strong>{activeLinkedProject?.projectLabel || workspace.activeProject?.name || "현재 챗 프로젝트"}</strong>
-            <small>
-              {activeLinkedProject?.path || "현재 챗과 연결할 업무 위키 프로젝트, 지침, 전역 규칙을 여기서 관리합니다."}
-            </small>
+            <div className="aui-chat-main-utility-title">
+              <strong title={activeLinkedProject?.path || workspace.activeProject?.name || "현재 챗 프로젝트"}>
+                {activeLinkedProject?.projectLabel || workspace.activeProject?.name || "현재 챗 프로젝트"}
+              </strong>
+            </div>
+            <div className="aui-chat-main-utility-meta" aria-label="chat summary">
+              <span className={`aui-model-pill status ${runTone}`}>{runLabel}</span>
+              <span className="aui-model-pill muted">{skillCountLabel}</span>
+              <span className="aui-model-pill subtle">{modelLabel}</span>
+            </div>
           </div>
-          <button className="aui-chat-main-settings-button" onClick={() => setSettingsOpen(true)} type="button">
-            프로젝트 설정
-          </button>
+          <div className="aui-chat-main-toolbar">
+            <button
+              className={`aui-chat-main-toggle ${sidebarOpen && !focusMode ? "active" : ""}`}
+              aria-label="좌측 패널 토글"
+              onClick={() => {
+                setFocusMode(false);
+                setSidebarOpen((current) => !current);
+              }}
+              type="button"
+            >
+              좌
+            </button>
+            <button
+              className={`aui-chat-main-toggle ${orchestrationOpen && !focusMode ? "active" : ""}`}
+              aria-label="오케스트레이션 패널 토글"
+              onClick={() => {
+                setFocusMode(false);
+                setOrchestrationOpen((current) => !current);
+              }}
+              type="button"
+            >
+              우
+            </button>
+            <button
+              className={`aui-chat-main-toggle ${focusMode ? "active" : ""}`}
+              aria-label="집중 모드 토글"
+              onClick={() => setFocusMode((current) => !current)}
+              type="button"
+            >
+              집중
+            </button>
+            <button
+              aria-label="프로젝트 설정 열기"
+              className="aui-chat-main-settings-button"
+              onClick={() => setSettingsOpen(true)}
+              type="button"
+            >
+              설정
+            </button>
+          </div>
         </div>
         {children}
       </section>

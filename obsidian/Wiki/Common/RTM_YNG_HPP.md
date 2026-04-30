@@ -12,6 +12,8 @@ tags:
 
 # HPP
 
+- [[Wiki/Common/RTM_YNG_HPP_Reference_Register]]
+
 - [[Wiki/Common/RTM_YNG_HPP_Status]]
 
 ## Project Overview

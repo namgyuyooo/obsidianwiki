@@ -50,6 +50,7 @@ updated: 2026-04-30
 - 라벨링 이슈와 FP 재확인이 반복 리스크
 
 ## 드릴다운
+- [[Wiki/BGF_EcoSpecialty_Project/Reference_Register]]
 - [[Wiki/BGF_EcoSpecialty_Project/Status]]
 - [[Wiki/BGF_EcoSpecialty_Project/hub]]
 - [[Wiki/BGF_EcoSpecialty_Project/Evidence_Log]]

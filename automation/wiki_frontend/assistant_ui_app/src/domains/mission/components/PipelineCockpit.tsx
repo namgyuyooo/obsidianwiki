@@ -124,7 +124,7 @@ export function PipelineCockpit({ chatContext }: PipelineCockpitProps) {
         <div>
           <span className="aui-kicker">mission / automation cockpit</span>
           <h1>Pipeline Cockpit</h1>
-          <p>{chatContext.workspace.toUpperCase()} 워크스페이스에서 Slack, Drive, rclone, 후속 위키화를 한 화면에서 안전하게 지휘합니다.</p>
+          <p>{chatContext.workspace.toUpperCase()} 수집 파이프라인을 `입력 수집 {"->"} 수집 계획 {"->"} 실행 모니터` 흐름으로 다시 압축했습니다.</p>
         </div>
         <aside className={`aui-ops-live ${phase}`}>
           <strong>{phase}</strong>
@@ -133,10 +133,43 @@ export function PipelineCockpit({ chatContext }: PipelineCockpitProps) {
         </aside>
       </section>
 
-      <section className="aui-ops-grid aui-ops-grid-wide">
+      <section className="aui-ops-summary-grid">
+        <article className="aui-ops-summary-card">
+          <span>slack</span>
+          <strong>{selectedChannels.length}</strong>
+          <small>selected channels · latest {shortDate(slackStatus.lastCollectedAt)}</small>
+        </article>
+        <article className="aui-ops-summary-card">
+          <span>drive</span>
+          <strong>{(activeAnalysis.candidates || []).length}</strong>
+          <small>target candidates · folders {String(activeAnalysis.summary?.driveFolders || 0)}</small>
+        </article>
+        <article className="aui-ops-summary-card">
+          <span>automation</span>
+          <strong>{automation.running.length}</strong>
+          <small>running jobs · history {latestRuns.length}</small>
+        </article>
+        <article className="aui-ops-summary-card">
+          <span>routing</span>
+          <strong>{slackStatus.configured ? "ready" : "check"}</strong>
+          <small>{compactCountMap(slackStatus.routingSummary?.channelBuckets)}</small>
+        </article>
+      </section>
+
+      <section className="aui-ops-command-bar">
+        <button onClick={() => loadAll(channelQuery)} type="button">상태 새로고침</button>
+        <button disabled={!selectedChannels.length} onClick={() => runSlackCollect(true)} type="button">Slack 미리보기</button>
+        <button disabled={!selectedChannels.length} onClick={() => runSlackCollect(false)} type="button">Slack 수집</button>
+        <button onClick={runDrivePlanner} type="button">Drive 계획 생성</button>
+        <button onClick={() => runAction(() => continueAfterCollection(), "수집 이후 manifest/run/refresh-global 체인을 실행했습니다.")} type="button">수집 후 계속</button>
+        <button onClick={() => runAction(() => triggerAutomation("refresh-global"), "refresh-global 실행을 요청했습니다.")} type="button">그래프맵 업데이트</button>
+        <button disabled={!runningJob?.runId} onClick={() => runAction(() => stopAutomation(runningJob?.runId || ""), "실행 중인 자동화에 stop을 요청했습니다.")} type="button">현재 작업 중지</button>
+      </section>
+
+      <section className="aui-ops-workbench">
         <article className="aui-ops-card">
           <div className="aui-ops-card-head">
-            <span>Slack routing</span>
+            <span>Slack intake</span>
             <strong>{slackStatus.workspace || "workspace 미설정"}</strong>
           </div>
           <div className="aui-ops-statline">
@@ -144,18 +177,10 @@ export function PipelineCockpit({ chatContext }: PipelineCockpitProps) {
             <span>{slackStatus.collectedChannels || 0} channels</span>
             <span>latest {shortDate(slackStatus.lastCollectedAt)}</span>
           </div>
-          <p className="aui-ops-muted">
-            bucket {compactCountMap(slackStatus.routingSummary?.channelBuckets)}
-          </p>
           <label className="aui-ops-field">
             <span>채널 검색</span>
             <input value={channelQuery} onChange={(event) => setChannelQuery(event.target.value)} placeholder="pjt, sales, tf, 고객명" />
           </label>
-          <div className="aui-ops-actions">
-            <button onClick={() => loadAll(channelQuery)} type="button">채널 조회</button>
-            <button disabled={!selectedChannels.length} onClick={() => runSlackCollect(true)} type="button">2일 미리보기</button>
-            <button disabled={!selectedChannels.length} onClick={() => runSlackCollect(false)} type="button">2일 수집 실행</button>
-          </div>
           <div className="aui-ops-inline-fields">
             <label>
               <span>lookback</span>
@@ -165,9 +190,13 @@ export function PipelineCockpit({ chatContext }: PipelineCockpitProps) {
               <span>limit/channel</span>
               <input min={1} type="number" value={limitPerChannel} onChange={(event) => setLimitPerChannel(Number(event.target.value) || 80)} />
             </label>
+            <label>
+              <span>selected</span>
+              <input disabled value={`${selectedChannels.length} channels`} />
+            </label>
           </div>
           <div className="aui-ops-list aui-ops-channel-list">
-            {visibleChannels.slice(0, 18).map((channel) => {
+            {visibleChannels.slice(0, 16).map((channel) => {
               const checked = selectedChannels.includes(channel.name);
               const bucket = channel.routing?.channel_profile?.channel_bucket || "unknown";
               return (
@@ -185,58 +214,60 @@ export function PipelineCockpit({ chatContext }: PipelineCockpitProps) {
 
         <article className="aui-ops-card">
           <div className="aui-ops-card-head">
-            <span>Drive planner</span>
-            <strong>{String(activeAnalysis.summary?.driveFolders || 0)} folders scanned</strong>
+            <span>Drive planning</span>
+            <strong>{(activeAnalysis.candidates || []).length} candidates</strong>
           </div>
           <label className="aui-ops-field">
             <span>지시 기반 수집 계획</span>
             <textarea
-              rows={4}
+              rows={5}
               value={driveInstruction}
               onChange={(event) => setDriveInstruction(event.target.value)}
               placeholder="예: 특정 고객/프로젝트를 찾아 필요한 경로만 안전하게 수집해."
             />
           </label>
-          <div className="aui-ops-actions">
-            <button onClick={runDrivePlanner} type="button">GLM 표적 계획 생성</button>
-            <button onClick={() => runAction(() => triggerAutomation("rclone-copy", true), "전체 rclone dry-run을 실행했습니다.")} type="button">전체 미리보기</button>
-            <button onClick={() => runAction(() => continueAfterCollection(), "수집 이후 manifest/run/refresh-global 체인을 실행했습니다.")} type="button">수집 후 계속</button>
-          </div>
-          <p className="aui-ops-muted">
-            keywords {(activeAnalysis.plan?.keywords || []).join(", ") || "-"}
-          </p>
+          <p className="aui-ops-muted">keywords {(activeAnalysis.plan?.keywords || []).join(", ") || "-"}</p>
           <div className="aui-ops-list">
-            {(activeAnalysis.candidates || []).slice(0, 10).map((candidate) => (
+            {(activeAnalysis.candidates || []).slice(0, 8).map((candidate) => (
               <DriveCandidateCard key={`${candidate.remotePath}-${candidate.score || 0}`} candidate={candidate} onRun={runAction} />
             ))}
             {!activeAnalysis.candidates?.length ? <p className="aui-ops-muted">아직 Drive 후보 분석이 없습니다.</p> : null}
           </div>
         </article>
 
-        <article className="aui-ops-card">
-          <div className="aui-ops-card-head">
-            <span>Run control</span>
-            <strong>{runningJob?.command || "대기"}</strong>
-          </div>
-          <div className="aui-ops-runbox">
-            <span>현재 실행</span>
-            <strong>{runningJob?.status || "idle"}</strong>
-            <p>{runningJob?.progress?.summary || runningJob?.progress?.lastLogLine || "실행 중인 작업이 없습니다."}</p>
-          </div>
-          <div className="aui-ops-actions">
-            <button onClick={() => runAction(() => triggerAutomation("refresh-global"), "refresh-global 실행을 요청했습니다.")} type="button">그래프맵 업데이트</button>
-            <button disabled={!runningJob?.runId} onClick={() => runAction(() => stopAutomation(runningJob?.runId || ""), "실행 중인 자동화에 stop을 요청했습니다.")} type="button">현재 작업 중지</button>
-          </div>
-          <div className="aui-ops-list">
-            {latestRuns.map((run: AutomationRun) => (
-              <article className="aui-ops-log-card" key={run.runId || `${run.command}-${run.createdAt}`}>
-                <strong>{run.command || "command"}</strong>
-                <span>{run.status || "-"} · {shortDate(run.updatedAt || run.createdAt)}</span>
-                <small>{run.progress?.summary || run.progress?.lastLogLine || "-"}</small>
-              </article>
-            ))}
-          </div>
-        </article>
+        <div className="aui-ops-rail">
+          <article className="aui-ops-card">
+            <div className="aui-ops-card-head">
+              <span>Run control</span>
+              <strong>{runningJob?.command || "대기"}</strong>
+            </div>
+            <div className="aui-ops-runbox">
+              <span>현재 실행</span>
+              <strong>{runningJob?.status || "idle"}</strong>
+              <p>{runningJob?.progress?.summary || runningJob?.progress?.lastLogLine || "실행 중인 작업이 없습니다."}</p>
+            </div>
+            <div className="aui-ops-actions">
+              <button onClick={() => runAction(() => triggerAutomation("rclone-copy", true), "전체 rclone dry-run을 실행했습니다.")} type="button">전체 미리보기</button>
+              <button onClick={() => runAction(() => continueAfterCollection(), "수집 이후 manifest/run/refresh-global 체인을 실행했습니다.")} type="button">후속 체인</button>
+            </div>
+          </article>
+
+          <article className="aui-ops-card">
+            <div className="aui-ops-card-head">
+              <span>Run history</span>
+              <strong>{latestRuns.length} recent runs</strong>
+            </div>
+            <div className="aui-ops-list">
+              {latestRuns.map((run: AutomationRun) => (
+                <article className="aui-ops-log-card" key={run.runId || `${run.command}-${run.createdAt}`}>
+                  <strong>{run.command || "command"}</strong>
+                  <span>{run.status || "-"} · {shortDate(run.updatedAt || run.createdAt)}</span>
+                  <small>{run.progress?.summary || run.progress?.lastLogLine || "-"}</small>
+                </article>
+              ))}
+            </div>
+          </article>
+        </div>
       </section>
     </main>
   );

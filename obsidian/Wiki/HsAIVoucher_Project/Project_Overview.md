@@ -8,6 +8,7 @@ source: "public Slack evidence sweep (2024-04-21 to 2026-04-21)"
 # Project Overview
 
 ## 운영 요약
+- 참조 기준 문서: [[Wiki/HsAIVoucher_Project/Reference_Register]]
 - 현재 상태: 최신 실행 상태는 [[Wiki/HsAIVoucher_Project/hub]]의 `실행 현황판`과 `현재 막힘 / 충돌` 기준으로 우선 확인합니다.
 - 실무 포인트: 이 문서는 프로젝트 목적, 범위, 현재 단계, 주요 판단을 빠르게 파악하는 기준 문서입니다.
 - 상태 기준: [[Wiki/HsAIVoucher_Project/Status]]

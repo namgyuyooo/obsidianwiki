@@ -58,6 +58,7 @@ POC 결과보고 / 외관불량탐지 / 진행 중 (데이터 보강 단계)
 - 성능 병목 = 데이터 정합성 > 모델 아키텍처
 
 ## 드릴다운
+- [[Wiki/Common/RTM_YNG_DMT_POC_Reference_Register]]
 - [[Wiki/Common/RTM_YNG_DMT_POC_Status]]
 - [[RTM_YNG_DMT_POC]]
 - [[RTM_YNG_제우스_픽셀_AI바우처]]

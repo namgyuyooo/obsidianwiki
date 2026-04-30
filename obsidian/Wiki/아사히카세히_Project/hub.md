@@ -39,6 +39,10 @@ source: "wiki management command"
 
 ## 상태 기준 링크
 - [[Wiki/아사히카세히_Project/Status]]
+- [[Wiki/아사히카세히_Project/Reference_Register]]
+
+## 참조 링크
+- [[Wiki/아사히카세히_Project/Reference_Register]]
 
 ## 증적/근거 링크
 - [[Wiki/아사히카세히_Project/Sources]]
@@ -47,6 +51,7 @@ source: "wiki management command"
 
 ## 운영 링크
 - [[Wiki/아사히카세히_Project/Status]]
+- [[Wiki/아사히카세히_Project/Reference_Register]]
 - [[Wiki/아사히카세히_Project/Project_Overview]]
 - [[Wiki/아사히카세히_Project/Sources]]
 - [[Wiki/아사히카세히_Project/Evidence_Log]]

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { ChatContext } from "../constants";
 import {
   deleteChatProject,
@@ -65,10 +65,20 @@ export function useChatWorkspace(initialContext: ChatContext): ChatWorkspaceStat
 
   const workspace = projectWorkspaceFromContext(initialContext);
   const wikiWorkspace = wikiWorkspaceFromContext(initialContext);
+  const initialSkillTagSeed = useMemo(() => [...initialContext.skillTags], [initialContext.skillTags]);
   const projectsInWorkspace = projects.filter((project) => (project.workspace || "work") === workspace);
   const activeProject = projectsInWorkspace.find((project) => project.id === activeProjectId) || projectsInWorkspace[0] || null;
 
-  async function reload(nextActiveProjectId = activeProjectId) {
+  const applySelectedSkillTags = useCallback((nextTags: string[]) => {
+    setSelectedSkillTags((current) => {
+      if (current.length === nextTags.length && current.every((value, index) => value === nextTags[index])) {
+        return current;
+      }
+      return nextTags;
+    });
+  }, []);
+
+  const reload = useCallback(async (nextActiveProjectId = activeProjectId) => {
     const [workspaceSnapshot, skillCatalog, wikiProjectCatalog] = await Promise.all([
       fetchChatWorkspace(),
       fetchSkillCatalog(),
@@ -85,7 +95,7 @@ export function useChatWorkspace(initialContext: ChatContext): ChatWorkspaceStat
     setWikiProjectOptions(wikiProjectCatalog);
     setActiveProjectId(nextActive);
     setStatus({ phase: "ready", message: "assistant-ui workspace가 동기화되었습니다." });
-  }
+  }, [activeProjectId, wikiWorkspace, workspace]);
 
   useEffect(() => {
     let cancelled = false;
@@ -117,21 +127,21 @@ export function useChatWorkspace(initialContext: ChatContext): ChatWorkspaceStat
   useEffect(() => {
     const storageProjectId = activeProject?.id || activeProjectId;
     if (!storageProjectId) {
-      setSelectedSkillTags([...initialContext.skillTags]);
+      applySelectedSkillTags(initialSkillTagSeed);
       return;
     }
     const saved = window.localStorage.getItem(skillStorageKey(workspace, storageProjectId));
     if (!saved) {
-      setSelectedSkillTags([...initialContext.skillTags]);
+      applySelectedSkillTags(initialSkillTagSeed);
       return;
     }
     try {
       const parsed = JSON.parse(saved);
-      setSelectedSkillTags(Array.isArray(parsed) ? parsed.filter((value): value is string => typeof value === "string") : []);
+      applySelectedSkillTags(Array.isArray(parsed) ? parsed.filter((value): value is string => typeof value === "string") : []);
     } catch {
-      setSelectedSkillTags([...initialContext.skillTags]);
+      applySelectedSkillTags(initialSkillTagSeed);
     }
-  }, [activeProject?.id, activeProjectId, initialContext.skillTags, workspace]);
+  }, [activeProject?.id, activeProjectId, applySelectedSkillTags, initialSkillTagSeed, workspace]);
 
   useEffect(() => {
     const storageProjectId = activeProject?.id || activeProjectId;

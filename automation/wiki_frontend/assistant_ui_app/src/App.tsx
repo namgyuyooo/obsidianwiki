@@ -4,6 +4,7 @@ import { Thread } from "./domains/chat/components/Thread";
 import { readChatContextFromUrl } from "./domains/chat/constants";
 import { useChatWorkspace } from "./domains/chat/hooks/useChatWorkspace";
 import { DecisionDeck } from "./domains/decisions/components/DecisionDeck";
+import { IngestWorkbench } from "./domains/ingest/components/IngestWorkbench";
 import { MissionControl } from "./domains/mission/components/MissionControl";
 import { OperationsControlPlane } from "./domains/mission/components/OperationsControlPlane";
 import { PipelineCockpit } from "./domains/mission/components/PipelineCockpit";
@@ -21,7 +22,7 @@ import {
   type SurfaceId,
 } from "./surfaces/surfaceRegistry";
 import type { ReactNode } from "react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { ChatStreamEvent } from "./domains/chat/api/glmChatApi";
 
 function readSurfaceFromUrl() {
@@ -52,6 +53,10 @@ function ProductFrame({
   const surfaceDefinition = getSurfaceDefinition(activeSurface);
   const primaryDefinition = getPrimarySurfaceDefinition(surfaceDefinition.primary);
   const activeSubSurfaces = getSurfacesByPrimary(surfaceDefinition.primary);
+  const surfaceCounts = activeSubSurfaces.reduce((counts, surface) => ({
+    ...counts,
+    [surface.status]: counts[surface.status] + 1,
+  }), { live: 0, scaffold: 0, fallback: 0 });
   const statusLabel = (status: "live" | "scaffold" | "fallback") => {
     if (status === "live") return "사용 가능";
     if (status === "scaffold") return "부분 구현";
@@ -94,6 +99,19 @@ function ProductFrame({
             </button>
           ))}
         </nav>
+        <div className="aui-product-contextbar" aria-label="active surface context">
+          <div>
+            <span>{primaryDefinition.label}</span>
+            <strong>{surfaceDefinition.label}</strong>
+            <small>{surfaceDefinition.description}</small>
+          </div>
+          <div className="aui-product-context-metrics">
+            <span>{surfaceDefinition.densityPattern}</span>
+            <span>Live {surfaceCounts.live}</span>
+            {surfaceCounts.scaffold ? <span>Scaffold {surfaceCounts.scaffold}</span> : null}
+            {surfaceCounts.fallback ? <span>Fallback {surfaceCounts.fallback}</span> : null}
+          </div>
+        </div>
       </header>
       <div className="aui-product-body">{children}</div>
     </div>
@@ -104,13 +122,13 @@ export function App() {
   const [surface, setSurface] = useState<SurfaceId>(() => readSurfaceFromUrl());
   const [orchestration, setOrchestration] = useState<Record<string, any>>({});
   const lastReloadedDoneRef = useRef("");
-  const initialChatContext = readChatContextFromUrl();
+  const initialChatContext = useMemo(() => readChatContextFromUrl(), []);
   const workspace = useChatWorkspace(initialChatContext);
-  const chatContext = {
+  const chatContext = useMemo(() => ({
     ...initialChatContext,
     projectId: workspace.activeProjectId || initialChatContext.projectId,
     skillTags: workspace.selectedSkillTags,
-  };
+  }), [initialChatContext, workspace.activeProjectId, workspace.selectedSkillTags]);
 
   useEffect(() => {
     const syncSurfaceFromHistory = () => setSurface(readSurfaceFromUrl());
@@ -140,6 +158,14 @@ export function App() {
 
   const handleStreamEvent = (event: ChatStreamEvent) => {
     setOrchestration((current) => {
+      const nextEvents = [
+        ...(current.events || []),
+        {
+          type: event.type,
+          payload: "payload" in event ? event.payload : { message: event.message },
+          createdAt: new Date().toISOString(),
+        },
+      ].slice(-80);
       if (event.type === "run-start") {
         return {
           ...current,
@@ -151,29 +177,35 @@ export function App() {
           projectBinding: current.projectBinding || null,
           done: null,
           error: null,
+          events: [{
+            type: event.type,
+            payload: { message: event.message },
+            createdAt: new Date().toISOString(),
+          }],
           updatedAt: Date.now(),
         };
       }
       if (event.type === "status") {
-        return { ...current, status: event.payload, updatedAt: Date.now() };
+        return { ...current, status: event.payload, events: nextEvents, updatedAt: Date.now() };
       }
       if (event.type === "retrieval") {
-        return { ...current, retrieval: event.payload, updatedAt: Date.now() };
+        return { ...current, retrieval: event.payload, events: nextEvents, updatedAt: Date.now() };
       }
       if (event.type === "validation") {
-        return { ...current, validation: event.payload, updatedAt: Date.now() };
+        return { ...current, validation: event.payload, events: nextEvents, updatedAt: Date.now() };
       }
       if (event.type === "paperclip") {
-        return { ...current, paperclip: event.payload, updatedAt: Date.now() };
+        return { ...current, paperclip: event.payload, events: nextEvents, updatedAt: Date.now() };
       }
       if (event.type === "project_binding") {
-        return { ...current, projectBinding: event.payload, updatedAt: Date.now() };
+        return { ...current, projectBinding: event.payload, events: nextEvents, updatedAt: Date.now() };
       }
       if (event.type === "done") {
         return {
           ...current,
           done: event.payload,
           status: { ...(current.status || {}), phase: event.payload.status || "completed" },
+          events: nextEvents,
           updatedAt: Date.now(),
         };
       }
@@ -182,6 +214,7 @@ export function App() {
           ...current,
           error: event.payload,
           status: { ...(current.status || {}), phase: "error" },
+          events: nextEvents,
           updatedAt: Date.now(),
         };
       }
@@ -195,6 +228,7 @@ export function App() {
     if (surface === "operations") return <OperationsControlPlane chatContext={chatContext} />;
     if (surface === "spotlite") return <SpotliteBoard chatContext={chatContext} />;
     if (surface === "decisions") return <DecisionDeck chatContext={chatContext} />;
+    if (surface === "ingest") return <IngestWorkbench chatContext={chatContext} />;
     if (surface === "paperclip") return <PaperclipStudio chatContext={chatContext} />;
     if (surface === "wiki") return <WikiWorkspace chatContext={chatContext} />;
     if (surface !== "chat") return <SurfaceMigrationFallback surface={getSurfaceDefinition(surface)} />;

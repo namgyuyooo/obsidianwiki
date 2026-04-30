@@ -48,6 +48,7 @@ PCB/패키지 AFVI 검사 제안 프로젝트. ODB 데이터·크레셈 연동·
 - FCCSP 특화 도메인, 데이터 소유권 이슈 사전 정리 없으면 제안 막힘
 
 ## 드릴다운
+- [[Wiki/Daeduck_AFVI_Project/Reference_Register]]
 - [[Wiki/Daeduck_AFVI_Project/Status]]
 - [[Wiki/Daeduck_AFVI_Project/hub]]
 - [[Wiki/Daeduck_AFVI_Project/Evidence_Log]]

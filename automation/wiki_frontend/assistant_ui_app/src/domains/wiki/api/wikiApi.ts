@@ -45,6 +45,139 @@ export type WikiStatusPayload = {
   store: Record<string, unknown>;
 };
 
+export type WikiGraphNode = {
+  id: string;
+  title: string;
+  section?: string;
+  type?: string;
+  size?: number;
+  degree?: number;
+};
+
+export type WikiGraphEdge = {
+  source: string;
+  target: string;
+  label?: string;
+};
+
+export type WikiGraphPayload = {
+  nodes: WikiGraphNode[];
+  edges: WikiGraphEdge[];
+};
+
+export type WikiManagementTargetPage = {
+  title?: string;
+  path: string;
+  division?: string;
+  projectKey?: string;
+  projectLabel?: string;
+  docKind?: string;
+};
+
+export type WikiManagementOperation = {
+  type?: string;
+  rationale?: string;
+  applyMode?: string;
+  proposedChanges?: unknown;
+  pairs?: unknown;
+};
+
+export type WikiManagementCommand = {
+  id: string;
+  command: string;
+  provider?: string;
+  status?: string;
+  createdAt?: string;
+  upstreamStatus?: string;
+  hints?: {
+    renamePairs?: Array<{ from: string; to: string }>;
+    keywords?: string[];
+  };
+  plan?: {
+    summaryMarkdown?: string;
+    targetPages?: WikiManagementTargetPage[];
+    operations?: WikiManagementOperation[];
+    risks?: string[];
+    nextActions?: string[];
+  };
+};
+
+export type WikiManagementApplyResult = {
+  status?: string;
+  createdAt?: string;
+  error?: string;
+  changedFiles?: Array<{
+    path: string;
+    title?: string;
+    operation?: string;
+    action?: string;
+    dryRun?: boolean;
+    replacements?: Array<{ from: string; to: string; count: number }>;
+  }>;
+  skippedOperations?: Array<{ type?: string; path?: string; reason?: string }>;
+};
+
+export type FilesystemBrowseTarget = {
+  path: string;
+  type: "file" | "directory";
+  fileCount?: number;
+  directoryCount?: number;
+};
+
+export type FilesystemBrowseEntry = {
+  path: string;
+  type: "file" | "directory" | "other";
+  depth?: number;
+  ext?: string;
+  size?: number;
+  updatedAt?: string;
+  fileCount?: number;
+  directoryCount?: number;
+  tree?: Array<{
+    depth: number;
+    type: "file" | "directory" | "other";
+    path: string;
+  }>;
+};
+
+export type FilesystemBrowsePayload = {
+  targets: FilesystemBrowseTarget[];
+  files: string[];
+  directories: string[];
+  blocked: string[];
+  entries: FilesystemBrowseEntry[];
+};
+
+export type RemoteBrowserItem = {
+  name: string;
+  remotePath: string;
+  type: "directory" | "file";
+  size?: number;
+  updatedAt?: string;
+};
+
+export type RemoteBrowserPayload = {
+  remote: string;
+  root: string;
+  currentPath: string;
+  parentPath?: string;
+  blocked?: boolean;
+  error?: string;
+  items: RemoteBrowserItem[];
+};
+
+export type CollectionStatusPayload = {
+  manifestPath?: string;
+  runOutputPath?: string;
+  manifestFolders: string[];
+  manifestFiles?: string[];
+  processedFolders: string[];
+  processedFiles: string[];
+  documents?: number;
+  processed?: number;
+  updatedAt?: string;
+};
+
 async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(path, {
     ...init,
@@ -100,4 +233,59 @@ export async function saveWikiStatus(input: {
     method: "POST",
     body: JSON.stringify(input),
   });
+}
+
+export async function fetchWikiGraph() {
+  return requestJson<WikiGraphPayload>("/api/wiki/graph");
+}
+
+export async function refreshWikiGraph() {
+  return requestJson<{ status?: string; command?: string; error?: string; stderr?: string; stdout?: string }>("/api/wiki/graph/refresh", {
+    method: "POST",
+    body: JSON.stringify({}),
+  });
+}
+
+export async function fetchWikiManagementCommands() {
+  return requestJson<{ commands: WikiManagementCommand[] }>("/api/wiki/manage");
+}
+
+export async function runWikiManagementCommand(command: string) {
+  return requestJson<WikiManagementCommand>("/api/wiki/manage", {
+    method: "POST",
+    body: JSON.stringify({ command }),
+  });
+}
+
+export async function applyWikiManagementCommand(commandId: string, dryRun = false) {
+  return requestJson<WikiManagementApplyResult>("/api/wiki/manage/apply", {
+    method: "POST",
+    body: JSON.stringify({ commandId, dryRun }),
+  });
+}
+
+export async function browseFilesystem(input: {
+  path?: string;
+  note?: string;
+  extensions?: string[];
+  maxDepth?: number;
+  maxFiles?: number;
+  maxEntriesPerDirectory?: number;
+  maxTreeEntries?: number;
+}) {
+  return requestJson<FilesystemBrowsePayload>("/api/filesystem/browse", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+
+export async function browseRemoteDrive(path = "") {
+  return requestJson<RemoteBrowserPayload>("/api/drive/remote-browser", {
+    method: "POST",
+    body: JSON.stringify({ path }),
+  });
+}
+
+export async function fetchCollectionStatus() {
+  return requestJson<CollectionStatusPayload>("/api/collection/status");
 }

@@ -1,7 +1,27 @@
 import type { FormEvent, KeyboardEvent } from "react";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { ChatContext } from "../../chat/constants";
-import type { WikiPageIndexItem, WikiSearchResult, WikiStatusCatalog } from "../api/wikiApi";
+import { continueAfterCollection, runTargetedRclone } from "../../mission/api/controlPlaneApi";
+import {
+  applyWikiManagementCommand,
+  browseFilesystem,
+  browseRemoteDrive,
+  fetchCollectionStatus,
+  fetchWikiGraph,
+  fetchWikiManagementCommands,
+  refreshWikiGraph,
+  runWikiManagementCommand,
+  type CollectionStatusPayload,
+  type FilesystemBrowsePayload,
+  type RemoteBrowserPayload,
+  type WikiGraphNode,
+  type WikiGraphPayload,
+  type WikiManagementApplyResult,
+  type WikiManagementCommand,
+  type WikiPageIndexItem,
+  type WikiSearchResult,
+  type WikiStatusCatalog,
+} from "../api/wikiApi";
 import { useWikiEvidenceConsole } from "../hooks/useWikiEvidenceConsole";
 
 type WikiWorkspaceProps = {
@@ -13,6 +33,226 @@ type StatusEditorProps = {
   catalog: WikiStatusCatalog;
   onSave: (input: { status: string; tags: string; highlight: string; note: string }) => void;
 };
+
+type WikiFolderGroup = {
+  key: string;
+  label: string;
+  type: string;
+  count: number;
+  pages: WikiPageIndexItem[];
+};
+
+type WikiResultItem = WikiPageIndexItem | WikiSearchResult;
+type WikiSortKey = "relevance" | "updated" | "title" | "kind" | "status" | "size";
+type WikiSortDirection = "asc" | "desc";
+type CollectionQueueItem = {
+  path: string;
+  source: "manual" | "mirror";
+  targetType: "directory" | "file";
+  approved?: boolean;
+  onHold?: boolean;
+  lastAction?: "idle" | "dry-run" | "run" | "failed";
+  lastError?: string;
+};
+type BrowseTypeFilter = "all" | "directory" | "file";
+type CollectionPreset = {
+  id: string;
+  label: string;
+  ext: string[];
+  type?: BrowseTypeFilter;
+};
+type ReasonLogEntry = {
+  id: string;
+  title: string;
+  detail: string;
+};
+type SavedQueueSnapshot = {
+  id: string;
+  name: string;
+  updatedAt: string;
+  items: CollectionQueueItem[];
+};
+
+type WikiGraphPlacedNode = WikiGraphNode & {
+  x: number;
+  y: number;
+  r: number;
+};
+
+const ALL_FOLDER_KEY = "all";
+const ALL_FILTER_VALUE = "all";
+const FOLDER_TYPE_ORDER = ["Project", "Account", "Common", "Memory", "Folder"];
+const WIKI_RESULT_LIMIT = 200;
+const GRAPH_NODE_LIMIT = 64;
+const GRAPH_EDGE_LIMIT = 120;
+const GRAPH_WIDTH = 360;
+const GRAPH_HEIGHT = 240;
+const MIRROR_PREFIX = "automation/drive_wikify/runtime/mirror/";
+const EMPTY_BROWSE: FilesystemBrowsePayload = {
+  targets: [],
+  files: [],
+  directories: [],
+  blocked: [],
+  entries: [],
+};
+const EMPTY_GRAPH: WikiGraphPayload = {
+  nodes: [],
+  edges: [],
+};
+const EMPTY_REMOTE_BROWSE: RemoteBrowserPayload = {
+  remote: "",
+  root: "",
+  currentPath: "",
+  parentPath: "",
+  blocked: false,
+  error: "",
+  items: [],
+};
+const EMPTY_COLLECTION_STATUS: CollectionStatusPayload = {
+  manifestFolders: [],
+  manifestFiles: [],
+  processedFolders: [],
+  processedFiles: [],
+};
+const COLLECTION_QUEUE_STORAGE_KEY = "assistant-ui.collection-queue-snapshots";
+const COLLECTION_PRESETS: CollectionPreset[] = [
+  { id: "all", label: "전체", ext: [], type: "all" },
+  { id: "documents", label: "문서", ext: [".pdf", ".docx", ".hwp", ".hwpx"], type: "file" },
+  { id: "slides", label: "슬라이드", ext: [".pptx"], type: "file" },
+  { id: "sheets", label: "시트", ext: [".xlsx", ".xls", ".csv"], type: "file" },
+  { id: "office", label: "office", ext: [".pdf", ".docx", ".pptx", ".xlsx", ".hwp", ".hwpx"], type: "file" },
+  { id: "folders", label: "폴더만", ext: [], type: "directory" },
+];
+
+function folderKey(page: WikiPageIndexItem) {
+  if (page.division === "project" || page.division === "account") {
+    return `${page.division}:${page.projectKey || page.projectLabel || page.section || "Project"}`;
+  }
+  if (page.division === "memory") return "L1_memory";
+  return `${page.division || "wiki"}:${page.section || page.division || "Wiki"}`;
+}
+
+function folderLabel(page: WikiPageIndexItem) {
+  if (page.division === "project" || page.division === "account") return page.projectLabel || page.projectKey || page.section || "Project";
+  if (page.division === "memory") return "L1 Memory";
+  if (page.division === "common") return "Common";
+  if (page.division === "log") return "Logs / Audit";
+  return page.section || page.division || "Wiki";
+}
+
+function folderType(page: WikiPageIndexItem) {
+  if (page.division === "project") return "Project";
+  if (page.division === "account") return "Account";
+  if (page.division === "memory") return "Memory";
+  if (page.division === "common") return "Common";
+  return page.division || "Folder";
+}
+
+function folderSortRank(type: string) {
+  const rank = FOLDER_TYPE_ORDER.indexOf(type);
+  return rank === -1 ? FOLDER_TYPE_ORDER.length : rank;
+}
+
+function buildFolderGroups(pages: WikiPageIndexItem[]) {
+  const groups = new Map<string, WikiFolderGroup>();
+  for (const page of pages) {
+    const key = folderKey(page);
+    const existing = groups.get(key);
+    if (existing) {
+      existing.count += 1;
+      existing.pages.push(page);
+      continue;
+    }
+    groups.set(key, {
+      key,
+      label: folderLabel(page),
+      type: folderType(page),
+      count: 1,
+      pages: [page],
+    });
+  }
+  return [...groups.values()].sort((a, b) => {
+    return folderSortRank(a.type) - folderSortRank(b.type) || a.label.localeCompare(b.label, "ko");
+  });
+}
+
+function isWikiPageIndexItem(item: WikiResultItem): item is WikiPageIndexItem {
+  return "division" in item || "docKind" in item || "workflowStatus" in item || "updatedAt" in item;
+}
+
+function frontmatterText(item: WikiResultItem, key: string) {
+  if (!("frontmatter" in item) || !item.frontmatter) return "";
+  const value = item.frontmatter[key];
+  if (Array.isArray(value)) return value.map(String).join(", ");
+  if (typeof value === "string" || typeof value === "number") return String(value);
+  return "";
+}
+
+function itemMeta(item: WikiResultItem, pageIndexByPath: Map<string, WikiPageIndexItem>) {
+  return pageIndexByPath.get(item.path) || (isWikiPageIndexItem(item) ? item : null);
+}
+
+function resultKind(item: WikiResultItem, meta: WikiPageIndexItem | null) {
+  return meta?.docKind || meta?.nature || frontmatterText(item, "docKind") || frontmatterText(item, "nature") || meta?.division || "page";
+}
+
+function resultStatusKey(item: WikiResultItem, meta: WikiPageIndexItem | null) {
+  return meta?.workflowStatus || frontmatterText(item, "workflowStatus") || "unknown";
+}
+
+function resultStatusLabel(item: WikiResultItem, meta: WikiPageIndexItem | null) {
+  return meta?.workflowStatusLabel || resultStatusKey(item, meta);
+}
+
+function resultUpdatedAt(item: WikiResultItem, meta: WikiPageIndexItem | null) {
+  return meta?.updatedAt || frontmatterText(item, "updatedAt") || "";
+}
+
+function resultSize(meta: WikiPageIndexItem | null) {
+  return meta?.size || 0;
+}
+
+function resultProjectText(item: WikiResultItem, meta: WikiPageIndexItem | null) {
+  return meta?.projectLabel || meta?.projectKey || frontmatterText(item, "projectLabel") || frontmatterText(item, "projectKey");
+}
+
+function itemMatchesQuery(item: WikiResultItem, meta: WikiPageIndexItem | null, query: string) {
+  if (!query) return true;
+  const haystack = [
+    item.title,
+    item.path,
+    "snippet" in item ? item.snippet : "",
+    resultProjectText(item, meta),
+    resultKind(item, meta),
+    resultStatusLabel(item, meta),
+  ].join(" ");
+  return haystack.toLowerCase().includes(query);
+}
+
+function compareText(left: string, right: string) {
+  return left.localeCompare(right, "ko", { numeric: true, sensitivity: "base" });
+}
+
+function compareWikiResults(
+  left: WikiResultItem,
+  right: WikiResultItem,
+  pageIndexByPath: Map<string, WikiPageIndexItem>,
+  sortKey: WikiSortKey,
+  direction: WikiSortDirection,
+) {
+  const leftMeta = itemMeta(left, pageIndexByPath);
+  const rightMeta = itemMeta(right, pageIndexByPath);
+  const multiplier = direction === "asc" ? 1 : -1;
+  const comparison = (() => {
+    if (sortKey === "relevance") return (("score" in left ? left.score || 0 : 0) - ("score" in right ? right.score || 0 : 0)) || compareText(resultTitle(left), resultTitle(right));
+    if (sortKey === "updated") return compareText(resultUpdatedAt(left, leftMeta), resultUpdatedAt(right, rightMeta));
+    if (sortKey === "kind") return compareText(resultKind(left, leftMeta), resultKind(right, rightMeta)) || compareText(resultTitle(left), resultTitle(right));
+    if (sortKey === "status") return compareText(resultStatusLabel(left, leftMeta), resultStatusLabel(right, rightMeta)) || compareText(resultTitle(left), resultTitle(right));
+    if (sortKey === "size") return resultSize(leftMeta) - resultSize(rightMeta);
+    return compareText(resultTitle(left), resultTitle(right));
+  })();
+  return comparison * multiplier;
+}
 
 function escapeHtml(value: string) {
   return value
@@ -159,6 +399,200 @@ function resultTitle(item: WikiPageIndexItem | WikiSearchResult) {
   return item.title || item.path.split("/").pop() || item.path;
 }
 
+function treeLabel(path = "") {
+  return path.split("/").pop() || path;
+}
+
+function remotePathFromMirror(path = "") {
+  if (!path.startsWith(MIRROR_PREFIX)) return "";
+  return path.slice(MIRROR_PREFIX.length).replace(/^\/+/, "");
+}
+
+function tokenSet(value: string) {
+  return new Set(
+    String(value || "")
+      .toLowerCase()
+      .replace(/[_-]+/g, " ")
+      .split(/[^가-힣a-z0-9]+/i)
+      .filter((item) => item.length >= 2 && !["project", "account", "wiki", "drive", "mirror"].includes(item)),
+  );
+}
+
+function overlapScore(a: string, b: string) {
+  const left = tokenSet(a);
+  const right = tokenSet(b);
+  let score = 0;
+  for (const token of left) if (right.has(token)) score += 1;
+  return score;
+}
+
+function projectRouteHint(path: string, pages: WikiPageIndexItem[]) {
+  const candidates = pages
+    .filter((page) => page.division === "project" || page.division === "account")
+    .map((page) => ({
+      projectKey: page.projectKey || "",
+      projectLabel: page.projectLabel || page.projectKey || "",
+      path: page.path,
+      score: Math.max(overlapScore(path, page.projectKey || ""), overlapScore(path, page.projectLabel || "")),
+    }))
+    .filter((item) => item.score > 0)
+    .sort((a, b) => b.score - a.score || a.projectLabel.localeCompare(b.projectLabel, "ko"));
+  return candidates[0] || null;
+}
+
+function projectRouteCandidates(path: string, pages: WikiPageIndexItem[]) {
+  return pages
+    .filter((page) => page.division === "project" || page.division === "account")
+    .map((page) => ({
+      projectKey: page.projectKey || "",
+      projectLabel: page.projectLabel || page.projectKey || "",
+      path: page.path,
+      score: Math.max(overlapScore(path, page.projectKey || ""), overlapScore(path, page.projectLabel || "")),
+    }))
+    .filter((item) => item.score > 0)
+    .sort((a, b) => b.score - a.score || a.projectLabel.localeCompare(b.projectLabel, "ko"))
+    .slice(0, 3);
+}
+
+function normalizedCollectionPath(path = "") {
+  return String(path || "").replace(/^\/+|\/+$/g, "");
+}
+
+function pathMatchesPrefix(path: string, prefix: string) {
+  return path === prefix || path.startsWith(`${prefix}/`);
+}
+
+function queueStatusForPath(path: string, status: CollectionStatusPayload, targetType: "directory" | "file" = "directory") {
+  const normalized = normalizedCollectionPath(path);
+  if (!normalized) return "unknown";
+  if (targetType === "file") {
+    if ((status.processedFiles || []).includes(normalized)) return "processed";
+    if ((status.manifestFiles || []).includes(normalized)) return "manifested";
+    return "queued";
+  }
+  const processed = (status.processedFolders || []).some((item) => pathMatchesPrefix(item, normalized));
+  if (processed) return "processed";
+  const manifested = (status.manifestFolders || []).some((item) => pathMatchesPrefix(item, normalized));
+  if (manifested) return "manifested";
+  return "queued";
+}
+
+function collectionStatusDetail(path: string, status: CollectionStatusPayload, targetType: "directory" | "file" = "directory") {
+  const normalized = normalizedCollectionPath(path);
+  const queueStatus = queueStatusForPath(normalized, status, targetType);
+  const detail = [
+    `path: ${normalized || "-"}`,
+    `target: ${targetType}`,
+    `status: ${queueStatus}`,
+    `manifest: ${status.manifestPath || "-"}`,
+    `run output: ${status.runOutputPath || "-"}`,
+  ];
+  if (targetType === "file") {
+    detail.push(`manifested file: ${(status.manifestFiles || []).includes(normalized) ? "yes" : "no"}`);
+    detail.push(`processed file: ${(status.processedFiles || []).includes(normalized) ? "yes" : "no"}`);
+  } else {
+    detail.push(`manifested subtree: ${(status.manifestFolders || []).some((item) => pathMatchesPrefix(item, normalized)) ? "yes" : "no"}`);
+    detail.push(`processed subtree: ${(status.processedFolders || []).some((item) => pathMatchesPrefix(item, normalized)) ? "yes" : "no"}`);
+  }
+  return detail.join("\n");
+}
+
+function collectionReasoningSummary(input: {
+  path: string;
+  targetType: "directory" | "file";
+  queueStatus: string;
+  routeHint?: { projectLabel?: string; score?: number } | null;
+  sourceLabel?: string;
+  status?: CollectionStatusPayload;
+  pages?: WikiPageIndexItem[];
+}) {
+  const normalized = normalizedCollectionPath(input.path);
+  const tokens = [...tokenSet(normalized)];
+  const pathTokens = tokens.join(", ") || "-";
+  const candidates = input.pages ? projectRouteCandidates(normalized, input.pages) : [];
+  const lines = [
+    "Step 1. Input Signals",
+    `- path: ${normalized}`,
+    `- source: ${input.sourceLabel || "-"}`,
+    `- target_type: ${input.targetType}`,
+    `- queue_status: ${input.queueStatus}`,
+    "",
+    "Step 2. Tokenization",
+    `- tokens: ${pathTokens}`,
+    `- token_count: ${tokens.length}`,
+    "",
+    "Step 3. Candidate Comparison",
+  ];
+  if (input.routeHint?.projectLabel) {
+    lines.push(`- top_match: ${input.routeHint.projectLabel}`);
+    lines.push(`- top_score: ${input.routeHint.score || 0}`);
+  } else {
+    lines.push("- top_match: none");
+    lines.push("- top_score: 0");
+  }
+  if (candidates.length) lines.push(`- top3: ${candidates.map((item) => `${item.projectLabel}(${item.score})`).join(" | ")}`);
+  else lines.push("- top3: none");
+  lines.push("", "Step 4. Status Checks");
+  if (input.status) {
+    if (input.targetType === "file") {
+      lines.push(`- manifest_hit: ${(input.status.manifestFiles || []).includes(normalized) ? "yes" : "no"}`);
+      lines.push(`- run_output_hit: ${(input.status.processedFiles || []).includes(normalized) ? "yes" : "no"}`);
+    } else {
+      lines.push(`- manifest_subtree_hit: ${(input.status.manifestFolders || []).some((item) => pathMatchesPrefix(item, normalized)) ? "yes" : "no"}`);
+      lines.push(`- run_output_subtree_hit: ${(input.status.processedFolders || []).some((item) => pathMatchesPrefix(item, normalized)) ? "yes" : "no"}`);
+    }
+  }
+  lines.push("", "Step 5. Rule Hits");
+  if (input.routeHint?.projectLabel) lines.push("- rule: project_route_hint_detected");
+  else lines.push("- rule: no_project_route_hint");
+  if (input.queueStatus === "processed") lines.push("- rule: already_processed_hold");
+  else if (input.queueStatus === "manifested") lines.push("- rule: manifested_but_not_fully_processed");
+  else lines.push("- rule: queue_candidate_open");
+  lines.push("", "Step 6. Final Decision");
+  if (input.queueStatus === "processed") lines.push("- decision: keep visible, avoid duplicate run unless forced");
+  else if (input.queueStatus === "manifested") lines.push("- decision: eligible for continue-after-collection or selective rerun");
+  else lines.push("- decision: eligible for queue/run");
+  return lines.join("\n");
+}
+
+function collectionImpactPreview(path: string, targetType: "directory" | "file", queueStatus: string, routeHint?: { projectLabel?: string } | null) {
+  const lines = [];
+  if (routeHint?.projectLabel) lines.push(`target wiki: ${routeHint.projectLabel}`);
+  else lines.push("target wiki: unresolved");
+  if (queueStatus === "processed") lines.push("impact: duplicate processing risk if run again");
+  else if (queueStatus === "manifested") lines.push("impact: manifest exists, likely continue/refresh path");
+  else lines.push("impact: new ingest candidate");
+  lines.push(`unit: ${targetType}`);
+  return lines.join(" · ");
+}
+
+function graphLayout(nodes: WikiGraphNode[]) {
+  const groups = [...new Set(nodes.map((node) => node.section || "Wiki"))];
+  const groupAngles = new Map(groups.map((group, index) => [group, (Math.PI * 2 * index) / Math.max(groups.length, 1)]));
+  return nodes.map<WikiGraphPlacedNode>((node, index) => {
+    const angle = (groupAngles.get(node.section || "Wiki") || 0) + index * 0.47;
+    const radius = 34 + Math.min(82, (index % 28) * 3.4) + (node.degree || 0) * 1.8;
+    return {
+      ...node,
+      x: GRAPH_WIDTH / 2 + Math.cos(angle) * radius,
+      y: GRAPH_HEIGHT / 2 + Math.sin(angle) * radius,
+      r: Math.max(5, Math.min(15, 5 + (node.degree || 0) * 0.85)),
+    };
+  });
+}
+
+function summarizeOperation(operation: { type?: string; rationale?: string; applyMode?: string; proposedChanges?: unknown; pairs?: unknown }) {
+  return operation.rationale || operation.applyMode || JSON.stringify(operation.proposedChanges || operation.pairs || "").slice(0, 120);
+}
+
+function markdownListLines(markdown = "") {
+  return markdown
+    .split("\n")
+    .map((line) => line.replace(/^\s*[-*]\s?/, "").trim())
+    .filter(Boolean)
+    .slice(0, 5);
+}
+
 function StatusEditor({ page, catalog, onSave }: StatusEditorProps) {
   const [status, setStatus] = useState("unknown");
   const [tags, setTags] = useState("");
@@ -211,20 +645,650 @@ function StatusEditor({ page, catalog, onSave }: StatusEditorProps) {
   );
 }
 
+function WikiGraphPanel({
+  activePath,
+  graph,
+  message,
+  onOpenPage,
+  onRefreshGraph,
+  phase,
+}: {
+  activePath: string;
+  graph: WikiGraphPayload;
+  message: string;
+  onOpenPage: (path: string) => void;
+  onRefreshGraph: () => void;
+  phase: string;
+}) {
+  const nodes = graph.nodes.slice(0, GRAPH_NODE_LIMIT);
+  const nodeIds = new Set(nodes.map((node) => node.id));
+  const edges = graph.edges.filter((edge) => nodeIds.has(edge.source) && nodeIds.has(edge.target)).slice(0, GRAPH_EDGE_LIMIT);
+  const placed = graphLayout(nodes);
+  const nodeById = new Map(placed.map((node) => [node.id, node]));
+
+  return (
+    <section className="aui-wiki-card aui-wiki-graph-card">
+      <div className="aui-wiki-card-head">
+        <span>Graph Map</span>
+        <strong>{nodes.length} nodes · {edges.length} links</strong>
+      </div>
+      <div className="aui-wiki-graph-canvas" aria-label="wiki graph map">
+        <svg viewBox={`0 0 ${GRAPH_WIDTH} ${GRAPH_HEIGHT}`} role="img">
+          <title>Wiki graph links</title>
+          {edges.map((edge) => {
+            const source = nodeById.get(edge.source);
+            const target = nodeById.get(edge.target);
+            if (!source || !target) return null;
+            return (
+              <line
+                key={`${edge.source}-${edge.target}-${edge.label || ""}`}
+                x1={source.x}
+                x2={target.x}
+                y1={source.y}
+                y2={target.y}
+              />
+            );
+          })}
+        </svg>
+        {placed.map((node) => (
+          <button
+            className={node.id === activePath ? "active" : ""}
+            key={node.id}
+            onClick={() => onOpenPage(node.id)}
+            style={{
+              height: `${node.r * 2}px`,
+              left: `${(node.x / GRAPH_WIDTH) * 100}%`,
+              top: `${(node.y / GRAPH_HEIGHT) * 100}%`,
+              width: `${node.r * 2}px`,
+            }}
+            title={`${node.title} · degree ${node.degree || 0}`}
+            type="button"
+          >
+            <span>{node.title}</span>
+          </button>
+        ))}
+      </div>
+      <div className="aui-wiki-graph-list">
+        {nodes.slice(0, 5).map((node) => (
+          <button key={node.id} onClick={() => onOpenPage(node.id)} type="button">
+            <strong>{node.title}</strong>
+            <span>{node.section || "Wiki"} · degree {node.degree || 0}</span>
+          </button>
+        ))}
+        {!nodes.length ? <p className="aui-wiki-muted">그래프 스냅샷을 불러오면 연결 문서가 표시됩니다.</p> : null}
+      </div>
+      <div className="aui-wiki-toolbar-actions">
+        <button onClick={onRefreshGraph} type="button">그래프맵 업데이트</button>
+      </div>
+      <p className={`aui-wiki-inline-state ${phase}`}>{message}</p>
+    </section>
+  );
+}
+
+function WikiManagementConsole({
+  onOpenPage,
+  onReloadIndex,
+}: {
+  onOpenPage: (path: string) => void;
+  onReloadIndex: () => Promise<void>;
+}) {
+  const [command, setCommand] = useState("");
+  const [commands, setCommands] = useState<WikiManagementCommand[]>([]);
+  const [activeCommand, setActiveCommand] = useState<WikiManagementCommand | null>(null);
+  const [applyResult, setApplyResult] = useState<WikiManagementApplyResult | null>(null);
+  const [phase, setPhase] = useState<"loading" | "idle" | "planning" | "applying" | "error">("loading");
+  const [message, setMessage] = useState("위키 관리 명령 히스토리를 불러오는 중입니다.");
+
+  const loadCommands = async () => {
+    setPhase("loading");
+    try {
+      const payload = await fetchWikiManagementCommands();
+      const nextCommands = payload.commands || [];
+      setCommands(nextCommands);
+      setActiveCommand((current) => current || nextCommands[0] || null);
+      setPhase("idle");
+      setMessage(nextCommands.length ? `${nextCommands.length}개 관리 명령을 불러왔습니다.` : "아직 관리 명령이 없습니다.");
+    } catch (error) {
+      setPhase("error");
+      setMessage(error instanceof Error ? error.message : "관리 명령 로드 실패");
+    }
+  };
+
+  useEffect(() => {
+    loadCommands();
+  }, []);
+
+  const runCommand = async (event: FormEvent) => {
+    event.preventDefault();
+    const trimmed = command.trim();
+    if (!trimmed) return;
+    setPhase("planning");
+    setApplyResult(null);
+    try {
+      const planned = await runWikiManagementCommand(trimmed);
+      setCommands((current) => [planned, ...current.filter((item) => item.id !== planned.id)]);
+      setActiveCommand(planned);
+      setCommand("");
+      setPhase("idle");
+      setMessage(`계획 생성 완료 · 대상 ${planned.plan?.targetPages?.length || 0}개 · 작업 ${planned.plan?.operations?.length || 0}개`);
+    } catch (error) {
+      setPhase("error");
+      setMessage(error instanceof Error ? error.message : "관리 명령 계획 실패");
+    }
+  };
+
+  const applyCommand = async (dryRun: boolean) => {
+    if (!activeCommand?.id) return;
+    if (!dryRun && !window.confirm("검토한 계획을 로컬 위키 Markdown에 적용합니다. 원본 Drive는 변경하지 않습니다. 계속할까요?")) return;
+    setPhase("applying");
+    try {
+      const result = await applyWikiManagementCommand(activeCommand.id, dryRun);
+      setApplyResult(result);
+      setPhase("idle");
+      setMessage(`${dryRun ? "Dry-run" : "실행"} 완료 · 변경 ${result.changedFiles?.length || 0}개 · 제외 ${result.skippedOperations?.length || 0}개`);
+      if (!dryRun) await onReloadIndex();
+      await loadCommands();
+    } catch (error) {
+      setPhase("error");
+      setMessage(error instanceof Error ? error.message : "관리 명령 실행 실패");
+    }
+  };
+
+  const summaryLines = markdownListLines(activeCommand?.plan?.summaryMarkdown);
+
+  return (
+    <section className="aui-wiki-card aui-wiki-command-card">
+      <div className="aui-wiki-card-head">
+        <span>Management Commands</span>
+        <strong>{activeCommand?.status || phase}</strong>
+      </div>
+      <form className="aui-wiki-status-form" onSubmit={runCommand}>
+        <label>
+          <span>LLM 처리 지시</span>
+          <textarea
+            rows={4}
+            value={command}
+            onChange={(event) => setCommand(event.target.value)}
+            placeholder="예: A 프로젝트 명칭을 B 프로젝트로 통일하고 관련 문서를 찾아 계획을 세워줘."
+          />
+        </label>
+        <button disabled={phase === "planning" || phase === "applying"} type="submit">계획 생성</button>
+      </form>
+      <p className={`aui-wiki-inline-state ${phase}`}>{message}</p>
+      <div className="aui-wiki-command-history">
+        {commands.slice(0, 4).map((item) => (
+          <button
+            className={item.id === activeCommand?.id ? "active" : ""}
+            key={item.id}
+            onClick={() => {
+              setActiveCommand(item);
+              setApplyResult(null);
+            }}
+            type="button"
+          >
+            <strong>{item.command}</strong>
+            <span>{item.provider || "local"} · {item.createdAt?.slice(0, 10) || "no date"}</span>
+          </button>
+        ))}
+      </div>
+      {activeCommand ? (
+        <article className="aui-wiki-command-plan">
+          {summaryLines.length ? (
+            <ul>
+              {summaryLines.map((line) => <li key={line}>{line}</li>)}
+            </ul>
+          ) : <p className="aui-wiki-muted">계획 요약이 없습니다.</p>}
+          {activeCommand.hints?.renamePairs?.length ? (
+            <div className="aui-wiki-command-chips">
+              {activeCommand.hints.renamePairs.map((pair) => <span key={`${pair.from}-${pair.to}`}>{pair.from} -&gt; {pair.to}</span>)}
+            </div>
+          ) : null}
+          <div className="aui-wiki-command-targets">
+            {(activeCommand.plan?.targetPages || []).slice(0, 6).map((page) => (
+              <button key={page.path} onClick={() => onOpenPage(page.path)} type="button">
+                <strong>{page.title || page.path}</strong>
+                <span>{page.path}</span>
+              </button>
+            ))}
+          </div>
+          {(activeCommand.plan?.operations || []).length ? (
+            <div className="aui-wiki-command-ops">
+              {activeCommand.plan?.operations?.slice(0, 5).map((operation, index) => (
+                <p key={`${operation.type || "op"}-${index}`}><strong>{operation.type || "operation"}</strong>: {summarizeOperation(operation)}</p>
+              ))}
+            </div>
+          ) : null}
+          <div className="aui-wiki-toolbar-actions">
+            <button disabled={phase === "applying"} onClick={() => applyCommand(true)} type="button">Dry-run</button>
+            <button disabled={phase === "applying"} onClick={() => applyCommand(false)} type="button">로컬 위키 적용</button>
+          </div>
+        </article>
+      ) : null}
+      {applyResult ? (
+        <article className="aui-wiki-command-result">
+          <strong>{applyResult.status || "result"}</strong>
+          <span>changed {applyResult.changedFiles?.length || 0} · skipped {applyResult.skippedOperations?.length || 0}</span>
+          {(applyResult.changedFiles || []).slice(0, 5).map((file) => (
+            <button key={`${file.path}-${file.operation}`} onClick={() => onOpenPage(file.path)} type="button">
+              <strong>{file.title || file.path}</strong>
+              <span>{file.replacements?.map((pair) => `${pair.from}->${pair.to} ${pair.count}`).join(", ") || file.operation || file.action}</span>
+            </button>
+          ))}
+        </article>
+      ) : null}
+    </section>
+  );
+}
+
 export function WikiWorkspace({ chatContext }: WikiWorkspaceProps) {
   const wiki = useWikiEvidenceConsole(chatContext.workspace);
+  const [activeFolderKey, setActiveFolderKey] = useState(ALL_FOLDER_KEY);
+  const [statusFilter, setStatusFilter] = useState(ALL_FILTER_VALUE);
+  const [kindFilter, setKindFilter] = useState(ALL_FILTER_VALUE);
+  const [sortKey, setSortKey] = useState<WikiSortKey>("updated");
+  const [sortDirection, setSortDirection] = useState<WikiSortDirection>("desc");
+  const [collectionPath, setCollectionPath] = useState("automation/drive_wikify/runtime/mirror");
+  const [collectionNote, setCollectionNote] = useState("");
+  const [collectionPhase, setCollectionPhase] = useState<"idle" | "loading" | "running" | "error">("idle");
+  const [collectionMessage, setCollectionMessage] = useState("로컬/미러 경로를 탐색해 remote path 수집 큐로 넘길 수 있습니다.");
+  const [collectionResult, setCollectionResult] = useState<FilesystemBrowsePayload>(EMPTY_BROWSE);
+  const [remoteBrowser, setRemoteBrowser] = useState<RemoteBrowserPayload>(EMPTY_REMOTE_BROWSE);
+  const [remoteBrowsePath, setRemoteBrowsePath] = useState("");
+  const [remotePathDraft, setRemotePathDraft] = useState("");
+  const [collectionQueue, setCollectionQueue] = useState<CollectionQueueItem[]>([]);
+  const [collectionTypeFilter, setCollectionTypeFilter] = useState<BrowseTypeFilter>("all");
+  const [collectionExtFilter, setCollectionExtFilter] = useState("all");
+  const [collectionPresetId, setCollectionPresetId] = useState("all");
+  const [collectionPathQuery, setCollectionPathQuery] = useState("");
+  const [queueRunMode, setQueueRunMode] = useState<"idle" | "dry-run" | "run">("idle");
+  const [queueActionPath, setQueueActionPath] = useState("");
+  const [queueSnapshotName, setQueueSnapshotName] = useState("");
+  const [savedQueues, setSavedQueues] = useState<SavedQueueSnapshot[]>([]);
+  const [selectedQueueSnapshotId, setSelectedQueueSnapshotId] = useState("");
+  const [collectionStatus, setCollectionStatus] = useState<CollectionStatusPayload>(EMPTY_COLLECTION_STATUS);
+  const [reasonLog, setReasonLog] = useState<ReasonLogEntry[]>([]);
+  const [wikiGraph, setWikiGraph] = useState<WikiGraphPayload>(EMPTY_GRAPH);
+  const [graphPhase, setGraphPhase] = useState<"loading" | "idle" | "running" | "error">("loading");
+  const [graphMessage, setGraphMessage] = useState("위키 그래프맵을 불러오는 중입니다.");
   const selectedTitle = wiki.activePage?.title || wiki.activeIndexItem?.title || "문서를 선택하세요";
   const previewHtml = markdownPreview(wiki.markdownDraft || "");
+  const folderGroups = useMemo(() => buildFolderGroups(wiki.pages), [wiki.pages]);
+  const activeFolder = folderGroups.find((folder) => folder.key === activeFolderKey) || null;
+  const pageIndexByPath = useMemo(() => new Map(wiki.pages.map((page) => [page.path, page])), [wiki.pages]);
+  const statusOptions = useMemo(() => {
+    const options = new Map<string, string>();
+    Object.entries(wiki.statusCatalog as WikiStatusCatalog).forEach(([key, meta]) => options.set(key, meta.label));
+    wiki.pages.forEach((page) => {
+      if (page.workflowStatus) options.set(page.workflowStatus, page.workflowStatusLabel || page.workflowStatus);
+    });
+    return [...options.entries()].sort((a, b) => compareText(a[1], b[1]));
+  }, [wiki.pages, wiki.statusCatalog]);
+  const kindOptions = useMemo(() => {
+    const kinds = new Set<string>();
+    wiki.pages.forEach((page) => kinds.add(resultKind(page, page)));
+    return [...kinds].sort(compareText);
+  }, [wiki.pages]);
+  const baseItems = useMemo<WikiResultItem[]>(() => {
+    if (wiki.searchResults.length) return wiki.searchResults;
+    const normalizedQuery = wiki.query.trim().toLowerCase();
+    return wiki.pages.filter((page) => itemMatchesQuery(page, page, normalizedQuery));
+  }, [wiki.pages, wiki.query, wiki.searchResults]);
+  const filteredItems = useMemo(() => {
+    return baseItems
+      .filter((item) => {
+        const meta = itemMeta(item, pageIndexByPath);
+        const isInFolder = activeFolderKey === ALL_FOLDER_KEY || Boolean(meta && folderKey(meta) === activeFolderKey);
+        const isMatchingStatus = statusFilter === ALL_FILTER_VALUE || resultStatusKey(item, meta) === statusFilter;
+        const isMatchingKind = kindFilter === ALL_FILTER_VALUE || resultKind(item, meta) === kindFilter;
+        return isInFolder && isMatchingStatus && isMatchingKind;
+      })
+      .sort((left, right) => compareWikiResults(left, right, pageIndexByPath, sortKey, sortDirection));
+  }, [activeFolderKey, baseItems, kindFilter, pageIndexByPath, sortDirection, sortKey, statusFilter]);
+  const visibleItems = useMemo(() => {
+    return filteredItems.slice(0, WIKI_RESULT_LIMIT);
+  }, [filteredItems]);
+  const resultCountLabel = filteredItems.length > visibleItems.length ? `${visibleItems.length}/${filteredItems.length}건` : `${visibleItems.length}건`;
+  const loadGraph = async () => {
+    setGraphPhase("loading");
+    try {
+      const graph = await fetchWikiGraph();
+      setWikiGraph(graph);
+      setGraphPhase("idle");
+      setGraphMessage(`${graph.nodes.length}개 노드와 ${graph.edges.length}개 링크를 불러왔습니다.`);
+    } catch (error) {
+      setGraphPhase("error");
+      setGraphMessage(error instanceof Error ? error.message : "그래프 로드 실패");
+    }
+  };
+  const collectionExtOptions = useMemo(() => {
+    const values = new Set<string>();
+    collectionResult.entries.forEach((entry) => {
+      if (entry.ext) values.add(entry.ext);
+    });
+    remoteBrowser.items.forEach((item) => {
+      const name = item.name || "";
+      const idx = name.lastIndexOf(".");
+      if (idx > -1) values.add(name.slice(idx).toLowerCase());
+    });
+    return [...values].sort(compareText);
+  }, [collectionResult.entries, remoteBrowser.items]);
+  const visibleCollectionEntries = useMemo(() => {
+    const query = collectionPathQuery.trim().toLowerCase();
+    const activePreset = COLLECTION_PRESETS.find((preset) => preset.id === collectionPresetId);
+    return collectionResult.entries.filter((entry) => {
+      if (collectionTypeFilter !== "all" && entry.type !== collectionTypeFilter) return false;
+      if (collectionExtFilter !== "all" && (entry.ext || "") !== collectionExtFilter) return false;
+      if (activePreset?.ext.length && !activePreset.ext.includes(entry.ext || "")) return false;
+      if (query && !`${entry.path} ${entry.type}`.toLowerCase().includes(query)) return false;
+      return true;
+    });
+  }, [collectionExtFilter, collectionPathQuery, collectionPresetId, collectionResult.entries, collectionTypeFilter]);
+  const visibleRemoteItems = useMemo(() => {
+    const query = collectionPathQuery.trim().toLowerCase();
+    const activePreset = COLLECTION_PRESETS.find((preset) => preset.id === collectionPresetId);
+    return remoteBrowser.items.filter((item) => {
+      if (collectionTypeFilter !== "all" && item.type !== collectionTypeFilter) return false;
+      const ext = item.name.includes(".") ? item.name.slice(item.name.lastIndexOf(".")).toLowerCase() : "";
+      if (collectionExtFilter !== "all" && ext !== collectionExtFilter) return false;
+      if (activePreset?.ext.length && !activePreset.ext.includes(ext)) return false;
+      if (query && !`${item.remotePath} ${item.name}`.toLowerCase().includes(query)) return false;
+      return true;
+    });
+  }, [collectionExtFilter, collectionPathQuery, collectionPresetId, collectionTypeFilter, remoteBrowser.items]);
+
+  const queuedCount = useMemo(() => collectionQueue.filter((item) => queueStatusForPath(item.path, collectionStatus, item.targetType) === "queued").length, [collectionQueue, collectionStatus]);
+  const manifestedCount = useMemo(() => collectionQueue.filter((item) => queueStatusForPath(item.path, collectionStatus, item.targetType) === "manifested").length, [collectionQueue, collectionStatus]);
+  const processedCount = useMemo(() => collectionQueue.filter((item) => queueStatusForPath(item.path, collectionStatus, item.targetType) === "processed").length, [collectionQueue, collectionStatus]);
+  const eligibleQueueCount = useMemo(() => collectionQueue.filter((item) => !item.onHold && item.approved !== false).length, [collectionQueue]);
+
+  useEffect(() => {
+    loadGraph();
+  }, []);
+
+  useEffect(() => {
+    const loadCollectionStatus = async () => {
+      try {
+        setCollectionStatus(await fetchCollectionStatus());
+      } catch {
+        setCollectionStatus(EMPTY_COLLECTION_STATUS);
+      }
+    };
+    loadCollectionStatus();
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const raw = window.localStorage.getItem(COLLECTION_QUEUE_STORAGE_KEY);
+      const parsed = raw ? JSON.parse(raw) : [];
+      if (Array.isArray(parsed)) setSavedQueues(parsed);
+    } catch {
+      setSavedQueues([]);
+    }
+  }, []);
 
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault();
     wiki.runSearch();
   };
 
+  const resetFilters = () => {
+    setStatusFilter(ALL_FILTER_VALUE);
+    setKindFilter(ALL_FILTER_VALUE);
+    setSortKey("updated");
+    setSortDirection("desc");
+  };
+
+  const resetSearchAndFilters = () => {
+    wiki.clearSearch();
+    setActiveFolderKey(ALL_FOLDER_KEY);
+    resetFilters();
+  };
+
+  const selectFolder = (folder: WikiFolderGroup | null) => {
+    wiki.clearSearch();
+    setActiveFolderKey(folder?.key || ALL_FOLDER_KEY);
+    if (folder?.pages[0]?.path) wiki.openPage(folder.pages[0].path);
+  };
+
   const handleEditorKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
     if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "s") {
       event.preventDefault();
       wiki.saveActivePage();
+    }
+  };
+
+  const runCollectionBrowse = async (event?: FormEvent) => {
+    event?.preventDefault();
+    setCollectionPhase("loading");
+    try {
+      const result = await browseFilesystem({
+        path: collectionPath.trim(),
+        note: collectionNote.trim(),
+        maxDepth: 4,
+        maxFiles: 80,
+        maxEntriesPerDirectory: 60,
+        maxTreeEntries: 160,
+      });
+      setCollectionResult(result);
+      setCollectionPhase("idle");
+      setCollectionMessage(`filesystem browse 완료: ${result.entries.length} entries, blocked ${result.blocked.length}건`);
+    } catch (error) {
+      setCollectionPhase("error");
+      setCollectionMessage(error instanceof Error ? error.message : "filesystem browse 실패");
+    }
+  };
+
+  const runRemoteBrowse = async (path = remoteBrowsePath) => {
+    setCollectionPhase("loading");
+    try {
+      const result = await browseRemoteDrive(path.trim());
+      setRemoteBrowser(result);
+      setRemoteBrowsePath(result.currentPath || "");
+      setCollectionPhase("idle");
+      setCollectionMessage(result.error
+        ? `remote browse 경고: ${result.error}`
+        : `remote browse 완료: ${result.items.length} items @ ${result.currentPath || "root"}`);
+    } catch (error) {
+      setCollectionPhase("error");
+      setCollectionMessage(error instanceof Error ? error.message : "remote browse 실패");
+    }
+  };
+
+  const pushQueue = (path: string, source: "manual" | "mirror", targetType: "directory" | "file" = "directory") => {
+    const trimmed = path.trim().replace(/^\/+/, "");
+    if (!trimmed) return;
+    setCollectionQueue((current) => {
+      if (current.some((item) => item.path === trimmed)) return current;
+      return [...current, { path: trimmed, source, targetType, approved: true, onHold: false, lastAction: "idle", lastError: "" }];
+    });
+  };
+
+  const addManualQueuePath = () => {
+    pushQueue(remotePathDraft, "manual", remotePathDraft.trim().includes(".") ? "file" : "directory");
+    setRemotePathDraft("");
+  };
+
+  const removeQueuePath = (path: string) => {
+    setCollectionQueue((current) => current.filter((item) => item.path !== path));
+  };
+
+  const updateQueueItem = (path: string, updater: (item: CollectionQueueItem) => CollectionQueueItem) => {
+    setCollectionQueue((current) => current.map((item) => (item.path === path ? updater(item) : item)));
+  };
+
+  const persistSnapshots = (next: SavedQueueSnapshot[]) => {
+    setSavedQueues(next);
+    if (typeof window !== "undefined") window.localStorage.setItem(COLLECTION_QUEUE_STORAGE_KEY, JSON.stringify(next));
+  };
+
+  const saveCurrentQueueSnapshot = () => {
+    const name = queueSnapshotName.trim() || `queue-${new Date().toISOString().slice(0, 16)}`;
+    const snapshot: SavedQueueSnapshot = {
+      id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      name,
+      updatedAt: new Date().toISOString(),
+      items: collectionQueue,
+    };
+    const next = [snapshot, ...savedQueues.filter((item) => item.name !== name)].slice(0, 12);
+    persistSnapshots(next);
+    setSelectedQueueSnapshotId(snapshot.id);
+    setQueueSnapshotName(name);
+    appendReasonLog(`Queue saved · ${name}`, `${collectionQueue.length} targets saved for reuse.`);
+    setCollectionMessage(`큐 스냅샷 저장 완료 · ${name}`);
+  };
+
+  const loadQueueSnapshot = () => {
+    const snapshot = savedQueues.find((item) => item.id === selectedQueueSnapshotId);
+    if (!snapshot) return;
+    setCollectionQueue(snapshot.items);
+    setQueueSnapshotName(snapshot.name);
+    appendReasonLog(`Queue loaded · ${snapshot.name}`, `${snapshot.items.length} targets restored from saved queue.`);
+    setCollectionMessage(`큐 스냅샷 불러오기 완료 · ${snapshot.name}`);
+  };
+
+  const deleteQueueSnapshot = () => {
+    if (!selectedQueueSnapshotId) return;
+    const snapshot = savedQueues.find((item) => item.id === selectedQueueSnapshotId);
+    const next = savedQueues.filter((item) => item.id !== selectedQueueSnapshotId);
+    persistSnapshots(next);
+    setSelectedQueueSnapshotId("");
+    if (snapshot) {
+      appendReasonLog(`Queue deleted · ${snapshot.name}`, "saved queue snapshot removed.");
+      setCollectionMessage(`큐 스냅샷 삭제 완료 · ${snapshot.name}`);
+    }
+  };
+
+  const appendReasonLog = (title: string, detail: string) => {
+    setReasonLog((current) => [
+      { id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`, title, detail },
+      ...current,
+    ].slice(0, 8));
+  };
+
+  const applyCollectionPreset = (preset: CollectionPreset) => {
+    setCollectionPresetId(preset.id);
+    setCollectionTypeFilter(preset.type || "all");
+    if (!preset.ext.length) {
+      setCollectionExtFilter("all");
+      return;
+    }
+    if (preset.ext.length === 1) {
+      setCollectionExtFilter(preset.ext[0]);
+      return;
+    }
+    setCollectionExtFilter("all");
+  };
+
+  const runSingleQueueItem = async (item: CollectionQueueItem, dryRun: boolean) => {
+    if (item.onHold || item.approved === false) {
+      setCollectionMessage(`${item.path} 는 hold 또는 미승인 상태라 실행하지 않았습니다.`);
+      return;
+    }
+    setCollectionPhase("running");
+    setQueueActionPath(item.path);
+    try {
+      await runTargetedRclone(item.path, dryRun);
+      setCollectionStatus(await fetchCollectionStatus());
+      updateQueueItem(item.path, (current) => ({ ...current, lastAction: dryRun ? "dry-run" : "run", lastError: "" }));
+      setCollectionPhase("idle");
+      setQueueActionPath("");
+      setCollectionMessage(`${item.path} ${dryRun ? "dry-run" : "run"} 실행 완료`);
+      appendReasonLog(
+        `${dryRun ? "Dry-run" : "Run"} · ${item.path}`,
+        [
+          `대상: ${item.path}`,
+          `타입: ${item.targetType}`,
+          `실행: ${dryRun ? "dry-run" : "run"}`,
+          "사유: 사용자가 큐 항목 단위 실행을 선택했습니다.",
+        ].join("\n"),
+      );
+    } catch (error) {
+      updateQueueItem(item.path, (current) => ({ ...current, lastAction: "failed", lastError: error instanceof Error ? error.message : "queue item failed" }));
+      setCollectionPhase("error");
+      setQueueActionPath("");
+      setCollectionMessage(error instanceof Error ? error.message : "큐 단건 실행 실패");
+    }
+  };
+
+  const runCollectionQueue = async (dryRun: boolean) => {
+    const eligibleItems = collectionQueue.filter((item) => !item.onHold && item.approved !== false);
+    if (!eligibleItems.length) {
+      setCollectionMessage("실행 가능한 큐 항목이 없습니다. hold 해제 또는 승인 후 다시 시도하세요.");
+      return;
+    }
+    setCollectionPhase("running");
+    setQueueActionPath("");
+    setQueueRunMode(dryRun ? "dry-run" : "run");
+    try {
+      const failures: string[] = [];
+      for (const item of eligibleItems) {
+        try {
+          await runTargetedRclone(item.path, dryRun);
+          updateQueueItem(item.path, (current) => ({ ...current, lastAction: dryRun ? "dry-run" : "run", lastError: "" }));
+        } catch (error) {
+          failures.push(item.path);
+          updateQueueItem(item.path, (current) => ({ ...current, lastAction: "failed", lastError: error instanceof Error ? error.message : "batch item failed" }));
+        }
+      }
+      setCollectionPhase("idle");
+      setQueueRunMode("idle");
+      setCollectionStatus(await fetchCollectionStatus());
+      setCollectionMessage(
+        failures.length
+          ? `${eligibleItems.length}건 중 ${failures.length}건 실패`
+          : dryRun
+            ? `수집 큐 ${eligibleItems.length}건 dry-run 실행 완료`
+            : `수집 큐 ${eligibleItems.length}건 로컬 mirror 수집 실행 완료`,
+      );
+      appendReasonLog(
+        `${dryRun ? "Batch dry-run" : "Batch run"} · ${eligibleItems.length} targets`,
+        eligibleItems
+          .slice(0, 5)
+          .map((item) => `${item.path} · ${item.targetType}`)
+          .concat(failures.length ? [`failures: ${failures.join(", ")}`] : [])
+          .concat(eligibleItems.length > 5 ? [`외 ${eligibleItems.length - 5}건`] : [])
+          .join("\n"),
+      );
+    } catch (error) {
+      setCollectionPhase("error");
+      setQueueActionPath("");
+      setQueueRunMode("idle");
+      setCollectionMessage(error instanceof Error ? error.message : "수집 큐 실행 실패");
+    }
+  };
+
+  const runQueueContinue = async () => {
+    setCollectionPhase("running");
+    setQueueActionPath("");
+    try {
+      await continueAfterCollection();
+      setCollectionStatus(await fetchCollectionStatus());
+      setCollectionPhase("idle");
+      setCollectionMessage("manifest -> run -> refresh-global 후속 체인을 실행했습니다.");
+      appendReasonLog(
+        "Continue-after-collection",
+        "manifest 생성 이후 run, refresh-global까지 후속 체인을 이어 실행했습니다.",
+      );
+    } catch (error) {
+      setCollectionPhase("error");
+      setCollectionMessage(error instanceof Error ? error.message : "수집 후 계속 실행 실패");
+    }
+  };
+
+  const runGraphRefresh = async () => {
+    setGraphPhase("running");
+    try {
+      const result = await refreshWikiGraph();
+      if (result.error || result.status === "failed") {
+        throw new Error(result.error || result.stderr || "그래프맵 업데이트 실패");
+      }
+      await Promise.all([wiki.reloadIndex(), loadGraph()]);
+      setGraphPhase("idle");
+      setGraphMessage(`그래프맵 업데이트 완료: ${result.command || "refresh-global"}`);
+    } catch (error) {
+      setGraphPhase("error");
+      setGraphMessage(error instanceof Error ? error.message : "그래프맵 업데이트 실패");
     }
   };
 
@@ -246,30 +1310,95 @@ export function WikiWorkspace({ chatContext }: WikiWorkspaceProps) {
               placeholder="프로젝트, 수치, 파일명, 고객명 검색"
             />
           </label>
+          <div className="aui-wiki-filter-grid">
+            <label>
+              <span>상태</span>
+              <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)}>
+                <option value={ALL_FILTER_VALUE}>전체 상태</option>
+                {statusOptions.map(([key, label]) => (
+                  <option key={key} value={key}>{label}</option>
+                ))}
+              </select>
+            </label>
+            <label>
+              <span>문서 유형</span>
+              <select value={kindFilter} onChange={(event) => setKindFilter(event.target.value)}>
+                <option value={ALL_FILTER_VALUE}>전체 유형</option>
+                {kindOptions.map((kind) => (
+                  <option key={kind} value={kind}>{kind}</option>
+                ))}
+              </select>
+            </label>
+            <label>
+              <span>정렬</span>
+              <select value={sortKey} onChange={(event) => setSortKey(event.target.value as WikiSortKey)}>
+                <option value="updated">업데이트</option>
+                <option value="title">제목</option>
+                <option value="kind">문서 유형</option>
+                <option value="status">상태</option>
+                <option value="size">크기</option>
+                <option value="relevance">검색 점수</option>
+              </select>
+            </label>
+            <label>
+              <span>방향</span>
+              <select value={sortDirection} onChange={(event) => setSortDirection(event.target.value as WikiSortDirection)}>
+                <option value="desc">내림차순</option>
+                <option value="asc">오름차순</option>
+              </select>
+            </label>
+          </div>
           <div>
             <button type="submit">검색</button>
-            <button onClick={wiki.clearSearch} type="button">초기화</button>
+            <button className="ghost" onClick={resetSearchAndFilters} type="button">전체 초기화</button>
+            <button className="ghost" onClick={resetFilters} type="button">필터 리셋</button>
           </div>
         </form>
 
+        <div className="aui-wiki-folder-tree" aria-label="project folders">
+          <button
+            className={activeFolderKey === ALL_FOLDER_KEY ? "active" : ""}
+            onClick={() => selectFolder(null)}
+            type="button"
+          >
+            <span>▾ 전체 Wiki</span>
+            <small>{wiki.pages.length} pages</small>
+          </button>
+          {folderGroups.map((folder) => (
+            <button
+              className={activeFolderKey === folder.key ? "active" : ""}
+              key={folder.key}
+              onClick={() => selectFolder(folder)}
+              type="button"
+            >
+              <span>{folder.type === "Project" ? "▸" : "·"} {folder.label}</span>
+              <small>{folder.type} · {folder.count}</small>
+            </button>
+          ))}
+        </div>
+
         <div className="aui-wiki-list-meta">
-          <strong>{wiki.searchResults.length ? "검색 결과" : "위키 인덱스"}</strong>
-          <span>{wiki.visiblePages.length}건</span>
+          <strong>{wiki.searchResults.length ? "검색 결과" : activeFolder?.label || "위키 인덱스"}</strong>
+          <span>{resultCountLabel}</span>
         </div>
 
         <div className="aui-wiki-result-list">
-          {wiki.visiblePages.map((item) => (
-            <button
-              className={wiki.isActiveResult(item.path) ? "active" : ""}
-              key={item.path}
-              onClick={() => wiki.openPage(item.path)}
-              type="button"
-            >
-              <strong>{resultTitle(item)}</strong>
-              <span>{item.path}</span>
-              {"snippet" in item && item.snippet ? <small>{item.snippet}</small> : null}
-            </button>
-          ))}
+          {visibleItems.map((item) => {
+            const meta = itemMeta(item, pageIndexByPath);
+            return (
+              <button
+                className={wiki.isActiveResult(item.path) ? "active" : ""}
+                key={item.path}
+                onClick={() => wiki.openPage(item.path)}
+                type="button"
+              >
+                <strong>{resultTitle(item)}</strong>
+                <span>{item.path}</span>
+                <em>{resultKind(item, meta)} · {resultStatusLabel(item, meta)} · {shortDate(resultUpdatedAt(item, meta))}</em>
+                {"snippet" in item && item.snippet ? <small>{item.snippet}</small> : null}
+              </button>
+            );
+          })}
         </div>
       </aside>
 
@@ -305,7 +1434,306 @@ export function WikiWorkspace({ chatContext }: WikiWorkspaceProps) {
           <div><span>Updated</span><strong>{shortDate(wiki.activeIndexItem?.updatedAt)}</strong></div>
         </div>
 
+        <section className="aui-wiki-pipeline-shell" aria-label="collection workbench">
+          <div className="aui-wiki-pipeline-summary">
+            <article>
+              <span>local browse</span>
+              <strong>{visibleCollectionEntries.length}</strong>
+              <small>{collectionPath}</small>
+            </article>
+            <article>
+              <span>remote browse</span>
+              <strong>{visibleRemoteItems.length}</strong>
+              <small>{remoteBrowser.currentPath || "root"}</small>
+            </article>
+            <article>
+              <span>queue eligible</span>
+              <strong>{eligibleQueueCount}</strong>
+              <small>{collectionQueue.length} total targets</small>
+            </article>
+            <article>
+              <span>pipeline state</span>
+              <strong>{collectionPhase}</strong>
+              <small>{collectionMessage}</small>
+            </article>
+          </div>
+
+          <div className="aui-wiki-pipeline-grid">
+            <form className="aui-wiki-collection-card" onSubmit={runCollectionBrowse}>
+              <div className="aui-wiki-collection-head">
+                <strong>Collection Browser</strong>
+                <span>{collectionPhase}</span>
+              </div>
+              <label>
+                <span>로컬 / mirror 경로</span>
+                <input
+                  value={collectionPath}
+                  onChange={(event) => setCollectionPath(event.target.value)}
+                  placeholder="automation/drive_wikify/runtime/mirror"
+                />
+              </label>
+              <label>
+                <span>추가 힌트</span>
+                <input
+                  value={collectionNote}
+                  onChange={(event) => setCollectionNote(event.target.value)}
+                  placeholder="프로젝트명, 파일확장자, 조사 메모"
+                />
+              </label>
+              <div className="aui-wiki-collection-actions">
+                <button type="submit">경로 탐색</button>
+                <button
+                  onClick={() => {
+                    setCollectionResult(EMPTY_BROWSE);
+                    setCollectionMessage("Collection Browser를 초기화했습니다.");
+                  }}
+                  type="button"
+                >
+                  초기화
+                </button>
+              </div>
+              <div className="aui-wiki-filter-grid">
+                <label>
+                  <span>브라우저 타입</span>
+                  <select
+                    value={collectionTypeFilter}
+                    onChange={(event) => {
+                      setCollectionPresetId("all");
+                      setCollectionTypeFilter(event.target.value as BrowseTypeFilter);
+                    }}
+                  >
+                    <option value="all">전체</option>
+                    <option value="directory">폴더</option>
+                    <option value="file">파일</option>
+                  </select>
+                </label>
+                <label>
+                  <span>확장자</span>
+                  <select
+                    value={collectionExtFilter}
+                    onChange={(event) => {
+                      setCollectionPresetId("all");
+                      setCollectionExtFilter(event.target.value);
+                    }}
+                  >
+                    <option value="all">전체 확장자</option>
+                    {collectionExtOptions.map((ext) => (
+                      <option key={ext} value={ext}>{ext}</option>
+                    ))}
+                  </select>
+                </label>
+                <label className="aui-wiki-filter-span-2">
+                  <span>경로 검색</span>
+                  <input
+                    value={collectionPathQuery}
+                    onChange={(event) => setCollectionPathQuery(event.target.value)}
+                    placeholder="경로명, 고객명, 파일명"
+                  />
+                </label>
+              </div>
+              <div className="aui-wiki-preset-row">
+                {COLLECTION_PRESETS.map((preset) => (
+                  <button
+                    className={collectionPresetId === preset.id ? "active" : ""}
+                    key={preset.id}
+                    onClick={() => applyCollectionPreset(preset)}
+                    type="button"
+                  >
+                    {preset.label}
+                  </button>
+                ))}
+              </div>
+              {collectionResult.blocked.length ? (
+                <div className="aui-wiki-collection-blocked">
+                  <strong>Blocked</strong>
+                  {collectionResult.blocked.slice(0, 5).map((path) => <small key={path}>{path}</small>)}
+                </div>
+              ) : null}
+              <div className="aui-wiki-collection-list">
+                {visibleCollectionEntries.slice(0, 8).map((entry) => {
+                  const remoteCandidate = entry.path.startsWith(MIRROR_PREFIX) ? remotePathFromMirror(entry.path) : "";
+                  const targetType = entry.type === "file" ? "file" : "directory";
+                  const routeHint = remoteCandidate ? projectRouteHint(remoteCandidate, wiki.pages) : null;
+                  const queueStatus = remoteCandidate ? queueStatusForPath(remoteCandidate, collectionStatus, targetType) : "";
+                  return (
+                    <article
+                      className="aui-wiki-collection-entry"
+                      key={`${entry.path}-${entry.type}`}
+                      title={remoteCandidate ? collectionStatusDetail(remoteCandidate, collectionStatus, targetType) : entry.path}
+                    >
+                      <div>
+                        <strong>{treeLabel(entry.path)}</strong>
+                        <span>{entry.type} · {entry.path}</span>
+                        {entry.updatedAt ? <small>{entry.updatedAt}</small> : null}
+                        {entry.type === "directory" ? <small>{entry.fileCount || 0} files · {entry.directoryCount || 0} dirs</small> : null}
+                        {routeHint ? <small>route hint · {routeHint.projectLabel} · score {routeHint.score}</small> : null}
+                        {remoteCandidate ? <small>status · {queueStatus}</small> : null}
+                      </div>
+                      {remoteCandidate ? (
+                        <div className="aui-wiki-collection-entry-actions">
+                          <button onClick={() => pushQueue(remoteCandidate, "mirror", targetType)} type="button">
+                            {targetType === "file" ? "파일 큐" : "큐에 추가"}
+                          </button>
+                        </div>
+                      ) : null}
+                    </article>
+                  );
+                })}
+              </div>
+            </form>
+
+            <section className="aui-wiki-collection-card" aria-label="remote drive browser">
+              <div className="aui-wiki-collection-head">
+                <strong>Remote Browser</strong>
+                <span>{remoteBrowser.remote ? `${remoteBrowser.remote}:${remoteBrowser.root || ""}` : "rclone"}</span>
+              </div>
+              <label>
+                <span>remote path</span>
+                <input
+                  value={remoteBrowsePath}
+                  onChange={(event) => setRemoteBrowsePath(event.target.value)}
+                  placeholder="예: 고객사/프로젝트A"
+                />
+              </label>
+              <div className="aui-wiki-collection-actions">
+                <button onClick={() => runRemoteBrowse(remoteBrowsePath)} type="button">remote 탐색</button>
+                <button onClick={() => runRemoteBrowse(remoteBrowser.parentPath || "")} type="button">상위로</button>
+                <button onClick={() => runRemoteBrowse("")} type="button">root</button>
+              </div>
+              {remoteBrowser.error ? <p className="aui-wiki-muted">{remoteBrowser.error}</p> : null}
+              <div className="aui-wiki-collection-list">
+                {visibleRemoteItems.slice(0, 12).map((item) => {
+                  const routeHint = projectRouteHint(item.remotePath, wiki.pages);
+                  const queueStatus = queueStatusForPath(item.remotePath, collectionStatus, item.type);
+                  return (
+                    <article
+                      className="aui-wiki-collection-entry"
+                      key={`${item.remotePath}-${item.type}`}
+                      title={collectionStatusDetail(item.remotePath, collectionStatus, item.type)}
+                    >
+                      <div>
+                        <strong>{item.name}</strong>
+                        <span>{item.type} · {item.remotePath}</span>
+                        <small>{item.updatedAt || "-"}</small>
+                        {routeHint ? <small>route hint · {routeHint.projectLabel} · score {routeHint.score}</small> : null}
+                        <small>status · {queueStatus}</small>
+                      </div>
+                      <div className="aui-wiki-collection-entry-actions">
+                        {item.type === "directory" ? (
+                          <button onClick={() => runRemoteBrowse(item.remotePath)} type="button">열기</button>
+                        ) : null}
+                        <button onClick={() => pushQueue(item.remotePath, "manual", item.type)} type="button">
+                          {item.type === "file" ? "파일 큐" : "큐에 추가"}
+                        </button>
+                      </div>
+                    </article>
+                  );
+                })}
+                {!remoteBrowser.items.length ? <p className="aui-wiki-muted">remote path를 열어 rclone 대상 폴더를 탐색하세요.</p> : null}
+              </div>
+            </section>
+
+            <section className="aui-wiki-collection-card">
+              <div className="aui-wiki-collection-head">
+                <strong>Collection Queue</strong>
+                <span>{eligibleQueueCount} eligible</span>
+              </div>
+              <label className="aui-wiki-status-form">
+                <span>queue snapshot</span>
+                <input
+                  value={queueSnapshotName}
+                  onChange={(event) => setQueueSnapshotName(event.target.value)}
+                  placeholder="예: sawnics-office-set"
+                />
+              </label>
+              <div className="aui-wiki-toolbar-actions">
+                <button disabled={!collectionQueue.length} onClick={saveCurrentQueueSnapshot} type="button">큐 저장</button>
+                <select value={selectedQueueSnapshotId} onChange={(event) => setSelectedQueueSnapshotId(event.target.value)}>
+                  <option value="">저장된 큐 선택</option>
+                  {savedQueues.map((snapshot) => (
+                    <option key={snapshot.id} value={snapshot.id}>{snapshot.name} · {snapshot.items.length}</option>
+                  ))}
+                </select>
+                <button disabled={!selectedQueueSnapshotId} onClick={loadQueueSnapshot} type="button">불러오기</button>
+                <button disabled={!selectedQueueSnapshotId} onClick={deleteQueueSnapshot} type="button">삭제</button>
+              </div>
+              <label className="aui-wiki-status-form">
+                <span>remote path 추가</span>
+                <input
+                  value={remotePathDraft}
+                  onChange={(event) => setRemotePathDraft(event.target.value)}
+                  placeholder="예: 고객사/프로젝트A 또는 folder/subfolder"
+                />
+              </label>
+              <div className="aui-wiki-toolbar-actions">
+                <button onClick={addManualQueuePath} type="button">큐에 추가</button>
+                <button disabled={!collectionQueue.length || collectionPhase === "running"} onClick={() => runCollectionQueue(true)} type="button">batch dry-run</button>
+                <button disabled={!collectionQueue.length || collectionPhase === "running"} onClick={() => runCollectionQueue(false)} type="button">batch run</button>
+                <button disabled={queueRunMode !== "run" && collectionPhase !== "idle"} onClick={runQueueContinue} type="button">수집 후 계속</button>
+              </div>
+              <div className="aui-wiki-queue-list">
+                {collectionQueue.map((item) => {
+                  const routeHint = projectRouteHint(item.path, wiki.pages);
+                  const queueStatus = queueStatusForPath(item.path, collectionStatus, item.targetType);
+                  const isRunning = collectionPhase === "running" && queueActionPath === item.path;
+                  return (
+                    <article
+                      className="aui-wiki-queue-item"
+                      key={item.path}
+                      title={collectionStatusDetail(item.path, collectionStatus, item.targetType)}
+                    >
+                      <strong>{item.path}</strong>
+                      <span>{item.source === "mirror" ? "mirror derived" : "manual remote path"} · {item.targetType} · {queueStatus}</span>
+                      {routeHint ? (
+                        <small>
+                          expected wiki · {routeHint.projectLabel} · score {routeHint.score}
+                        </small>
+                      ) : null}
+                      <small>{collectionImpactPreview(item.path, item.targetType, queueStatus, routeHint)}</small>
+                      <small>
+                        flags · {item.onHold ? "hold" : "active"} · {item.approved === false ? "approval pending" : "approved"} · last {item.lastAction || "idle"}
+                        {item.lastError ? ` · error ${item.lastError}` : ""}
+                      </small>
+                      <div className="aui-wiki-queue-actions">
+                        <button disabled={collectionPhase === "running"} onClick={() => runSingleQueueItem(item, true)} type="button">
+                          {isRunning ? "실행중" : item.lastAction === "failed" ? "retry dry-run" : "dry-run"}
+                        </button>
+                        <button disabled={collectionPhase === "running"} onClick={() => runSingleQueueItem(item, false)} type="button">
+                          {item.lastAction === "failed" ? "retry run" : "run"}
+                        </button>
+                        <button
+                          disabled={collectionPhase === "running"}
+                          onClick={() => updateQueueItem(item.path, (current) => ({ ...current, onHold: !current.onHold }))}
+                          type="button"
+                        >
+                          {item.onHold ? "hold 해제" : "hold"}
+                        </button>
+                        <button
+                          disabled={collectionPhase === "running"}
+                          onClick={() => updateQueueItem(item.path, (current) => ({ ...current, approved: current.approved === false }))}
+                          type="button"
+                        >
+                          {item.approved === false ? "approve" : "승인해제"}
+                        </button>
+                        <button disabled={collectionPhase === "running"} onClick={() => removeQueuePath(item.path)} type="button">제거</button>
+                      </div>
+                    </article>
+                  );
+                })}
+                {!collectionQueue.length ? <p className="aui-wiki-muted">mirror 브라우징 결과나 수동 입력으로 수집 대상을 큐에 담으세요.</p> : null}
+              </div>
+            </section>
+          </div>
+        </section>
+
         <div className="aui-wiki-editor-grid">
+          <section className="aui-wiki-preview" aria-label="live markdown preview">
+            <div className="aui-wiki-preview-head">
+              <span>Live preview</span>
+              <strong>Notion-style 읽기 화면</strong>
+            </div>
+            <div className="aui-wiki-preview-body" dangerouslySetInnerHTML={{ __html: previewHtml || "<p>미리보기 내용 없음</p>" }} />
+          </section>
           <label className="aui-wiki-editor">
             <span>Markdown 편집</span>
             <textarea
@@ -316,13 +1744,6 @@ export function WikiWorkspace({ chatContext }: WikiWorkspaceProps) {
               value={wiki.markdownDraft}
             />
           </label>
-          <section className="aui-wiki-preview" aria-label="live markdown preview">
-            <div className="aui-wiki-preview-head">
-              <span>Live preview</span>
-              <strong>Notion-style 읽기 화면</strong>
-            </div>
-            <div className="aui-wiki-preview-body" dangerouslySetInnerHTML={{ __html: previewHtml || "<p>미리보기 내용 없음</p>" }} />
-          </section>
         </div>
       </section>
 
@@ -347,6 +1768,31 @@ export function WikiWorkspace({ chatContext }: WikiWorkspaceProps) {
         <section className="aui-wiki-card">
           <span>상태 관리</span>
           <StatusEditor page={wiki.activeIndexItem} catalog={wiki.statusCatalog} onSave={wiki.saveActiveStatus} />
+        </section>
+
+        <WikiGraphPanel
+          activePath={wiki.activePath}
+          graph={wikiGraph}
+          message={graphMessage}
+          onOpenPage={wiki.openPage}
+          onRefreshGraph={runGraphRefresh}
+          phase={graphPhase}
+        />
+
+        <WikiManagementConsole onOpenPage={wiki.openPage} onReloadIndex={wiki.reloadIndex} />
+
+        <section className="aui-wiki-card">
+          <span>Thinking Log</span>
+          <strong>{reasonLog.length} recent decisions</strong>
+          <div className="aui-wiki-queue-list">
+            {reasonLog.map((entry) => (
+              <div className="aui-wiki-thinking" key={entry.id}>
+                <strong>{entry.title}</strong>
+                <pre>{entry.detail}</pre>
+              </div>
+            ))}
+            {!reasonLog.length ? <p className="aui-wiki-muted">큐 추가, 단건 실행, batch 실행, 후속 체인을 시작하면 판단 로그가 쌓입니다.</p> : null}
+          </div>
         </section>
       </aside>
     </main>

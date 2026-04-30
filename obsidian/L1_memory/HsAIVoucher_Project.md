@@ -45,6 +45,7 @@ AI바우처 기반 + 후속 기능추가개발 확장형
 - 설비 수량 오인 이력 있으므로 견적 작업 시 수량 재확인 필수
 
 ## 드릴다운
+- [[Wiki/HsAIVoucher_Project/Reference_Register]]
 - [[Wiki/HsAIVoucher_Project/Status]]
 - [[Wiki/HsAIVoucher_Project/hub]]
 - [[Wiki/HsAIVoucher_Project/Evidence_Log]]

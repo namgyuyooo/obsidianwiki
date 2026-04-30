@@ -39,6 +39,10 @@ source: "산업현장문제해결형산업AI에이전트기술개발(R&D) 폴더
 
 ## 상태 기준 링크
 - [[Wiki/SanupAI_RnD_Project/Status]]
+- [[Wiki/SanupAI_RnD_Project/Reference_Register]]
+
+## 참조 링크
+- [[Wiki/SanupAI_RnD_Project/Reference_Register]]
 
 ## 증적/근거 링크
 - [[Wiki/SanupAI_RnD_Project/Sources]]
@@ -47,6 +51,7 @@ source: "산업현장문제해결형산업AI에이전트기술개발(R&D) 폴더
 
 ## 운영 링크
 - [[Wiki/SanupAI_RnD_Project/Status]]
+- [[Wiki/SanupAI_RnD_Project/Reference_Register]]
 - [[Wiki/SanupAI_RnD_Project/Project_Overview]]
 - [[Wiki/SanupAI_RnD_Project/Sources]]
 - [[Wiki/SanupAI_RnD_Project/Evidence_Log]]

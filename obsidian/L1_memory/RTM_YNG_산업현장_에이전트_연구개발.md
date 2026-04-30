@@ -58,6 +58,7 @@ updated: 2026-04-30
 - 응답시간 `15초 이하`는 최종 hwp 후반부 운용지표 — KPI 표에 직접 넣지 않음
 
 ## 드릴다운
+- [[Wiki/Common/RTM_YNG_산업현장_에이전트_연구개발_Reference_Register]]
 - [[Wiki/Common/RTM_YNG_산업현장_에이전트_연구개발_Status]]
 - [[RTM_YNG_산업현장_에이전트_연구개발]]
 - [[RTM_YNG_Evidence_Log_2026-04-21]]

@@ -39,6 +39,10 @@ source: "public Slack evidence sweep (2024-04-21 to 2026-04-21)"
 
 ## 상태 기준 링크
 - [[Wiki/SeoulSemicon_Project/Status]]
+- [[Wiki/SeoulSemicon_Project/Reference_Register]]
+
+## 참조 링크
+- [[Wiki/SeoulSemicon_Project/Reference_Register]]
 
 ## 증적/근거 링크
 - [[Wiki/SeoulSemicon_Project/Sources]]
@@ -47,6 +51,7 @@ source: "public Slack evidence sweep (2024-04-21 to 2026-04-21)"
 
 ## 운영 링크
 - [[Wiki/SeoulSemicon_Project/Status]]
+- [[Wiki/SeoulSemicon_Project/Reference_Register]]
 - [[Wiki/SeoulSemicon_Project/Project_Overview]]
 - [[Wiki/SeoulSemicon_Project/Sources]]
 - [[Wiki/SeoulSemicon_Project/Evidence_Log]]

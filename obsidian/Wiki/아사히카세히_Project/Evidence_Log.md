@@ -13,6 +13,7 @@ source: "wiki management command"
 - 충돌 가능성이 보이면 즉시 [[Wiki/아사히카세히_Project/Conflict_Register]]에 연결합니다.
 
 ## 활용 연결
+- 참조 레지스터: [[Wiki/아사히카세히_Project/Reference_Register]]
 - 상태 레지스터: [[Wiki/아사히카세히_Project/Status]]
 - 실무 판단: [[Wiki/아사히카세히_Project/Decisions]]
 - 실행 항목: [[Wiki/아사히카세히_Project/Action_Items]]

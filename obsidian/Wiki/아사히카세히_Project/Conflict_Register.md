@@ -12,6 +12,7 @@ source: "wiki management command"
 - 해소 전까지 허브 상단 `현재 막힘 / 충돌`과 연동해 가시화합니다.
 
 ## 처리 원칙
+- 관련 참조는 [[Wiki/아사히카세히_Project/Reference_Register]]에서 우선 확인
 - 충돌이 상태에 영향을 주면 [[Wiki/아사히카세히_Project/Status]]의 blocker와 history에도 반영
 - 확정되면 [[Wiki/아사히카세히_Project/Decisions]]로 승격
 - 실행이 필요하면 [[Wiki/아사히카세히_Project/Action_Items]]로 연결

@@ -48,6 +48,7 @@ Xray Repair 해외 납품 프로젝트. Quotation → NDA → 계약 → PO → 
 - 납품형 프로젝트 사례 기준으로 재사용 가치가 가장 높은 프로젝트 중 하나
 
 ## 드릴다운
+- [[Wiki/SeoulSemicon_Project/Reference_Register]]
 - [[Wiki/SeoulSemicon_Project/Status]]
 - [[Wiki/SeoulSemicon_Project/hub]]
 - [[Wiki/SeoulSemicon_Project/Evidence_Log]]

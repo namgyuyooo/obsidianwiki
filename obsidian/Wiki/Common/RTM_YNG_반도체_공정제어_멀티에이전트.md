@@ -13,6 +13,8 @@ tags:
 
 # 반도체 공정제어 멀티에이전트
 
+- [[Wiki/Common/RTM_YNG_반도체_공정제어_멀티에이전트_Reference_Register]]
+
 - [[Wiki/Common/RTM_YNG_반도체_공정제어_멀티에이전트_Status]]
 
 ## Project Overview

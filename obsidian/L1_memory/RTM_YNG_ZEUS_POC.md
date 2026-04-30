@@ -53,6 +53,7 @@ PoC 결과보고 / 타당성 검토 / 부정적 결론 (적용 불가)
 - 결론이 부정적(적용 불가) — 성능 수치로 오해하지 않도록 주의
 
 ## 드릴다운
+- [[Wiki/Common/RTM_YNG_ZEUS_POC_Reference_Register]]
 - [[Wiki/Common/RTM_YNG_ZEUS_POC_Status]]
 - [[RTM_YNG_ZEUS_POC]]
 - [[RTM_YNG_Evidence_Log_2026-04-21]]

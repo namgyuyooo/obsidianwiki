@@ -39,6 +39,10 @@ source: ""
 
 ## 상태 기준 링크
 - [[Wiki/Business_Plan_Project/Status]]
+- [[Wiki/Business_Plan_Project/Reference_Register]]
+
+## 참조 링크
+- [[Wiki/Business_Plan_Project/Reference_Register]]
 
 ## 증적/근거 링크
 - [[Wiki/Business_Plan_Project/Sources]]
@@ -47,6 +51,7 @@ source: ""
 
 ## 운영 링크
 - [[Wiki/Business_Plan_Project/Status]]
+- [[Wiki/Business_Plan_Project/Reference_Register]]
 - [[Wiki/Business_Plan_Project/Project_Overview]]
 - [[Wiki/Business_Plan_Project/Sources]]
 - [[Wiki/Business_Plan_Project/Evidence_Log]]

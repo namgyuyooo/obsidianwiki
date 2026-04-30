@@ -25,6 +25,8 @@ source: "Global wiki index initialized from existing project hubs"
 
 ## Operating Documents
 
+- [[Wiki/Common/Wiki_Reference_Operating_Model]]: 링크 우선 참조 레지스터 운영 모델
+- [[Wiki/Common/Reference_Link_Restoration_Queue]]: URL 미복원 참조의 복원 큐
 - [[Wiki/Common/Wiki_Ingest_Operating_Model]]: 인제스트 운영 원칙
 - [[Wiki/Common/Wiki_Ingest_Templates]]: 핵심 문서 템플릿
 - [[Wiki/Common/Wiki_Ingest_Prompt_Set]]: 작업별 프롬프트 세트
@@ -114,6 +116,7 @@ Drive 소스 기반으로 구축된 RTM_YNG 계열 프로젝트 페이지 (L1_me
 - top-level 공간은 `project`, `account`, `common`, `shared` 역할로 구분해 운영합니다.
 - `project` 허브는 상태, 막힘, 다음 액션, 근거가 상단에 보여야 합니다.
 - 각 `project` 공간의 `Status.md`를 상태 라벨, 단계, 헬스, 담당, 막힘, 다음 게이트의 기준 레지스터로 사용합니다.
+- 각 `project` 공간의 `Reference_Register.md`를 링크 우선 참조 레지스터로 사용하고, URL이 어려우면 파일명/경로를 fallback으로 남깁니다.
 - `account` 허브는 활성 프로젝트와 다음 고객 접점을, `common/shared` 허브는 운영 자산과 승격 큐를 우선 보여줍니다.
 - 새 프로젝트 허브를 만들면 이 파일에도 추가합니다.
 - 새 프로젝트를 추가하면 `obsidian/L1_memory/`에도 스냅샷 파일을 함께 생성합니다.

@@ -8,12 +8,16 @@ source: "Initial Sawnics project wiki creation"
 # Change Log
 
 ## 운영 원칙
+- 관련 참조는 [[Wiki/Sawnics_ManufacturingAI_Project/Reference_Register]]에서 우선 확인
 - 상태 레지스터 변경은 [[Wiki/Sawnics_ManufacturingAI_Project/Status]]와 함께 추적합니다.
 - 이 문서는 위키 구조/내용 변경 이력입니다.
 - 실무 판단 자체는 [[Wiki/Sawnics_ManufacturingAI_Project/Decisions]]에, 실행 큐는 [[Wiki/Sawnics_ManufacturingAI_Project/Action_Items]]에 남기고 이 문서는 변경 사실을 기록합니다.
 
 ## 2026-04-30
 - 핵심 운영 문서를 실무형 표준 섹션으로 재정비
+- 공고 PDF, 제출안내 PDF, 2026 양식 HWP, 2025 기존본 HWP를 로컬 경로에서 직접 추출
+- `rhwp` 로컬 바이너리 동작을 재확인하고 `RFP_Writing_Strategy_2026-04-30.md` 작성
+- 허브, 증적로그, 액션 큐에 작성 전략 기준 문서를 연결
 
 ## 기존 정리 메모
 ## 2026-04-29

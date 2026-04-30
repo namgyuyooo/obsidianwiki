@@ -46,6 +46,7 @@ AI바우처 완료 + 후속 협업 구조 설계형
 - 바우처 종료 ≠ 프로젝트 종료 — 후속 협업 구조가 실질적 다음 단계
 
 ## 드릴다운
+- [[Wiki/Pixel_AIVoucher_Project/Reference_Register]]
 - [[Wiki/Pixel_AIVoucher_Project/Status]]
 - [[Wiki/Pixel_AIVoucher_Project/hub]]
 - [[Wiki/Pixel_AIVoucher_Project/Evidence_Log]]

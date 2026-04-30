@@ -9,6 +9,7 @@ from .models import DocumentRecord, ExtractedContent, ProjectDecision, Validatio
 PROJECT_FILES = {
     "hub.md": "# {title}\n\n- [[Wiki/index]]\n",
     "Project_Overview.md": "# Project Overview\n",
+    "Reference_Register.md": "# Reference Register\n",
     "Sources.md": "# Sources\n",
     "Evidence_Log.md": "# Evidence Log\n",
     "Conflict_Register.md": "# Conflict Register\n",
@@ -52,9 +53,10 @@ def ensure_project_space(project_name: str, wiki_root: Path, l1_root: Path) -> l
                 "- 현재 상태: 문서 인제스트 시작",
                 "- 핵심 결정사항: 신규 프로젝트 공간 자동 생성",
                 "- 핵심 수치 / 파일: 추후 업데이트",
+                "- 핵심 참조 링크: 추후 업데이트",
                 "- 미해결 이슈: 프로젝트 범위 확인 필요",
                 "- 주의사항 (Gotchas): 자동 분기 결과 검토 필요",
-                f"- 드릴다운: [[Wiki/{project_name}/hub]], [[Wiki/{project_name}/Sources]], [[Wiki/{project_name}/Evidence_Log]]",
+                f"- 드릴다운: [[Wiki/{project_name}/hub]], [[Wiki/{project_name}/Reference_Register]], [[Wiki/{project_name}/Evidence_Log]]",
             ]
         )
         l1_path.write_text(l1_text + "\n", encoding="utf-8")
@@ -74,15 +76,29 @@ def write_project_updates(
     source_name = record.title or record.file_path.name
     update_heading = f"Update - {date.today().isoformat()}"
 
+    reference_lines = [
+        "### Reference 01",
+        f"- 제목: {source_name}",
+        f"- 참조 유형: {'Google Drive' if record.drive_name else 'Local File'}",
+        f"- URL: {record.source_url or '-'}",
+        f"- fallback 파일명: {source_name}",
+        f"- fallback 경로: Drive 분류: {record.drive_name or '-'} / 폴더: {record.folder_path or '-'}",
+        f"- 재수집 식별자: 수정일 `{record.modified_time or 'unknown'}` / MIME `{record.mime_type or 'unknown'}`",
+        "- 설명 위치: [[Project_Overview]], [[Evidence_Log]], [[Change_Log]]",
+        "- 관련 위키 문서: [[Project_Overview]], [[Evidence_Log]], [[Change_Log]]",
+        "- 읽기 상태: 자동 인제스트 등록",
+        f"- 비고: 프로젝트 판정 `{decision.action}` / 판정 근거: {decision.reason}",
+    ]
+    _append_block(project_dir / "Reference_Register.md", update_heading, reference_lines)
+
     sources_lines = [
+        "- 운영 메모: 링크 우선 참조는 [[Reference_Register]]에서 관리",
         f"- 문서명: {source_name}",
         f"- 형식: {record.file_path.suffix.lstrip('.').lower()}",
         f"- Drive: {record.drive_name}",
         f"- 폴더: {record.folder_path}",
         f"- 수정일: {record.modified_time or 'unknown'}",
         f"- 로컬 경로: `{record.file_path}`",
-        f"- 프로젝트 판정: `{decision.action}`",
-        f"- 판정 근거: {decision.reason}",
     ]
     _append_block(project_dir / "Sources.md", update_heading, sources_lines)
 
@@ -115,6 +131,7 @@ def write_project_updates(
 
     written.extend(
         [
+            project_dir / "Reference_Register.md",
             project_dir / "Sources.md",
             project_dir / "Evidence_Log.md",
             project_dir / "Change_Log.md",

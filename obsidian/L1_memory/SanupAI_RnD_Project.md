@@ -40,5 +40,6 @@ updated: 2026-04-30
 - 정부과제 특성상 사업계획서, 중간보고, 연차보고 등이 핵심 소스 문서
 
 ## 드릴다운
+- [[Wiki/SanupAI_RnD_Project/Reference_Register]]
 - [[Wiki/SanupAI_RnD_Project/Status]]
 - [[Wiki/SanupAI_RnD_Project/hub]]

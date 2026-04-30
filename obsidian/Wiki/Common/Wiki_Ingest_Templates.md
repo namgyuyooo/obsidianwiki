@@ -47,9 +47,10 @@ source: ""
 ## 최근 업데이트
 | 일시 | 추진내용 | 실무 의미 | 연결 증적 | 다음 액션 |
 | --- | --- | --- | --- | --- |
-| 2026-04-30 | 초기 운영 현황판 구성 | 허브 상단에서 상태/막힘/다음 액션을 바로 보게 됨 | [[Wiki/Project_Name/Sources]], [[Wiki/Project_Name/Evidence_Log]] | 실제 진행 내용으로 갱신 |
+| 2026-04-30 | 초기 운영 현황판 구성 | 허브 상단에서 상태/막힘/다음 액션을 바로 보게 됨 | [[Wiki/Project_Name/Reference_Register]], [[Wiki/Project_Name/Evidence_Log]] | 실제 진행 내용으로 갱신 |
 
-## 증적/근거 링크
+## 참조/근거 링크
+- [[Wiki/Project_Name/Reference_Register]]
 - [[Wiki/Project_Name/Sources]]
 - [[Wiki/Project_Name/Evidence_Log]]
 - [[Wiki/Project_Name/Conflict_Register]]
@@ -100,6 +101,58 @@ source: ""
 | 일시 | 상태 변경 | 실무 의미 | 연결 문서 |
 | --- | --- | --- | --- |
 | 2026-04-30 | 초기 상태 레지스터 생성 | 프로젝트 상태를 별도 문서로 추적 시작 | [[Wiki/Project_Name/hub]], [[Wiki/Project_Name/Action_Items]] |
+```
+
+## Reference_Register.md
+
+```markdown
+---
+type: reference
+created: 2026-04-30
+updated: 2026-04-30
+source: ""
+---
+
+# Reference Register
+
+## 운영 원칙
+- 이 문서는 링크 우선 참조 레지스터입니다.
+- 가능한 경우 Slack 링크, 웹 링크, Google Drive 링크, 로컬 경로를 먼저 남깁니다.
+- 안정적인 링크를 남기기 어렵다면 파일명, 폴더 경로, 검색 키워드를 fallback으로 반드시 남깁니다.
+- 임시 mirror 경로는 남기지 않고, 대신 원격 폴더 분류, 대표 파일명, channel id, file id, last_export_path 같은 재수집 식별자를 남깁니다.
+- 위키 본문에는 모든 내용을 복제하지 말고, 어디에 설명되어 있고 어떤 문서를 다시 열어봐야 하는지 연결합니다.
+
+## 핵심 참조
+
+### Reference 01
+- 제목:
+- 참조 유형: Slack / Web / Google Drive / Local File / Email / Other
+- URL:
+- fallback 파일명:
+- fallback 경로:
+- 재수집 식별자:
+- 설명 위치:
+- 관련 위키 문서:
+- 읽기 상태:
+- 비고:
+
+### Reference 02
+- 제목:
+- 참조 유형:
+- URL:
+- fallback 파일명:
+- fallback 경로:
+- 재수집 식별자:
+- 설명 위치:
+- 관련 위키 문서:
+- 읽기 상태:
+- 비고:
+
+## 참조 운영 메모
+- 대표본:
+- 비교본:
+- 지금 바로 다시 열어봐야 할 링크:
+- 금지: 임시 mirror/cache 경로를 영구 참조로 기록하지 않기
 ```
 
 ## account hub.md
@@ -181,6 +234,11 @@ source: ""
 
 ```markdown
 # Sources
+
+## 운영 원칙
+- 링크 우선 참조는 [[Wiki/Project_Name/Reference_Register]]에서 먼저 관리합니다.
+- 이 문서는 상세 출처 메타데이터, 레거시 source notes, raw-source 메모를 보조적으로 유지합니다.
+- URL을 직접 남기기 어렵거나 접근 메모가 더 중요한 경우 이 문서를 함께 사용합니다.
 
 ## 2026-04-20
 ### Primary
