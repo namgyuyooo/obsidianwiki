@@ -22,7 +22,8 @@ RUN apt-get update \
 
 RUN python3 -m pip install --no-cache-dir --break-system-packages \
     pypdf \
-    python-docx
+    python-docx \
+    openpyxl
 
 COPY --from=rhwp-builder /tmp/rhwp/target/release/rhwp /usr/local/bin/rhwp
 
