@@ -21,3 +21,14 @@ source: "2026-04-29 wiki structure improvement pass"
 
 - SanupAI R&D 프로젝트의 필수 운영 문서 세트를 초기화함.
 - `Sources.md`, `Evidence_Log.md`, `Conflict_Register.md`, `Change_Log.md` 파일을 실제 생성하여 기존 허브 링크가 실체 파일을 가리키도록 정리함.
+
+## Change - 2026-04-30
+<!-- operational-conversion:2026-04-30 -->
+- 상태 변화 메모: 2026-04-30 00:00 운영형 위키 전환 기준으로 SanupAI RnD Project 운영 문서 구조가 생성/점검되었고 원문 보존, 상태 갱신, CEO/PM 후속 판단이 수행/대기됨
+- 생성/점검 문서: Status, Business_Flow, CEO_Brief, PM_Action_Plan, Customer_Followup, Raw_Evidence_Index
+- 원칙: 기존 원문/증적은 요약으로 대체하지 않고 보존 레이어와 운영 판단 레이어를 분리
+
+## Change - 2026-04-30 운영 문서 실내용 보강
+- 상태 변화 메모: 2026-04-30 00:00 SanupAI R&D 허브 기준으로 프로젝트가 운영형 골격은 갖췄으나 원문 근거 부족 상태로 기록되었고 수집/인제스트 액션이 대기됨
+- 보강 문서: Status, Business_Flow, CEO_Brief, PM_Action_Plan, Customer_Followup, Raw_Evidence_Index
+- 근거: hub, Sources, Evidence_Log, Conflict_Register의 현재 빈/대기 상태

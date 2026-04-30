@@ -66,9 +66,11 @@ When a new work event appears, promote it through the wiki in this order:
 2. Register provenance in `Reference_Register.md` with links first and file-name fallback
 3. Extract facts, quotes, numbers, decisions, and constraints into `Evidence_Log.md`
 4. Register contradictions or unresolved mismatches in `Conflict_Register.md`
-5. Record actual document/wiki changes in `Change_Log.md`
-6. Update synthesized pages such as `Project_Overview.md`, `Decisions.md`, `Risks.md`, `KPI.md`
-7. Refresh the relevant `obsidian/L1_memory/{ProjectName}.md`
+5. Preserve long raw extracts, original file text, tables, and extraction limits in `Raw_Evidence_Index.md`; never replace source content with only a summary
+6. Append a status-change memo to `Status.md` using: `YYYY-MM-DD HH:mm [source] 기준으로 [change]가 기록되었고 [action]이 수행/대기됨`
+7. Record actual document/wiki changes in `Change_Log.md`
+8. Update operating pages such as `Business_Flow.md`, `CEO_Brief.md`, `PM_Action_Plan.md`, `Customer_Followup.md`, `Project_Overview.md`, `Decisions.md`, `Risks.md`, `KPI.md`
+9. Refresh the relevant `obsidian/L1_memory/{ProjectName}.md`
 
 Do not jump straight from a new event to a cleaned-up conclusion if source facts, conflicts, or version changes need to remain visible.
 Do not overuse `Conflict_Register.md` for vague uncertainty when the more practical next step is to update `Action_Items.md`, `Decisions.md`, `Risks.md`, `Status.md`, or the hub.
@@ -87,14 +89,16 @@ When possible, be proactive: recommend which wiki page should be reviewed or edi
 When new source material arrives:
 
 1. Read source from `obsidian/raw/` or other provided location
-2. Preserve provenance in `Sources.md`
-3. Preserve key quotes, numbers, decisions, and constraints in `Evidence_Log.md`
-4. Record contradictions in `Conflict_Register.md` (don't flatten them away)
-5. Update synthesized pages: `Project_Overview.md`, `Decisions.md`, `Risks.md`, `KPI.md`
-6. Add short entry to `Change_Log.md`
-7. Refresh `obsidian/Wiki/index.md` if navigation changed
-8. Append dated entry to `obsidian/Wiki/log.md`
-9. **Update `obsidian/L1_memory/{ProjectName}.md`** to reflect status/decision/issue changes
+2. Preserve provenance in `Reference_Register.md` and source inventory in `Sources.md`
+3. Preserve long raw extracts or full extracted text in `Raw_Evidence_Index.md`
+4. Preserve key quotes, numbers, decisions, and constraints in `Evidence_Log.md`
+5. Record contradictions in `Conflict_Register.md` (don't flatten them away)
+6. Append a concrete status-change memo to `Status.md`
+7. Update operating pages: `Business_Flow.md`, `CEO_Brief.md`, `PM_Action_Plan.md`, `Customer_Followup.md`, `Project_Overview.md`, `Decisions.md`, `Risks.md`, `KPI.md`
+8. Add short entry to `Change_Log.md`
+9. Refresh `obsidian/Wiki/index.md` if navigation changed
+10. Append dated entry to `obsidian/Wiki/log.md`
+11. **Update `obsidian/L1_memory/{ProjectName}.md`** to reflect status/decision/issue changes
 
 Prefer append-style updates over destructive rewrites when historical context matters.
 
@@ -127,6 +131,8 @@ Document fixes in `obsidian/Wiki/log.md`.
 Most project folders should maintain:
 - `hub.md`, `Status.md`, `Reference_Register.md`, `Project_Overview.md`
 - `Sources.md`, `Evidence_Log.md`
+- `Raw_Evidence_Index.md`, `Business_Flow.md`
+- `CEO_Brief.md`, `PM_Action_Plan.md`, `Customer_Followup.md`
 - `Change_Log.md`, `Conflict_Register.md`
 - `Action_Items.md`, `Decisions.md`, `Risks.md`
 - Optional specialized pages: `KPI.md`, `Equipment.md`, `Architecture.md`
@@ -145,6 +151,9 @@ Project hubs should act as execution briefs, not flat indexes. Keep visible:
 Temporary mirror/cache paths are not canonical references and should be converted into remote folder lineage, file names, IDs, or collection-state identifiers before being written to the wiki.
 
 `Status.md` should be the canonical project status register for label, stage, health, owner, blockers, next gate, and status history.
+It must also preserve concrete change-event memos such as `YYYY-MM-DD HH:mm [source] 기준으로 [change]가 기록되었고 [action]이 수행/대기됨`.
+
+`Raw_Evidence_Index.md` should be the canonical raw/extracted evidence preservation index. Use it for long extracts, full extracted text, tables, file-level provenance, extraction limits, and version/source pointers that would be lost in a short summary.
 
 ## Canonical Project Evidence Files
 
@@ -153,6 +162,12 @@ Use underscore file names for project evidence documents:
 - `Reference_Register.md`
 - `Sources.md`
 - `Evidence_Log.md`
+- `Raw_Evidence_Index.md`
+- `Status.md`
+- `Business_Flow.md`
+- `CEO_Brief.md`
+- `PM_Action_Plan.md`
+- `Customer_Followup.md`
 - `Conflict_Register.md`
 - `Change_Log.md`
 

@@ -30,6 +30,13 @@ source: ""
 - 상태가 바뀌면 [[Wiki/LGEnergy_ImageAnalysis_Project/hub]], [[Wiki/LGEnergy_ImageAnalysis_Project/Action_Items]], [[Wiki/LGEnergy_ImageAnalysis_Project/Risks]], [[L1_memory/LGEnergy_ImageAnalysis_Project]]를 함께 갱신
 - 확정 판단은 [[Wiki/LGEnergy_ImageAnalysis_Project/Decisions]]로, 충돌은 [[Wiki/LGEnergy_ImageAnalysis_Project/Conflict_Register]]로 연결
 
+## 운영 보강 - 2026-04-30
+
+- 상태 메모: 2026-04-30 16:40 KST 기준 [[Project_Overview]]와 [[Evidence_Log]]를 운영형으로 재해석했으며, LG엔솔 이미지분석은 계약 완료 전후의 요구사항/환경 제약 정렬 단계로 분류한다.
+- 현재 단계: 착수 준비 / 기술 요구사항 정렬. Li 석출 정량화, XRM 분석, CT 이미지 분석 범위가 병렬로 논의되고, XRM 샘플 이미지는 분석 착수 가능한 상태로 확인된다.
+- 주요 제약: AWS 사용 가능 여부와 고객 이미지의 AWS 업로드 금지 조건, 내부망 접근, Python/Docker/Message Queue 지원 여부, 사내 개발 서버 활용 방향.
+- 다음 판단: 성능 목표 `MAE 2% 이내`, `95% 이상`, `99.5% 초안 -> 95% 조정`의 최종 계약/제안 반영 버전을 확정해야 한다.
+
 ## Status History
 | 일시 | 상태 변경 | 실무 의미 | 연결 문서 |
 | --- | --- | --- | --- |
@@ -37,3 +44,8 @@ source: ""
 
 ## 기존 정리 메모
 - 기존 상태 문서 없음
+
+## 운영형 위키 전환 메모 - 2026-04-30
+- 상태 변화 메모: 2026-04-30 00:00 운영형 위키 전환 기준으로 LGEnergy ImageAnalysis Project 기존 문서가 점검되었고 운영 판단 레이어와 원문 보존 레이어 연결이 수행/대기됨
+- 원문/긴 추출문은 Raw_Evidence_Index, Sources, Evidence_Log를 기준으로 보존
+- CEO/PM 판단은 Status, Business_Flow, CEO_Brief, PM_Action_Plan, Customer_Followup에서 관리

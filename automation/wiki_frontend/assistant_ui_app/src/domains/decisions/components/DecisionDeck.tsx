@@ -49,6 +49,7 @@ export function DecisionDeck({ chatContext }: DecisionDeckProps) {
   ];
   const busy = ["loading", "saving", "thinking"].includes(deck.status.phase);
   const compareBusy = ["loading", "merging", "saving"].includes(deck.compare.phase);
+  const scanBusy = ["scanning", "enqueuing"].includes(deck.mergeScan.phase);
   const recommendationReady = Boolean(deck.inference.trim());
 
   return (
@@ -60,6 +61,33 @@ export function DecisionDeck({ chatContext }: DecisionDeckProps) {
           description="충돌, 미확정 사실, 버전 차이를 업무 큐로 접수하고 GLM 보조 판정, 병합, 승인 로그까지 처리합니다."
         />
         <StatGrid stats={stats} />
+        <PanelCard eyebrow="Similarity trigger" title="병합 후보 스캔">
+          <p className="aui-decision-empty-note">
+            전체 위키의 주요 태그, 키워드, 그래프맵 연결을 비교해 중복/충돌 가능 문서와 병합 전략을 찾습니다.
+          </p>
+          <button className="aui-wide-action" disabled={scanBusy} onClick={deck.scanMergeCandidates} type="button">
+            유사도/그래프 병합 후보 찾기
+          </button>
+          <button className="aui-wide-action" disabled={scanBusy} onClick={deck.scanAndEnqueueTopMergeCandidates} type="button">
+            상위 5건 큐 등록
+          </button>
+          <StatusLine phase={deck.mergeScan.phase} message={deck.mergeScan.message} />
+          <div className="aui-decision-history">
+            {(deck.mergeScan.snapshot?.candidates || []).slice(0, 6).map((candidate) => (
+              <article key={candidate.id}>
+                <strong>{candidate.primary.title || candidate.primary.path}</strong>
+                <span>
+                  score {candidate.score} · {candidate.conflictRisk ? "충돌 우선" : "연결/정리"} · {candidate.graphLinked ? "graph" : "keyword"}
+                </span>
+                <small>{candidate.secondary.title || candidate.secondary.path}</small>
+                <small>{candidate.mergePlan?.changeMemo || candidate.reason?.join(", ")}</small>
+                <button className="aui-wide-action" disabled={scanBusy} onClick={() => deck.enqueueMergeCandidate(candidate)} type="button">
+                  Decision Queue 등록
+                </button>
+              </article>
+            ))}
+          </div>
+        </PanelCard>
         <PanelCard eyebrow="Pending queue" title={`${deck.pendingItems.length}건`}>
           <div className="aui-project-list">
             {deck.pendingItems.map((queueItem) => (

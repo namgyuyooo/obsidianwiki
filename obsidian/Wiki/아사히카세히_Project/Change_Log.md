@@ -34,3 +34,14 @@ source: "wiki management command"
 - [[Wiki/Common/RTM_YNG_Wiki_Build_Plan_2026-04-21]]: RTM_YNG Wiki Build Plan
 - [[Wiki/Common/RTM_YNG_아사히카세이_보고자료_2026-04-22]]: 아사히카세이 보고자료 2026-04-22
 - [[Wiki/Common/RTM_YNG_아사히카세이]]: 아사히카세이
+
+## Change - 2026-04-30
+<!-- operational-conversion:2026-04-30 -->
+- 상태 변화 메모: 2026-04-30 00:00 운영형 위키 전환 기준으로 아사히카세히 Project 운영 문서 구조가 생성/점검되었고 원문 보존, 상태 갱신, CEO/PM 후속 판단이 수행/대기됨
+- 생성/점검 문서: Status, Business_Flow, CEO_Brief, PM_Action_Plan, Customer_Followup, Raw_Evidence_Index
+- 원칙: 기존 원문/증적은 요약으로 대체하지 않고 보존 레이어와 운영 판단 레이어를 분리
+
+## Change - 2026-04-30 운영 문서 실내용 보강
+- 상태 변화 메모: 2026-04-30 00:00 아사히카세히 Common 분석과 보고자료 기준으로 PoC가 양산 도입 판단 단계로 정리되었고 수치 정합성/전폭 데모/검사 우선순위 확인이 대기됨
+- 보강 문서: Status, Business_Flow, CEO_Brief, PM_Action_Plan, Customer_Followup, Raw_Evidence_Index
+- 근거: RTM_YNG_아사히카세이, RTM_YNG_아사히카세이_Status, RTM_YNG_아사히카세이_보고자료_2026-04-22

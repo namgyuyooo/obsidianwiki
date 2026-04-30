@@ -34,3 +34,14 @@ source: "public Slack evidence sweep (2024-04-21 to 2026-04-21)"
 - 자동 인제스트 문서 반영: `2024년 AI바우처 지원사업 중간보고서_제우스,알티엠.pdf`
 - 프로젝트 판정: `update_existing_project`
 - 생성/갱신 프로젝트: `[[Wiki/ZEUS_AIVoucher_Project/hub]]`
+
+## Change - 2026-04-30
+<!-- operational-conversion:2026-04-30 -->
+- 상태 변화 메모: 2026-04-30 00:00 운영형 위키 전환 기준으로 ZEUS AIVoucher Project 운영 문서 구조가 생성/점검되었고 원문 보존, 상태 갱신, CEO/PM 후속 판단이 수행/대기됨
+- 생성/점검 문서: Status, Business_Flow, CEO_Brief, PM_Action_Plan, Customer_Followup, Raw_Evidence_Index
+- 원칙: 기존 원문/증적은 요약으로 대체하지 않고 보존 레이어와 운영 판단 레이어를 분리
+
+## Change - 2026-04-30 운영 문서 실내용 보강
+- 상태 변화 메모: 2026-04-30 00:00 ZEUS AI바우처 증적 기준으로 프로젝트가 후속 협업/레퍼런스 재사용 검토 상태로 정리되었고 인프라 결정과 사업가치 수치 원출처 확인이 대기됨
+- 보강 문서: Status, Business_Flow, CEO_Brief, PM_Action_Plan, Customer_Followup, Raw_Evidence_Index
+- 근거: Project_Overview, Infrastructure_and_Value, Evidence_Log

@@ -64,6 +64,8 @@ export function MissionControl({ chatContext }: MissionControlProps) {
     { label: "Decision Queue", value: mission.mission.summary.decisionQueue },
     { label: "Risk Queue", value: mission.riskyProjects.length },
     { label: "Priority Docs", value: mission.mission.summary.highPriorityDocuments },
+    { label: "Ops Ready", value: mission.mission.summary.operationalReady || 0 },
+    { label: "Ops Gaps", value: mission.mission.summary.operationalGaps || 0 },
     { label: "Automation", value: mission.automation.running.length },
     { label: "Governance", value: mission.governance.summary?.projectsWithIssues || 0 },
   ];
@@ -87,9 +89,9 @@ export function MissionControl({ chatContext }: MissionControlProps) {
     <main className="aui-command-dashboard">
       <section className="aui-command-hero">
         <div>
-          <span>프로젝트 현황</span>
-          <h1>프로젝트 현황</h1>
-          <p>프로젝트 상태, 결정 대기, 자동화, 리스크, 핵심 문서를 확인합니다.</p>
+          <span>Command Center</span>
+          <h1>커맨드센터</h1>
+          <p>프로젝트 상태, 운영 문서, 원문 보존, 결정 대기, 자동화 흐름을 한 번에 확인합니다.</p>
         </div>
         <div className={`aui-command-live ${mission.status.phase}`}>
           <strong>{mission.status.phase}</strong>
@@ -137,6 +139,7 @@ export function MissionControl({ chatContext }: MissionControlProps) {
             <div className="aui-command-chipline">
               <span>{active?.division || "project"}</span>
               <span>score {active?.score || 0}</span>
+              <span>ops {active?.operationalCoverage || 0}%</span>
               <span>pages {active?.pages?.length || 0}</span>
               <span>last {shortDate(active?.lastActivityAt)}</span>
               {(active?.workflowTags || []).slice(0, 4).map((tag) => <span key={tag}>{tag}</span>)}
@@ -158,6 +161,9 @@ export function MissionControl({ chatContext }: MissionControlProps) {
             <ProjectLane title="결정 / 확정" items={active?.decisions} emptyText="최근 결정 없음" />
             <ProjectLane title="충돌 / 정합성" items={active?.conflicts} emptyText="명시 충돌 없음" />
             <ProjectLane title="최근 운영 메모" items={active?.recentMemos} emptyText="최근 메모 없음" />
+            <ProjectLane title="상태 변화 메모" items={active?.statusMemos} emptyText="상태 변화 메모 없음" />
+            <ProjectLane title="CEO 판단" items={active?.ceoBrief} emptyText="CEO_Brief 보강 필요" />
+            <ProjectLane title="PM 실행" items={active?.pmActions} emptyText="PM_Action_Plan 보강 필요" />
             <section className="aui-command-lane">
               <h2>핵심 근거</h2>
               {active?.coreDocuments?.length ? (
@@ -171,6 +177,27 @@ export function MissionControl({ chatContext }: MissionControlProps) {
               )}
             </section>
           </div>
+
+          <section className="aui-command-operating-card">
+            <div className="aui-command-panel-head">
+              <span>운영형 위키 흐름</span>
+              <strong>{active?.operationalCoverage || 0}%</strong>
+            </div>
+            <div className="aui-command-doc-grid">
+              {(active?.operationalDocs || []).map((doc) => (
+                <article className={doc.present && doc.hasContent ? "ready" : "missing"} key={doc.file || doc.path}>
+                  <strong>{doc.label || doc.file}</strong>
+                  <span>{doc.present && doc.hasContent ? "연결됨" : "보강 필요"}</span>
+                  <small>{doc.path || "-"}</small>
+                </article>
+              ))}
+            </div>
+            <div className="aui-command-brief-grid compact">
+              <ProjectLane title="Business Flow" items={active?.businessFlow} emptyText="흐름 정보 보강 필요" />
+              <ProjectLane title="Customer Follow-up" items={active?.customerFollowups} emptyText="고객 후속 정보 없음" />
+              <ProjectLane title="Raw Evidence" items={active?.rawEvidence} emptyText="원문 보존 확인 필요" />
+            </div>
+          </section>
 
           <section className="aui-command-brief-card">
             <div className="aui-command-panel-head">
@@ -223,6 +250,7 @@ export function MissionControl({ chatContext }: MissionControlProps) {
           </dl>
           <button onClick={() => mission.runAutomation("refresh-global")} type="button">그래프맵 업데이트</button>
           <button onClick={() => mission.runAutomation("rclone-copy", true)} type="button">수집 미리보기</button>
+          <button onClick={() => mission.planOperationalConversion()} type="button">운영형 전환 계획</button>
           <button className="secondary" onClick={mission.reload} type="button">Mission 갱신</button>
 
           <div className="aui-command-risk-list">
@@ -271,6 +299,19 @@ export function MissionControl({ chatContext }: MissionControlProps) {
                 type="button"
               >
                 {projectName(project)}
+              </button>
+            ))}
+          </div>
+
+          <div className="aui-command-risk-list">
+            <span>Ops Gaps</span>
+            {mission.operationalGapProjects.slice(0, LIST_ITEM_LIMIT).map((project) => (
+              <button
+                key={project.projectKey}
+                onClick={() => mission.setActiveProjectKey(project.projectKey)}
+                type="button"
+              >
+                {projectName(project)} · ops {project.operationalCoverage || 0}% · {(project.missingOperationalDocs || []).slice(0, 2).join(", ") || "내용 보강"}
               </button>
             ))}
           </div>

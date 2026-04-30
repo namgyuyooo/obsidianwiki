@@ -7,6 +7,7 @@ import {
   fetchMissionSnapshot,
   fetchProjectBrief,
   fetchProjectGovernance,
+  runWikiManagementCommand,
   triggerAutomation,
   type AutomationSnapshot,
   type MissionProject,
@@ -59,6 +60,9 @@ export function useMissionControl(workspace: string) {
   const staleProjects = mission.projects.filter((project) => !project.lastActivityAt).slice(0, 8);
   const highDocumentProjects = mission.projects
     .filter((project) => (project.coreDocuments || []).some((doc) => doc.priority === "high"))
+    .slice(0, 8);
+  const operationalGapProjects = mission.projects
+    .filter((project) => (project.missingOperationalDocs || []).length || (project.operationalCoverage || 0) < 80)
     .slice(0, 8);
   const latestRun = automation.running[0] || automation.runs[0] || null;
   const automationTimeline = [...automation.running, ...automation.runs]
@@ -175,6 +179,21 @@ export function useMissionControl(workspace: string) {
     }
   };
 
+  const planOperationalConversion = async (scope?: string) => {
+    const target = scope || activeProject?.projectLabel || activeProject?.projectKey || "전체 프로젝트";
+    setStatus({ phase: "running", message: `${target} 운영형 위키 전환 계획을 생성하는 중입니다.` });
+    notify("running", "운영형 전환 계획 생성", target, { durationMs: 2200 });
+    try {
+      await runWikiManagementCommand(`${target} 프로젝트 허브를 Status, Business_Flow, CEO_Brief, PM_Action_Plan, Customer_Followup, Raw_Evidence_Index 기준으로 운영형 위키로 전환하고 중복/충돌 없이 연결해줘.`);
+      await reload();
+      setStatus({ phase: "ready", message: "운영형 전환 계획을 생성했습니다. 위키 관련 탭에서 승인/적용할 수 있습니다." });
+      notify("success", "운영형 전환 계획 생성 완료", "위키 관련 탭에서 적용 대기 중입니다.");
+    } catch (error) {
+      setStatus({ phase: "failed", message: error instanceof Error ? error.message : "운영형 전환 계획 생성 실패" });
+      notify("error", "운영형 전환 계획 생성 실패", error instanceof Error ? error.message : "운영형 전환 계획 생성 실패");
+    }
+  };
+
   const missionQuestions = [
     {
       label: "오늘 밀 프로젝트",
@@ -182,7 +201,7 @@ export function useMissionControl(workspace: string) {
     },
     {
       label: "근거 확인",
-      value: activeProject?.coreDocuments?.length ? `${activeProject.coreDocuments.length}개 핵심문서` : "핵심문서 보강 필요",
+      value: activeProject?.rawEvidence?.length ? "원문 보존 확인" : activeProject?.coreDocuments?.length ? `${activeProject.coreDocuments.length}개 핵심문서` : "핵심문서 보강 필요",
     },
     {
       label: "정합성 대기",
@@ -193,8 +212,8 @@ export function useMissionControl(workspace: string) {
       value: riskyProjects.length ? `${riskyProjects.length}개 프로젝트` : "명시 리스크 없음",
     },
     {
-      label: "자동화",
-      value: latestRun?.status === "running" ? `${latestRun.command} 실행 중` : latestRun?.command || "대기",
+      label: "운영 문서",
+      value: activeProject ? `${activeProject.operationalCoverage || 0}% 준비` : "대기",
     },
   ];
 
@@ -212,6 +231,7 @@ export function useMissionControl(workspace: string) {
     decisionProjects,
     staleProjects,
     highDocumentProjects,
+    operationalGapProjects,
     automationTimeline,
     projectBrief,
     status,
@@ -221,5 +241,6 @@ export function useMissionControl(workspace: string) {
     loadActiveProjectBrief,
     addProjectAction,
     addProjectDecision,
+    planOperationalConversion,
   };
 }

@@ -16,8 +16,19 @@ source: "public Slack evidence sweep (2024-04-21 to 2026-04-21)"
 ## 2026-04-30
 - 핵심 운영 문서를 실무형 표준 섹션으로 재정비
 
+## Change - 2026-04-30 운영 문서 실내용 보강
+
+- 2026-04-30 16:40 KST 기준 [[Project_Overview]]와 [[Evidence_Log]]를 바탕으로 LG엔솔 이미지분석의 요구사항/환경 제약/성능 목표를 운영 문서에 반영했다.
+- 고객 데이터 반출 제약과 성능 목표 조정 흔적을 CEO/PM 판단 항목으로 승격했다.
+
 ## 기존 정리 메모
 ## 2026-04-21
 
 - LG엔솔 이미지분석 공개 Slack 증적 정리 시작
 - XRM 샘플 이미지, 과제 범위, 인프라 요구사항, 자료 경로 등록
+
+## Change - 2026-04-30
+<!-- operational-conversion:2026-04-30 -->
+- 상태 변화 메모: 2026-04-30 00:00 운영형 위키 전환 기준으로 LGEnergy ImageAnalysis Project 운영 문서 구조가 생성/점검되었고 원문 보존, 상태 갱신, CEO/PM 후속 판단이 수행/대기됨
+- 생성/점검 문서: Status, Business_Flow, CEO_Brief, PM_Action_Plan, Customer_Followup, Raw_Evidence_Index
+- 원칙: 기존 원문/증적은 요약으로 대체하지 않고 보존 레이어와 운영 판단 레이어를 분리

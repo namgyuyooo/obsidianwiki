@@ -4394,6 +4394,7 @@ body {
 
 .aui-command-brief-grid section,
 .aui-command-brief-card,
+.aui-command-operating-card,
 .aui-command-writer {
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.08);
@@ -4422,6 +4423,52 @@ body {
 
 .aui-command-brief-card {
   margin-top: 12px;
+}
+
+.aui-command-operating-card {
+  display: grid;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.aui-command-doc-grid {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.aui-command-doc-grid article {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  display: grid;
+  gap: 5px;
+  min-height: 82px;
+  padding: 11px;
+}
+
+.aui-command-doc-grid article.ready {
+  background: rgba(35, 179, 137, 0.14);
+}
+
+.aui-command-doc-grid article.missing {
+  background: rgba(255, 187, 80, 0.12);
+}
+
+.aui-command-doc-grid strong {
+  color: #ffffff;
+  font-size: 13px;
+}
+
+.aui-command-doc-grid span,
+.aui-command-doc-grid small {
+  color: #aebbd0;
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.aui-command-brief-grid.compact {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-top: 0;
 }
 
 .aui-command-brief-card ul {

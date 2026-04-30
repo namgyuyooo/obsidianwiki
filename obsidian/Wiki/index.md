@@ -21,6 +21,7 @@ source: "Global wiki index initialized from existing project hubs"
 새 세션을 시작할 때 먼저 읽을 컴팩트 컨텍스트 스냅샷 모음:
 - 위치: `obsidian/L1_memory/{ProjectName}.md`
 - 각 파일은 프로젝트 현재 상태, 핵심 결정, 미해결 이슈, Gotcha를 50줄 이내로 요약
+- L1 요약은 빠른 진입용 스냅샷일 뿐이며 원문/긴 추출문/표/수치/버전 이력은 각 프로젝트의 `Raw_Evidence_Index.md`, `Evidence_Log.md`, `Sources.md`를 기준으로 보존
 - 인제스트 또는 핵심 결정 이후 갱신 필요
 
 ## Operating Documents
@@ -116,7 +117,10 @@ Drive 소스 기반으로 구축된 RTM_YNG 계열 프로젝트 페이지 (L1_me
 - top-level 공간은 `project`, `account`, `common`, `shared` 역할로 구분해 운영합니다.
 - `project` 허브는 상태, 막힘, 다음 액션, 근거가 상단에 보여야 합니다.
 - 각 `project` 공간의 `Status.md`를 상태 라벨, 단계, 헬스, 담당, 막힘, 다음 게이트의 기준 레지스터로 사용합니다.
+- 신규 데이터나 결정이 상태를 바꾸면 `Status.md`와 `Change_Log.md`에 `YYYY-MM-DD HH:mm [원천] 기준으로 [변화]가 기록되었고 [후속 액션]이 수행/대기됨` 형식의 상태 변화 메모를 남깁니다.
 - 각 `project` 공간의 `Reference_Register.md`를 링크 우선 참조 레지스터로 사용하고, URL이 어려우면 파일명/경로를 fallback으로 남깁니다.
+- 각 `project` 공간의 `Raw_Evidence_Index.md`는 파일 원문, 긴 추출문, 표, 수치, 버전 체인, 추출 경고를 보존하는 기준 레지스터로 사용하며 짧은 요약으로 대체하지 않습니다.
+- CEO/PM 판단이 필요한 질문은 `Status.md`, `Business_Flow.md`, `CEO_Brief.md`, `PM_Action_Plan.md`, `Customer_Followup.md`, `Decision Queue`를 우선 확인합니다.
 - `account` 허브는 활성 프로젝트와 다음 고객 접점을, `common/shared` 허브는 운영 자산과 승격 큐를 우선 보여줍니다.
 - 새 프로젝트 허브를 만들면 이 파일에도 추가합니다.
 - 새 프로젝트를 추가하면 `obsidian/L1_memory/`에도 스냅샷 파일을 함께 생성합니다.

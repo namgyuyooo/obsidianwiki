@@ -39,3 +39,14 @@ source: "Initial Sawnics project wiki creation"
   - `Conflict_Register.md`
   - `Change_Log.md`
 - 제출안내문/제출서류 양식은 첨부 메타데이터 기준으로만 등록하고, 본문 미열람 상태를 충돌/리스크로 분리
+
+## Change - 2026-04-30
+<!-- operational-conversion:2026-04-30 -->
+- 상태 변화 메모: 2026-04-30 00:00 운영형 위키 전환 기준으로 Sawnics ManufacturingAI Project 운영 문서 구조가 생성/점검되었고 원문 보존, 상태 갱신, CEO/PM 후속 판단이 수행/대기됨
+- 생성/점검 문서: Status, Business_Flow, CEO_Brief, PM_Action_Plan, Customer_Followup, Raw_Evidence_Index
+- 원칙: 기존 원문/증적은 요약으로 대체하지 않고 보존 레이어와 운영 판단 레이어를 분리
+
+## Change - 2026-04-30 운영 문서 실내용 보강
+- 상태 변화 메모: 2026-04-30 00:00 쏘닉스 사업계획서 작성 분석 기준으로 PoC 후속 영업이 제출 준비 단계로 구체화되었고 KPI/작성 셀 분해/고객 확인 액션이 대기됨
+- 보강 문서: Status, Business_Flow, CEO_Brief, PM_Action_Plan, Customer_Followup, Raw_Evidence_Index
+- 근거: Business_Plan_Writing_Analysis_2026-04-30, RFP_Writing_Strategy_2026-04-30, Evidence_Log, Sources

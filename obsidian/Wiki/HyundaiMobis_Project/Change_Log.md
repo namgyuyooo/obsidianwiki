@@ -16,9 +16,20 @@ source: "public Slack evidence sweep (2024-04-21 to 2026-04-21)"
 ## 2026-04-30
 - 핵심 운영 문서를 실무형 표준 섹션으로 재정비
 
+## Change - 2026-04-30 운영 문서 실내용 보강
+
+- 2026-04-30 16:50 KST 기준 [[Project_Overview]]와 [[Evidence_Log]]를 바탕으로 현대모비스의 견적/납기/계약 전환 상태를 운영 문서에 반영했다.
+- 상업 구조와 납기 충돌 가능성을 CEO/PM 판단 항목으로 승격했다.
+
 ## 기존 정리 메모
 ## 2026-04-21
 
 - 현대모비스 공개 Slack 증적 정리 시작
 - 요구사항 확인 문서, 제작사양서, 견적서 등록
 - 4월 14일 견적서 수정 및 납기 조정 논의 등록
+
+## Change - 2026-04-30
+<!-- operational-conversion:2026-04-30 -->
+- 상태 변화 메모: 2026-04-30 00:00 운영형 위키 전환 기준으로 HyundaiMobis Project 운영 문서 구조가 생성/점검되었고 원문 보존, 상태 갱신, CEO/PM 후속 판단이 수행/대기됨
+- 생성/점검 문서: Status, Business_Flow, CEO_Brief, PM_Action_Plan, Customer_Followup, Raw_Evidence_Index
+- 원칙: 기존 원문/증적은 요약으로 대체하지 않고 보존 레이어와 운영 판단 레이어를 분리

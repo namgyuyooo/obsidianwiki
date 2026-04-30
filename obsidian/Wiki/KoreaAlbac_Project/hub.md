@@ -49,6 +49,14 @@ source: "public Slack evidence sweep (2024-04-21 to 2026-04-21)"
 - [[Wiki/KoreaAlbac_Project/Evidence_Log]]
 - [[Wiki/KoreaAlbac_Project/Conflict_Register]]
 
+## 운영형 문서 링크
+- [[Wiki/KoreaAlbac_Project/Status]]: 현재 상태, 단계, 막힘, 다음 게이트
+- [[Wiki/KoreaAlbac_Project/Business_Flow]]: 수집부터 고객 후속까지 실제 업무 흐름
+- [[Wiki/KoreaAlbac_Project/CEO_Brief]]: CEO 의사결정 포인트
+- [[Wiki/KoreaAlbac_Project/PM_Action_Plan]]: PM 실행 액션과 담당/기한
+- [[Wiki/KoreaAlbac_Project/Customer_Followup]]: 고객 접점과 다음 커뮤니케이션
+- [[Wiki/KoreaAlbac_Project/Raw_Evidence_Index]]: 원문/긴 추출문/표/수치/버전 보존
+
 ## 운영 링크
 - [[Wiki/KoreaAlbac_Project/Status]]
 - [[Wiki/KoreaAlbac_Project/Reference_Register]]

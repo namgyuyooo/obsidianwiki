@@ -14,6 +14,24 @@ export type MissionProject = {
   decisions?: string[];
   conflicts?: string[];
   coreDocuments?: Array<{ title?: string; path?: string; score?: number; priority?: string }>;
+  operationalDocs?: Array<{
+    file?: string;
+    label?: string;
+    path?: string;
+    present?: boolean;
+    hasContent?: boolean;
+    updatedAt?: string;
+    docKind?: string;
+  }>;
+  missingOperationalDocs?: string[];
+  operationalCoverage?: number;
+  statusMemos?: string[];
+  businessFlow?: string[];
+  ceoBrief?: string[];
+  pmActions?: string[];
+  customerFollowups?: string[];
+  rawEvidence?: string[];
+  opsActions?: string[];
   lastActivityAt?: string;
   hubPath?: string;
   score?: number;
@@ -24,6 +42,8 @@ export type MissionSummary = {
   ongoing: number;
   decisionQueue: number;
   highPriorityDocuments: number;
+  operationalReady?: number;
+  operationalGaps?: number;
 };
 
 export type MissionSnapshot = {
@@ -161,6 +181,16 @@ export async function appendProjectDecision(projectKey: string, input: {
     {
       method: "POST",
       body: JSON.stringify(input),
+    },
+  );
+}
+
+export async function runWikiManagementCommand(command: string) {
+  return requestJson<{ id?: string; title?: string; operations?: Array<Record<string, unknown>>; summary?: string }>(
+    "/api/wiki/manage",
+    {
+      method: "POST",
+      body: JSON.stringify({ command }),
     },
   );
 }

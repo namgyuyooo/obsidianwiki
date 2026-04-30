@@ -22,3 +22,9 @@ source: "public Slack evidence sweep (2024-04-21 to 2026-04-21)"
 - BGF에코스페셜티 공개 Slack 증적을 별도 프로젝트 문서군으로 분리
 - 운영 리뷰와 후속 업무 보고 흐름 반영
 - v1.6.0 배포, 재학습 모델 배포, 로그 관리 체계 반영
+
+## Change - 2026-04-30
+<!-- operational-conversion:2026-04-30 -->
+- 상태 변화 메모: 2026-04-30 00:00 운영형 위키 전환 기준으로 BGF EcoSpecialty Project 운영 문서 구조가 생성/점검되었고 원문 보존, 상태 갱신, CEO/PM 후속 판단이 수행/대기됨
+- 생성/점검 문서: Status, Business_Flow, CEO_Brief, PM_Action_Plan, Customer_Followup, Raw_Evidence_Index
+- 원칙: 기존 원문/증적은 요약으로 대체하지 않고 보존 레이어와 운영 판단 레이어를 분리

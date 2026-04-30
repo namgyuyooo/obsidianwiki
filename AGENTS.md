@@ -120,14 +120,15 @@ When a new source arrives:
 
 1. Read the source from `obsidian/raw/` or another explicitly provided source location.
 2. Preserve provenance in the project's `Reference_Register.md` with links first and file-name fallback.
-3. Use `Sources.md` only when detailed legacy source notes or raw-source handling still matter.
-4. Preserve key quotes, numbers, decisions, and constraints in `Evidence_Log.md`.
+3. Register source inventory in `Sources.md` and preserve long raw extracts or full extracted text in `Raw_Evidence_Index.md`.
+4. Preserve key quotes, numbers, decisions, and constraints in `Evidence_Log.md`; do not replace source content with a short summary.
 5. Record contradictions in `Conflict_Register.md` instead of flattening them away.
-6. Update synthesized pages such as `Project_Overview.md`, `Decisions.md`, `Risks.md`, `KPI.md`.
-7. Add a short entry to `Change_Log.md`.
-8. Refresh `obsidian/Wiki/index.md` if navigation changed.
-9. Append a dated entry to `obsidian/Wiki/log.md`.
-10. **Update `obsidian/L1_memory/{ProjectName}.md`** to reflect any status, decision, issue, or reference changes.
+6. Append a status-change memo to `Status.md` in the form: `YYYY-MM-DD HH:mm [source] 기준으로 [change]가 기록되었고 [action]이 수행/대기됨`.
+7. Update operating pages such as `Business_Flow.md`, `CEO_Brief.md`, `PM_Action_Plan.md`, `Customer_Followup.md`, `Project_Overview.md`, `Decisions.md`, `Risks.md`, `KPI.md`.
+8. Add a short entry to `Change_Log.md`.
+9. Refresh `obsidian/Wiki/index.md` if navigation changed.
+10. Append a dated entry to `obsidian/Wiki/log.md`.
+11. **Update `obsidian/L1_memory/{ProjectName}.md`** to reflect any status, decision, issue, or reference changes.
 
 Prefer append-style updates over destructive rewrites when historical context matters.
 
@@ -139,9 +140,11 @@ When a new work event appears, promote it through the wiki in this order:
 2. Register provenance in `Reference_Register.md` using URL/link first, file name/path fallback second.
 3. Extract facts, quotes, numbers, decisions, and constraints into `Evidence_Log.md`.
 4. Register contradictions or unresolved mismatches in `Conflict_Register.md`.
-5. Record actual document/wiki changes in `Change_Log.md`.
-6. Update synthesized pages such as `Project_Overview.md`, `Decisions.md`, `Risks.md`, `KPI.md`.
-7. Refresh the relevant `obsidian/L1_memory/{ProjectName}.md`.
+5. Preserve long raw extracts and file-level source detail in `Raw_Evidence_Index.md`.
+6. Record actual document/wiki changes in `Change_Log.md`.
+7. Append a concrete status-change memo to `Status.md`.
+8. Update operating pages such as `Business_Flow.md`, `CEO_Brief.md`, `PM_Action_Plan.md`, `Customer_Followup.md`, `Project_Overview.md`, `Decisions.md`, `Risks.md`, `KPI.md`.
+9. Refresh the relevant `obsidian/L1_memory/{ProjectName}.md`.
 
 Do not jump straight from a new event to a cleaned-up conclusion if source facts, conflicts, or version changes need to remain visible.
 Do not over-promote weak uncertainty into `Conflict_Register.md` when the more practical move is to update `Action_Items.md`, `Decisions.md`, `Risks.md`, `Status.md`, or the hub.
@@ -208,9 +211,13 @@ Most project folders should keep these pages available:
 - `Status.md`
 - `Reference_Register.md`
 - `Project_Overview.md`
-- `Reference_Register.md`
 - `Sources.md`
 - `Evidence_Log.md`
+- `Raw_Evidence_Index.md`
+- `Business_Flow.md`
+- `CEO_Brief.md`
+- `PM_Action_Plan.md`
+- `Customer_Followup.md`
 - `Change_Log.md`
 - `Conflict_Register.md`
 - `Action_Items.md`
@@ -255,6 +262,16 @@ Use it to track:
 - blockers
 - next gate or milestone
 - status history
+- concrete change-event memos in the form `YYYY-MM-DD HH:mm [source] 기준으로 [change]가 기록되었고 [action]이 수행/대기됨`
+- Decision Queue outcomes that changed operating state
+
+`Raw_Evidence_Index.md` is the canonical raw/extracted evidence preservation index.
+Use it to track:
+
+- long raw extracts or full extracted text that would be lost in a summary
+- tables, numbers, version chains, extraction warnings, and file-level provenance
+- source paths and extraction output paths
+- which operating pages consumed the evidence and which items still need Decision Queue review
 
 ## Account/Common/Shared Hub Minimum
 
@@ -286,6 +303,12 @@ Use underscore file names for project evidence and reference documents:
 - `Reference_Register.md`
 - `Sources.md`
 - `Evidence_Log.md`
+- `Raw_Evidence_Index.md`
+- `Status.md`
+- `Business_Flow.md`
+- `CEO_Brief.md`
+- `PM_Action_Plan.md`
+- `Customer_Followup.md`
 - `Conflict_Register.md`
 - `Change_Log.md`
 

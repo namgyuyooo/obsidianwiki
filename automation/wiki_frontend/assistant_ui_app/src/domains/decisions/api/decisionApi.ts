@@ -48,6 +48,50 @@ export type DecisionMergeSuggestion = {
   mergedMarkdown?: string;
 };
 
+export type DecisionMergeCandidate = {
+  id: string;
+  score: number;
+  similarity: number;
+  graphLinked?: boolean;
+  conflictRisk?: boolean;
+  strategy?: string;
+  reason?: string[];
+  primary: {
+    title?: string;
+    path: string;
+    projectKey?: string;
+    projectLabel?: string;
+    docKind?: string;
+    keyLines?: string[];
+  };
+  secondary: {
+    title?: string;
+    path: string;
+    projectKey?: string;
+    projectLabel?: string;
+    docKind?: string;
+    keyLines?: string[];
+  };
+  mergePlan?: {
+    targetPath?: string;
+    steps?: string[];
+    changeMemo?: string;
+  };
+};
+
+export type DecisionMergeCandidateScan = {
+  generatedAt: string;
+  workspace: string;
+  strategy: string;
+  summary: {
+    scannedPages: number;
+    candidates: number;
+    conflictRisk: number;
+  };
+  candidates: DecisionMergeCandidate[];
+  enqueued?: DecisionItem[];
+};
+
 async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(path, {
     ...init,
@@ -107,6 +151,27 @@ export async function suggestDecisionMerge(input: {
   return requestJson<DecisionMergeSuggestion>("/api/wiki/conflict-merge", {
     method: "POST",
     body: JSON.stringify(input),
+  });
+}
+
+export async function scanDecisionMergeCandidates(workspace = "rtm", limit = 24) {
+  return requestJson<DecisionMergeCandidateScan>("/api/decision-queue/merge-candidates", {
+    method: "POST",
+    body: JSON.stringify({ workspace, limit }),
+  });
+}
+
+export async function enqueueDecisionMergeCandidate(candidate: DecisionMergeCandidate, workspace = "rtm") {
+  return requestJson<{ item: DecisionItem }>("/api/decision-queue/merge-candidates/enqueue", {
+    method: "POST",
+    body: JSON.stringify({ workspace, candidate }),
+  });
+}
+
+export async function scanAndEnqueueDecisionMergeCandidates(workspace = "rtm", enqueueTop = 5, limit = 24) {
+  return requestJson<DecisionMergeCandidateScan>("/api/decision-queue/merge-candidates", {
+    method: "POST",
+    body: JSON.stringify({ workspace, limit, enqueueTop }),
   });
 }
 

@@ -16,26 +16,46 @@
   - Decision Queue 승인 후보 생성
   - 원문 보존 레이어와 운영 판단 레이어 분리
 
-- [ ] 신규 데이터 변화 메모 표준화
+- [x] 신규 데이터 변화 메모 표준화
   - 형식: `YYYY-MM-DD HH:mm 데이터/근거 수집으로 [상태 변화]가 기록되었고 [후속 액션]이 수행/대기됨`
   - `Status.md`, `Business_Flow.md`, `Change_Log.md`, `Raw_Evidence_Index.md`에 append
   - Slack/Drive/File/Paperclip/GLM 채팅 입력 모두 동일한 event memo로 남김
 
-- [ ] Decisions 탭 전체 위키 유사도 스캔
+- [x] Decisions 탭 전체 위키 유사도 스캔
   - 주요 태그, 키워드, 프로젝트명, 고객명, 파일명, 핵심 수치, 일정, 그래프 이웃을 사용
   - 유사 문서/중복 문서/충돌 가능 문서 후보 생성
   - 후보별 병합 전략과 보류 사유 제안
 
-- [ ] 병합 전략 리스트 기반 사용자 액션
+- [x] 병합 전략 리스트 기반 사용자 액션
   - Decision Queue 카드로 등록
   - 병합안 생성
   - 보류/추가조사/승인 반영
   - 적용 후 상태 변화 메모 자동 append
 
+- [x] 레거시 지침 전역 정리
+  - 짧은 요약 중심 지침을 원문 보존 + 운영 판단 레이어 분리 원칙으로 조정
+  - `Raw_Evidence_Index.md`, `Status.md`, `Change_Log.md` 사용 규칙을 전역 지침과 인제스트 파이프라인에 반영
+  - GLM 전역 지침이 CEO/PM 운영 문서와 Decision Queue를 우선 사용하도록 보강
+
+- [x] 커맨드센터/Spotlite 운영형 위키 흐름 반영
+  - 커맨드센터 프로젝트 카드에 운영 문서 준비도, 누락 문서, 상태 변화 메모, CEO/PM/고객 후속 신호 표시
+  - 커맨드센터에서 운영형 전환 계획을 바로 생성해 위키 관리 승인 흐름으로 보냄
+  - Spotlite에 오늘/이번주/리스크 외 운영형 위키 액션 후보와 Raw Evidence 상태를 표시
+
 - [ ] LLM 채팅 활용 흐름 연결
   - 채팅 답변이 프로젝트 허브의 `Status`, `CEO_Brief`, `PM_Action_Plan`, `Decision Queue`, `Raw_Evidence_Index`를 우선 검색
   - 근거 부족 시 확인해야 할 원문 경로를 반환
   - 확정 지식 반영은 승인 게이트를 통과
+
+- [ ] 병합 후보 고도화
+  - LLM으로 후보별 병합 전략 재랭킹
+  - 원문 보존 범위 자동 산출
+  - 병합 후 hub/Status/CEO_Brief에 어떤 문장을 남길지 미리보기
+
+- [ ] 수집 파이프라인 연동
+  - Slack/Drive/File 수집 완료 시 자동으로 변화 메모 후보 생성
+  - 신규 데이터가 기존 프로젝트 허브와 얼마나 가까운지 자동 계산
+  - 확정 전에는 Decision Queue로만 이동
 
 ## 운영 원칙
 

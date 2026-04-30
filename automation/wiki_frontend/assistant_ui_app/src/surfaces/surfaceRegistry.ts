@@ -35,7 +35,7 @@ export type SurfaceDefinition = {
 export const PRIMARY_SURFACES: readonly PrimarySurfaceDefinition[] = [
   { id: "chat", label: "채팅", description: "LLM 프로젝트 대화", defaultSurfaceId: "chat" },
   { id: "wiki", label: "위키", description: "검토, 위키, 수집, 설정", defaultSurfaceId: "decisions" },
-  { id: "mission", label: "현황", description: "프로젝트 현황과 요약", defaultSurfaceId: "mission" },
+  { id: "mission", label: "커맨드센터", description: "운영 흐름과 의사결정", defaultSurfaceId: "mission" },
 ] as const;
 
 export const SURFACES: readonly SurfaceDefinition[] = [
@@ -88,7 +88,7 @@ export const SURFACES: readonly SurfaceDefinition[] = [
     primary: "wiki",
     label: "원문 정리",
     shortLabel: "Ingest",
-    description: "원문을 요약하고 지식 승격 후보를 만듭니다.",
+    description: "원문 보존, 상태 메모, 승격 후보를 만듭니다.",
     densityPattern: "원문 처리",
     status: "live",
     legacyHash: "#ingest",
@@ -97,9 +97,9 @@ export const SURFACES: readonly SurfaceDefinition[] = [
   {
     id: "mission",
     primary: "mission",
-    label: "프로젝트 현황",
-    shortLabel: "현황",
-    description: "프로젝트 상태, 결정 대기, 자동화, 리스크를 확인합니다.",
+    label: "커맨드센터",
+    shortLabel: "Command",
+    description: "프로젝트 상태, 운영 문서, 결정 대기, 자동화를 확인합니다.",
     densityPattern: "현황",
     status: "live",
     legacyHash: "#mission",

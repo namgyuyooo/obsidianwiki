@@ -387,6 +387,17 @@ export type SpotlitePayload = {
   today?: SpotliteItem[];
   week?: SpotliteItem[];
   risks?: SpotliteItem[];
+  operations?: Array<{
+    project?: string;
+    projectKey?: string;
+    coverage?: number;
+    decisionQueueCount?: number;
+    missingDocs?: string[];
+    actions?: string[];
+    latestStatusMemo?: string;
+    rawEvidence?: string;
+    hubPath?: string;
+  }>;
   projects?: Array<{ project?: string; count?: number; risks?: number; actions?: number; latestPath?: string }>;
 };
 

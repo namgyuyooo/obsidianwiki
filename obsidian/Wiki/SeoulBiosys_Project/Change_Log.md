@@ -16,8 +16,19 @@ source: "public Slack evidence sweep (2024-04-21 to 2026-04-21)"
 ## 2026-04-30
 - 핵심 운영 문서를 실무형 표준 섹션으로 재정비
 
+## Change - 2026-04-30 운영 문서 실내용 보강
+
+- 2026-04-30 16:50 KST 기준 [[Project_Overview]]와 [[Evidence_Log]]를 바탕으로 서울바이오시스의 POC 결과/AI agent 확장/가격 병목을 운영 문서에 반영했다.
+- EHM 단독 도입과 AI agent 통합 제안의 분기 판단을 CEO/PM 항목으로 승격했다.
+
 ## 기존 정리 메모
 ## 2026-04-21
 
 - 서울바이오시스 공개 Slack 증적 정리 시작
 - EHM 소개, POC 2차 결과, AI agent 통합 인사이트 문서 등록
+
+## Change - 2026-04-30
+<!-- operational-conversion:2026-04-30 -->
+- 상태 변화 메모: 2026-04-30 00:00 운영형 위키 전환 기준으로 SeoulBiosys Project 운영 문서 구조가 생성/점검되었고 원문 보존, 상태 갱신, CEO/PM 후속 판단이 수행/대기됨
+- 생성/점검 문서: Status, Business_Flow, CEO_Brief, PM_Action_Plan, Customer_Followup, Raw_Evidence_Index
+- 원칙: 기존 원문/증적은 요약으로 대체하지 않고 보존 레이어와 운영 판단 레이어를 분리

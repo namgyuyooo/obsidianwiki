@@ -28,3 +28,14 @@ source: "public Slack evidence sweep (2024-04-21 to 2026-04-21)"
 - 자동 인제스트 문서 반영: `(일반분과)_R-20240318-021643 _픽셀_알티엠.pptx`
 - 프로젝트 판정: `update_existing_project`
 - 생성/갱신 프로젝트: `[[Wiki/Pixel_AIVoucher_Project/hub]]`
+
+## Change - 2026-04-30
+<!-- operational-conversion:2026-04-30 -->
+- 상태 변화 메모: 2026-04-30 00:00 운영형 위키 전환 기준으로 Pixel AIVoucher Project 운영 문서 구조가 생성/점검되었고 원문 보존, 상태 갱신, CEO/PM 후속 판단이 수행/대기됨
+- 생성/점검 문서: Status, Business_Flow, CEO_Brief, PM_Action_Plan, Customer_Followup, Raw_Evidence_Index
+- 원칙: 기존 원문/증적은 요약으로 대체하지 않고 보존 레이어와 운영 판단 레이어를 분리
+
+## Change - 2026-04-30 운영 문서 실내용 보강
+- 상태 변화 메모: 2026-04-30 00:00 Pixel AI바우처 증적 기준으로 프로젝트가 후속 운영 구조 정리 상태로 구체화되었고 XML/NAS 확정 여부와 PIXEL-DMT 역할 경계 확인이 대기됨
+- 보강 문서: Status, Business_Flow, CEO_Brief, PM_Action_Plan, Customer_Followup, Raw_Evidence_Index
+- 근거: Project_Overview, Domain_and_Integration, DMT_Integration, Evidence_Log

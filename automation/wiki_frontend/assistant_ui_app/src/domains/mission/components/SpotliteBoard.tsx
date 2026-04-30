@@ -20,6 +20,7 @@ const EMPTY_SPOTLITE: SpotlitePayload = {
   today: [],
   week: [],
   risks: [],
+  operations: [],
   projects: [],
 };
 
@@ -78,7 +79,7 @@ export function SpotliteBoard({ chatContext }: SpotliteBoardProps) {
         <div>
           <span className="aui-kicker">요약</span>
           <h1>요약</h1>
-          <p>{chatContext.workspace.toUpperCase()} 기준 진행 중 프로젝트 신호를 오늘, 이번주, 리스크 중심으로 보여줍니다.</p>
+          <p>{chatContext.workspace.toUpperCase()} 기준 진행 중 프로젝트 신호를 오늘, 이번주, 리스크, 운영형 위키 흐름 중심으로 보여줍니다.</p>
         </div>
         <aside className={`aui-ops-live ${phase}`}>
           <strong>{phase}</strong>
@@ -130,6 +131,22 @@ export function SpotliteBoard({ chatContext }: SpotliteBoardProps) {
                 <strong>{item.project || item.title || "-"}</strong>
                 <span>{item.line || "-"}</span>
                 <small>{item.kind || "signal"}</small>
+              </article>
+            ))}
+          </div>
+        </article>
+
+        <article className="aui-ops-card">
+          <div className="aui-ops-card-head">
+            <span>Ops Flow</span>
+            <strong>{spotlite.summary?.operationalGaps || 0}</strong>
+          </div>
+          <div className="aui-ops-list">
+            {(spotlite.operations || []).slice(0, 8).map((item, index) => (
+              <article className="aui-ops-log-card" key={`${item.projectKey}-${index}`}>
+                <strong>{item.project || "-"}</strong>
+                <span>{(item.actions || []).join(" / ") || item.latestStatusMemo || "운영 액션 보강 필요"}</span>
+                <small>ops {item.coverage || 0}% · queue {item.decisionQueueCount || 0} · {(item.missingDocs || []).slice(0, 3).join(", ") || "필수 문서 연결됨"}</small>
               </article>
             ))}
           </div>

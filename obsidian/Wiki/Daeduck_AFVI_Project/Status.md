@@ -37,3 +37,8 @@ source: ""
 
 ## 기존 정리 메모
 - 기존 상태 문서 없음
+
+## 운영형 위키 전환 메모 - 2026-04-30
+- 상태 변화 메모: 2026-04-30 00:00 운영형 위키 전환 기준으로 Daeduck AFVI Project 기존 문서가 점검되었고 운영 판단 레이어와 원문 보존 레이어 연결이 수행/대기됨
+- 원문/긴 추출문은 Raw_Evidence_Index, Sources, Evidence_Log를 기준으로 보존
+- CEO/PM 판단은 Status, Business_Flow, CEO_Brief, PM_Action_Plan, Customer_Followup에서 관리

@@ -2,11 +2,16 @@ import { useEffect, useState } from "react";
 import { useToastCenter } from "../../../components/surface/ToastCenter";
 import { fetchWikiPage, saveWikiPage } from "../../wiki/api/wikiApi";
 import {
+  enqueueDecisionMergeCandidate,
   fetchDecisionQueue,
   inferDecisionItem,
   resolveDecisionItem,
+  scanAndEnqueueDecisionMergeCandidates,
+  scanDecisionMergeCandidates,
   summarizeDecisionQueue,
   suggestDecisionMerge,
+  type DecisionMergeCandidate,
+  type DecisionMergeCandidateScan,
   type DecisionItem,
   type DecisionMergeSuggestion,
 } from "../api/decisionApi";
@@ -29,6 +34,12 @@ type DecisionCompareState = {
   suggestion: DecisionMergeSuggestion | null;
 };
 
+type DecisionMergeScanState = {
+  phase: "idle" | "scanning" | "ready" | "enqueuing" | "failed";
+  message: string;
+  snapshot: DecisionMergeCandidateScan | null;
+};
+
 const EMPTY_COMPARE: DecisionCompareState = {
   phase: "idle",
   message: "근거 비교를 열면 출처 문서와 Conflict Register를 나란히 확인합니다.",
@@ -38,6 +49,12 @@ const EMPTY_COMPARE: DecisionCompareState = {
   sourceMarkdown: "",
   targetMarkdown: "",
   suggestion: null,
+};
+
+const EMPTY_MERGE_SCAN: DecisionMergeScanState = {
+  phase: "idle",
+  message: "전체 위키의 태그, 키워드, 그래프 연결을 스캔해 병합 후보를 찾을 수 있습니다.",
+  snapshot: null,
 };
 
 function isDeletionDecision(item: DecisionItem | null) {
@@ -85,6 +102,7 @@ export function useDecisionDeck(workspace: string) {
   const [inference, setInference] = useState("");
   const [resolutionNote, setResolutionNote] = useState("");
   const [compare, setCompare] = useState<DecisionCompareState>(EMPTY_COMPARE);
+  const [mergeScan, setMergeScan] = useState<DecisionMergeScanState>(EMPTY_MERGE_SCAN);
   const [status, setStatus] = useState<DecisionDeckStatus>({
     phase: "loading",
     message: "Decision Queue를 불러오는 중입니다.",
@@ -318,6 +336,67 @@ export function useDecisionDeck(workspace: string) {
     resolveActive(recommendedActionFromInference(inference));
   };
 
+  const scanMergeCandidates = async () => {
+    setMergeScan({ phase: "scanning", message: "전체 위키의 태그/키워드/그래프맵 기반 유사도를 계산하는 중입니다.", snapshot: mergeScan.snapshot });
+    notify("running", "병합 후보 스캔 시작", "태그, 키워드, 그래프 연결을 분석합니다.", { durationMs: 2400 });
+    try {
+      const snapshot = await scanDecisionMergeCandidates(workspace, 24);
+      setMergeScan({
+        phase: "ready",
+        message: `병합 후보 ${snapshot.candidates.length}건 · 충돌 위험 ${snapshot.summary.conflictRisk}건`,
+        snapshot,
+      });
+      notify("success", "병합 후보 스캔 완료", `${snapshot.candidates.length}건의 전략 후보를 찾았습니다.`);
+    } catch (error) {
+      setMergeScan({
+        phase: "failed",
+        message: error instanceof Error ? error.message : "병합 후보 스캔 실패",
+        snapshot: mergeScan.snapshot,
+      });
+      notify("error", "병합 후보 스캔 실패", error instanceof Error ? error.message : "병합 후보 스캔 실패");
+    }
+  };
+
+  const enqueueMergeCandidate = async (candidate: DecisionMergeCandidate) => {
+    setMergeScan((current) => ({ ...current, phase: "enqueuing", message: "병합 후보를 Decision Queue에 등록하는 중입니다." }));
+    notify("running", "Decision Queue 등록", candidate.primary?.title || candidate.id, { durationMs: 2200 });
+    try {
+      await enqueueDecisionMergeCandidate(candidate, workspace);
+      await reload("");
+      setMergeScan((current) => ({ ...current, phase: "ready", message: "병합 후보를 Decision Queue에 등록했습니다." }));
+      notify("success", "Decision Queue 등록 완료", candidate.primary?.title || candidate.id);
+    } catch (error) {
+      setMergeScan((current) => ({
+        ...current,
+        phase: "failed",
+        message: error instanceof Error ? error.message : "Decision Queue 등록 실패",
+      }));
+      notify("error", "Decision Queue 등록 실패", error instanceof Error ? error.message : "Decision Queue 등록 실패");
+    }
+  };
+
+  const scanAndEnqueueTopMergeCandidates = async () => {
+    setMergeScan({ phase: "enqueuing", message: "병합 후보를 스캔하고 상위 후보를 Decision Queue에 등록하는 중입니다.", snapshot: mergeScan.snapshot });
+    notify("running", "상위 병합 후보 등록", "스캔 후 상위 5건을 Decision Queue에 올립니다.", { durationMs: 2600 });
+    try {
+      const snapshot = await scanAndEnqueueDecisionMergeCandidates(workspace, 5, 24);
+      await reload("");
+      setMergeScan({
+        phase: "ready",
+        message: `상위 후보 ${snapshot.enqueued?.length || 0}건 등록 · 전체 후보 ${snapshot.candidates.length}건`,
+        snapshot,
+      });
+      notify("success", "상위 병합 후보 등록 완료", `${snapshot.enqueued?.length || 0}건을 Decision Queue에 등록했습니다.`);
+    } catch (error) {
+      setMergeScan({
+        phase: "failed",
+        message: error instanceof Error ? error.message : "상위 병합 후보 등록 실패",
+        snapshot: mergeScan.snapshot,
+      });
+      notify("error", "상위 병합 후보 등록 실패", error instanceof Error ? error.message : "상위 병합 후보 등록 실패");
+    }
+  };
+
   return {
     items,
     pendingItems,
@@ -332,6 +411,7 @@ export function useDecisionDeck(workspace: string) {
     inference,
     resolutionNote,
     compare,
+    mergeScan,
     status,
     summary,
     setActiveItemId,
@@ -349,5 +429,8 @@ export function useDecisionDeck(workspace: string) {
     saveCompareTarget,
     saveCompareAndApprove,
     applyInferenceRecommendation,
+    scanMergeCandidates,
+    enqueueMergeCandidate,
+    scanAndEnqueueTopMergeCandidates,
   };
 }
