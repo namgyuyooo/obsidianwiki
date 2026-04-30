@@ -246,10 +246,25 @@ export async function saveWikiPage(path: string, markdown: string) {
   });
 }
 
-export async function deleteWikiPage(path: string, reason: string, workspace: string) {
-  return requestJson<{ status: string; path: string; title: string; reason?: string; workspace: string; timestamp: string }>("/api/wiki/page/delete", {
+export async function deleteWikiPage(path: string, reason: string, workspace: string, force = false) {
+  return requestJson<{ status: string; path: string; title: string; reason?: string; workspace: string; timestamp: string; force?: boolean }>("/api/wiki/page/delete", {
     method: "POST",
-    body: JSON.stringify({ path, reason, workspace }),
+    body: JSON.stringify({ path, reason, workspace, force }),
+  });
+}
+
+export async function deleteWikiProjectPackage(projectKey: string, reason: string, workspace: string) {
+  return requestJson<{
+    status: string;
+    projectKey: string;
+    removedPaths: string[];
+    removedCount: number;
+    reason?: string;
+    workspace: string;
+    timestamp: string;
+  }>("/api/wiki/project/delete", {
+    method: "POST",
+    body: JSON.stringify({ projectKey, reason, workspace }),
   });
 }
 

@@ -182,7 +182,7 @@ class RuntimeConfig:
     slack_state_path: Path | None = None
     slack_channel_types: list[str] = field(default_factory=list)
     slack_channels: list[str] = field(default_factory=list)
-    slack_history_limit: int = 200
+    slack_history_limit: int = 5000
     slack_oldest_days: int = 30
     slack_include_threads: bool = True
     slack_include_files: bool = True
@@ -277,7 +277,7 @@ class RuntimeConfig:
             slack_state_path=_resolve_config_path(base, payload.get("SLACK_STATE_PATH", "automation/wiki_api/runtime/slack_collection_state.json")),
             slack_channel_types=_as_list(payload.get("SLACK_CHANNEL_TYPES"), ["public_channel", "private_channel"]),
             slack_channels=_as_list(payload.get("SLACK_CHANNELS"), []),
-            slack_history_limit=_as_int(payload.get("SLACK_HISTORY_LIMIT"), 200),
+            slack_history_limit=_as_int(payload.get("SLACK_HISTORY_LIMIT"), 5000),
             slack_oldest_days=_as_int(payload.get("SLACK_OLDEST_DAYS"), 30),
             slack_include_threads=_as_bool(payload.get("SLACK_INCLUDE_THREADS"), default=True),
             slack_include_files=_as_bool(payload.get("SLACK_INCLUDE_FILES"), default=True),

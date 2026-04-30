@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import type { ChatContext } from "../../chat/constants";
+import { useToastCenter } from "../../../components/surface/ToastCenter";
 import { fetchWikiIndex, type WikiPageIndexItem } from "../../wiki/api/wikiApi";
 import {
   fetchKnowledgePromotions,
@@ -121,6 +122,7 @@ function ListBlock({ items, title }: { items: string[]; title: string }) {
 }
 
 export function IngestWorkbench({ chatContext }: IngestWorkbenchProps) {
+  const { notify } = useToastCenter();
   const [phase, setPhase] = useState<IngestPhase>("loading");
   const [message, setMessage] = useState("지식 주입 작업대를 불러오는 중입니다.");
   const [text, setText] = useState(DEFAULT_INGEST_TEXT);
@@ -160,17 +162,21 @@ export function IngestWorkbench({ chatContext }: IngestWorkbenchProps) {
     if (!text.trim()) {
       setPhase("error");
       setMessage("다이제스트할 원문이 비어 있습니다.");
+      notify("error", "다이제스트 생성 실패", "다이제스트할 원문이 비어 있습니다.");
       return;
     }
     setPhase("digesting");
+    notify("running", "다이제스트 생성 시작", projectHint || "프로젝트 힌트 없음", { durationMs: 2200 });
     try {
       const payload = await generateIngestDigest({ text, projectHint });
       setDigest(payload);
       setPhase("idle");
       setMessage("한국어 다이제스트를 생성했습니다.");
+      notify("success", "다이제스트 생성 완료", projectHint || "프로젝트 힌트 없음");
     } catch (error) {
       setPhase("error");
       setMessage(error instanceof Error ? error.message : "다이제스트 생성 실패");
+      notify("error", "다이제스트 생성 실패", error instanceof Error ? error.message : "다이제스트 생성 실패");
     }
   };
 
@@ -178,9 +184,11 @@ export function IngestWorkbench({ chatContext }: IngestWorkbenchProps) {
     if (!text.trim()) {
       setPhase("error");
       setMessage("승격할 원문이 비어 있습니다.");
+      notify("error", "승격 후보 생성 실패", "승격할 원문이 비어 있습니다.");
       return;
     }
     setPhase("promoting");
+    notify("running", "승격 후보 생성 시작", projectHint || "프로젝트 힌트 없음", { durationMs: 2200 });
     try {
       const result = await promoteKnowledge({
         content: text,
@@ -194,9 +202,11 @@ export function IngestWorkbench({ chatContext }: IngestWorkbenchProps) {
       setSelectedPromotionId(result.promotion?.id || "");
       setPhase("idle");
       setMessage(`승격 후보 Markdown 생성 완료: ${result.path || result.promotion?.path || "path 없음"}`);
+      notify("success", "승격 후보 생성 완료", result.path || result.promotion?.path || "path 없음");
     } catch (error) {
       setPhase("error");
       setMessage(error instanceof Error ? error.message : "승격 후보 생성 실패");
+      notify("error", "승격 후보 생성 실패", error instanceof Error ? error.message : "승격 후보 생성 실패");
     }
   };
 

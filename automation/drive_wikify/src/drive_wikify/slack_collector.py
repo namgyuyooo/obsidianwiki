@@ -10,6 +10,7 @@ from typing import Any
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode
 from urllib.request import Request, urlopen
+from zoneinfo import ZoneInfo
 
 from .config import RuntimeConfig
 
@@ -782,17 +783,48 @@ def _write_state(path: Path, payload: dict[str, Any]) -> None:
     path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
-def _history_oldest_ts(config: RuntimeConfig, channel_id: str, state: dict[str, Any], oldest_days: int | None) -> str:
+KST = ZoneInfo("Asia/Seoul")
+
+
+def _date_boundary_ts(value: str, *, end_of_day: bool = False) -> str:
+    date_value = datetime.strptime(value, "%Y-%m-%d").date()
+    if end_of_day:
+        boundary = datetime.combine(date_value + timedelta(days=1), datetime.min.time(), tzinfo=KST)
+    else:
+        boundary = datetime.combine(date_value, datetime.min.time(), tzinfo=KST)
+    return f"{boundary.astimezone(UTC).timestamp():.6f}"
+
+
+def _newer_ts(left: str, right: str) -> str:
+    try:
+        return left if float(left or 0) >= float(right or 0) else right
+    except ValueError:
+        return left or right
+
+
+def _history_window_ts(
+    config: RuntimeConfig,
+    channel_id: str,
+    state: dict[str, Any],
+    oldest_days: int | None,
+    since_date: str | None = None,
+    until_date: str | None = None,
+) -> tuple[str, str, str]:
+    if since_date:
+        return _date_boundary_ts(since_date), _date_boundary_ts(until_date, end_of_day=True) if until_date else "", "date_range"
+    if oldest_days is not None:
+        since = datetime.now(tz=UTC) - timedelta(days=max(1, int(oldest_days)))
+        return f"{since.timestamp():.6f}", "", "recent_days"
     channel_state = (state.get("channels") or {}).get(channel_id, {})
     latest_ts = channel_state.get("latest_message_ts", "")
     if latest_ts:
         try:
-            return f"{float(latest_ts) - 0.000001:.6f}"
+            return f"{float(latest_ts) - 0.000001:.6f}", "", "incremental"
         except ValueError:
             pass
-    days = oldest_days if oldest_days is not None else config.slack_oldest_days
+    days = config.slack_oldest_days
     since = datetime.now(tz=UTC) - timedelta(days=max(1, int(days)))
-    return f"{since.timestamp():.6f}"
+    return f"{since.timestamp():.6f}", "", "recent_days"
 
 
 def _fetch_channel_messages(
@@ -800,22 +832,26 @@ def _fetch_channel_messages(
     channel_id: str,
     oldest_ts: str,
     limit_per_channel: int,
+    latest_ts: str = "",
     throttle: SlackThrottle | None = None,
 ) -> list[dict[str, Any]]:
     cursor = ""
     messages: list[dict[str, Any]] = []
     while len(messages) < limit_per_channel:
         batch_limit = min(200, limit_per_channel - len(messages))
+        request_params = {
+            "channel": channel_id,
+            "oldest": oldest_ts,
+            "limit": batch_limit,
+            "inclusive": "false",
+            "cursor": cursor,
+        }
+        if latest_ts:
+            request_params["latest"] = latest_ts
         payload = _slack_request(
             token,
             "conversations.history",
-            {
-                "channel": channel_id,
-                "oldest": oldest_ts,
-                "limit": batch_limit,
-                "inclusive": "false",
-                "cursor": cursor,
-            },
+            request_params,
             throttle=throttle,
         )
         batch = payload.get("messages", [])
@@ -862,6 +898,8 @@ def collect_channels(
     config: RuntimeConfig,
     channel_selectors: list[str] | None = None,
     oldest_days: int | None = None,
+    since_date: str | None = None,
+    until_date: str | None = None,
     limit_per_channel: int | None = None,
     include_threads: bool | None = None,
     include_files: bool | None = None,
@@ -894,17 +932,17 @@ def collect_channels(
             "project_wiki_target_root": _relative_repo_path(config.slack_project_wiki_root or (RuntimeConfig.repo_root() / "obsidian/Wiki/Common/Slack_Project_Intake")),
             "company_wiki_target_root": _relative_repo_path(config.slack_company_wiki_root or (RuntimeConfig.repo_root() / "obsidian/Wiki/Common/Slack_Company_News")),
         }
-        oldest_ts = _history_oldest_ts(config, channel_id, state, oldest_days)
+        oldest_ts, latest_boundary_ts, window_mode = _history_window_ts(config, channel_id, state, oldest_days, since_date, until_date)
         auto_joined = False
         try:
-            messages = _fetch_channel_messages(token, channel_id, oldest_ts, max_messages, throttle=throttle)
+            messages = _fetch_channel_messages(token, channel_id, oldest_ts, max_messages, latest_boundary_ts, throttle=throttle)
         except SlackApiError as exc:
             if exc.error_code == "not_in_channel" and channel.get("type") == "public_channel":
                 try:
                     _join_channel(token, channel_id, throttle=throttle)
                     auto_joined = True
                     throttle.pause_between_channels()
-                    messages = _fetch_channel_messages(token, channel_id, oldest_ts, max_messages, throttle=throttle)
+                    messages = _fetch_channel_messages(token, channel_id, oldest_ts, max_messages, latest_boundary_ts, throttle=throttle)
                 except SlackApiError as join_exc:
                     skipped.append(
                         {
@@ -940,7 +978,9 @@ def collect_channels(
 
         export_relpath = f"{run_started_at.strftime('%Y-%m-%d')}/{channel_name}_{channel_id}_{run_stamp}.json"
         export_path = export_root / export_relpath
-        latest_ts = normalized_messages[0]["ts"] if normalized_messages else channel_states.get(channel_id, {}).get("latest_message_ts", "")
+        previous_latest_ts = channel_states.get(channel_id, {}).get("latest_message_ts", "")
+        latest_ts = normalized_messages[0]["ts"] if normalized_messages else previous_latest_ts
+        state_latest_ts = _newer_ts(latest_ts, previous_latest_ts)
         export_payload = {
             "type": "slack_channel_export",
             "workspace": config.slack_workspace_name or "",
@@ -948,7 +988,11 @@ def collect_channels(
             "channel": channel,
             "routing": channel_profile,
             "history_window": {
+                "mode": window_mode,
                 "oldest_ts": oldest_ts,
+                "latest_ts": latest_boundary_ts,
+                "since_date_kst": since_date or "",
+                "until_date_kst": until_date or "",
                 "message_order": "newest_first",
                 "limit_per_channel": max_messages,
                 "include_threads": use_threads,
@@ -1003,7 +1047,7 @@ def collect_channels(
                 "name": channel_name,
                 "type": channel.get("type"),
                 "last_collected_at": run_started_at.isoformat(),
-                "latest_message_ts": latest_ts,
+                "latest_message_ts": state_latest_ts,
                 "last_export_path": str(export_path),
                 "last_filtered_export_path": str(filtered_path),
                 "message_count": len(normalized_messages),

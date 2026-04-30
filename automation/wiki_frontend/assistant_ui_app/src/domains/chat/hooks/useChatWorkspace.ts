@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useToastCenter } from "../../../components/surface/ToastCenter";
 import type { ChatContext } from "../constants";
 import {
   deleteInstructionCandidate as deleteInstructionCandidateApi,
@@ -58,6 +59,7 @@ export type ChatWorkspaceState = {
 };
 
 export function useChatWorkspace(initialContext: ChatContext): ChatWorkspaceState {
+  const { notify } = useToastCenter();
   const [projects, setProjects] = useState<ChatProject[]>([]);
   const [activeProjectId, setActiveProjectId] = useState(initialContext.projectId);
   const [global, setGlobal] = useState<ChatGlobalSettings>(DEFAULT_GLOBAL_SETTINGS);
@@ -165,6 +167,7 @@ export function useChatWorkspace(initialContext: ChatContext): ChatWorkspaceStat
 
   const createProject = async () => {
     setStatus({ phase: "saving", message: "새 assistant-ui 프로젝트를 생성 중입니다." });
+    notify("running", "프로젝트 생성 시작", workspace === "personal" ? "새 개인 챗" : "새 업무 챗", { durationMs: 2200 });
     const project = await saveChatProject({
       name: workspace === "personal" ? "새 개인 챗" : "새 업무 챗",
       instructions: workspace === "personal"
@@ -173,11 +176,13 @@ export function useChatWorkspace(initialContext: ChatContext): ChatWorkspaceStat
       workspace,
     });
     await reload(project.id);
+    notify("success", "프로젝트 생성 완료", project.name || project.id);
   };
 
   const saveActiveProject = async (input: { name: string; instructions: string; linkedWikiProject: LinkedWikiProject | null }) => {
     if (!activeProject) return;
     setStatus({ phase: "saving", message: "프로젝트 지침과 위키 연결을 저장 중입니다." });
+    notify("running", "프로젝트 저장 시작", input.name || activeProject.name || activeProject.id, { durationMs: 2200 });
     const project = await saveChatProject({
       id: activeProject.id,
       name: input.name,
@@ -186,41 +191,52 @@ export function useChatWorkspace(initialContext: ChatContext): ChatWorkspaceStat
       linkedWikiProject: input.linkedWikiProject,
     });
     await reload(project.id);
+    notify("success", "프로젝트 저장 완료", project.name || project.id);
   };
 
   const deleteActiveProject = async () => {
     if (!activeProject) return;
     setStatus({ phase: "saving", message: "프로젝트를 삭제 중입니다." });
+    notify("running", "프로젝트 삭제 시작", activeProject.name || activeProject.id, { durationMs: 2200 });
     await deleteChatProject(activeProject.id);
     await reload("");
+    notify("success", "프로젝트 삭제 완료", activeProject.name || activeProject.id);
   };
 
   const moveActiveConversation = async (targetProjectId: string) => {
     if (!activeProject || !targetProjectId || targetProjectId === activeProject.id) return;
     setStatus({ phase: "saving", message: "현재 대화를 다른 프로젝트로 이동 중입니다." });
+    notify("running", "대화 이동 시작", `${activeProject.name || activeProject.id} -> ${targetProjectId}`, { durationMs: 2200 });
     const result = await moveChatProjectMessages(activeProject.id, targetProjectId);
     await reload(result.targetProject?.id || targetProjectId);
+    notify("success", "대화 이동 완료", result.targetProject?.name || targetProjectId);
   };
 
   const saveGlobal = async (nextGlobal: ChatGlobalSettings) => {
     setStatus({ phase: "saving", message: "전역 지침을 저장 중입니다." });
+    notify("running", "전역 지침 저장 시작", "assistant-ui global settings", { durationMs: 2200 });
     const saved = await saveChatGlobalSettings(nextGlobal);
     setGlobal(saved);
     setStatus({ phase: "ready", message: "전역 지침을 저장했습니다." });
+    notify("success", "전역 지침 저장 완료", "assistant-ui global settings");
   };
 
   const promoteInstructionCandidate = async (candidateId: string) => {
     if (!activeProject) return;
     setStatus({ phase: "saving", message: "지침 승격 후보를 반영 중입니다." });
+    notify("running", "지침 승격 후보 반영 시작", activeProject.name || activeProject.id, { durationMs: 2200 });
     const project = await promoteInstructionCandidateApi(activeProject.id, candidateId);
     await reload(project.id);
+    notify("success", "지침 승격 후보 반영 완료", activeProject.name || activeProject.id);
   };
 
   const deleteInstructionCandidate = async (candidateId: string) => {
     if (!activeProject) return;
     setStatus({ phase: "saving", message: "지침 승격 후보를 정리 중입니다." });
+    notify("running", "지침 승격 후보 삭제 시작", activeProject.name || activeProject.id, { durationMs: 2200 });
     await deleteInstructionCandidateApi(activeProject.id, candidateId);
     await reload(activeProject.id);
+    notify("success", "지침 승격 후보 삭제 완료", activeProject.name || activeProject.id);
   };
 
   const toggleSkillTag = (skillId: string) => {

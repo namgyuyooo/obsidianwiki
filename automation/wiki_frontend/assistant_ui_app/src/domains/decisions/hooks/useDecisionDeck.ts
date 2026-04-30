@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useToastCenter } from "../../../components/surface/ToastCenter";
 import { fetchWikiPage, saveWikiPage } from "../../wiki/api/wikiApi";
 import {
   fetchDecisionQueue,
@@ -77,6 +78,7 @@ function recommendedActionFromInference(content = "") {
 }
 
 export function useDecisionDeck(workspace: string) {
+  const { notify } = useToastCenter();
   const [items, setItems] = useState<DecisionItem[]>([]);
   const [activeItemId, setActiveItemId] = useState("");
   const [directive, setDirective] = useState("승인 전 근거 충돌과 보류 조건을 먼저 따져줘.");
@@ -154,6 +156,7 @@ export function useDecisionDeck(workspace: string) {
   const resolveActive = async (action: "approve" | "hold" | "investigate", noteOverride = "") => {
     if (!activeItem) return;
     setStatus({ phase: "saving", message: `${activeItem.title || "카드"}를 ${action} 처리 중입니다.` });
+    notify("running", "Decision 처리 시작", `${activeItem.title || "카드"} · ${action}`, { durationMs: 2200 });
     try {
       const note = noteOverride || resolutionNote || inference || directive;
       await resolveDecisionItem(activeItem.id, action, note, workspace);
@@ -161,20 +164,25 @@ export function useDecisionDeck(workspace: string) {
       setResolutionNote("");
       setCompare({ ...EMPTY_COMPARE });
       await reload("");
+      notify("success", "Decision 처리 완료", `${activeItem.title || "카드"}를 ${action} 처리했습니다.`);
     } catch (error) {
       setStatus({ phase: "failed", message: error instanceof Error ? error.message : "Decision 처리 실패" });
+      notify("error", "Decision 처리 실패", error instanceof Error ? error.message : "Decision 처리 실패");
     }
   };
 
   const runInference = async () => {
     if (!activeItem) return;
     setStatus({ phase: "thinking", message: "GLM이 현재 Decision Deck 카드를 검토 중입니다." });
+    notify("running", "Decision 판정 보조 시작", activeItem.title || "카드", { durationMs: 2200 });
     try {
       const result = await inferDecisionItem(activeItem, directive, workspace);
       setInference(result);
       setStatus({ phase: "ready", message: "GLM 판정 보조가 완료되었습니다." });
+      notify("success", "Decision 판정 보조 완료", `${activeItem.title || "카드"}에 대한 권장안을 생성했습니다.`);
     } catch (error) {
       setStatus({ phase: "failed", message: error instanceof Error ? error.message : "GLM 판정 실패" });
+      notify("error", "Decision 판정 보조 실패", error instanceof Error ? error.message : "GLM 판정 실패");
     }
   };
 
@@ -231,6 +239,7 @@ export function useDecisionDeck(workspace: string) {
       : await loadComparison();
     if (!readyCompare) return;
     setCompare((current) => ({ ...current, phase: "merging", message: "GLM 병합안을 생성하는 중입니다." }));
+    notify("running", "근거 병합안 생성 시작", activeItem.title || "카드", { durationMs: 2200 });
     try {
       const suggestion = await suggestDecisionMerge({
         id: activeItem.id,
@@ -250,12 +259,14 @@ export function useDecisionDeck(workspace: string) {
         message: "GLM 병합안이 준비되었습니다.",
         suggestion,
       }));
+      notify("success", "근거 병합안 생성 완료", `${activeItem.title || "카드"} 병합안을 준비했습니다.`);
     } catch (error) {
       setCompare((current) => ({
         ...current,
         phase: "failed",
         message: error instanceof Error ? error.message : "GLM 병합안 생성 실패",
       }));
+      notify("error", "근거 병합안 생성 실패", error instanceof Error ? error.message : "GLM 병합안 생성 실패");
     }
   };
 
@@ -275,9 +286,11 @@ export function useDecisionDeck(workspace: string) {
       return false;
     }
     setCompare((current) => ({ ...current, phase: "saving", message: "대상 문서를 저장하는 중입니다." }));
+    notify("running", "대상 문서 저장 시작", compare.targetPath, { durationMs: 2200 });
     try {
       await saveWikiPage(compare.targetPath, compare.targetMarkdown);
       setCompare((current) => ({ ...current, phase: "ready", message: "대상 문서를 저장했습니다." }));
+      notify("success", "대상 문서 저장 완료", compare.targetPath);
       return true;
     } catch (error) {
       setCompare((current) => ({
@@ -285,6 +298,7 @@ export function useDecisionDeck(workspace: string) {
         phase: "failed",
         message: error instanceof Error ? error.message : "대상 문서 저장 실패",
       }));
+      notify("error", "대상 문서 저장 실패", error instanceof Error ? error.message : "대상 문서 저장 실패");
       return false;
     }
   };

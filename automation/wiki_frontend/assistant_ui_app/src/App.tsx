@@ -12,6 +12,7 @@ import { SpotliteBoard } from "./domains/mission/components/SpotliteBoard";
 import { PaperclipStudio } from "./domains/paperclip/components/PaperclipStudio";
 import { WikiWorkspace } from "./domains/wiki/components/WikiWorkspace";
 import { SurfaceMigrationFallback } from "./surfaces/SurfaceMigrationFallback";
+import { ToastCenterProvider } from "./components/surface/ToastCenter";
 import {
   getPrimarySurfaceDefinition,
   getSurfaceDefinition,
@@ -236,13 +237,15 @@ export function App() {
   })();
 
   return (
-    <ProductFrame
-      activeSurface={surface}
-      onPrimaryChange={selectPrimarySurface}
-      onSurfaceChange={selectSurface}
-      workspaceLabel={chatContext.workspace}
-    >
-      {content}
-    </ProductFrame>
+    <ToastCenterProvider>
+      <ProductFrame
+        activeSurface={surface}
+        onPrimaryChange={selectPrimarySurface}
+        onSurfaceChange={selectSurface}
+        workspaceLabel={chatContext.workspace}
+      >
+        {content}
+      </ProductFrame>
+    </ToastCenterProvider>
   );
 }

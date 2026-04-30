@@ -5888,8 +5888,26 @@ button.aui-notion-table-row.active {
 }
 
 .aui-wiki-graph-canvas line {
-  stroke: rgba(47, 52, 55, 0.18);
-  stroke-width: 1.2;
+  stroke: rgba(24, 31, 38, 0.5);
+  stroke-linecap: round;
+  stroke-width: 1.8;
+  transition: opacity 140ms ease, stroke 140ms ease, stroke-width 140ms ease;
+  vector-effect: non-scaling-stroke;
+}
+
+.aui-wiki-graph-canvas[data-has-focus="true"] line {
+  opacity: 0.14;
+}
+
+.aui-wiki-graph-canvas line.related {
+  opacity: 0.42;
+  stroke: rgba(47, 107, 79, 0.48);
+}
+
+.aui-wiki-graph-canvas line.active {
+  opacity: 1;
+  stroke: rgba(18, 94, 62, 0.96);
+  stroke-width: 2.8;
 }
 
 .aui-wiki-graph-canvas button {
@@ -5899,13 +5917,33 @@ button.aui-notion-table-row.active {
   box-shadow: 0 8px 22px rgba(47, 52, 55, 0.2);
   cursor: pointer;
   position: absolute;
+  transition: transform 140ms ease, box-shadow 140ms ease, background 140ms ease, opacity 140ms ease;
   transform: translate(-50%, -50%);
   z-index: 1;
 }
 
+.aui-wiki-graph-canvas[data-has-focus="true"] button {
+  opacity: 0.52;
+}
+
+.aui-wiki-graph-canvas button.related {
+  background: #456c5b;
+  box-shadow: 0 10px 24px rgba(47, 107, 79, 0.26);
+  opacity: 0.95;
+}
+
+.aui-wiki-graph-canvas button.hovered,
 .aui-wiki-graph-canvas button.active {
   background: var(--aui-accent-strong);
-  box-shadow: 0 0 0 6px rgba(47, 107, 79, 0.16);
+  box-shadow: 0 0 0 6px rgba(47, 107, 79, 0.16), 0 14px 30px rgba(29, 79, 58, 0.32);
+  opacity: 1;
+  z-index: 3;
+}
+
+.aui-wiki-graph-canvas button.hovered,
+.aui-wiki-graph-canvas button.active,
+.aui-wiki-graph-canvas button.related {
+  transform: translate(-50%, -50%) scale(1.06);
 }
 
 .aui-wiki-graph-canvas button span {
@@ -5928,8 +5966,21 @@ button.aui-notion-table-row.active {
 }
 
 .aui-wiki-graph-canvas button:hover span,
+.aui-wiki-graph-canvas button.hovered span,
+.aui-wiki-graph-canvas button.related span,
 .aui-wiki-graph-canvas button.active span {
   display: block;
+}
+
+.aui-wiki-graph-focus-summary {
+  color: var(--aui-ink-soft);
+  font-size: 12px;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.aui-wiki-graph-focus-summary strong {
+  color: var(--aui-accent-strong);
 }
 
 .aui-wiki-graph-modal {
@@ -8528,6 +8579,7 @@ pre,
 
 .aui-pipeline-source-grid label,
 .aui-pipeline-filebox,
+.aui-pipeline-slack-period,
 .aui-pipeline-automation-options label,
 .aui-pipeline-existing-mode,
 .aui-pipeline-schedule-panel,
@@ -8556,9 +8608,20 @@ pre,
 }
 
 .aui-pipeline-source-grid span,
+.aui-pipeline-slack-period span,
 .aui-pipeline-automation-options span {
   color: var(--aui-muted);
   font-size: var(--aui-type-caption);
+}
+
+.aui-pipeline-slack-period {
+  display: grid;
+  gap: var(--aui-space-2);
+}
+
+.aui-pipeline-slack-period strong {
+  display: block;
+  margin-bottom: 2px;
 }
 
 .aui-pipeline-preset-row {
@@ -8698,7 +8761,18 @@ pre,
   color: var(--aui-ink);
 }
 
-.aui-pipeline-toast {
+.aui-global-toast-stack {
+  display: grid;
+  gap: 12px;
+  max-width: min(520px, calc(100vw - 32px));
+  position: fixed;
+  right: 24px;
+  top: 24px;
+  z-index: 80;
+}
+
+.aui-pipeline-toast,
+.aui-global-toast {
   align-items: start;
   background: #111827;
   border: 1px solid rgba(17, 24, 39, 0.16);
@@ -8707,38 +8781,43 @@ pre,
   color: #ffffff;
   display: grid;
   gap: 5px;
-  max-width: min(520px, calc(100vw - 32px));
   padding: 14px 16px;
-  position: fixed;
-  right: 24px;
-  top: 24px;
-  z-index: 80;
 }
 
-.aui-pipeline-toast.running {
+.aui-pipeline-toast.running,
+.aui-global-toast.running {
   background: #1d4ed8;
 }
 
-.aui-pipeline-toast.success {
+.aui-pipeline-toast.success,
+.aui-global-toast.success {
   background: #047857;
 }
 
-.aui-pipeline-toast.error {
+.aui-pipeline-toast.error,
+.aui-global-toast.error {
   background: #b91c1c;
 }
 
-.aui-pipeline-toast strong {
+.aui-global-toast.info {
+  background: #334155;
+}
+
+.aui-pipeline-toast strong,
+.aui-global-toast strong {
   font-size: 14px;
   line-height: 1.25;
 }
 
-.aui-pipeline-toast span {
+.aui-pipeline-toast span,
+.aui-global-toast span {
   color: rgba(255, 255, 255, 0.86);
   font-size: var(--aui-type-caption);
   line-height: 1.45;
 }
 
-.aui-pipeline-toast button {
+.aui-pipeline-toast button,
+.aui-global-toast button {
   background: rgba(255, 255, 255, 0.14);
   border: 1px solid rgba(255, 255, 255, 0.22);
   border-radius: 999px;

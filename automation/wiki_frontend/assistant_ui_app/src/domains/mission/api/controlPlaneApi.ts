@@ -77,6 +77,11 @@ export type SettingsPayload = {
   editableKeys?: string[];
 };
 
+export type PipelineStatePayload = {
+  updatedAt?: string;
+  state?: Record<string, unknown>;
+};
+
 export type CoveragePayload = {
   label?: string;
   progressPercent?: number;
@@ -232,6 +237,8 @@ export function fetchSlackChannels(query = "") {
 export function collectSlack(input: {
   channels: string[];
   oldestDays: number;
+  sinceDate?: string;
+  untilDate?: string;
   limitPerChannel: number;
   dryRun?: boolean;
 }) {
@@ -292,6 +299,17 @@ export function saveSettings(settings: Record<string, string>) {
   return requestJson<SettingsPayload>("/api/settings", {
     method: "POST",
     body: JSON.stringify({ settings }),
+  });
+}
+
+export function fetchPipelineState() {
+  return requestJson<PipelineStatePayload>("/api/pipeline/state");
+}
+
+export function savePipelineState(state: Record<string, unknown>) {
+  return requestJson<PipelineStatePayload>("/api/pipeline/state", {
+    method: "POST",
+    body: JSON.stringify({ state }),
   });
 }
 

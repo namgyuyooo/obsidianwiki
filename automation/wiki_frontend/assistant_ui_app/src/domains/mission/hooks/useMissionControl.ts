@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useToastCenter } from "../../../components/surface/ToastCenter";
 import {
   appendProjectAction,
   appendProjectDecision,
@@ -39,6 +40,7 @@ const EMPTY_AUTOMATION: AutomationSnapshot = {
 };
 
 export function useMissionControl(workspace: string) {
+  const { notify } = useToastCenter();
   const [mission, setMission] = useState<MissionSnapshot>(EMPTY_MISSION);
   const [automation, setAutomation] = useState<AutomationSnapshot>(EMPTY_AUTOMATION);
   const [coverage, setCoverage] = useState<CoveragePayload>({});
@@ -114,8 +116,10 @@ export function useMissionControl(workspace: string) {
 
   const runAutomation = async (command: string, dryRun = false) => {
     setStatus({ phase: "running", message: `${command}${dryRun ? " dry-run" : ""} 실행 요청 중입니다.` });
+    notify("running", "자동화 실행 시작", `${command}${dryRun ? " dry-run" : ""}`, { durationMs: 2200 });
     await triggerAutomation(command, dryRun);
     await reload();
+    notify("success", "자동화 실행 완료", `${command}${dryRun ? " dry-run" : ""} 요청을 반영했습니다.`);
   };
 
   const loadActiveProjectBrief = async () => {
@@ -125,14 +129,17 @@ export function useMissionControl(workspace: string) {
       const brief = await fetchProjectBrief(activeProject.projectKey, workspace);
       setProjectBrief(brief);
       setStatus({ phase: "ready", message: "프로젝트 브리프를 불러왔습니다." });
+      notify("success", "프로젝트 브리프 갱신 완료", activeProject.projectLabel || activeProject.projectKey);
     } catch (error) {
       setStatus({ phase: "failed", message: error instanceof Error ? error.message : "프로젝트 브리프 로드 실패" });
+      notify("error", "프로젝트 브리프 갱신 실패", error instanceof Error ? error.message : "프로젝트 브리프 로드 실패");
     }
   };
 
   const addProjectAction = async (action: string) => {
     if (!activeProject?.projectKey || !action.trim()) return;
     setStatus({ phase: "running", message: "프로젝트 Action_Items.md에 액션을 추가하는 중입니다." });
+    notify("running", "프로젝트 액션 추가 시작", activeProject.projectLabel || activeProject.projectKey, { durationMs: 2200 });
     try {
       await appendProjectAction(activeProject.projectKey, {
         workspace,
@@ -141,14 +148,17 @@ export function useMissionControl(workspace: string) {
       });
       await reload();
       setStatus({ phase: "ready", message: "프로젝트 액션을 추가했습니다." });
+      notify("success", "프로젝트 액션 추가 완료", activeProject.projectLabel || activeProject.projectKey);
     } catch (error) {
       setStatus({ phase: "failed", message: error instanceof Error ? error.message : "프로젝트 액션 추가 실패" });
+      notify("error", "프로젝트 액션 추가 실패", error instanceof Error ? error.message : "프로젝트 액션 추가 실패");
     }
   };
 
   const addProjectDecision = async (decision: string) => {
     if (!activeProject?.projectKey || !decision.trim()) return;
     setStatus({ phase: "running", message: "프로젝트 Decisions.md에 수동 결정을 추가하는 중입니다." });
+    notify("running", "프로젝트 결정 기록 시작", activeProject.projectLabel || activeProject.projectKey, { durationMs: 2200 });
     try {
       await appendProjectDecision(activeProject.projectKey, {
         workspace,
@@ -158,8 +168,10 @@ export function useMissionControl(workspace: string) {
       });
       await reload();
       setStatus({ phase: "ready", message: "프로젝트 결정을 추가했습니다." });
+      notify("success", "프로젝트 결정 기록 완료", activeProject.projectLabel || activeProject.projectKey);
     } catch (error) {
       setStatus({ phase: "failed", message: error instanceof Error ? error.message : "프로젝트 결정 추가 실패" });
+      notify("error", "프로젝트 결정 기록 실패", error instanceof Error ? error.message : "프로젝트 결정 추가 실패");
     }
   };
 

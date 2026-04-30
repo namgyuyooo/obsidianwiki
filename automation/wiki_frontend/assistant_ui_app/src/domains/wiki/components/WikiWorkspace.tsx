@@ -1,9 +1,11 @@
 import type { FormEvent, KeyboardEvent, PointerEvent, WheelEvent } from "react";
 import { useEffect, useMemo, useRef, useState, type MouseEvent } from "react";
 import type { ChatContext } from "../../chat/constants";
+import { useToastCenter } from "../../../components/surface/ToastCenter";
 import { continueAfterCollection, runTargetedRclone } from "../../mission/api/controlPlaneApi";
 import {
   deleteWikiPage as deleteWikiPageApi,
+  deleteWikiProjectPackage as deleteWikiProjectPackageApi,
   applyWikiManagementCommand,
   browseFilesystem,
   browseRemoteDrive,
@@ -139,6 +141,24 @@ const COLLECTION_PRESETS: CollectionPreset[] = [
   { id: "office", label: "office", ext: [".pdf", ".docx", ".pptx", ".xlsx", ".hwp", ".hwpx"], type: "file" },
   { id: "folders", label: "폴더만", ext: [], type: "directory" },
 ];
+const PROTECTED_DELETION_FILE_NAMES = new Set([
+  "index.md",
+  "hub.md",
+  "Project_Overview.md",
+  "Sources.md",
+  "Evidence_Log.md",
+  "Action_Items.md",
+  "Risks.md",
+  "Decisions.md",
+  "Conflict_Register.md",
+  "Change_Log.md",
+  "KPI.md",
+  "Next_Meeting_Prep.md",
+  "Project_Relationships.md",
+  "Reference_Register.md",
+  "Expansion_Structure.md",
+  "Document_Usage_Log.md",
+]);
 
 function folderKey(page: WikiPageIndexItem) {
   if (page.division === "project" || page.division === "account") {
@@ -247,6 +267,20 @@ function itemMatchesQuery(item: WikiResultItem, meta: WikiPageIndexItem | null, 
 
 function compareText(left: string, right: string) {
   return left.localeCompare(right, "ko", { numeric: true, sensitivity: "base" });
+}
+
+function isProtectedDeletionPage(page: WikiPageIndexItem | null) {
+  if (!page) return false;
+  const fileName = page.path.split("/").pop() || "";
+  if (PROTECTED_DELETION_FILE_NAMES.has(fileName)) return true;
+  if (page.docKind === "hub") return true;
+  return false;
+}
+
+function isHubDeletionPage(page: WikiPageIndexItem | null) {
+  if (!page) return false;
+  const fileName = page.path.split("/").pop() || "";
+  return fileName === "hub.md" || page.docKind === "hub";
 }
 
 function compareWikiResults(
@@ -727,6 +761,7 @@ function WikiGraphPanel({
   const edges = graph.edges.filter((edge) => nodeIds.has(edge.source) && nodeIds.has(edge.target)).slice(0, GRAPH_EDGE_LIMIT);
   const placed = graphLayout(nodes);
   const nodeById = new Map(placed.map((node) => [node.id, node]));
+  const [hoveredNodeId, setHoveredNodeId] = useState("");
   const [viewport, setViewport] = useState({ x: 0, y: 0, scale: onExpand ? 1 : 0.9 });
   const [isDragging, setIsDragging] = useState(false);
   const dragRef = useRef<{ pointerId: number | null; startX: number; startY: number; originX: number; originY: number }>({
@@ -736,6 +771,21 @@ function WikiGraphPanel({
     originX: 0,
     originY: 0,
   });
+  const focusNodeId = hoveredNodeId || activePath;
+  const adjacency = useMemo(() => {
+    const map = new Map<string, Set<string>>();
+    edges.forEach((edge) => {
+      if (!map.has(edge.source)) map.set(edge.source, new Set());
+      if (!map.has(edge.target)) map.set(edge.target, new Set());
+      map.get(edge.source)?.add(edge.target);
+      map.get(edge.target)?.add(edge.source);
+    });
+    return map;
+  }, [edges]);
+  const neighborIds = focusNodeId ? adjacency.get(focusNodeId) || new Set<string>() : new Set<string>();
+  const focusedLinkCount = focusNodeId
+    ? edges.filter((edge) => edge.source === focusNodeId || edge.target === focusNodeId).length
+    : 0;
   const clampScale = (value: number) => Math.max(0.55, Math.min(2.4, Number(value.toFixed(3))));
   const handleGraphPointerDown = (event: PointerEvent<HTMLDivElement>) => {
     if (event.target instanceof Element && event.target.closest("button")) return;
@@ -794,10 +844,12 @@ function WikiGraphPanel({
         <button onClick={() => zoomGraph(0.9)} type="button">축소 -</button>
         <button onClick={resetGraphViewport} type="button">리셋</button>
         <span>{Math.round(viewport.scale * 100)}%</span>
+        <span>{focusNodeId ? `focus ${focusedLinkCount} links` : "노드 hover 또는 선택 시 연결 강조"}</span>
       </div>
       <div
         aria-label="wiki graph map"
         className="aui-wiki-graph-canvas"
+        data-has-focus={focusNodeId ? "true" : "false"}
         onPointerCancel={endGraphDrag}
         onPointerDown={handleGraphPointerDown}
         onPointerMove={handleGraphPointerMove}
@@ -818,8 +870,11 @@ function WikiGraphPanel({
               const source = nodeById.get(edge.source);
               const target = nodeById.get(edge.target);
               if (!source || !target) return null;
+              const isFocused = !!focusNodeId && (edge.source === focusNodeId || edge.target === focusNodeId);
+              const isNeighbor = !!focusNodeId && (neighborIds.has(edge.source) || neighborIds.has(edge.target));
               return (
                 <line
+                  className={isFocused ? "active" : isNeighbor ? "related" : ""}
                   key={`${edge.source}-${edge.target}-${edge.label || ""}`}
                   x1={source.x}
                   x2={target.x}
@@ -831,9 +886,17 @@ function WikiGraphPanel({
           </svg>
           {placed.map((node) => (
             <button
-              className={node.id === activePath ? "active" : ""}
+              className={[
+                node.id === activePath ? "active" : "",
+                node.id === hoveredNodeId ? "hovered" : "",
+                focusNodeId && neighborIds.has(node.id) ? "related" : "",
+              ].filter(Boolean).join(" ")}
               key={node.id}
+              onBlur={() => setHoveredNodeId((current) => (current === node.id ? "" : current))}
               onClick={() => onOpenPage(node.id)}
+              onMouseEnter={() => setHoveredNodeId(node.id)}
+              onMouseLeave={() => setHoveredNodeId((current) => (current === node.id ? "" : current))}
+              onFocus={() => setHoveredNodeId(node.id)}
               style={{
                 height: `${node.r * 2}px`,
                 left: `${node.x}px`,
@@ -857,6 +920,11 @@ function WikiGraphPanel({
         ))}
         {!nodes.length ? <p className="aui-wiki-muted">그래프 스냅샷을 불러오면 연결 문서가 표시됩니다.</p> : null}
       </div>
+      {focusNodeId ? (
+        <p className="aui-wiki-graph-focus-summary">
+          현재 포커스: <strong>{nodeById.get(focusNodeId)?.title || focusNodeId}</strong> · 직접 연결 {focusedLinkCount}개 · 이웃 노드 {neighborIds.size}개
+        </p>
+      ) : null}
       <div className="aui-wiki-toolbar-actions">
         {onExpand ? <button onClick={onExpand} type="button">확대</button> : null}
         <button onClick={onRefreshGraph} type="button">그래프맵 업데이트</button>
@@ -1022,6 +1090,7 @@ function WikiManagementConsole({
 }
 
 export function WikiWorkspace({ chatContext }: WikiWorkspaceProps) {
+  const { notify } = useToastCenter();
   const wiki = useWikiEvidenceConsole(chatContext.workspace);
   const [activeFolderKey, setActiveFolderKey] = useState(ALL_FOLDER_KEY);
   const [documentMode, setDocumentMode] = useState<WikiDocumentMode>("preview");
@@ -1064,6 +1133,9 @@ export function WikiWorkspace({ chatContext }: WikiWorkspaceProps) {
   const futureRef = useRef<string[]>([]);
   const selectedTitle = wiki.activePage?.title || wiki.activeIndexItem?.title || "문서를 선택하세요";
   const previewHtml = markdownPreview(wiki.markdownDraft || "");
+  const activeDeleteProtected = isProtectedDeletionPage(wiki.activeIndexItem);
+  const activeDeleteHub = isHubDeletionPage(wiki.activeIndexItem);
+  const activeProjectDeleteEligible = ["project", "account"].includes(wiki.activeIndexItem?.division || "") && Boolean(wiki.activeIndexItem?.projectKey);
   useEffect(() => {
     historyRef.current = pageHistory;
   }, [pageHistory]);
@@ -1515,6 +1587,7 @@ export function WikiWorkspace({ chatContext }: WikiWorkspaceProps) {
 
   const refreshDeletionCandidates = async () => {
     setDeletionPhase("loading");
+    notify("running", "삭제 추천 분석 시작", "후보 문서와 보호 규칙을 다시 계산하고 있습니다.", { durationMs: 2200 });
     try {
       const payload = await fetchWikiDeletionCandidates(chatContext.workspace, 24);
       setDeletionCandidates(payload);
@@ -1524,33 +1597,77 @@ export function WikiWorkspace({ chatContext }: WikiWorkspaceProps) {
           ? `${payload.candidates.length}건의 삭제 추천 후보를 계산했습니다.`
           : "현재 규칙 기준으로 삭제 추천 후보가 없습니다.",
       );
+      notify(
+        "success",
+        "삭제 추천 분석 완료",
+        payload.candidates.length ? `${payload.candidates.length}건의 후보를 찾았습니다.` : "현재 삭제 추천 후보가 없습니다.",
+      );
     } catch (error) {
       setDeletionPhase("error");
       setDeletionMessage(error instanceof Error ? error.message : "삭제 추천 분석 실패");
+      notify("error", "삭제 추천 분석 실패", error instanceof Error ? error.message : "삭제 추천 분석 실패");
     }
   };
 
-  const runDeletePage = async (path: string, title?: string) => {
+  const runDeletePage = async (path: string, title?: string, force = false) => {
     if (!path) return;
+    const selectedPage = wiki.pages.find((page) => page.path === path) || null;
+    if (isProtectedDeletionPage(selectedPage) && !(force && isHubDeletionPage(selectedPage))) {
+      setDeletionPhase("idle");
+      setDeletionMessage("이 문서는 핵심 운영 문서라 직접 삭제 대상이 아닙니다. hub.md만 강제 삭제 예외를 허용합니다.");
+      notify("info", "삭제 차단", "이 문서는 보호 규칙에 걸려 있습니다. hub.md만 강제 삭제 예외를 허용합니다.");
+      return;
+    }
     setDeletionPhase("running");
+    notify("running", force ? "강제 삭제 시작" : "문서 삭제 시작", title || path, { durationMs: 2200 });
     try {
-      const result = await deleteWikiPageApi(path, deletionReason, chatContext.workspace);
+      const result = await deleteWikiPageApi(path, deletionReason, chatContext.workspace, force);
       await Promise.all([wiki.reloadIndex(), loadGraph()]);
       setDeletionCandidates((current) => ({
         ...current,
         candidates: current.candidates.filter((candidate) => candidate.path !== path),
       }));
       setDeletionPhase("idle");
-      setDeletionMessage(`삭제 완료 · ${title || result.title || path}`);
-      appendReasonLog(`Delete · ${title || result.title || path}`, [path, deletionReason].filter(Boolean).join("\n"));
+      setDeletionMessage(`${force ? "강제 " : ""}삭제 완료 · ${title || result.title || path}`);
+      appendReasonLog(`${force ? "Force delete" : "Delete"} · ${title || result.title || path}`, [path, deletionReason].filter(Boolean).join("\n"));
+      notify("success", force ? "허브 강제 삭제 완료" : "문서 삭제 완료", title || result.title || path);
     } catch (error) {
       setDeletionPhase("error");
       setDeletionMessage(error instanceof Error ? error.message : "문서 삭제 실패");
+      notify("error", force ? "허브 강제 삭제 실패" : "문서 삭제 실패", error instanceof Error ? error.message : "문서 삭제 실패");
+    }
+  };
+
+  const runDeleteProjectPackage = async () => {
+    const projectKey = wiki.activeIndexItem?.projectKey || "";
+    if (!projectKey) {
+      setDeletionMessage("현재 문서에서 projectKey를 찾지 못했습니다.");
+      notify("error", "프로젝트 전체 삭제 실패", "현재 문서에서 projectKey를 찾지 못했습니다.");
+      return;
+    }
+    setDeletionPhase("running");
+    notify("running", "프로젝트 전체 삭제 시작", projectKey, { durationMs: 2400 });
+    try {
+      const result = await deleteWikiProjectPackageApi(projectKey, deletionReason, chatContext.workspace);
+      await Promise.all([wiki.reloadIndex(), loadGraph()]);
+      setDeletionCandidates((current) => ({
+        ...current,
+        candidates: current.candidates.filter((candidate) => candidate.projectKey !== projectKey),
+      }));
+      setDeletionPhase("idle");
+      setDeletionMessage(`프로젝트 전체 삭제 완료 · ${projectKey} · ${result.removedCount}개 항목 정리`);
+      appendReasonLog(`Delete project · ${projectKey}`, [deletionReason, `removed: ${result.removedCount}`].join("\n"));
+      notify("success", "프로젝트 전체 삭제 완료", `${projectKey} · ${result.removedCount}개 항목 정리`);
+    } catch (error) {
+      setDeletionPhase("error");
+      setDeletionMessage(error instanceof Error ? error.message : "프로젝트 전체 삭제 실패");
+      notify("error", "프로젝트 전체 삭제 실패", error instanceof Error ? error.message : "프로젝트 전체 삭제 실패");
     }
   };
 
   const enqueueDeletionRecommendations = async (paths?: string[]) => {
     setDeletionPhase("running");
+    notify("running", "삭제 추천 디시전 등록 시작", "삭제 후보를 decision queue에 넣고 있습니다.", { durationMs: 2200 });
     try {
       const result = await enqueueWikiDeletionCandidatesApi({
         workspace: chatContext.workspace,
@@ -1563,9 +1680,11 @@ export function WikiWorkspace({ chatContext }: WikiWorkspaceProps) {
         `Deletion decisions queued · ${result.count}건`,
         (paths && paths.length ? paths : deletionCandidates.candidates.map((candidate) => candidate.path)).slice(0, 6).join("\n"),
       );
+      notify("success", "삭제 추천 디시전 등록 완료", `${result.count}건을 decision queue로 보냈습니다.`);
     } catch (error) {
       setDeletionPhase("error");
       setDeletionMessage(error instanceof Error ? error.message : "삭제 추천 큐 등록 실패");
+      notify("error", "삭제 추천 디시전 등록 실패", error instanceof Error ? error.message : "삭제 추천 큐 등록 실패");
     }
   };
 
@@ -1803,14 +1922,39 @@ export function WikiWorkspace({ chatContext }: WikiWorkspaceProps) {
           </div>
           <div className="aui-wiki-queue-list">
             {wiki.activeIndexItem?.path ? (
-              <button
-                className="aui-wide-action danger"
-                disabled={deletionPhase === "running" || wiki.activeIndexItem.statusManaged === false}
-                onClick={() => runDeletePage(wiki.activeIndexItem?.path || "", wiki.activeIndexItem?.title)}
-                type="button"
-              >
-                현재 문서 바로 삭제
-              </button>
+              <>
+                {activeProjectDeleteEligible ? (
+                  <button
+                    className="aui-wide-action danger"
+                    disabled={deletionPhase === "running"}
+                    onClick={runDeleteProjectPackage}
+                    type="button"
+                  >
+                    프로젝트 전체 삭제
+                  </button>
+                ) : null}
+                <button
+                  className="aui-wide-action danger"
+                  disabled={deletionPhase === "running" || wiki.activeIndexItem.statusManaged === false || activeDeleteProtected}
+                  onClick={() => runDeletePage(wiki.activeIndexItem?.path || "", wiki.activeIndexItem?.title, false)}
+                  type="button"
+                >
+                  현재 문서 바로 삭제
+                </button>
+                {activeDeleteHub ? (
+                  <button
+                    className="aui-wide-action danger"
+                    disabled={deletionPhase === "running" || wiki.activeIndexItem.statusManaged === false}
+                    onClick={() => runDeletePage(wiki.activeIndexItem?.path || "", wiki.activeIndexItem?.title, true)}
+                    type="button"
+                  >
+                    현재 허브 강제 삭제
+                  </button>
+                ) : null}
+                {activeDeleteProtected && !activeDeleteHub ? <p className="aui-wiki-muted">현재 문서는 핵심 운영 문서라 직접 삭제가 막혀 있습니다.</p> : null}
+                {activeProjectDeleteEligible ? <p className="aui-wiki-muted">불필요한 프로젝트를 정리하려면 `프로젝트 전체 삭제`를 사용하세요. 프로젝트 폴더와 대응 L1 메모리를 함께 제거합니다.</p> : null}
+                {activeDeleteHub ? <p className="aui-wiki-muted">`현재 허브 강제 삭제`는 `hub.md` 한 장만 지웁니다. 연관 문서까지 없애려면 `프로젝트 전체 삭제`를 사용하세요.</p> : null}
+              </>
             ) : null}
             {deletionCandidates.candidates.slice(0, 6).map((candidate: WikiDeletionCandidate) => (
               <div className="aui-wiki-thinking" key={candidate.path}>

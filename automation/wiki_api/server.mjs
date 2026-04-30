@@ -18,6 +18,7 @@ const wikiSparseIndexPath = join(driveRuntime, "wiki_sparse_index.json");
 const wikiGraphSnapshotPath = join(driveRuntime, "wiki_graph_snapshot.json");
 const apiRuntime = resolvePathEnv("WIKI_API_RUNTIME", "automation/wiki_api/runtime");
 const runHistoryPath = join(apiRuntime, "runs.json");
+const pipelineStatePath = join(apiRuntime, "pipeline_state.json");
 const driveCollectionStatePath = join(apiRuntime, "drive_collection_state.json");
 const paperclipTasksPath = join(apiRuntime, "paperclip_tasks.json");
 const paperclipEventsPath = join(apiRuntime, "paperclip_events.json");
@@ -361,7 +362,7 @@ async function slackStatus() {
     channelTypes: (env.SLACK_CHANNEL_TYPES || "public_channel,private_channel").split(",").map((item) => item.trim()).filter(Boolean),
     exportRoot: relative(repoRoot, exportRoot),
     statePath: relative(repoRoot, statePath),
-    historyLimit: Number(env.SLACK_HISTORY_LIMIT || 200),
+    historyLimit: Number(env.SLACK_HISTORY_LIMIT || 5000),
     oldestDays: Number(env.SLACK_OLDEST_DAYS || 30),
     includeThreads: env.SLACK_INCLUDE_THREADS !== "false",
     includeFiles: env.SLACK_INCLUDE_FILES !== "false",
@@ -465,6 +466,26 @@ async function prependJsonHistory(path, entry, limit = 100) {
   const trimmed = history.slice(0, limit);
   await writeFile(path, JSON.stringify(trimmed, null, 2), "utf-8");
   return trimmed;
+}
+
+async function pipelineStatePayload() {
+  const state = await readJsonFile(pipelineStatePath, {});
+  return {
+    updatedAt: state.updatedAt || "",
+    state,
+  };
+}
+
+async function writePipelineState(nextState = {}) {
+  await mkdir(apiRuntime, { recursive: true });
+  const previous = await readJsonFile(pipelineStatePath, {});
+  const state = {
+    ...previous,
+    ...nextState,
+    updatedAt: new Date().toISOString(),
+  };
+  await writeFile(pipelineStatePath, JSON.stringify(state, null, 2), "utf-8");
+  return { updatedAt: state.updatedAt, state };
 }
 
 async function recordLlmUsage(entry = {}) {
@@ -2261,6 +2282,11 @@ function isProtectedWikiDeletionPage(page = {}) {
   return false;
 }
 
+function isHubWikiDeletionPage(page = {}) {
+  const fileName = String(page.path || "").split("/").pop() || "";
+  return fileName === "hub.md" || page.isProjectHub || page.docKind === "hub";
+}
+
 function deletionSignalRegex() {
   return /(draft|tmp|temp|test|copy|old|backup|sample|unused|legacy|archive|실험|테스트|임시|복사본|백업|구버전)/i;
 }
@@ -2433,6 +2459,7 @@ function deletableWikiPath(path, workspaceId = "rtm") {
 
 async function deleteWikiPage(body = {}) {
   const workspaceId = body.workspace || "rtm";
+  const force = body.force === true;
   const fullPath = deletableWikiPath(body.path, workspaceId);
   const relPath = relative(repoRoot, fullPath);
   const markdown = await readFile(fullPath, "utf-8").catch(() => "");
@@ -2449,7 +2476,7 @@ async function deleteWikiPage(body = {}) {
     ...classification,
   }, statusStore);
   const assessment = wikiDeletionAssessment(page, new Map([[relPath, 0]]));
-  if (assessment.protected) {
+  if (assessment.protected && !(force && isHubWikiDeletionPage(page))) {
     throw new Error(assessment.reasons[0] || "보호 문서는 삭제할 수 없습니다.");
   }
   await unlink(fullPath);
@@ -2469,10 +2496,60 @@ async function deleteWikiPage(body = {}) {
     reason: String(body.reason || "").trim(),
     source: body.source || "manual",
     decisionId: body.decisionId || "",
+    force,
   };
   await appendJsonl(wikiDeletionAuditPath, payload);
   return {
     status: "deleted",
+    ...payload,
+  };
+}
+
+async function deleteWikiProjectPackage(body = {}) {
+  const workspaceId = body.workspace || "rtm";
+  const projectKey = String(body.projectKey || "").trim();
+  if (!projectKey) throw new Error("projectKey is required");
+  const workspace = wikiWorkspace(workspaceId);
+  const projectDir = projectDirForKey(projectKey, workspaceId);
+  const projectRelPath = relative(repoRoot, projectDir);
+  const l1Path = join(workspace.l1Root, `${projectKey}.md`);
+  const removedPaths = [];
+  const reason = String(body.reason || "").trim();
+
+  if (existsSync(projectDir)) {
+    const projectFiles = await walkMarkdown(projectDir).catch(() => []);
+    removedPaths.push(...projectFiles.map((file) => relative(repoRoot, file)));
+    await rm(projectDir, { recursive: true, force: true });
+  }
+  if (existsSync(l1Path)) {
+    removedPaths.push(relative(repoRoot, l1Path));
+    await rm(l1Path, { force: true });
+  }
+  if (!removedPaths.length) {
+    throw new Error(`삭제할 프로젝트 패키지를 찾지 못했습니다: ${projectKey}`);
+  }
+
+  const statusStore = await wikiStatusStore();
+  for (const path of removedPaths) {
+    if (statusStore.pages?.[path]) delete statusStore.pages[path];
+  }
+  if (statusStore.projects?.[projectKey]) delete statusStore.projects[projectKey];
+  await writeJsonFile(wikiStatusesPath, statusStore);
+
+  const payload = {
+    timestamp: new Date().toISOString(),
+    workspace: workspaceId,
+    projectKey,
+    projectPath: projectRelPath,
+    l1Path: existsSync(l1Path) ? relative(repoRoot, l1Path) : join(relative(repoRoot, workspace.l1Root), `${projectKey}.md`),
+    removedPaths,
+    removedCount: removedPaths.length,
+    reason,
+    source: body.source || "manual_project_delete",
+  };
+  await appendJsonl(wikiDeletionAuditPath, payload);
+  return {
+    status: "deleted_project_package",
     ...payload,
   };
 }
@@ -8511,6 +8588,13 @@ const server = createServer(async (req, res) => {
       const settings = await writeEnvValues(body.settings || {});
       return sendJson(res, 200, { settings, locked: { DRIVE_DELETE_SOURCE: "false" } });
     }
+    if (pathname === "/api/pipeline/state" && req.method === "GET") {
+      return sendJson(res, 200, await pipelineStatePayload());
+    }
+    if (pathname === "/api/pipeline/state" && req.method === "POST") {
+      const body = await readBody(req);
+      return sendJson(res, 200, await writePipelineState(body.state || {}));
+    }
     if (pathname === "/api/coverage" && req.method === "GET") {
       return sendJson(res, 200, await coverageSummary());
     }
@@ -8615,6 +8699,8 @@ const server = createServer(async (req, res) => {
       for (const channel of body.channels || []) {
         extraArgs.push("--channel", String(channel));
       }
+      if (body.sinceDate) extraArgs.push("--since-date", String(body.sinceDate));
+      if (body.untilDate) extraArgs.push("--until-date", String(body.untilDate));
       if (body.oldestDays) extraArgs.push("--oldest-days", String(body.oldestDays));
       if (body.limitPerChannel) extraArgs.push("--limit-per-channel", String(body.limitPerChannel));
       if (body.includeThreads === false) extraArgs.push("--no-threads");
@@ -8832,6 +8918,10 @@ const server = createServer(async (req, res) => {
     if (pathname === "/api/wiki/page/delete" && req.method === "POST") {
       const body = await readBody(req);
       return sendJson(res, 200, await deleteWikiPage(body));
+    }
+    if (pathname === "/api/wiki/project/delete" && req.method === "POST") {
+      const body = await readBody(req);
+      return sendJson(res, 200, await deleteWikiProjectPackage(body));
     }
     if (pathname === "/api/wiki/deletion-candidates" && req.method === "GET") {
       const workspace = url.searchParams.get("workspace") || "rtm";

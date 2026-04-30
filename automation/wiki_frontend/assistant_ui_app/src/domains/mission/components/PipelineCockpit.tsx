@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { ChatContext } from "../../chat/constants";
+import { useToastCenter } from "../../../components/surface/ToastCenter";
 import { fetchAutomationSnapshot, triggerAutomation, type AutomationRun, type AutomationSnapshot } from "../api/missionApi";
 import {
   analyzeDriveInstruction,
@@ -7,10 +8,12 @@ import {
   createSchedule,
   continueAfterCollection,
   fetchDriveAnalyses,
+  fetchPipelineState,
   fetchSchedules,
   fetchSettings,
   fetchSlackChannels,
   fetchSlackStatus,
+  savePipelineState,
   saveSettings,
   runTargetedRclone,
   stopAutomation,
@@ -34,8 +37,6 @@ type ExecutionMode = "now" | "scheduled";
 type CompletionMode = "timebox" | "objective";
 type ConnectionPolicy = "stop" | "retry";
 type ExistingMode = "skip-existing" | "overwrite";
-type ToastTone = "running" | "success" | "error" | "info";
-
 type ScheduleDraft = {
   name: string;
   command: string;
@@ -45,10 +46,25 @@ type ScheduleDraft = {
   intervalMinutes: number;
 };
 
-type PipelineToast = {
-  tone: ToastTone;
-  title: string;
-  body: string;
+type PipelinePersistedState = {
+  selectedChannels?: string[];
+  channelQuery?: string;
+  slackSinceDate?: string;
+  slackUntilDate?: string;
+  oldestDays?: number;
+  limitPerChannel?: number;
+  objective?: string;
+  sources?: Partial<SourceSelection>;
+  filesystemPath?: string;
+  continueAfterCollect?: boolean;
+  refreshAfterCollect?: boolean;
+  executionMode?: ExecutionMode;
+  completionMode?: CompletionMode;
+  connectionPolicy?: ConnectionPolicy;
+  existingMode?: ExistingMode;
+  retryAfterMinutes?: number;
+  tested?: Partial<{ slack: boolean; drive: boolean; mirror: boolean }>;
+  scheduleDraft?: Partial<ScheduleDraft>;
 };
 
 const SOURCE_LABELS: Array<{ key: SourceKey; label: string; detail: string }> = [
@@ -72,8 +88,8 @@ const CONSERVATIVE_RULE_FIELDS = [
   { key: "RCLONE_TRANSFERS", label: "동시 전송", fallback: "1" },
   { key: "RCLONE_COPY_MAX_MINUTES", label: "수집 시간(분)", fallback: "30" },
   { key: "RCLONE_EXCLUDE_PATTERNS", label: "제외 패턴", fallback: ".git,node_modules,*.tmp" },
-  { key: "SLACK_HISTORY_LIMIT", label: "Slack 채널당 메시지", fallback: "80" },
-  { key: "SLACK_OLDEST_DAYS", label: "Slack 최근 일수", fallback: "2" },
+  { key: "SLACK_OLDEST_DAYS", label: "Slack 기본 수집 기간(일)", fallback: "2" },
+  { key: "SLACK_HISTORY_LIMIT", label: "Slack 안전 상한(채널당)", fallback: "5000" },
   { key: "SLACK_API_MIN_INTERVAL_SECONDS", label: "Slack API 간격(초)", fallback: "1.5" },
   { key: "SLACK_HISTORY_PAGE_PAUSE_SECONDS", label: "Slack 페이지 대기(초)", fallback: "1.2" },
   { key: "SLACK_THREAD_PAUSE_SECONDS", label: "Slack thread 대기(초)", fallback: "1.2" },
@@ -88,6 +104,13 @@ const BATCH_COMMANDS = [
   { key: "build-manifest", label: "Manifest 생성", source: "system" },
   { key: "run", label: "위키 반영", source: "system" },
   { key: "refresh-global", label: "검색/그래프 반영", source: "system" },
+] as const;
+
+const SLACK_PERIOD_PRESETS = [
+  { label: "오늘", days: 1 },
+  { label: "최근 3일", days: 3 },
+  { label: "최근 7일", days: 7 },
+  { label: "최근 30일", days: 30 },
 ] as const;
 
 function shortDate(value = "") {
@@ -136,17 +159,45 @@ function elapsedLabel(startedAt = "", now = Date.now()) {
   return `${minutes}분 ${String(seconds).padStart(2, "0")}초`;
 }
 
+function kstDateInputValue(offsetDays = 0) {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Seoul",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date(Date.now() + offsetDays * 24 * 60 * 60 * 1000));
+}
+
+function inclusiveDaysBetween(startDate: string, endDate: string) {
+  const start = Date.parse(`${startDate}T00:00:00Z`);
+  const end = Date.parse(`${endDate}T00:00:00Z`);
+  if (!Number.isFinite(start) || !Number.isFinite(end) || end < start) return 1;
+  return Math.max(1, Math.round((end - start) / (24 * 60 * 60 * 1000)) + 1);
+}
+
+function asPersistedState(value: unknown): PipelinePersistedState {
+  return value && typeof value === "object" ? value as PipelinePersistedState : {};
+}
+
+function isSourceSelection(value: unknown): value is Partial<SourceSelection> {
+  return Boolean(value && typeof value === "object");
+}
+
 export function PipelineCockpit({ chatContext }: PipelineCockpitProps) {
+  const { notify } = useToastCenter();
+  const hydratedRef = useRef(false);
+  const lastPersistedJsonRef = useRef("");
   const [phase, setPhase] = useState("loading");
   const [message, setMessage] = useState("수집 화면을 불러오는 중입니다.");
   const [activeAction, setActiveAction] = useState("");
-  const [toast, setToast] = useState<PipelineToast | null>(null);
   const [nowTick, setNowTick] = useState(Date.now());
   const [slackStatus, setSlackStatus] = useState<SlackStatusSnapshot>({});
   const [slackChannels, setSlackChannels] = useState<SlackChannel[]>([]);
   const [selectedChannels, setSelectedChannels] = useState<string[]>([]);
   const [channelQuery, setChannelQuery] = useState("");
   const [oldestDays, setOldestDays] = useState(2);
+  const [slackSinceDate, setSlackSinceDate] = useState(kstDateInputValue(-1));
+  const [slackUntilDate, setSlackUntilDate] = useState(kstDateInputValue(0));
   const [limitPerChannel, setLimitPerChannel] = useState(80);
   const [objective, setObjective] = useState("쏘닉스 같은 신규 고객/프로젝트 후보를 찾아 안전하게 수집 계획을 세워줘.");
   const [sources, setSources] = useState<SourceSelection>({ slack: true, drive: true, filesystem: true });
@@ -189,28 +240,61 @@ export function PipelineCockpit({ chatContext }: PipelineCockpitProps) {
     if (key && !latestRunsByCommand.has(key)) latestRunsByCommand.set(key, run);
   });
 
+  const refreshCollectionState = async () => {
+    const [nextSlackStatus, analysisPayload, automationPayload, schedulePayload] = await Promise.all([
+      fetchSlackStatus(),
+      fetchDriveAnalyses(),
+      fetchAutomationSnapshot(),
+      fetchSchedules(),
+    ]);
+    setSlackStatus(nextSlackStatus);
+    setDriveAnalyses(analysisPayload.analyses || []);
+    setAutomation(automationPayload);
+    setSchedules(schedulePayload.schedules || []);
+  };
+
   const loadAll = async (query = channelQuery) => {
     setPhase("loading");
     try {
-      const [nextSlackStatus, channelPayload, analysisPayload, automationPayload, settingsPayload, schedulePayload] = await Promise.all([
+      const [nextSlackStatus, channelPayload, analysisPayload, automationPayload, settingsPayload, schedulePayload, pipelinePayload] = await Promise.all([
         fetchSlackStatus(),
         fetchSlackChannels(query),
         fetchDriveAnalyses(),
         fetchAutomationSnapshot(),
         fetchSettings(),
         fetchSchedules(),
+        fetchPipelineState(),
       ]);
+      const persisted = asPersistedState(pipelinePayload.state);
       setSlackStatus(nextSlackStatus);
       setSlackChannels(channelPayload.channels || []);
       setDriveAnalyses(analysisPayload.analyses || []);
       setAutomation(automationPayload);
       setSettings(settingsPayload);
       setRuleDraft(pickConservativeRules(settingsPayload.settings));
-      setOldestDays(conservativeNumber(settingsPayload.settings, "SLACK_OLDEST_DAYS", 2));
-      setLimitPerChannel(conservativeNumber(settingsPayload.settings, "SLACK_HISTORY_LIMIT", 80));
+      const nextOldestDays = Number(persisted.oldestDays) || conservativeNumber(settingsPayload.settings, "SLACK_OLDEST_DAYS", 2);
+      setOldestDays(nextOldestDays);
+      setSlackSinceDate(persisted.slackSinceDate || kstDateInputValue(-(nextOldestDays - 1)));
+      setSlackUntilDate(persisted.slackUntilDate || kstDateInputValue(0));
+      setLimitPerChannel(Number(persisted.limitPerChannel) || conservativeNumber(settingsPayload.settings, "SLACK_HISTORY_LIMIT", 5000));
+      if (Array.isArray(persisted.selectedChannels)) setSelectedChannels(persisted.selectedChannels);
+      if (typeof persisted.channelQuery === "string") setChannelQuery(persisted.channelQuery);
+      if (typeof persisted.objective === "string") setObjective(persisted.objective);
+      if (isSourceSelection(persisted.sources)) setSources((current) => ({ ...current, ...persisted.sources }));
+      if (typeof persisted.filesystemPath === "string") setFilesystemPath(persisted.filesystemPath);
+      if (typeof persisted.continueAfterCollect === "boolean") setContinueAfterCollect(persisted.continueAfterCollect);
+      if (typeof persisted.refreshAfterCollect === "boolean") setRefreshAfterCollect(persisted.refreshAfterCollect);
+      if (persisted.executionMode) setExecutionMode(persisted.executionMode);
+      if (persisted.completionMode) setCompletionMode(persisted.completionMode);
+      if (persisted.connectionPolicy) setConnectionPolicy(persisted.connectionPolicy);
+      if (persisted.existingMode) setExistingMode(persisted.existingMode);
+      if (Number(persisted.retryAfterMinutes)) setRetryAfterMinutes(Number(persisted.retryAfterMinutes));
+      if (persisted.tested) setTested((current) => ({ ...current, ...persisted.tested }));
+      if (persisted.scheduleDraft) setScheduleDraft((current) => ({ ...current, ...persisted.scheduleDraft }));
       setSchedules(schedulePayload.schedules || []);
+      hydratedRef.current = true;
       setPhase("ready");
-      setMessage("수집 화면 동기화 완료.");
+      setMessage("전역 수집 상태 동기화 완료. 10초마다 자동 갱신됩니다.");
     } catch (error) {
       setPhase("error");
       setMessage(error instanceof Error ? error.message : "수집 화면 로드 실패");
@@ -244,28 +328,67 @@ export function PipelineCockpit({ chatContext }: PipelineCockpitProps) {
     return { ...item, run };
   });
 
-  const notify = (tone: ToastTone, title: string, body: string) => {
-    setToast({ tone, title, body });
-  };
-
   useEffect(() => {
-    if (!toast || toast.tone === "running") return undefined;
-    const timer = window.setTimeout(() => setToast(null), 5200);
-    return () => window.clearTimeout(timer);
-  }, [toast]);
-
-  useEffect(() => {
-    if (phase !== "running" && !automation.running.length) return undefined;
     const timer = window.setInterval(async () => {
       try {
-        setAutomation(await fetchAutomationSnapshot());
+        await refreshCollectionState();
         setNowTick(Date.now());
       } catch {
         // Keep the visible run state stable if a transient poll fails.
       }
-    }, 2500);
+    }, 10000);
     return () => window.clearInterval(timer);
-  }, [phase, automation.running.length]);
+  }, []);
+
+  useEffect(() => {
+    if (!hydratedRef.current) return undefined;
+    const nextState: PipelinePersistedState = {
+      selectedChannels,
+      channelQuery,
+      slackSinceDate,
+      slackUntilDate,
+      oldestDays,
+      limitPerChannel,
+      objective,
+      sources,
+      filesystemPath,
+      continueAfterCollect,
+      refreshAfterCollect,
+      executionMode,
+      completionMode,
+      connectionPolicy,
+      existingMode,
+      retryAfterMinutes,
+      tested,
+      scheduleDraft,
+    };
+    const nextJson = JSON.stringify(nextState);
+    if (nextJson === lastPersistedJsonRef.current) return undefined;
+    const timer = window.setTimeout(() => {
+      lastPersistedJsonRef.current = nextJson;
+      savePipelineState(nextState as Record<string, unknown>).catch(() => {});
+    }, 700);
+    return () => window.clearTimeout(timer);
+  }, [
+    selectedChannels,
+    channelQuery,
+    slackSinceDate,
+    slackUntilDate,
+    oldestDays,
+    limitPerChannel,
+    objective,
+    sources,
+    filesystemPath,
+    continueAfterCollect,
+    refreshAfterCollect,
+    executionMode,
+    completionMode,
+    connectionPolicy,
+    existingMode,
+    retryAfterMinutes,
+    tested,
+    scheduleDraft,
+  ]);
 
   useEffect(() => {
     if (!automation.running.length) return undefined;
@@ -315,9 +438,36 @@ export function PipelineCockpit({ chatContext }: PipelineCockpitProps) {
     setMessage(suggestedChannels.length ? `추천 채널 ${suggestedChannels.length}개를 선택했습니다.` : "선택할 추천 채널이 없습니다.");
   };
 
+  const applySlackPeriod = (days: number) => {
+    const safeDays = Math.max(1, days);
+    setOldestDays(safeDays);
+    setSlackSinceDate(kstDateInputValue(-(safeDays - 1)));
+    setSlackUntilDate(kstDateInputValue(0));
+    setRuleDraft((current) => ({ ...current, SLACK_OLDEST_DAYS: String(safeDays) }));
+    setTested((current) => ({ ...current, slack: false }));
+  };
+
+  const updateSlackPeriodDate = (field: "since" | "until", value: string) => {
+    const nextSince = field === "since" ? value : slackSinceDate;
+    const nextUntil = field === "until" ? value : slackUntilDate;
+    setSlackSinceDate(nextSince);
+    setSlackUntilDate(nextUntil);
+    const nextDays = inclusiveDaysBetween(nextSince, nextUntil);
+    setOldestDays(nextDays);
+    setRuleDraft((current) => ({ ...current, SLACK_OLDEST_DAYS: String(nextDays) }));
+    setTested((current) => ({ ...current, slack: false }));
+  };
+
   const runSlackCollect = (testOnly: boolean) => runAction(
     async () => {
-      await collectSlack({ channels: selectedChannels, oldestDays, limitPerChannel, dryRun: testOnly });
+      await collectSlack({
+        channels: selectedChannels,
+        oldestDays,
+        sinceDate: slackSinceDate,
+        untilDate: slackUntilDate,
+        limitPerChannel,
+        dryRun: testOnly,
+      });
       if (testOnly) setTested((current) => ({ ...current, slack: true }));
     },
     testOnly ? "Slack 테스트를 실행했습니다." : "Slack 실제 수집을 실행했습니다.",
@@ -350,7 +500,14 @@ export function PipelineCockpit({ chatContext }: PipelineCockpitProps) {
   }, "실제 수집 예약을 생성했습니다.", "수집 예약 생성");
 
   const runSlackCollectWithAutomation = (testOnly: boolean) => runAction(async () => {
-    await collectSlack({ channels: selectedChannels, oldestDays, limitPerChannel, dryRun: testOnly });
+    await collectSlack({
+      channels: selectedChannels,
+      oldestDays,
+      sinceDate: slackSinceDate,
+      untilDate: slackUntilDate,
+      limitPerChannel,
+      dryRun: testOnly,
+    });
     if (testOnly) setTested((current) => ({ ...current, slack: true }));
     if (!testOnly) await runPostCollection();
   }, testOnly ? "Slack 테스트를 실행했습니다." : "Slack 실제 수집과 후속 자동화를 실행했습니다.", testOnly ? "Slack 테스트" : "Slack 실제 수집");
@@ -438,14 +595,6 @@ export function PipelineCockpit({ chatContext }: PipelineCockpitProps) {
         </aside>
       </section>
 
-      {toast ? (
-        <aside aria-live="polite" className={`aui-pipeline-toast ${toast.tone}`} role="status">
-          <strong>{toast.title}</strong>
-          <span>{toast.body}</span>
-          <button onClick={() => setToast(null)} type="button">닫기</button>
-        </aside>
-      ) : null}
-
       <section className={`aui-pipeline-progress ${runningJob ? "running" : "idle"}`} aria-live="polite">
         <div className="aui-pipeline-progress-head">
           <div>
@@ -511,26 +660,41 @@ export function PipelineCockpit({ chatContext }: PipelineCockpitProps) {
           </div>
           {sources.slack ? (
             <>
+          <div className="aui-pipeline-slack-period">
+            <div>
+              <strong>Slack 대화 기간</strong>
+              <span>최신순으로 읽되, 먼저 수집할 대화 기간을 명확히 지정합니다.</span>
+            </div>
+            <div className="aui-pipeline-preset-row">
+              {SLACK_PERIOD_PRESETS.map((preset) => (
+                <button key={preset.label} onClick={() => applySlackPeriod(preset.days)} type="button">{preset.label}</button>
+              ))}
+            </div>
+          </div>
           <div className="aui-ops-inline-fields">
             <label>
               <span>채널 검색</span>
               <input value={channelQuery} onChange={(event) => setChannelQuery(event.target.value)} placeholder="sales, pjt, 고객명" />
             </label>
             <label>
-              <span>최근 며칠</span>
+              <span>시작일(KST)</span>
               <input
-                min={1}
-                type="number"
-                value={oldestDays}
-                onChange={(event) => {
-                  const nextValue = Number(event.target.value) || 2;
-                  setOldestDays(nextValue);
-                  setRuleDraft((current) => ({ ...current, SLACK_OLDEST_DAYS: String(nextValue) }));
-                }}
+                type="date"
+                value={slackSinceDate}
+                onChange={(event) => updateSlackPeriodDate("since", event.target.value)}
               />
             </label>
             <label>
-              <span>채널당 개수</span>
+              <span>종료일(KST)</span>
+              <input
+                min={slackSinceDate}
+                type="date"
+                value={slackUntilDate}
+                onChange={(event) => updateSlackPeriodDate("until", event.target.value)}
+              />
+            </label>
+            <label>
+              <span>안전 상한(채널당)</span>
               <input
                 min={1}
                 type="number"
@@ -543,6 +707,7 @@ export function PipelineCockpit({ chatContext }: PipelineCockpitProps) {
               />
             </label>
           </div>
+          <p className="aui-ops-muted">선택 기간: {slackSinceDate} ~ {slackUntilDate} KST · {oldestDays}일. 개수는 기간 기준 수집이 과도해질 때 멈추는 안전 상한입니다.</p>
           <div className="aui-pipeline-choice-list">
             {visibleChannels.slice(0, 10).map((channel) => {
               const checked = selectedChannels.includes(channel.name);
@@ -765,8 +930,8 @@ export function PipelineCockpit({ chatContext }: PipelineCockpitProps) {
                   onChange={(event) => {
                     const nextValue = event.target.value;
                     setRuleDraft((current) => ({ ...current, [field.key]: nextValue }));
-                    if (field.key === "SLACK_OLDEST_DAYS") setOldestDays(Number(nextValue) || 2);
-                    if (field.key === "SLACK_HISTORY_LIMIT") setLimitPerChannel(Number(nextValue) || 80);
+                    if (field.key === "SLACK_OLDEST_DAYS") applySlackPeriod(Number(nextValue) || 2);
+                    if (field.key === "SLACK_HISTORY_LIMIT") setLimitPerChannel(Number(nextValue) || 5000);
                   }}
                 />
                   <small>{field.key}</small>
