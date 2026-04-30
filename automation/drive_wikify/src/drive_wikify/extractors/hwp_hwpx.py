@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import re
+import os
 import subprocess
 import xml.etree.ElementTree as ET
 from pathlib import Path
@@ -125,9 +126,16 @@ def _finalize_rhwp_table(table: dict[str, object]) -> list[list[str]]:
 
 
 def _run_rhwp(path: Path) -> str | None:
+    env_bin = os.environ.get("RHWP_BIN", "").strip()
     candidates = [
+        [env_bin, "dump", str(path)] if env_bin else [],
         [
             "/Users/rtm/Documents/GitHub/Obsidian_wiki/.tmp_rhwp/rhwp/target/release/rhwp",
+            "dump",
+            str(path),
+        ],
+        [
+            "/host/Users/rtm/Documents/GitHub/Obsidian_wiki/.tmp_rhwp/rhwp/target/release/rhwp",
             "dump",
             str(path),
         ],
@@ -140,7 +148,7 @@ def _run_rhwp(path: Path) -> str | None:
         ["rhwp", "dump", str(path)],
         ["python3", "-m", "rhwp", "dump", str(path)],
     ]
-    for cmd in candidates:
+    for cmd in [item for item in candidates if item]:
         try:
             result = subprocess.run(
                 cmd,

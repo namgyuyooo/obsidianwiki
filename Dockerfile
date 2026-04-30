@@ -1,3 +1,9 @@
+FROM rust:1-bookworm AS rhwp-builder
+
+RUN git clone --depth 1 https://github.com/edwardkim/rhwp.git /tmp/rhwp \
+  && cd /tmp/rhwp \
+  && cargo build --release --bin rhwp
+
 FROM node:20-bookworm-slim
 
 ENV DEBIAN_FRONTEND=noninteractive
@@ -18,6 +24,8 @@ RUN python3 -m pip install --no-cache-dir --break-system-packages \
     pypdf \
     python-docx
 
+COPY --from=rhwp-builder /tmp/rhwp/target/release/rhwp /usr/local/bin/rhwp
+
 WORKDIR /workspace/wiki-repo
 
 COPY . /workspace/wiki-repo
@@ -29,7 +37,8 @@ ENV WIKI_OPS_REPO_ROOT=/workspace/wiki-repo \
     DRIVE_WIKIFY_RUNTIME=/data/drive_wikify/runtime \
     WIKI_API_RUNTIME=/data/wiki_api/runtime \
     RCLONE_CONFIG=/config/rclone/rclone.conf \
-    PYTHONPATH=/workspace/wiki-repo/automation/drive_wikify/src
+    PYTHONPATH=/workspace/wiki-repo/automation/drive_wikify/src \
+    RHWP_BIN=/usr/local/bin/rhwp
 
 RUN mkdir -p /config/rclone /data/drive_wikify/runtime /data/wiki_api/runtime
 

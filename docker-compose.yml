@@ -16,6 +16,7 @@ services:
       WIKI_API_RUNTIME: /data/wiki_api/runtime
       RCLONE_CONFIG: /config/rclone/rclone.conf
       PYTHONPATH: /workspace/wiki-repo/automation/drive_wikify/src
+      RHWP_BIN: /usr/local/bin/rhwp
     volumes:
       - .:/workspace/wiki-repo
       - ./docker/config:/config

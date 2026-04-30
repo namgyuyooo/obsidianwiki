@@ -9055,9 +9055,23 @@ async function updatePaperclipTask(taskId, updates) {
   return next.find((task) => task.id === taskId);
 }
 
+function paperclipRunningTaskIsStale(task = {}) {
+  const staleMs = Number(process.env.PAPERCLIP_RUNNING_STALE_MS || 15 * 60 * 1000);
+  const started = Date.parse(task.startedAt || task.updatedAt || task.createdAt || "");
+  return Number.isFinite(started) && Date.now() - started > staleMs;
+}
+
 async function executePaperclipTask(task) {
   if (!task?.id) throw new Error("Paperclip task id is required");
-  if (task.status === "running") throw new Error("Paperclip task is already running");
+  if (task.status === "running" && !paperclipRunningTaskIsStale(task)) throw new Error("Paperclip task is already running");
+  if (task.status === "running" && paperclipRunningTaskIsStale(task)) {
+    await prependJsonHistory(paperclipEventsPath, {
+      taskId: task.id,
+      type: "task_recovered_from_stale_running",
+      message: `${task.agent}: stale running task recovered for rerun`,
+      createdAt: new Date().toISOString(),
+    });
+  }
   if (task.status === "completed" && !task.payload?.allowReRun) {
     throw new Error("Paperclip task is already completed. Create a new task for rerun.");
   }
@@ -9123,6 +9137,30 @@ async function executePaperclipTask(task) {
 async function triggerPaperclipTask(templateId, options = {}) {
   const task = await createPaperclipTask(templateId, options);
   return executePaperclipTask(task);
+}
+
+async function triggerPaperclipTaskAsync(templateId, options = {}) {
+  const task = await createPaperclipTask(templateId, options);
+  setImmediate(() => {
+    executePaperclipTask(task).catch(async (error) => {
+      await updatePaperclipTask(task.id, {
+        status: "failed",
+        result: { status: "failed", error: error.message },
+        finishedAt: new Date().toISOString(),
+      }).catch(() => null);
+      await prependJsonHistory(paperclipEventsPath, {
+        taskId: task.id,
+        type: "task_failed",
+        message: `${task.agent}: ${error.message}`,
+        createdAt: new Date().toISOString(),
+      }).catch(() => null);
+    });
+  });
+  return {
+    status: "accepted",
+    async: true,
+    task,
+  };
 }
 
 async function triggerExistingPaperclipTask(taskId) {
@@ -11278,7 +11316,9 @@ const server = createServer(async (req, res) => {
     }
     if (pathname === "/api/paperclip/trigger" && req.method === "POST") {
       const body = await readBody(req);
-      return sendJson(res, 200, await triggerPaperclipTask(body.templateId || "validator", body));
+      if (!body.templateId) return sendJson(res, 400, { status: "failed", error: "templateId is required for /api/paperclip/trigger" });
+      if (body.async === true || body.wait === false) return sendJson(res, 202, await triggerPaperclipTaskAsync(body.templateId, body));
+      return sendJson(res, 200, await triggerPaperclipTask(body.templateId, body));
     }
 
     await serveStatic(req, res, pathname);
