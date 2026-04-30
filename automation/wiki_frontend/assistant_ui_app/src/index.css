@@ -9693,6 +9693,72 @@ pre,
   color: #92400e;
 }
 
+.aui-pipeline-unified-actions {
+  align-items: center;
+  background:
+    linear-gradient(135deg, rgba(17, 24, 39, 0.96), rgba(5, 122, 85, 0.88)),
+    #111827;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: var(--aui-radius-panel);
+  color: #ffffff;
+  display: grid;
+  gap: var(--aui-space-3);
+  grid-template-columns: minmax(0, 1fr) auto;
+  padding: var(--aui-card-pad);
+}
+
+.aui-pipeline-unified-actions > div:first-child {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+}
+
+.aui-pipeline-unified-actions span,
+.aui-pipeline-unified-actions small {
+  color: rgba(255, 255, 255, 0.72);
+  font-size: var(--aui-type-caption);
+  line-height: 1.45;
+}
+
+.aui-pipeline-unified-actions strong {
+  color: #ffffff;
+  font-size: clamp(17px, 1.5vw, 23px);
+}
+
+.aui-pipeline-unified-actions > div:last-child {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--aui-space-2);
+  justify-content: flex-end;
+}
+
+.aui-pipeline-unified-actions button {
+  background: rgba(255, 255, 255, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: var(--aui-radius-control);
+  color: #ffffff;
+  cursor: pointer;
+  font-weight: 900;
+  min-height: 42px;
+  padding: 10px 15px;
+}
+
+.aui-pipeline-unified-actions button.primary {
+  background: #ffffff;
+  border-color: #ffffff;
+  color: #0f172a;
+}
+
+.aui-pipeline-unified-actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.aui-pipeline-source-actions {
+  background: #f8fafc;
+  border-style: dashed;
+}
+
 .aui-pipeline-skill-routes {
   background: linear-gradient(135deg, rgba(15, 23, 42, 0.04), rgba(12, 166, 120, 0.06));
   border: 1px solid var(--aui-line);
@@ -9746,6 +9812,66 @@ pre,
   display: grid;
   gap: var(--aui-space-2);
   grid-template-columns: 1fr;
+}
+
+.aui-pipeline-step-status,
+.aui-pipeline-file-status-list {
+  display: grid;
+  gap: var(--aui-space-2);
+}
+
+.aui-pipeline-file-status-list {
+  margin-top: var(--aui-space-3);
+}
+
+.aui-pipeline-file-status-list > strong {
+  color: var(--aui-ink);
+  font-size: var(--aui-type-caption);
+}
+
+.aui-pipeline-step-status article,
+.aui-pipeline-file-status-list article {
+  background: #f8fafc;
+  border: 1px solid var(--aui-line);
+  border-radius: var(--aui-radius-control);
+  display: grid;
+  gap: 5px;
+  padding: var(--aui-row-pad-y) var(--aui-row-pad-x);
+}
+
+.aui-pipeline-step-status article.running,
+.aui-pipeline-file-status-list article.running {
+  background: rgba(9, 105, 218, 0.08);
+  border-color: rgba(9, 105, 218, 0.3);
+}
+
+.aui-pipeline-step-status article.completed,
+.aui-pipeline-step-status article.ready,
+.aui-pipeline-step-status article.previewed,
+.aui-pipeline-file-status-list article.completed,
+.aui-pipeline-file-status-list article.processed,
+.aui-pipeline-file-status-list article.candidate {
+  background: rgba(12, 166, 120, 0.08);
+  border-color: rgba(12, 166, 120, 0.25);
+}
+
+.aui-pipeline-step-status article.failed,
+.aui-pipeline-step-status article.blocked,
+.aui-pipeline-step-status article.hold,
+.aui-pipeline-file-status-list article.failed,
+.aui-pipeline-file-status-list article.hold {
+  background: rgba(220, 38, 38, 0.08);
+  border-color: rgba(220, 38, 38, 0.25);
+}
+
+.aui-pipeline-step-status span,
+.aui-pipeline-step-status small,
+.aui-pipeline-file-status-list span,
+.aui-pipeline-file-status-list small {
+  color: var(--aui-muted);
+  font-size: var(--aui-type-caption);
+  line-height: 1.4;
+  overflow-wrap: anywhere;
 }
 
 .aui-pipeline-batch-status div {

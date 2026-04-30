@@ -198,7 +198,31 @@ def main() -> int:
         else:
             print(f"Slack collection {payload['status']} ({payload['channel_count']} channels)")
             for export in payload["exports"]:
-                print(f"- #{export['channel_name']} ({export['channel_id']}): {export['messages']} messages -> {export['export_path']}")
+                stats = export.get("fetch_stats") or {}
+                file_stats = export.get("file_stats") or {}
+                promoted_paths = export.get("promoted_paths") or []
+                promoted_projects = sorted(
+                    {
+                        path.split("/")[2]
+                        for path in promoted_paths
+                        if isinstance(path, str) and path.startswith("obsidian/Wiki/Slack_") and len(path.split("/")) > 2
+                    }
+                )
+                print(
+                    f"- #{export['channel_name']} ({export['channel_id']}): {export['messages']} messages"
+                    f" · order={stats.get('order', 'newest_first')}"
+                    f" · pages={stats.get('pages', '-')}"
+                    f" · exhausted={stats.get('exhausted', '-')}"
+                    f" · files={file_stats.get('downloaded', 0)} downloaded/{file_stats.get('analyzed', 0)} analyzed"
+                    f" · promoted={len(promoted_paths)} docs/{len(promoted_projects)} projects"
+                    f" · newest={stats.get('newest_fetched_ts', '')}"
+                    f" · oldest={stats.get('oldest_fetched_ts', '')}"
+                    f" -> {export['export_path']}"
+                )
+                if promoted_projects:
+                    preview = ", ".join(promoted_projects[:8])
+                    suffix = " ..." if len(promoted_projects) > 8 else ""
+                    print(f"  projects: {preview}{suffix}")
         return 0
 
     raise ValueError(f"Unsupported command: {args.command}")

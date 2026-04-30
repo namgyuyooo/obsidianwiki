@@ -1,0 +1,37 @@
+---
+type: knowledge
+created: 2026-04-30
+updated: 2026-04-30
+source: ""
+---
+
+# Evidence Log
+
+<!-- slack-project:C01L5SA4Y4C:Slack_쏘닉스_SAWNICS_Project:1771922915.904899:1771922915.904899:1 -->
+## Slack Evidence - 2026-04-30 - 쏘닉스 (SAWNICS)
+
+### Message 01
+- ts: `1771922915.904899` / `2026-02-24 17:48:35 KST`
+- routing: bucket `project` / reason `project_keywords`
+- Original:
+  > 금일 방문한 쏘닉스 미팅 내용 공유드립니다. <@UBKL1FZ28> <@U0A11G512F3> <@U05AWGZ1TRD> <@U03NJDDPZPZ> <@U025MG70MNX> <@U082RGK8J15> ■ 고객명: 쏘닉스 (SAWNICS) ■ 방문 일자: 2026-02-21 ■ 참석자: 쏘닉스_문용일 이사, 유광남 과장, 김경아, 하헌석 / RTM_박진우, 허정 ■ 방문 목적: 자사 웨이퍼 제조 공정의 품질 개선 및 공정 효율 향상을 위한 OGI/AVI향 AI 도입 검토 ■ 결과 - 정부 지원 사업을 통한 AI 도입을 적극 검토 - OGI쪽 우선 적용(지원사업) - AVI 공정까지 확장 검토 가능성 존재 ■ 미팅 내용 1. 회사개요 - 종업원수 약 80명, 매출액 250억 규모의 평택 소재의 코스닥 상장사 - 4인치 및 6인치 웨이퍼를 생산하는 반도체 파운드리 기업 2. 미팅내용 - 현재 양산품에 대해 AVI 설비를 통해 검사 진행 후 OGI를 통해 샘플 검사 진행. 개발품은 전수 OGI검사 중 - 약 3µm 수준의 불량 탐지 가능/불량 유형 약 20개 (현재 AVI 불량률은 약 2~3% 수준) - 웨이퍼 전체를 검사하여 웨이퍼 맵(Wafer Mapping) 생성 - 맵핑을 통해 불량 위치 및 분포 판단 - 한 웨이퍼당 생산되는 다이(Die) 수량은 약 3,000개 ~ 20,000개 수준 - AVI에서 탐지되지 않는 더 미세한 불량은 OGI 공정(고해상도 현미경 기반 검사)에서 확인 - OGI 공정은 현재 수동 검사로 진행 - 주요 요구사항 ・ OGI 공정의 공수 절감, 고해상도 이미지 기반 AI 자동 불량 판별, 보고서 생성 ・ 장기적으로 AVI 공정까지 통합 고도화 검토 ・ OGI 자동화를 위해서 키엔스 현미경 + 자동화 설비 + AI 모델의 통합 검토 필요 ・ 전체 프로젝트는 정부 지원 사업 형태로 추진 희망 ■ 협의 결과 - 정부 지원 사업 기반 AI 도입 방향성에 대해 공감대 형성 - OGI 자동화 우선 검토 후 AVI 확장 검토 가능 - 내부 데이터 확보 후 구체 협의 진행 ■ Next Plan - 정부 지원사업을 위한 사전 준비(쏘닉스) *지원 과제 일정 및 요건 사전 확인 필요 - OGI 및 AVI 불량 샘플 데이터 확보 - 요구사항 재정리 후 견적 제출 및 서류 작업 서포트 등 별첨#01. (회사소개서), 주식쇠사 쏘닉스.pdf 별첨#02. (제안요청서), 주식회사 쏘닉스, 검사공정 AI도입 프로젝트_v3_20260208.pdf
+
+<!-- slack-project:C01L5SA4Y4C:Slack_쏘닉스_SAWNICS_Project:1771922915.904899:1771922915.904899:1:files2:analysis2 -->
+## Slack Evidence - 2026-04-30 - 쏘닉스 (SAWNICS)
+
+### Message 01
+- ts: `1771922915.904899` / `2026-02-24 17:48:35 KST`
+- routing: bucket `project` / reason `project_keywords`
+- Original:
+  > 금일 방문한 쏘닉스 미팅 내용 공유드립니다. <@UBKL1FZ28> <@U0A11G512F3> <@U05AWGZ1TRD> <@U03NJDDPZPZ> <@U025MG70MNX> <@U082RGK8J15> ■ 고객명: 쏘닉스 (SAWNICS) ■ 방문 일자: 2026-02-21 ■ 참석자: 쏘닉스_문용일 이사, 유광남 과장, 김경아, 하헌석 / RTM_박진우, 허정 ■ 방문 목적: 자사 웨이퍼 제조 공정의 품질 개선 및 공정 효율 향상을 위한 OGI/AVI향 AI 도입 검토 ■ 결과 - 정부 지원 사업을 통한 AI 도입을 적극 검토 - OGI쪽 우선 적용(지원사업) - AVI 공정까지 확장 검토 가능성 존재 ■ 미팅 내용 1. 회사개요 - 종업원수 약 80명, 매출액 250억 규모의 평택 소재의 코스닥 상장사 - 4인치 및 6인치 웨이퍼를 생산하는 반도체 파운드리 기업 2. 미팅내용 - 현재 양산품에 대해 AVI 설비를 통해 검사 진행 후 OGI를 통해 샘플 검사 진행. 개발품은 전수 OGI검사 중 - 약 3µm 수준의 불량 탐지 가능/불량 유형 약 20개 (현재 AVI 불량률은 약 2~3% 수준) - 웨이퍼 전체를 검사하여 웨이퍼 맵(Wafer Mapping) 생성 - 맵핑을 통해 불량 위치 및 분포 판단 - 한 웨이퍼당 생산되는 다이(Die) 수량은 약 3,000개 ~ 20,000개 수준 - AVI에서 탐지되지 않는 더 미세한 불량은 OGI 공정(고해상도 현미경 기반 검사)에서 확인 - OGI 공정은 현재 수동 검사로 진행 - 주요 요구사항 ・ OGI 공정의 공수 절감, 고해상도 이미지 기반 AI 자동 불량 판별, 보고서 생성 ・ 장기적으로 AVI 공정까지 통합 고도화 검토 ・ OGI 자동화를 위해서 키엔스 현미경 + 자동화 설비 + AI 모델의 통합 검토 필요 ・ 전체 프로젝트는 정부 지원 사업 형태로 추진 희망 ■ 협의 결과 - 정부 지원 사업 기반 AI 도입 방향성에 대해 공감대 형성 - OGI 자동화 우선 검토 후 AVI 확장 검토 가능 - 내부 데이터 확보 후 구체 협의 진행 ■ Next Plan - 정부 지원사업을 위한 사전 준비(쏘닉스) *지원 과제 일정 및 요건 사전 확인 필요 - OGI 및 AVI 불량 샘플 데이터 확보 - 요구사항 재정리 후 견적 제출 및 서류 작업 서포트 등 별첨#01. (회사소개서), 주식쇠사 쏘닉스.pdf 별첨#02. (제안요청서), 주식회사 쏘닉스, 검사공정 AI도입 프로젝트_v3_20260208.pdf
+
+  - attachment: `별첨#01. (회사소개서), 주식쇠사 쏘닉스.pdf`
+  - attachment_download: `downloaded` / `obsidian/raw/exports/slack_files/2026-04-30/tf_cross_team_sales_C01L5SA4Y4C_2026-04-30T13-59-18Z/C01L5SA4Y4C/1771922915_904899/F0AGPUUM2FQ_별첨#01. (회사소개서), 주식쇠사 쏘닉스.pdf`
+  - attachment_analysis: `analyzed` / extractor `pdf_fallback`
+  - attachment_excerpt:
+    > %PDF-1.7 1 0 obj <</Type/Catalog/Pages 2 0 R/Lang(en) /StructTreeRoot 218 0 R/Outlines 203 0 R/MarkInfo<</Marked true>>/Metadata 1137 0 R/ViewerPreferences 1138 0 R>> endobj 2 0 obj <</Type/Pages/Count 14/Kids[ 3 0 R 19 0 R 55 0 R 69 0 R 78 0 R 150 0 R 169 0 R 171 0 R 179 0 R 183 0 R 188 0 R 196 0 R 198 0 R 200 0 R] >> endobj 3 0 obj <</Type/Page/Parent 2 0 R/Resources<</ExtGState<</GS5 5 0 R/GS7 7 0 R/GS18 18 0 R>>/XObject<</Image6 6 0 R/Image8 8 0 R>>/Pattern<</P15 15 0 R>>/Font<</F1 16 0 R>>/ProcSet[/PDF/Text/ImageB/ImageC/ImageI] >>/MediaBox[ 0 0 720 405] /Contents 4 0 R/Group<</Type/Group/S/Transparency/CS/DeviceRGB>>/Tabs/S/StructParents 0>> endobj 4 0 obj <</Filter/FlateDecode/Length 2350>> stream +w{zrx NO~<=q/X SjJm vF}b 5E5 $ q L^- 2r(" IAP`( Vd]u{hK MM'8 J$yj= '`XF n Ir @p#P Od6? @m0- fqREip +p"< h:w[ `479N MPpy _K`W< bEia /V#g` !T<{ gD=r5 C '9 (.gc @qv\ zS$dv T TJJ3Y /]m)] [W3jc j4A2 AB&yA f(Vd @Zqc H?]@ 8s$i <ns4 bsNr o~:' endstream endobj 5 0 obj <</Type/ExtGState/BM/Normal/ca 1>> endobj 6 0 obj <</Type/XObject/Subtype/Image/Width 1999/Height 750/ColorSpace/DeviceRGB/BitsPerComponent 8/Filter/DCTDecode/Interpolate true/Length 106515>> stream JFIF $.' ",# (7),01444 '9=82<.342 !22222222222222222222222222222222222222222222222222 $3br %&'()*456789:CDEFGHIJSTUVWXYZcdefghijstuvwxyz &'()*56789:CDEFGHIJSTUVWXYZcdefghijstuvwxyz QJi( 'd'% CE-% n_h w "Kg= '/'o t2;6 roT_ E&ir=h uTW1 !]>k 3FEA IKHh IKI@ GteZ m-m%y ks>3 ]-eR e'sZx|5H )GJJu 5=2O #zu#R< )Q^7 .KJ: )i)h VtLne 5=2O F$HP ?43 0 WMLej 4 QE 5Hy 8 IKI@ IKHh )i)h ~G-Jr WEXT j+Ju%N\ +jUy. 4{*_ 4{*_ GIEs +kc:) 2+,r ~~ ~ GMEs? GMEs_ GKEs_ q5kF^ ~~ ^ ~~ = ~~ = GQEr GOEs? 4{*_ ~~ = ~~ = mL^P= iEq? geEq geEq geEq gcEq Q$R xvYg]_Ho'S J{u] 0)j9 Kere8 $Eu= 4T_E )s{J iG"K QKH)h }SKF QHg/ EFqR vV_& i9Sp 8uH> M{8 }* eQvku "G#
+  - attachment: `별첨#02. (제안요청서), 주식회사 쏘닉스, 검사공정 AI도입 프로젝트_v3_20260208.pdf`
+  - attachment_download: `downloaded` / `obsidian/raw/exports/slack_files/2026-04-30/tf_cross_team_sales_C01L5SA4Y4C_2026-04-30T13-59-18Z/C01L5SA4Y4C/1771922915_904899/F0AGAHH6H9V_별첨#02. (제안요청서), 주식회사 쏘닉스, 검사공정 AI도입 프로젝트_v3_20260208.pdf`
+  - attachment_analysis: `analyzed` / extractor `pdf_fallback`
+  - attachment_excerpt:
+    > %PDF-1.7 1 0 obj <</Type/Catalog/Pages 2 0 R/Lang(ko) /StructTreeRoot 179 0 R/MarkInfo<</Marked true>>/Metadata 2956 0 R/ViewerPreferences 2957 0 R>> endobj 2 0 obj <</Type/Pages/Count 21/Kids[ 3 0 R 22 0 R 25 0 R 36 0 R 38 0 R 40 0 R 42 0 R 43 0 R 44 0 R 45 0 R 46 0 R 47 0 R 48 0 R 49 0 R 50 0 R 51 0 R 52 0 R 53 0 R 54 0 R 57 0 R 58 0 R] >> endobj 3 0 obj <</Type/Page/Parent 2 0 R/Resources<</Font<</F1 5 0 R/F2 9 0 R/F3 14 0 R/F4 16 0 R/F5 18 0 R>>/ExtGState<</GS7 7 0 R/GS8 8 0 R>>/XObject<</Image20 20 0 R>>/ProcSet[/PDF/Text/ImageB/ImageC/ImageI] >>/MediaBox[ 0 0 595.32 841.92] /Contents 4 0 R/Group<</Type/Group/S/Transparency/CS/DeviceRGB>>/Tabs/S/StructParents 0>> endobj 4 0 obj <</Filter/FlateDecode/Length 610>> stream J(R8$M 7E~[L )wUo Kh.V ,yP, .uX. ymP5 ^PSA PAZz endstream endobj 5 0 obj <</Type/Font/Subtype/TrueType/Name/F1/BaseFont/BCDEEE+MalgunGothic/Encoding/WinAnsiEncoding/FontDescriptor 6 0 R/FirstChar 32/LastChar 126/Widths 2940 0 R>> endobj 6 0 obj <</Type/FontDescriptor/FontName/BCDEEE+MalgunGothic/Flags 32/ItalicAngle 0/Ascent 1088/Descent -200/CapHeight 800/AvgWidth 463/MaxWidth 2175/FontWeight 400/XHeight 250/StemV 46/FontBBox[ -977 -200 1199 800] /FontFile2 2938 0 R>> endobj 7 0 obj <</Type/ExtGState/BM/Normal/ca 1>> endobj 8 0 obj <</Type/ExtGState/BM/Normal/CA 1>> endobj 9 0 obj <</Type/Font/Subtype/Type0/BaseFont/BCDFEE+MalgunGothicBold/Encoding/Identity-H/DescendantFonts 10 0 R/ToUnicode 2941 0 R>> endobj 10 0 obj [ 11 0 R] endobj 11 0 obj <</BaseFont/BCDFEE+MalgunGothicBold/Subtype/CIDFontType2/Type/Font/CIDToGIDMap/Identity/DW 1000/CIDSystemInfo 12 0 R/FontDescriptor 13 0 R/W 2943 0 R>> endobj 12 0 obj <</Ordering(Identity) /Registry(Adobe) /Supplement 0>> endobj 13 0 obj <</Type/FontDescriptor/FontName/BCDFEE+MalgunGothicBold/Flags 32/ItalicA

@@ -13,6 +13,8 @@ from urllib.request import Request, urlopen
 from zoneinfo import ZoneInfo
 
 from .config import RuntimeConfig
+from .extractors import extract_document
+from .wiki_writer import ensure_project_space
 
 
 class SlackApiError(RuntimeError):
@@ -304,6 +306,116 @@ def _normalize_file(file_item: dict[str, Any]) -> dict[str, Any]:
         "url_private": file_item.get("url_private"),
         "permalink": file_item.get("permalink"),
     }
+
+
+def _safe_filename(value: str) -> str:
+    name = re.sub(r"[\\/:*?\"<>|\x00-\x1f]+", "_", value or "slack_file").strip(" ._")
+    name = re.sub(r"_+", "_", name)
+    return name[:160] or "slack_file"
+
+
+def _slack_file_extension(file_item: dict[str, Any]) -> str:
+    name = str(file_item.get("name") or file_item.get("title") or "")
+    suffix = Path(name).suffix.lower()
+    if suffix:
+        return suffix
+    filetype = str(file_item.get("filetype") or "").lower().strip(".")
+    if filetype:
+        return f".{filetype}"
+    mimetype = str(file_item.get("mimetype") or "").lower()
+    if mimetype == "application/pdf":
+        return ".pdf"
+    if mimetype in {"image/jpeg", "image/jpg"}:
+        return ".jpg"
+    if mimetype == "image/png":
+        return ".png"
+    if mimetype == "video/mp4":
+        return ".mp4"
+    return ""
+
+
+def _supported_analysis_suffix(path: Path) -> bool:
+    return path.suffix.lower() in {".hwp", ".hwpx", ".pdf", ".docx", ".pptx", ".xlsx", ".xls", ".csv", ".html", ".htm"}
+
+
+def _download_slack_file(token: str, file_item: dict[str, Any], target_path: Path, throttle: SlackThrottle) -> dict[str, Any]:
+    url = str(file_item.get("url_private") or "")
+    if not url:
+        return {"status": "skipped", "reason": "missing_url_private"}
+    if "files.slack.com/" not in url:
+        return {"status": "skipped", "reason": "external_reference"}
+    size = int(file_item.get("size") or 0)
+    if size > 200 * 1024 * 1024:
+        return {"status": "skipped", "reason": "file_too_large", "size": size}
+
+    target_path.parent.mkdir(parents=True, exist_ok=True)
+    request = Request(url, headers={"Authorization": f"Bearer {token}"})
+    throttle.before_request()
+    try:
+        with _open_url(request, timeout=120) as response:
+            target_path.write_bytes(response.read())
+        throttle.after_request()
+        return {"status": "downloaded", "path": _relative_repo_path(target_path), "size": target_path.stat().st_size}
+    except (HTTPError, URLError, TimeoutError, OSError) as exc:
+        return {"status": "failed", "reason": str(exc)[:240]}
+
+
+def _analyze_downloaded_slack_file(path: Path) -> dict[str, Any]:
+    if not _supported_analysis_suffix(path):
+        return {"status": "preserved_only", "reason": "unsupported_for_text_extractor", "ext": path.suffix.lower()}
+    try:
+        extracted = extract_document(path)
+        return {
+            "status": "analyzed",
+            "extractor": extracted.extractor_name,
+            "text_excerpt": " ".join(extracted.text.split())[:1800],
+            "headings": extracted.headings[:8],
+            "warnings": extracted.warnings,
+        }
+    except Exception as exc:  # noqa: BLE001 - attachment extraction should not fail Slack collection.
+        return {"status": "failed", "reason": str(exc)[:240], "ext": path.suffix.lower()}
+
+
+def _download_and_analyze_message_files(
+    token: str,
+    config: RuntimeConfig,
+    channel: dict[str, Any],
+    export_relpath: str,
+    messages: list[dict[str, Any]],
+    throttle: SlackThrottle,
+) -> dict[str, int]:
+    export_root = (config.slack_export_root or (RuntimeConfig.repo_root() / "obsidian/raw/exports/slack")).resolve()
+    file_root = export_root.parent / "slack_files" / Path(export_relpath).with_suffix("")
+    downloaded = 0
+    analyzed = 0
+    skipped = 0
+    failed = 0
+    channel_id = str(channel.get("id") or "unknown")
+
+    for message in messages:
+        ts = str(message.get("ts") or "").replace(".", "_")
+        for file_index, file_item in enumerate(message.get("files") or [], start=1):
+            file_id = str(file_item.get("id") or f"file{file_index}")
+            name = _safe_filename(str(file_item.get("name") or file_item.get("title") or file_id))
+            suffix = _slack_file_extension(file_item)
+            if suffix and not name.lower().endswith(suffix):
+                name = f"{name}{suffix}"
+            target_path = file_root / channel_id / ts / f"{file_id}_{name}"
+            download = _download_slack_file(token, file_item, target_path, throttle)
+            file_item["download"] = download
+            if download.get("status") == "downloaded":
+                downloaded += 1
+                analysis = _analyze_downloaded_slack_file(target_path)
+                file_item["analysis"] = analysis
+                if analysis.get("status") == "analyzed":
+                    analyzed += 1
+            elif download.get("status") == "failed":
+                failed += 1
+            else:
+                skipped += 1
+            throttle.pause_between_threads()
+
+    return {"downloaded": downloaded, "analyzed": analyzed, "skipped": skipped, "failed": failed}
 
 
 def _normalize_message(message: dict[str, Any], include_files: bool = True) -> dict[str, Any]:
@@ -631,6 +743,264 @@ def _message_excerpt(message: dict[str, Any], limit: int = 220) -> str:
     return text[: limit - 1].rstrip() + "…"
 
 
+def _slack_plain_text(text: str) -> str:
+    text = re.sub(r"<@[^>]+>", "", text or "")
+    text = re.sub(r"<([^>|]+)\|([^>]+)>", r"\2", text)
+    text = re.sub(r"<([^>]+)>", r"\1", text)
+    text = text.replace("*", " ")
+    return " ".join(text.split()).strip()
+
+
+def _clean_project_name(value: str) -> str:
+    name = _slack_plain_text(value)
+    name = re.sub(r"^[\s:：\-–—■•\[\]()]+", "", name)
+    name = re.sub(r"^\d{2,4}[.\-/년]\s*\d{1,2}[.\-/월]\s*\d{1,2}(?:일)?\s*", "", name)
+    name = re.sub(r"^\d{1,2}\s*(?:\([^)]+\))?\s+", "", name)
+    name = re.sub(r"^(?:금일|오늘|어제|차주|이번|해당|방문한|고객사|고객명|고객측)\s+", "", name)
+    name = re.sub(r"^(?:\d{2,4}[.\-/년]\s*){1,3}", "", name).strip()
+    name = re.sub(r"^.*\(\d+\)\s*", "", name)
+    name = re.sub(r"\s+(?:미팅|회의|방문|대응현황|업무협의|결과|내역|내용|공유|전달).*$", "", name)
+    name = re.sub(r"\s+(?:고객\s*요청사항|요청사항|참고사항|업무구조|유입경로|TODO|목적|참석자|결정\s*내용).*$", "", name)
+    name = re.sub(r"\s+\d+\.\s+.*$", "", name)
+    name = re.sub(r"\s+\d+$", "", name)
+    name = re.sub(r"\s*/\s*RTM.*$", "", name, flags=re.IGNORECASE)
+    name = re.sub(r"\s+\((?:https?://)?www\.[^)]+\)", "", name, flags=re.IGNORECASE)
+    name = re.sub(r":[A-Za-z0-9_+\-]+:?", "", name)
+    name = re.sub(r"\s{2,}", " ", name).strip(" -:：,./")
+    return name[:60].strip()
+
+
+def _valid_project_name(name: str) -> bool:
+    if len(name) < 2:
+        return False
+    lowered = name.lower()
+    blocked = {
+        "rtm",
+        "알티엠",
+        "고객",
+        "고객사",
+        "고객명",
+        "미팅",
+        "회의",
+        "금일",
+        "오늘",
+        "공유",
+        "영업",
+        "cross_team_sales",
+        "sales",
+    }
+    if lowered in blocked:
+        return False
+    return bool(re.search(r"[가-힣A-Za-z0-9]", name))
+
+
+def _extract_slack_project_name(message: dict[str, Any], channel_name: str = "") -> str:
+    text = _message_text(message)
+    plain = _slack_plain_text(text)
+    patterns = [
+        r"(?:■\s*)?고객(?:명|사|측)?\s*[:：]\s*([^■\n\r]+)",
+        r"(?:기업명-지사명\(부서명\)|기업명|고객)\s*[:：]\s*([^■\n\r]+)",
+        r"(?:\[|\*)?\s*(?:\d{2,4}[.\-/년]\s*){1,3}\s*([가-힣A-Za-z0-9&().·\-\s]+?)\s*(?:미팅|회의|대응현황|업무협의|결과|내역)",
+        r"([가-힣A-Za-z0-9&().·\-\s]+?)\s+x\s+RTM",
+    ]
+    for pattern in patterns:
+        match = re.search(pattern, plain, flags=re.IGNORECASE)
+        if not match:
+            continue
+        candidate = _clean_project_name(match.group(1))
+        if _valid_project_name(candidate):
+            return candidate
+
+    channel_candidate = _clean_project_name(channel_name.replace("pjt_", "").replace("tf_", ""))
+    return channel_candidate if _valid_project_name(channel_candidate) else ""
+
+
+def _slack_project_key(project_name: str) -> str:
+    cleaned = re.sub(r"[^0-9A-Za-z가-힣]+", "_", project_name).strip("_")
+    cleaned = re.sub(r"_+", "_", cleaned)
+    if not cleaned:
+        cleaned = "Unknown"
+    return f"Slack_{cleaned[:72]}_Project"
+
+
+def _ts_to_kst(ts: str) -> str:
+    try:
+        return datetime.fromtimestamp(float(ts), tz=UTC).astimezone(ZoneInfo("Asia/Seoul")).strftime("%Y-%m-%d %H:%M:%S KST")
+    except (TypeError, ValueError):
+        return ""
+
+
+def _project_marker(channel_id: str, project_key: str, items: list[dict[str, Any]]) -> str:
+    ts_values = [str(item.get("ts", "") or "") for item in items if item.get("ts")]
+    newest = max(ts_values) if ts_values else ""
+    oldest = min(ts_values) if ts_values else ""
+    downloaded = 0
+    analyzed = 0
+    for item in items:
+        for file_item in item.get("message", {}).get("files") or []:
+            if (file_item.get("download") or {}).get("status") == "downloaded":
+                downloaded += 1
+            if (file_item.get("analysis") or {}).get("status") == "analyzed":
+                analyzed += 1
+    return f"slack-project:{channel_id}:{project_key}:{newest}:{oldest}:{len(items)}:files{downloaded}:analysis{analyzed}"
+
+
+def _append_project_slack_updates(
+    config: RuntimeConfig,
+    channel: dict[str, Any],
+    project_name: str,
+    project_key: str,
+    items: list[dict[str, Any]],
+    export_path: Path,
+    filtered_path: Path,
+    history_window: dict[str, Any],
+    filter_result: dict[str, Any],
+    collected_at: str,
+) -> list[str]:
+    ensure_project_space(project_key, config.wiki_root, config.l1_memory_root)
+    project_dir = config.wiki_root / project_key
+    channel_name = channel.get("name", "")
+    channel_id = channel.get("id", "")
+    date_label = collected_at[:10]
+    marker = _project_marker(channel_id, project_key, items)
+    heading = f"Slack Evidence - {date_label} - {project_name}"
+    written_paths: list[str] = []
+    provider = filter_result.get("provider", "")
+    fetch_stats = history_window.get("fetch_stats", {}) if isinstance(history_window.get("fetch_stats"), dict) else {}
+
+    reference_lines = [
+        "### Slack Reference",
+        f"- 프로젝트 후보: `{project_name}`",
+        f"- 채널: `#{channel_name}` (`{channel_id}`)",
+        f"- 수집 시각: `{collected_at}`",
+        f"- 기간: `{history_window.get('since_date_kst', '') or history_window.get('oldest_ts', '')}` ~ `{history_window.get('until_date_kst', '') or history_window.get('latest_ts', '')}`",
+        f"- Slack API 상태: order `{fetch_stats.get('order', 'newest_first')}` / pages `{fetch_stats.get('pages', '-')}` / exhausted `{fetch_stats.get('exhausted', '-')}`",
+        f"- raw export: `{_relative_repo_path(export_path)}`",
+        f"- filtered export: `{_relative_repo_path(filtered_path)}`",
+        f"- 필터 제공자: `{provider}` / 필터 오류: `{filter_result.get('error', '') or 'none'}`",
+        f"- 이 프로젝트에 승격된 메시지 수: `{len(items)}`",
+    ]
+    if _append_unique_block(project_dir / "Reference_Register.md", marker, heading, reference_lines):
+        written_paths.append(_relative_repo_path(project_dir / "Reference_Register.md"))
+
+    source_lines = [
+        "- 운영 메모: Slack 원문은 raw export를 기준 증거로 보존하고, 이 페이지는 프로젝트별 승격 뷰로 관리",
+        f"- 증거원: Slack `#{channel_name}`",
+        f"- 원본 파일: `{_relative_repo_path(export_path)}`",
+        f"- 필터 파일: `{_relative_repo_path(filtered_path)}`",
+        "- 수집 방향: 최신 메시지부터 과거 방향",
+        f"- 메시지 범위 ts: `{min(str(item.get('ts', '') or '') for item in items)}` ~ `{max(str(item.get('ts', '') or '') for item in items)}`",
+    ]
+    if _append_unique_block(project_dir / "Sources.md", marker, heading, source_lines):
+        written_paths.append(_relative_repo_path(project_dir / "Sources.md"))
+
+    overview_lines = [
+        f"- Slack 수집에서 `{project_name}` 프로젝트 후보를 자동 감지",
+        f"- 채널 `#{channel_name}`에서 `{len(items)}`개 메시지를 프로젝트 증거로 승격",
+        "- 다음 액션: 사람이 프로젝트명/범위/상태를 검수하고 필요 시 기존 프로젝트와 병합",
+    ]
+    if _append_unique_block(project_dir / "Project_Overview.md", marker, heading, overview_lines):
+        written_paths.append(_relative_repo_path(project_dir / "Project_Overview.md"))
+
+    evidence_lines: list[str] = []
+    for index, item in enumerate(items[:30], start=1):
+        message = item.get("message", {})
+        text = _message_excerpt(message, 1600)
+        if not text:
+            continue
+        evidence_lines.extend(
+            [
+                f"### Message {index:02d}",
+                f"- ts: `{item.get('ts', '')}` / `{_ts_to_kst(str(item.get('ts', '') or ''))}`",
+                f"- routing: bucket `{item.get('bucket', '')}` / reason `{item.get('reason', '')}`",
+                "- Original:",
+                f"  > {text}",
+                "",
+            ]
+        )
+        for file_item in message.get("files") or []:
+            download = file_item.get("download") or {}
+            analysis = file_item.get("analysis") or {}
+            evidence_lines.extend(
+                [
+                    f"  - attachment: `{file_item.get('name') or file_item.get('title') or file_item.get('id')}`",
+                    f"  - attachment_download: `{download.get('status', 'metadata_only')}` / `{download.get('path', download.get('reason', ''))}`",
+                    f"  - attachment_analysis: `{analysis.get('status', 'not_analyzed')}` / extractor `{analysis.get('extractor', '-')}`",
+                ]
+            )
+            if analysis.get("text_excerpt"):
+                evidence_lines.extend(["  - attachment_excerpt:", f"    > {analysis.get('text_excerpt')}"])
+    if evidence_lines and _append_unique_block(project_dir / "Evidence_Log.md", marker, heading, evidence_lines):
+        written_paths.append(_relative_repo_path(project_dir / "Evidence_Log.md"))
+
+    action_lines: list[str] = []
+    for item in items:
+        text = _message_text(item.get("message", {}))
+        if re.search(r"TODO|요청|필요|확인|검토|예정|보내|전달|공유|견적|계약|발송|출장|미팅", text, flags=re.IGNORECASE):
+            action_lines.append(f"- `{item.get('ts', '')}` {_message_excerpt(item.get('message', {}), 300)}")
+    if action_lines and _append_unique_block(project_dir / "Decisions.md", marker, heading, action_lines[:20]):
+        written_paths.append(_relative_repo_path(project_dir / "Decisions.md"))
+
+    risk_lines: list[str] = []
+    for item in items:
+        text = _message_text(item.get("message", {}))
+        if re.search(r"충돌|불일치|상충|지연|리스크|보류|미확정|불가|연기|어려|이슈|비용|범위", text):
+            risk_lines.append(f"- `{item.get('ts', '')}` {_message_excerpt(item.get('message', {}), 300)}")
+    if risk_lines and _append_unique_block(project_dir / "Risks.md", marker, heading, risk_lines[:20]):
+        written_paths.append(_relative_repo_path(project_dir / "Risks.md"))
+
+    change_lines = [
+        "- Slack 수집 결과 프로젝트별 증거 패키지 자동 승격",
+        f"- 프로젝트 후보: `{project_name}`",
+        f"- 생성/갱신 프로젝트: `[[Wiki/{project_key}/hub]]`",
+        f"- 메시지 수: `{len(items)}`",
+        f"- raw export: `{_relative_repo_path(export_path)}`",
+    ]
+    if _append_unique_block(project_dir / "Change_Log.md", marker, heading, change_lines):
+        written_paths.append(_relative_repo_path(project_dir / "Change_Log.md"))
+
+    return written_paths
+
+
+def _promote_slack_messages_to_projects(
+    config: RuntimeConfig,
+    channel: dict[str, Any],
+    export_path: Path,
+    filtered_path: Path,
+    history_window: dict[str, Any],
+    filter_result: dict[str, Any],
+    collected_at: str,
+) -> list[str]:
+    grouped: dict[tuple[str, str], list[dict[str, Any]]] = {}
+    channel_name = channel.get("name", "")
+    for item in filter_result.get("kept", []):
+        if item.get("bucket") != "project":
+            continue
+        project_name = _extract_slack_project_name(item.get("message", {}), channel_name)
+        if not project_name:
+            continue
+        project_key = _slack_project_key(project_name)
+        grouped.setdefault((project_name, project_key), []).append(item)
+
+    written_paths: list[str] = []
+    for (project_name, project_key), items in sorted(grouped.items(), key=lambda entry: (-len(entry[1]), entry[0][0])):
+        written_paths.extend(
+            _append_project_slack_updates(
+                config,
+                channel,
+                project_name,
+                project_key,
+                items,
+                export_path,
+                filtered_path,
+                history_window,
+                filter_result,
+                collected_at,
+            )
+        )
+    return written_paths
+
+
 def _promote_filtered_export_to_wiki(
     config: RuntimeConfig,
     channel: dict[str, Any],
@@ -665,7 +1035,9 @@ def _promote_filtered_export_to_wiki(
         _ensure_markdown_page(target_root / "Conflict_Register.md", "Conflict Register")
         _ensure_markdown_page(target_root / "Change_Log.md", "Change Log")
         target_bucket = items[0].get("bucket", "company_news")
-        marker = f"slack-promotion:{channel_id}:{export_relpath}:{target_bucket}"
+        ts_values = [str(item.get("ts", "") or "") for item in items if item.get("ts")]
+        span_signature = f"{max(ts_values) if ts_values else ''}:{min(ts_values) if ts_values else ''}:{len(items)}"
+        marker = f"slack-promotion:{channel_id}:{target_bucket}:{span_signature}"
         heading = f"Slack Collect - {date_label} - #{channel_name}"
         reference_lines = [
             "### Reference 01",
@@ -738,6 +1110,18 @@ def _promote_filtered_export_to_wiki(
         ]
         if _append_unique_block(target_root / "Change_Log.md", marker, heading, change_lines):
             written_paths.append(_relative_repo_path(target_root / "Change_Log.md"))
+
+    written_paths.extend(
+        _promote_slack_messages_to_projects(
+            config,
+            channel,
+            export_path,
+            filtered_path,
+            history_window,
+            filter_result,
+            collected_at,
+        )
+    )
     return written_paths
 
 
@@ -834,9 +1218,11 @@ def _fetch_channel_messages(
     limit_per_channel: int,
     latest_ts: str = "",
     throttle: SlackThrottle | None = None,
-) -> list[dict[str, Any]]:
+) -> tuple[list[dict[str, Any]], dict[str, Any]]:
     cursor = ""
     messages: list[dict[str, Any]] = []
+    pages = 0
+    final_has_more = False
     while len(messages) < limit_per_channel:
         batch_limit = min(200, limit_per_channel - len(messages))
         request_params = {
@@ -854,8 +1240,10 @@ def _fetch_channel_messages(
             request_params,
             throttle=throttle,
         )
+        pages += 1
         batch = payload.get("messages", [])
         messages.extend(batch)
+        final_has_more = bool(payload.get("has_more"))
         cursor = payload.get("response_metadata", {}).get("next_cursor", "")
         if not cursor or not batch:
             break
@@ -863,7 +1251,17 @@ def _fetch_channel_messages(
             throttle.pause_between_history_pages()
     # Slack conversations.history returns newest messages first. Keep that order
     # so the pipeline promotes the most recent evidence before older context.
-    return messages
+    stats = {
+        "pages": pages,
+        "limit_per_channel": limit_per_channel,
+        "limit_reached": len(messages) >= limit_per_channel,
+        "exhausted": not cursor and not final_has_more,
+        "has_more": bool(cursor or final_has_more),
+        "newest_fetched_ts": messages[0].get("ts", "") if messages else "",
+        "oldest_fetched_ts": messages[-1].get("ts", "") if messages else "",
+        "order": "newest_first",
+    }
+    return messages, stats
 
 
 def _fetch_thread_replies(token: str, channel_id: str, thread_ts: str, throttle: SlackThrottle | None = None) -> list[dict[str, Any]]:
@@ -934,15 +1332,16 @@ def collect_channels(
         }
         oldest_ts, latest_boundary_ts, window_mode = _history_window_ts(config, channel_id, state, oldest_days, since_date, until_date)
         auto_joined = False
+        fetch_stats: dict[str, Any] = {}
         try:
-            messages = _fetch_channel_messages(token, channel_id, oldest_ts, max_messages, latest_boundary_ts, throttle=throttle)
+            messages, fetch_stats = _fetch_channel_messages(token, channel_id, oldest_ts, max_messages, latest_boundary_ts, throttle=throttle)
         except SlackApiError as exc:
             if exc.error_code == "not_in_channel" and channel.get("type") == "public_channel":
                 try:
                     _join_channel(token, channel_id, throttle=throttle)
                     auto_joined = True
                     throttle.pause_between_channels()
-                    messages = _fetch_channel_messages(token, channel_id, oldest_ts, max_messages, latest_boundary_ts, throttle=throttle)
+                    messages, fetch_stats = _fetch_channel_messages(token, channel_id, oldest_ts, max_messages, latest_boundary_ts, throttle=throttle)
                 except SlackApiError as join_exc:
                     skipped.append(
                         {
@@ -977,6 +1376,9 @@ def collect_channels(
             normalized_messages.append(normalized)
 
         export_relpath = f"{run_started_at.strftime('%Y-%m-%d')}/{channel_name}_{channel_id}_{run_stamp}.json"
+        file_stats = {"downloaded": 0, "analyzed": 0, "skipped": 0, "failed": 0}
+        if not dry_run and use_files:
+            file_stats = _download_and_analyze_message_files(token, config, channel, export_relpath, normalized_messages, throttle)
         export_path = export_root / export_relpath
         previous_latest_ts = channel_states.get(channel_id, {}).get("latest_message_ts", "")
         latest_ts = normalized_messages[0]["ts"] if normalized_messages else previous_latest_ts
@@ -997,6 +1399,8 @@ def collect_channels(
                 "limit_per_channel": max_messages,
                 "include_threads": use_threads,
                 "include_files": use_files,
+                "fetch_stats": fetch_stats,
+                "file_stats": file_stats,
             },
             "messages": normalized_messages,
         }
@@ -1052,6 +1456,7 @@ def collect_channels(
                 "last_filtered_export_path": str(filtered_path),
                 "message_count": len(normalized_messages),
                 "filtered_message_count": len(filter_result.get("kept", [])),
+                "file_stats": file_stats,
                 "filter_provider": filter_result.get("provider", ""),
                 "filter_error": filter_result.get("error", ""),
                 "routing": routing,
@@ -1064,6 +1469,8 @@ def collect_channels(
                 "type": channel.get("type"),
                 "routing": channel_profile,
                 "messages": len(normalized_messages),
+                "fetch_stats": fetch_stats,
+                "file_stats": file_stats,
                 "latest_message_ts": latest_ts,
                 "export_path": str(export_path),
                 "dry_run": dry_run,

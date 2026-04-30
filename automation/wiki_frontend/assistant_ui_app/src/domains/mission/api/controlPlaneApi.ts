@@ -82,6 +82,91 @@ export type PipelineStatePayload = {
   state?: Record<string, unknown>;
 };
 
+export type CollectionPlan = {
+  objective?: string;
+  sources?: Partial<Record<"slack" | "drive" | "filesystem", boolean>>;
+  scope?: {
+    slack?: {
+      channels?: string[];
+      sinceDate?: string;
+      untilDate?: string;
+      oldestDays?: number;
+      limitPerChannel?: number;
+      includeThreads?: boolean;
+      includeFiles?: boolean;
+    };
+    drive?: {
+      remotePath?: string;
+      candidate?: DriveCandidate;
+    };
+    filesystem?: {
+      path?: string;
+      maxDepth?: number;
+      maxFiles?: number;
+      maxEntriesPerDirectory?: number;
+    };
+  };
+  execution?: {
+    mode?: string;
+    completionMode?: string;
+    connectionPolicy?: string;
+    retryAfterMinutes?: number;
+    continueAfterCollect?: boolean;
+    refreshAfterCollect?: boolean;
+  };
+  rules?: Record<string, string>;
+  existingMode?: string;
+  skillRoutes?: Array<Record<string, unknown>>;
+};
+
+export type PipelineRunStep = {
+  id?: string;
+  label?: string;
+  status?: string;
+  detail?: string;
+  command?: string;
+  runId?: string;
+};
+
+export type PipelineFileStatus = {
+  path?: string;
+  source?: string;
+  ext?: string;
+  extractor?: string;
+  skill?: string;
+  status?: string;
+  wikiTarget?: string;
+  action?: string;
+  warnings?: string[];
+  channel?: string;
+  channelId?: string;
+  messages?: number;
+  order?: string;
+  pages?: number;
+  exhausted?: boolean;
+  downloadedFiles?: number;
+  analyzedFiles?: number;
+  promotedDocuments?: number;
+  promotedProjects?: number;
+  newestTs?: string;
+  oldestTs?: string;
+};
+
+export type PipelineRunRecord = {
+  runId?: string;
+  command?: string;
+  status?: string;
+  createdAt?: string;
+  startedAt?: string;
+  updatedAt?: string;
+  finishedAt?: string;
+  currentStep?: string;
+  steps?: PipelineRunStep[];
+  fileStatuses?: PipelineFileStatus[];
+  summary?: Record<string, unknown>;
+  errors?: string[];
+};
+
 export type FilesystemBrowsePayload = {
   files?: string[];
   directories?: string[];
@@ -418,6 +503,35 @@ export function savePipelineState(state: Record<string, unknown>) {
     method: "POST",
     body: JSON.stringify({ state }),
   });
+}
+
+export function planPipelineCollection(plan: CollectionPlan) {
+  return requestJson<{ plan: CollectionPlan; preview: PipelineRunRecord }>("/api/pipeline/plan", {
+    method: "POST",
+    body: JSON.stringify({ collectionPlan: plan }),
+  });
+}
+
+export function testPipelineCollection(plan: CollectionPlan) {
+  return requestJson<{ run: PipelineRunRecord }>("/api/pipeline/test", {
+    method: "POST",
+    body: JSON.stringify({ collectionPlan: plan }),
+  });
+}
+
+export function runPipelineCollection(plan: CollectionPlan) {
+  return requestJson<{ run: PipelineRunRecord }>("/api/pipeline/run", {
+    method: "POST",
+    body: JSON.stringify({ collectionPlan: plan }),
+  });
+}
+
+export function fetchPipelineRuns() {
+  return requestJson<{ runs: PipelineRunRecord[] }>("/api/pipeline/runs");
+}
+
+export function fetchPipelineRun(runId: string) {
+  return requestJson<{ run: PipelineRunRecord }>(`/api/pipeline/runs/${encodeURIComponent(runId)}`);
 }
 
 export function fetchFilesystemRoots() {

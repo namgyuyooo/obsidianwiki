@@ -74,3 +74,18 @@
 - 관련 위키 문서: [[Evidence_Log]], [[Change_Log]], [[Conflict_Register]]
 - 읽기 상태: system collect promoted
 - 비고: 필터 제공자 `disabled` / 필터 오류 `none` / 대상 버킷 `project` / 반영 메시지 수 `59`
+
+<!-- slack-promotion:C01L5SA4Y4C:2026-04-30/tf_cross_team_sales_C01L5SA4Y4C_2026-04-30T13-28-43Z.json:project -->
+## Slack Collect - 2026-04-30 - #tf_cross_team_sales
+
+### Reference 01
+- 제목: Slack collect #tf_cross_team_sales
+- 참조 유형: Slack
+- URL: -
+- fallback 파일명: tf_cross_team_sales_C01L5SA4Y4C_2026-04-30T13-28-43Z.json
+- fallback 경로: Slack 채널 `#tf_cross_team_sales` / channel id `C01L5SA4Y4C`
+- 재수집 식별자: collection state `automation/wiki_api/runtime/slack_collection_state.json` / last_export_path `obsidian/raw/exports/slack/2026-04-30/tf_cross_team_sales_C01L5SA4Y4C_2026-04-30T13-28-43Z.json` / last_filtered_export_path `2026-04-30/tf_cross_team_sales_C01L5SA4Y4C_2026-04-30T13-28-43Z.json` / oldest_ts `1767193200.000000`
+- 설명 위치: [[Evidence_Log]], [[Change_Log]], [[Conflict_Register]]
+- 관련 위키 문서: [[Evidence_Log]], [[Change_Log]], [[Conflict_Register]]
+- 읽기 상태: system collect promoted
+- 비고: 필터 제공자 `disabled` / 필터 오류 `none` / 대상 버킷 `project` / 반영 메시지 수 `59`

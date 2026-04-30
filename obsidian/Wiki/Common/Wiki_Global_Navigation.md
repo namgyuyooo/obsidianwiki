@@ -10,32 +10,32 @@ source: "automation/drive_wikify global navigation generator"
 이 문서는 위키 전체 갱신 상태를 전역 관점에서 요약하는 자동 생성 네비게이션 맵입니다.
 
 ## Global Snapshot
-- 생성 시각: `2026-04-30T12:47:06.775266`
-- 총 페이지: `813`
-- 총 링크 엣지: `3085`
-- 고아 페이지: `177`
-- 프로젝트/공간 수: `69`
+- 생성 시각: `2026-04-30T23:01:21.799287`
+- 총 페이지: `874`
+- 총 링크 엣지: `3043`
+- 고아 페이지: `257`
+- 프로젝트/공간 수: `75`
 
 ## High Connectivity Pages
-- [[Wiki/아사히카세히_Project/Reference_Register]]: degree `277`
-- [[Wiki/아사히카세히_Project/hub]]: degree `258`
-- [[Wiki/아사히카세히_Project/Evidence_Log]]: degree `245`
+- [[Wiki/아사히카세히_Project/hub]]: degree `270`
+- [[Wiki/아사히카세히_Project/Reference_Register]]: degree `263`
+- [[Wiki/아사히카세히_Project/Evidence_Log]]: degree `231`
 - [[Wiki/아사히카세히_Project/Status]]: degree `231`
 - [[Wiki/ZEUS_AIVoucher_Project/Decisions]]: degree `225`
 - [[Wiki/ZEUS_AIVoucher_Project/Risks]]: degree `213`
 - [[Wiki/아사히카세히_Project/Conflict_Register]]: degree `210`
 - [[Wiki/아사히카세히_Project/Action_Items]]: degree `209`
-- [[Wiki/아사히카세히_Project/Change_Log]]: degree `192`
-- [[Wiki/아사히카세히_Project/Project_Overview]]: degree `162`
-- [[Wiki/index]]: degree `114`
+- [[Wiki/아사히카세히_Project/Change_Log]]: degree `172`
+- [[Wiki/아사히카세히_Project/Project_Overview]]: degree `142`
+- [[Wiki/index]]: degree `120`
 - [[Wiki/ZEUS_AIVoucher_Project/Sources]]: degree `91`
 
 ## Project Coverage
-- `Common`: pages `132`, memory `0`, graph links `1176`
-- `memory`: pages `77`, memory `77`, graph links `314`
+- `Common`: pages `132`, memory `0`, graph links `1178`
+- `memory`: pages `83`, memory `83`, graph links `334`
 - `Business_Plan_Project`: pages `22`, memory `0`, graph links `96`
 - `PSK_Project`: pages `18`, memory `0`, graph links `137`
-- `Sawnics_ManufacturingAI_Project`: pages `14`, memory `0`, graph links `129`
+- `Sawnics_ManufacturingAI_Project`: pages `15`, memory `0`, graph links `141`
 - `LGEnergy_ImageAnalysis_Project`: pages `13`, memory `0`, graph links `92`
 - `Pixel_AIVoucher_Project`: pages `13`, memory `0`, graph links `95`
 - `SeoulBiosys_Project`: pages `13`, memory `0`, graph links `93`
@@ -53,26 +53,26 @@ source: "automation/drive_wikify global navigation generator"
 - `BGF_EcoSpecialty_Project`: pages `11`, memory `0`, graph links `78`
 
 ## Orphan Pages
-- [[L1_memory/GLM_Chat_Projects/1777525663629-새_GLM_프로젝트]]
-- [[L1_memory/GLM_Chat_Projects/1777525942200-새_GLM_프로젝트]]
-- [[L1_memory/GLM_Chat_Projects/1777527873305-새_GLM_프로젝트]]
-- [[Wiki/2020_kim_seeun_Project/Conflict_Register]]
-- [[Wiki/2020_kim_seeun_Project/Decisions]]
-- [[Wiki/2020_kim_seeun_Project/Evidence_Log]]
-- [[Wiki/2020_kim_seeun_Project/Project_Overview]]
-- [[Wiki/2020_kim_seeun_Project/Risks]]
-- [[Wiki/2020_kim_suhyeong_Project/Conflict_Register]]
-- [[Wiki/2020_kim_suhyeong_Project/Decisions]]
-- [[Wiki/2020_kim_suhyeong_Project/Evidence_Log]]
-- [[Wiki/2020_kim_suhyeong_Project/Project_Overview]]
-- [[Wiki/2020_kim_suhyeong_Project/Risks]]
-- [[Wiki/2020_lee_yewon_Project/Conflict_Register]]
-- [[Wiki/2020_lee_yewon_Project/Decisions]]
-- [[Wiki/2020_lee_yewon_Project/Evidence_Log]]
-- [[Wiki/2020_lee_yewon_Project/Project_Overview]]
-- [[Wiki/2020_lee_yewon_Project/Risks]]
-- [[Wiki/2020_minhyeong_cv_gil_Project/Conflict_Register]]
-- [[Wiki/2020_minhyeong_cv_gil_Project/Decisions]]
+- [[L1_memory/GLM_Global_Instructions]]
+- [[Wiki/2023_221125_250423_hubsedexdemo_021006_00_v1_Project/Conflict_Register]]
+- [[Wiki/2023_221125_250423_hubsedexdemo_021006_00_v1_Project/Decisions]]
+- [[Wiki/2023_221125_250423_hubsedexdemo_021006_00_v1_Project/Evidence_Log]]
+- [[Wiki/2023_221125_250423_hubsedexdemo_021006_00_v1_Project/Project_Overview]]
+- [[Wiki/2023_221125_250423_hubsedexdemo_021006_00_v1_Project/Risks]]
+- [[Wiki/2023_5월_22_03_12_17_scan_Project/Conflict_Register]]
+- [[Wiki/2023_5월_22_03_12_17_scan_Project/Decisions]]
+- [[Wiki/2023_5월_22_03_12_17_scan_Project/Evidence_Log]]
+- [[Wiki/2023_5월_22_03_12_17_scan_Project/Project_Overview]]
+- [[Wiki/2023_5월_22_03_12_17_scan_Project/Risks]]
+- [[Wiki/2023_ai_pattern_Project/Conflict_Register]]
+- [[Wiki/2023_ai_pattern_Project/Decisions]]
+- [[Wiki/2023_ai_pattern_Project/Evidence_Log]]
+- [[Wiki/2023_ai_pattern_Project/Project_Overview]]
+- [[Wiki/2023_ai_pattern_Project/Risks]]
+- [[Wiki/2023_main_mission_title_our_Project/Conflict_Register]]
+- [[Wiki/2023_main_mission_title_our_Project/Decisions]]
+- [[Wiki/2023_main_mission_title_our_Project/Evidence_Log]]
+- [[Wiki/2023_main_mission_title_our_Project/Project_Overview]]
 
 ## Runtime Outputs
 - `automation/drive_wikify/runtime/wiki_sparse_index.json`

@@ -206,6 +206,11 @@ function projectKeyFromWikiPath(path: string) {
   return parts[wikiIndex + 1] || "";
 }
 
+function isAlreadyMissingProjectError(error: unknown) {
+  const message = error instanceof Error ? error.message : String(error || "");
+  return message.includes("삭제할 프로젝트 패키지를 찾지 못했습니다");
+}
+
 function folderSortRank(type: string) {
   const rank = FOLDER_TYPE_ORDER.indexOf(type);
   return rank === -1 ? FOLDER_TYPE_ORDER.length : rank;
@@ -1047,6 +1052,10 @@ function WikiManagementConsole({
   };
 
   const summaryLines = markdownListLines(activeCommand?.plan?.summaryMarkdown);
+  const quickCommands = [
+    "기존 자료를 운영형 위키로 컨버팅해줘. 프로젝트 허브를 연결하고 중복/충돌을 막아줘. 파일 원문은 요약으로 대체하지 말고 Raw_Evidence_Index와 Evidence_Log에 보존하는 전제로 Status, Business_Flow, CEO_Brief, PM_Action_Plan, Customer_Followup 후보를 만들어줘.",
+    "이 프로젝트의 현재 상태를 CEO/PM이 의사결정할 수 있게 허브 중심으로 재정리하는 계획을 세워줘. 원문 보존, 충돌 후보, 다음 액션, 고객 후속을 분리해줘.",
+  ];
 
   return (
     <section className="aui-wiki-card aui-wiki-command-card">
@@ -1061,9 +1070,16 @@ function WikiManagementConsole({
             rows={4}
             value={command}
             onChange={(event) => setCommand(event.target.value)}
-            placeholder="예: A 프로젝트 명칭을 B 프로젝트로 통일하고 관련 문서를 찾아 계획을 세워줘."
+            placeholder="예: 기존 자료를 운영형 위키로 컨버팅하고 프로젝트 허브를 연결해줘. 파일 원문은 요약 대체 금지."
           />
         </label>
+        <div className="aui-wiki-command-chips">
+          {quickCommands.map((item) => (
+            <button key={item.slice(0, 32)} onClick={() => setCommand(item)} type="button">
+              {item.includes("CEO/PM") ? "CEO/PM 운영 전환" : "운영형 허브 연결"}
+            </button>
+          ))}
+        </div>
         <button disabled={phase === "planning" || phase === "applying"} type="submit">계획 생성</button>
       </form>
       <p className={`aui-wiki-inline-state ${phase}`}>{message}</p>
@@ -1515,17 +1531,27 @@ export function WikiWorkspace({ chatContext }: WikiWorkspaceProps) {
       notify("info", "선택 항목 없음", "삭제할 문서를 먼저 선택하세요.");
       return;
     }
+    const selectedCount = selectedWikiPages.length;
     setDeletionPhase("running");
-    notify("running", "일괄 삭제 시작", `${selectedWikiPages.length}개 문서`, { durationMs: 2400 });
+    notify("running", "일괄 삭제 시작", `${selectedCount}개 문서`, { durationMs: 2400 });
     try {
       const projectPages = selectedProjectHubPages;
       const nonProjectPages = selectedWikiPages.filter((page) => !(["project", "account"].includes(page.division || "") && page.docKind === "hub" && (page.projectKey || projectKeyFromWikiPath(page.path))));
       const handledProjectKeys = new Set<string>();
+      let alreadyMissingProjects = 0;
       for (const page of projectPages) {
         const projectKey = page.projectKey || projectKeyFromWikiPath(page.path);
         if (!projectKey || handledProjectKeys.has(projectKey)) continue;
         handledProjectKeys.add(projectKey);
-        await deleteWikiProjectPackageApi(projectKey, deletionReason, chatContext.workspace, page.path);
+        try {
+          await deleteWikiProjectPackageApi(projectKey, deletionReason, chatContext.workspace, page.path);
+        } catch (error) {
+          if (isAlreadyMissingProjectError(error)) {
+            alreadyMissingProjects += 1;
+            continue;
+          }
+          throw error;
+        }
       }
       for (const page of nonProjectPages) {
         await deleteWikiPageApi(page.path, deletionReason, chatContext.workspace, false);
@@ -1533,8 +1559,15 @@ export function WikiWorkspace({ chatContext }: WikiWorkspaceProps) {
       await Promise.all([wiki.reloadIndex(), loadGraph()]);
       clearSelectedWikiPages();
       setDeletionPhase("idle");
-      notify("success", "일괄 삭제 완료", `${selectedWikiPages.length}개 선택 항목을 정리했습니다.`);
+      notify(
+        "success",
+        "일괄 삭제 완료",
+        alreadyMissingProjects
+          ? `${selectedCount}개 선택 항목을 정리했습니다. 이미 없던 프로젝트 ${alreadyMissingProjects}개는 화면에서 동기화했습니다.`
+          : `${selectedCount}개 선택 항목을 정리했습니다.`,
+      );
     } catch (error) {
+      await Promise.all([wiki.reloadIndex(), loadGraph()]);
       setDeletionPhase("error");
       notify("error", "일괄 삭제 실패", error instanceof Error ? error.message : "일괄 삭제 실패");
     }
@@ -1862,6 +1895,13 @@ export function WikiWorkspace({ chatContext }: WikiWorkspaceProps) {
       appendReasonLog(`Delete project · ${projectKey}`, [deletionReason, `removed: ${result.removedCount}`].join("\n"));
       notify("success", "프로젝트 전체 삭제 완료", `${projectKey} · ${result.removedCount}개 항목 정리`);
     } catch (error) {
+      await Promise.all([wiki.reloadIndex(), loadGraph()]);
+      if (isAlreadyMissingProjectError(error)) {
+        setDeletionPhase("idle");
+        setDeletionMessage(`이미 없는 프로젝트를 화면에서 정리했습니다 · ${projectKey}`);
+        notify("info", "프로젝트 전체 삭제 정리", `${projectKey} 는 이미 없어 인덱스만 다시 맞췄습니다.`);
+        return;
+      }
       setDeletionPhase("error");
       setDeletionMessage(error instanceof Error ? error.message : "프로젝트 전체 삭제 실패");
       notify("error", "프로젝트 전체 삭제 실패", error instanceof Error ? error.message : "프로젝트 전체 삭제 실패");

@@ -50,3 +50,19 @@ source: "Slack channel routing"
 - 채널: `#tf_cross_team_sales`
 - 버킷: `project`
 - export relpath: `2026-04-30/tf_cross_team_sales_C01L5SA4Y4C_2026-04-30T11-20-46Z.json`
+
+<!-- slack-promotion:C01L5SA4Y4C:2026-04-30/tf_cross_team_sales_C01L5SA4Y4C_2026-04-30T13-43-46Z.json:project -->
+## Slack Collect - 2026-04-30 - #tf_cross_team_sales
+
+- Slack filtered export 자동 승격
+- 채널: `#tf_cross_team_sales`
+- 버킷: `project`
+- export relpath: `2026-04-30/tf_cross_team_sales_C01L5SA4Y4C_2026-04-30T13-43-46Z.json`
+
+<!-- slack-promotion:C01L5SA4Y4C:project:1777544778.439319:1767777065.786109:57 -->
+## Slack Collect - 2026-04-30 - #tf_cross_team_sales
+
+- Slack filtered export 자동 승격
+- 채널: `#tf_cross_team_sales`
+- 버킷: `project`
+- export relpath: `2026-04-30/tf_cross_team_sales_C01L5SA4Y4C_2026-04-30T13-52-15Z.json`

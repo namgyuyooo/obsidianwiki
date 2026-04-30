@@ -9,6 +9,7 @@ import {
   collectSlack,
   createSchedule,
   continueAfterCollection,
+  fetchPipelineRuns,
   fetchDriveAnalyses,
   fetchFilesystemRoots,
   importFilesystemFolder,
@@ -17,15 +18,21 @@ import {
   fetchSettings,
   fetchSlackChannels,
   fetchSlackStatus,
+  planPipelineCollection,
+  runPipelineCollection,
   savePipelineState,
   saveSettings,
   runTargetedRclone,
   stopAutomation,
+  testPipelineCollection,
   type AutomationSchedule,
+  type CollectionPlan,
   type DriveAnalysis,
   type DriveCandidate,
   type FilesystemBrowsePayload,
   type FilesystemRoot,
+  type PipelineFileStatus,
+  type PipelineRunRecord,
   type SettingsPayload,
   type SlackChannel,
   type SlackStatusSnapshot,
@@ -71,6 +78,7 @@ type PipelinePersistedState = {
   existingMode?: ExistingMode;
   retryAfterMinutes?: number;
   tested?: Partial<{ slack: boolean; drive: boolean; mirror: boolean }>;
+  pipelineTestReadyKey?: string;
   scheduleDraft?: Partial<ScheduleDraft>;
 };
 
@@ -230,6 +238,11 @@ function conservativeNumber(settings: Record<string, string>, key: string, fallb
   return Number.isFinite(value) && value > 0 ? value : fallback;
 }
 
+function summaryNumber(summary: Record<string, unknown>, key: string) {
+  const value = Number(summary[key]);
+  return Number.isFinite(value) ? value : 0;
+}
+
 function elapsedLabel(startedAt = "", now = Date.now()) {
   const started = Date.parse(startedAt);
   if (!Number.isFinite(started)) return "-";
@@ -305,12 +318,14 @@ export function PipelineCockpit({ chatContext }: PipelineCockpitProps) {
   const [tested, setTested] = useState({ slack: false, drive: false, mirror: false });
   const [driveAnalyses, setDriveAnalyses] = useState<DriveAnalysis[]>([]);
   const [automation, setAutomation] = useState<AutomationSnapshot>({ running: [], runs: [] });
+  const [pipelineRuns, setPipelineRuns] = useState<PipelineRunRecord[]>([]);
+  const [pipelinePreview, setPipelinePreview] = useState<PipelineRunRecord | null>(null);
+  const [pipelineTestReadyKey, setPipelineTestReadyKey] = useState("");
   const [filesystemBrowse, setFilesystemBrowse] = useState<FilesystemBrowsePayload>({ files: [], directories: [], blocked: [], entries: [] });
   const [filesystemRoots, setFilesystemRoots] = useState<FilesystemRoot[]>([]);
 
   const activeAnalysis = currentDriveAnalysis(driveAnalyses);
   const candidates = activeAnalysis.candidates || [];
-  const topCandidate = candidates[0];
   const runningJob = automation.running[0];
   const runVisibleForSources = (run: AutomationRun) => {
     const key = commandKey(run.command);
@@ -321,12 +336,17 @@ export function PipelineCockpit({ chatContext }: PipelineCockpitProps) {
   const recentRuns = [...automation.running, ...automation.runs.filter((run) => !automation.running.some((live) => live.runId === run.runId))]
     .filter(runVisibleForSources)
     .slice(0, 6);
-  const progressRun = runningJob || recentRuns[0];
-  const progressPercent = typeof progressRun?.progress?.percent === "number" ? Math.max(0, Math.min(100, progressRun.progress.percent)) : null;
-  const progressLines = progressRun?.progress?.recentLines?.length
-    ? progressRun.progress.recentLines
-    : [progressRun?.progress?.summary || progressRun?.progress?.lastLogLine || (runningJob ? "로그 수신 대기 중입니다. 작업은 실행 중입니다." : "최근 실행 로그가 없습니다.")];
-  const actionBusy = Boolean(activeAction || runningJob);
+  const activePipelineRun = pipelineRuns.find((run) => run.status === "running") || null;
+  const latestPipelineRun = pipelineRuns[0] || null;
+  const progressAutomationRun = runningJob || recentRuns[0];
+  const progressRun = activePipelineRun || latestPipelineRun || progressAutomationRun;
+  const progressPercent = typeof progressAutomationRun?.progress?.percent === "number" ? Math.max(0, Math.min(100, progressAutomationRun.progress.percent)) : null;
+  const progressLines = activePipelineRun?.steps?.length
+    ? activePipelineRun.steps.slice(-5).map((step) => `${step.label || step.id}: ${step.status || "-"}${step.detail ? ` · ${step.detail}` : ""}`)
+    : progressAutomationRun?.progress?.recentLines?.length
+      ? progressAutomationRun.progress.recentLines
+      : [progressAutomationRun?.progress?.summary || progressAutomationRun?.progress?.lastLogLine || (runningJob ? "로그 수신 대기 중입니다. 작업은 실행 중입니다." : "최근 실행 로그가 없습니다.")];
+  const actionBusy = Boolean(activeAction || runningJob || activePipelineRun);
   const latestRunsByCommand = new Map<string, AutomationRun>();
   [...automation.running, ...automation.runs].forEach((run) => {
     const key = commandKey(run.command);
@@ -339,6 +359,10 @@ export function PipelineCockpit({ chatContext }: PipelineCockpitProps) {
     && run.slackScopeKey === currentSlackScopeKey
   ));
   const slackTestReady = Boolean(selectedChannels.length && ((tested.slack && slackTestKey === currentSlackScopeKey) || hasCompletedSlackDryRun));
+  const precollectedCandidates = candidates.filter(isPrecollected);
+  const actionableCandidates = existingMode === "skip-existing" ? candidates.filter((candidate) => !isPrecollected(candidate)) : candidates;
+  const visibleCandidates = existingMode === "skip-existing" ? actionableCandidates : candidates;
+  const activeTopCandidate = visibleCandidates[0];
   const activeSourceNames = SOURCE_LABELS.filter((source) => sources[source.key]).map((source) => source.label);
   const driveReady = Boolean(activeTopCandidate?.remotePath && tested.drive);
   const filesystemReady = Boolean(filesystemPath && tested.mirror);
@@ -368,22 +392,24 @@ export function PipelineCockpit({ chatContext }: PipelineCockpitProps) {
                 : "실제 수집을 실행할 준비가 됐습니다.";
 
   const refreshCollectionState = async () => {
-    const [nextSlackStatus, analysisPayload, automationPayload, schedulePayload] = await Promise.all([
+    const [nextSlackStatus, analysisPayload, automationPayload, schedulePayload, pipelineRunPayload] = await Promise.all([
       fetchSlackStatus(),
       fetchDriveAnalyses(),
       fetchAutomationSnapshot(),
       fetchSchedules(),
+      fetchPipelineRuns(),
     ]);
     setSlackStatus(nextSlackStatus);
     setDriveAnalyses(analysisPayload.analyses || []);
     setAutomation(automationPayload);
     setSchedules(schedulePayload.schedules || []);
+    setPipelineRuns(pipelineRunPayload.runs || []);
   };
 
   const loadAll = async (query = channelQuery) => {
     setPhase("loading");
     try {
-      const [nextSlackStatus, channelPayload, analysisPayload, automationPayload, settingsPayload, schedulePayload, pipelinePayload, filesystemRootPayload] = await Promise.all([
+      const [nextSlackStatus, channelPayload, analysisPayload, automationPayload, settingsPayload, schedulePayload, pipelinePayload, filesystemRootPayload, pipelineRunPayload] = await Promise.all([
         fetchSlackStatus(),
         fetchSlackChannels(query),
         fetchDriveAnalyses(),
@@ -392,12 +418,14 @@ export function PipelineCockpit({ chatContext }: PipelineCockpitProps) {
         fetchSchedules(),
         fetchPipelineState(),
         fetchFilesystemRoots(),
+        fetchPipelineRuns(),
       ]);
       const persisted = asPersistedState(pipelinePayload.state);
       setSlackStatus(nextSlackStatus);
       setSlackChannels(channelPayload.channels || []);
       setDriveAnalyses(analysisPayload.analyses || []);
       setAutomation(automationPayload);
+      setPipelineRuns(pipelineRunPayload.runs || []);
       setFilesystemRoots(filesystemRootPayload.roots || []);
       setSettings(settingsPayload);
       setRuleDraft(pickConservativeRules(settingsPayload.settings));
@@ -424,6 +452,7 @@ export function PipelineCockpit({ chatContext }: PipelineCockpitProps) {
       if (Number(persisted.retryAfterMinutes)) setRetryAfterMinutes(Number(persisted.retryAfterMinutes));
       if (persisted.tested) setTested((current) => ({ ...current, ...persisted.tested }));
       if (typeof persisted.slackTestKey === "string") setSlackTestKey(persisted.slackTestKey);
+      if (typeof persisted.pipelineTestReadyKey === "string") setPipelineTestReadyKey(persisted.pipelineTestReadyKey);
       if (persisted.scheduleDraft) setScheduleDraft((current) => ({ ...current, ...persisted.scheduleDraft }));
       setSchedules(schedulePayload.schedules || []);
       hydratedRef.current = true;
@@ -448,13 +477,64 @@ export function PipelineCockpit({ chatContext }: PipelineCockpitProps) {
   }, [channelQuery, slackChannels]);
 
   const suggestedChannels = visibleChannels.slice(0, 4).map((channel) => channel.name).filter(Boolean);
-  const selectedChannelLabel = selectedChannels.length ? selectedChannels.slice(0, 3).join(", ") : "선택 없음";
   const selectedSourceCount = Object.values(sources).filter(Boolean).length;
   const activeSchedules = schedules.filter((schedule) => schedule.enabled !== false).slice(0, 4);
-  const precollectedCandidates = candidates.filter(isPrecollected);
-  const actionableCandidates = existingMode === "skip-existing" ? candidates.filter((candidate) => !isPrecollected(candidate)) : candidates;
-  const visibleCandidates = existingMode === "skip-existing" ? actionableCandidates : candidates;
-  const activeTopCandidate = visibleCandidates[0];
+  const buildCollectionPlan = (): CollectionPlan => ({
+    objective: objective.trim(),
+    sources,
+    scope: {
+      slack: {
+        channels: selectedChannels,
+        sinceDate: slackSinceDate,
+        untilDate: slackUntilDate,
+        oldestDays,
+        limitPerChannel,
+        includeThreads: true,
+        includeFiles: true,
+      },
+      drive: {
+        remotePath: activeTopCandidate?.remotePath || "",
+        candidate: activeTopCandidate,
+      },
+      filesystem: {
+        path: filesystemPath,
+        maxDepth: conservativeNumber(ruleDraft, "FILESYSTEM_BROWSE_MAX_DEPTH", 8),
+        maxFiles: conservativeNumber(ruleDraft, "FILESYSTEM_BROWSE_MAX_FILES", 5000),
+        maxEntriesPerDirectory: conservativeNumber(ruleDraft, "FILESYSTEM_BROWSE_MAX_ENTRIES", 300),
+      },
+    },
+    execution: {
+      mode: executionMode,
+      completionMode,
+      connectionPolicy,
+      retryAfterMinutes,
+      continueAfterCollect,
+      refreshAfterCollect,
+    },
+    rules: ruleDraft,
+    existingMode,
+    skillRoutes: activeSkillRoutes.map((route) => ({
+      label: route.label,
+      exts: route.exts,
+      skill: route.skill,
+      count: route.count,
+    })),
+  });
+  const collectionPlan = buildCollectionPlan();
+  const collectionPlanKey = JSON.stringify(collectionPlan);
+  const pipelineReady = Boolean(activeSourceNames.length && pipelineTestReadyKey === collectionPlanKey);
+  const focusedPipelineRun = activePipelineRun || latestPipelineRun || pipelinePreview;
+  const pipelineFileStatuses: PipelineFileStatus[] = focusedPipelineRun?.fileStatuses?.length
+    ? focusedPipelineRun.fileStatuses
+    : pipelinePreview?.fileStatuses || [];
+  const pipelineSteps = focusedPipelineRun?.steps || [];
+  const pipelineSummary = focusedPipelineRun?.summary || pipelinePreview?.summary || {};
+  const pipelineCandidateFiles = summaryNumber(pipelineSummary, "candidateFiles");
+  const pipelineProcessedFiles = summaryNumber(pipelineSummary, "processedFiles");
+  const pipelineTotalFiles = summaryNumber(pipelineSummary, "totalFiles");
+  const pipelineSlackChannels = summaryNumber(pipelineSummary, "slackChannels");
+  const pipelineSlackMessages = summaryNumber(pipelineSummary, "slackMessages");
+  const pipelineDriveTargets = summaryNumber(pipelineSummary, "driveTargets");
   const batchStatusCards = BATCH_COMMANDS.filter((item) => {
     if (item.source === "system") return true;
     if (item.source === "mirror") return sources.drive || sources.filesystem;
@@ -497,6 +577,7 @@ export function PipelineCockpit({ chatContext }: PipelineCockpitProps) {
       existingMode,
       retryAfterMinutes,
       tested,
+      pipelineTestReadyKey,
       scheduleDraft,
     };
     const nextJson = JSON.stringify(nextState);
@@ -525,14 +606,15 @@ export function PipelineCockpit({ chatContext }: PipelineCockpitProps) {
     existingMode,
     retryAfterMinutes,
     tested,
+    pipelineTestReadyKey,
     scheduleDraft,
   ]);
 
   useEffect(() => {
-    if (!automation.running.length) return undefined;
+    if (!automation.running.length && !activePipelineRun) return undefined;
     const timer = window.setInterval(() => setNowTick(Date.now()), 1000);
     return () => window.clearInterval(timer);
-  }, [automation.running.length]);
+  }, [automation.running.length, activePipelineRun]);
 
   const runAction = async (action: () => Promise<unknown>, success: string, runningLabel = "작업") => {
     setPhase("running");
@@ -553,6 +635,45 @@ export function PipelineCockpit({ chatContext }: PipelineCockpitProps) {
     } finally {
       setActiveAction("");
     }
+  };
+
+  const runUnifiedPipelineTest = () => runAction(async () => {
+    const plan = buildCollectionPlan();
+    const planKey = JSON.stringify(plan);
+    const previewPayload = await planPipelineCollection(plan);
+    setPipelinePreview(previewPayload.preview);
+    const payload = await testPipelineCollection(plan);
+    const nextRun = payload.run;
+    setPipelinePreview(nextRun);
+    setPipelineRuns((current) => [nextRun, ...current.filter((run) => run.runId !== nextRun.runId)].slice(0, 20));
+    setPipelineTestReadyKey(planKey);
+    const nextTested = {
+      slack: sources.slack ? true : tested.slack,
+      drive: sources.drive ? true : tested.drive,
+      mirror: sources.filesystem ? true : tested.mirror,
+    };
+    if (sources.slack) setSlackTestKey(slackScopeKey(selectedChannels, slackSinceDate, slackUntilDate, limitPerChannel));
+    setTested(nextTested);
+    await savePipelineState({
+      tested: nextTested,
+      pipelineTestReadyKey: planKey,
+      slackTestKey: sources.slack ? slackScopeKey(selectedChannels, slackSinceDate, slackUntilDate, limitPerChannel) : slackTestKey,
+    });
+  }, "테스트 완료. 같은 범위의 실제 수집을 시작할 수 있습니다.", "파이프라인 테스트");
+
+  const runUnifiedPipelineActual = () => {
+    if (!pipelineReady) {
+      setPhase("error");
+      setMessage("실제 수집 전 같은 목표/범위로 테스트를 먼저 완료해야 합니다.");
+      notify("error", "실제 수집 보류", "먼저 테스트 실행을 눌러 범위와 파일별 스킬 라우팅을 확인하세요.");
+      return;
+    }
+    runAction(async () => {
+      const payload = await runPipelineCollection(buildCollectionPlan());
+      const nextRun = payload.run;
+      setPipelineRuns((current) => [nextRun, ...current.filter((run) => run.runId !== nextRun.runId)].slice(0, 20));
+      setPipelinePreview(nextRun);
+    }, "실제 수집을 완료했습니다. 파일별 상태와 검수 항목을 확인하세요.", "실제 수집");
   };
 
   const toggleChannel = (name: string) => {
@@ -797,8 +918,9 @@ export function PipelineCockpit({ chatContext }: PipelineCockpitProps) {
       notify("success", "파일 경로 추출 완료", selectedPath);
       return;
     }
-    notify("running", "절대경로 미제공", "브라우저가 원본 경로를 숨겨 임시 작업공간 fallback으로 적재합니다.");
-    void importExplorerFolder(files);
+    setPhase("error");
+    setMessage("브라우저가 원본 절대경로를 숨겼습니다. 업로드하지 않았습니다. Finder에서 폴더를 선택한 뒤 경로를 복사해 시작 경로에 붙여넣고 `경로 확인`을 누르세요.");
+    notify("error", "경로 추출 불가", "업로드 fallback은 실행하지 않았습니다. 경로 입력 또는 빠른 시작점을 사용하세요.");
   };
 
   const runFilesystemCollect = (dryRun: boolean) => runAction(async () => {
@@ -840,11 +962,11 @@ export function PipelineCockpit({ chatContext }: PipelineCockpitProps) {
         </aside>
       </section>
 
-      <section className={`aui-pipeline-progress ${runningJob ? "running" : "idle"}`} aria-live="polite">
+      <section className={`aui-pipeline-progress ${activePipelineRun || runningJob ? "running" : "idle"}`} aria-live="polite">
         <div className="aui-pipeline-progress-head">
           <div>
-            <span>고정 상태바 · {runningJob ? "진행 중" : "대기/최근 진행"}</span>
-            <strong>{progressRun?.command || "대기 중"}</strong>
+            <span>고정 상태바 · {activePipelineRun || runningJob ? "진행 중" : "대기/최근 진행"}</span>
+            <strong>{activePipelineRun?.currentStep || progressRun?.command || "대기 중"}</strong>
           </div>
           <div>
             <b>{progressRun?.status || "idle"}</b>
@@ -862,21 +984,21 @@ export function PipelineCockpit({ chatContext }: PipelineCockpitProps) {
           </div>
           <div>
             <span>파일 스킬</span>
-            <strong>{sources.filesystem ? "확장자별 자동 라우팅" : "파일 미선택"}</strong>
+            <strong>{pipelineSlackMessages ? `Slack ${pipelineSlackMessages} messages · 최신순` : pipelineProcessedFiles || pipelineTotalFiles ? `${pipelineProcessedFiles}/${pipelineTotalFiles} 처리` : sources.filesystem ? "확장자별 자동 라우팅" : "파일 미선택"}</strong>
           </div>
         </div>
         <div className="aui-pipeline-progress-bar" data-empty={progressPercent === null ? "true" : "false"}>
-          <i style={{ width: `${progressPercent ?? (runningJob ? 42 : 0)}%` }} />
+          <i style={{ width: `${progressPercent ?? (activePipelineRun || runningJob ? 42 : 0)}%` }} />
         </div>
         <details className="aui-pipeline-progress-details">
           <summary>실행 세부 보기</summary>
           <div className="aui-pipeline-progress-grid">
             <div><span>실행 ID</span><strong>{progressRun?.runId || "-"}</strong></div>
             <div><span>시작</span><strong>{shortDate(progressRun?.startedAt || progressRun?.createdAt)}</strong></div>
-            <div><span>경과</span><strong>{runningJob ? elapsedLabel(progressRun?.startedAt || progressRun?.createdAt, nowTick) : "-"}</strong></div>
-            <div><span>진행률</span><strong>{progressPercent === null ? (runningJob ? "측정 대기" : "-") : `${progressPercent}%`}</strong></div>
-            <div><span>현재 파일</span><strong>{progressRun?.progress?.currentFile || "-"}</strong></div>
-            <div><span>속도/ETA</span><strong>{[progressRun?.progress?.speed, progressRun?.progress?.eta ? `ETA ${progressRun.progress.eta}` : ""].filter(Boolean).join(" · ") || "-"}</strong></div>
+            <div><span>경과</span><strong>{activePipelineRun || runningJob ? elapsedLabel(progressRun?.startedAt || progressRun?.createdAt, nowTick) : "-"}</strong></div>
+            <div><span>진행률</span><strong>{progressPercent === null ? (activePipelineRun || runningJob ? "측정 대기" : "-") : `${progressPercent}%`}</strong></div>
+            <div><span>현재 파일</span><strong>{progressAutomationRun?.progress?.currentFile || activePipelineRun?.currentStep || "-"}</strong></div>
+            <div><span>속도/ETA</span><strong>{[progressAutomationRun?.progress?.speed, progressAutomationRun?.progress?.eta ? `ETA ${progressAutomationRun.progress.eta}` : ""].filter(Boolean).join(" · ") || "-"}</strong></div>
           </div>
           <div className="aui-pipeline-progress-log">
             <span>최근 로그</span>
@@ -1065,10 +1187,10 @@ export function PipelineCockpit({ chatContext }: PipelineCockpitProps) {
                   />
                 </label>
                 <div className="aui-pipeline-filesystem-primary">
-                  <button className="primary" disabled={actionBusy} onClick={() => filesystemDirectoryInputRef.current?.click()} type="button">상위폴더 선택</button>
+                  <button className="primary" disabled={actionBusy} onClick={() => filesystemDirectoryInputRef.current?.click()} type="button">상위폴더 선택(경로만)</button>
                   <button disabled={actionBusy} onClick={runFilesystemBrowse} type="button">경로 확인</button>
                 </div>
-                <p className="aui-ops-muted">가능하면 원본 절대경로만 사용합니다. 경로가 숨겨질 때만 임시 작업공간으로 대체합니다.</p>
+                <p className="aui-ops-muted">업로드하지 않습니다. 브라우저가 절대경로를 숨기면 Finder에서 폴더를 선택하고 경로 복사 후 시작 경로에 붙여넣으세요.</p>
                 <div className="aui-pipeline-filesystem-roots">
                   <strong>빠른 시작점</strong>
                   <div>
@@ -1121,10 +1243,28 @@ export function PipelineCockpit({ chatContext }: PipelineCockpitProps) {
             </div>
           </header>
           <div className="aui-pipeline-readiness">
-            {sources.slack ? <span className={slackTestReady ? "ready" : "hold"}>Slack {slackTestReady ? "준비됨" : "테스트 필요"}</span> : null}
-            {sources.drive ? <span className={driveReady ? "ready" : "hold"}>Drive {driveReady ? "준비됨" : "표적 테스트 필요"}</span> : null}
-            {sources.filesystem ? <span className={filesystemReady ? "ready" : "hold"}>파일 {filesystemReady ? "준비됨" : "경로 확인 필요"}</span> : null}
+            {sources.slack ? <span className={pipelineReady || slackTestReady ? "ready" : "hold"}>Slack {pipelineReady || slackTestReady ? "테스트 완료" : "범위 확인 필요"}</span> : null}
+            {sources.drive ? <span className={pipelineReady || driveReady ? "ready" : "hold"}>Drive {pipelineReady || driveReady ? "테스트 완료" : "표적 확인 필요"}</span> : null}
+            {sources.filesystem ? <span className={pipelineReady || filesystemReady ? "ready" : "hold"}>파일 {pipelineReady || filesystemReady ? "테스트 완료" : "경로 확인 필요"}</span> : null}
           </div>
+          <section className="aui-pipeline-unified-actions">
+            <div>
+              <span>공통 실행 플랜</span>
+              <strong>{activeSourceNames.join(" + ") || "증거원 미선택"}</strong>
+              <small>
+                테스트가 성공하면 같은 목표/범위의 실제 수집만 활성화됩니다.
+                {pipelineCandidateFiles || pipelineSlackChannels || pipelineDriveTargets || pipelineSlackMessages
+                  ? ` 후보 ${pipelineCandidateFiles} 파일 · Slack ${pipelineSlackChannels} 채널/${pipelineSlackMessages} 메시지 · Drive ${pipelineDriveTargets} 표적`
+                  : " 아직 테스트 전입니다."}
+              </small>
+            </div>
+            <div>
+              <button disabled={actionBusy || !activeSourceNames.length} onClick={runUnifiedPipelineTest} type="button">테스트 실행</button>
+              <button className="primary" disabled={actionBusy || !pipelineReady} onClick={runUnifiedPipelineActual} type="button">
+                {activePipelineRun ? "실제 수집 진행 중" : "실제 수집 시작"}
+              </button>
+            </div>
+          </section>
           {(sources.drive || sources.filesystem) ? (
             <div className="aui-pipeline-runtime-stages">
               {FILESYSTEM_RUNTIME_STAGES.map((stage, index) => (
@@ -1153,35 +1293,38 @@ export function PipelineCockpit({ chatContext }: PipelineCockpitProps) {
               </div>
             </div>
           ) : null}
-          <div className="aui-pipeline-execute-grid">
-            {sources.slack ? (
+          <details className="aui-pipeline-advanced aui-pipeline-source-actions">
+            <summary>소스별 직접 실행(고급)</summary>
+            <div className="aui-pipeline-execute-grid">
+              {sources.slack ? (
+                <section>
+                  <strong>Slack</strong>
+                  <button disabled={actionBusy || !selectedChannels.length} onClick={() => runSlackCollect(true)} type="button">테스트</button>
+                  <button className="primary" disabled={actionBusy || !slackTestReady} onClick={requestSlackActualCollect} type="button">실제 수집</button>
+                </section>
+              ) : null}
+              {sources.drive ? (
+                <section>
+                  <strong>Drive</strong>
+                  <button disabled={actionBusy || !activeTopCandidate?.remotePath} onClick={() => activeTopCandidate && runTarget(activeTopCandidate, true)} type="button">표적 테스트</button>
+                  <button className="primary" disabled={actionBusy || !driveReady} onClick={requestDriveActualCollect} type="button">표적 수집</button>
+                </section>
+              ) : null}
+              {sources.filesystem ? (
+                <section>
+                  <strong>파일</strong>
+                  <button disabled={actionBusy} onClick={() => runFilesystemCollect(true)} type="button">점검</button>
+                  <button className="primary" disabled={actionBusy || !filesystemReady} onClick={() => runFilesystemCollect(false)} type="button">스킬 분석+위키화</button>
+                </section>
+              ) : null}
               <section>
-                <strong>Slack</strong>
-                <button disabled={actionBusy || !selectedChannels.length} onClick={() => runSlackCollect(true)} type="button">테스트</button>
-                <button className="primary" disabled={actionBusy || !slackTestReady} onClick={requestSlackActualCollect} type="button">실제 수집</button>
+                <strong>후속</strong>
+                <button disabled={actionBusy} onClick={() => runAction(() => continueAfterCollection(), "후속 반영을 실행했습니다.", "후속 반영")} type="button">후속 반영</button>
+                <button disabled={actionBusy} onClick={() => runAction(() => triggerAutomation("refresh-global"), "그래프맵 업데이트를 요청했습니다.", "그래프맵 업데이트")} type="button">그래프맵 업데이트</button>
+                <button disabled={!runningJob?.runId} onClick={() => runAction(() => stopAutomation(runningJob?.runId || ""), "실행 중인 작업에 중지를 요청했습니다.", "작업 중지")} type="button">작업 중지</button>
               </section>
-            ) : null}
-            {sources.drive ? (
-              <section>
-                <strong>Drive</strong>
-                <button disabled={actionBusy || !activeTopCandidate?.remotePath} onClick={() => activeTopCandidate && runTarget(activeTopCandidate, true)} type="button">표적 테스트</button>
-                <button className="primary" disabled={actionBusy || !driveReady} onClick={requestDriveActualCollect} type="button">표적 수집</button>
-              </section>
-            ) : null}
-            {sources.filesystem ? (
-              <section>
-                <strong>파일</strong>
-                <button disabled={actionBusy} onClick={() => runFilesystemCollect(true)} type="button">점검</button>
-                <button className="primary" disabled={actionBusy || !filesystemReady} onClick={() => runFilesystemCollect(false)} type="button">스킬 분석+위키화</button>
-              </section>
-            ) : null}
-            <section>
-              <strong>후속</strong>
-              <button disabled={actionBusy} onClick={() => runAction(() => continueAfterCollection(), "후속 반영을 실행했습니다.", "후속 반영")} type="button">후속 반영</button>
-              <button disabled={actionBusy} onClick={() => runAction(() => triggerAutomation("refresh-global"), "그래프맵 업데이트를 요청했습니다.", "그래프맵 업데이트")} type="button">그래프맵 업데이트</button>
-              <button disabled={!runningJob?.runId} onClick={() => runAction(() => stopAutomation(runningJob?.runId || ""), "실행 중인 작업에 중지를 요청했습니다.", "작업 중지")} type="button">작업 중지</button>
-            </section>
-          </div>
+            </div>
+          </details>
 
           <details className="aui-pipeline-advanced">
             <summary>실행 옵션과 보수 룰</summary>
@@ -1315,7 +1458,31 @@ export function PipelineCockpit({ chatContext }: PipelineCockpitProps) {
           </header>
           <div className="aui-pipeline-status-grid">
             <section>
-              <strong>배치 명령</strong>
+              <strong>전역 파이프라인</strong>
+              <div className="aui-pipeline-step-status">
+                {pipelineSteps.slice(-8).map((step) => (
+                  <article className={step.status || "idle"} key={step.id || step.label}>
+                    <b>{step.label || step.id}</b>
+                    <span>{step.status || "-"} · {step.command || focusedPipelineRun?.command || "pipeline"}</span>
+                    <small>{step.detail || "대기"}</small>
+                  </article>
+                ))}
+                {!pipelineSteps.length ? <p className="aui-ops-muted">테스트 실행 후 단계 상태가 표시됩니다.</p> : null}
+              </div>
+              <div className="aui-pipeline-file-status-list">
+                <strong>파일별 처리 상태</strong>
+                {pipelineFileStatuses.slice(0, 10).map((item, index) => (
+                  <article className={item.status || "candidate"} key={`${item.path}-${index}`}>
+                    <b>{item.path || "-"}</b>
+                    <span>{item.source || "-"} · {item.ext || "source"} · {item.extractor || "-"} · {item.skill || "-"}</span>
+                    <small>{item.status || "-"} · {item.messages ? `${item.messages} messages · ` : ""}{item.order === "newest_first" ? "최신순 · " : ""}{item.pages ? `${item.pages} pages · ` : ""}{typeof item.exhausted === "boolean" ? (item.exhausted ? "API 끝까지 확인 · " : "상한 도달/추가 가능 · ") : ""}{item.downloadedFiles ? `첨부 ${item.downloadedFiles} 다운로드 · ` : ""}{item.analyzedFiles ? `${item.analyzedFiles} 분석 · ` : ""}{item.promotedProjects ? `프로젝트 ${item.promotedProjects}개 · ` : ""}{item.promotedDocuments ? `위키 ${item.promotedDocuments}개 반영 · ` : ""}{item.action || "대기"}{item.warnings?.length ? ` · ${item.warnings[0]}` : ""}</small>
+                  </article>
+                ))}
+                {!pipelineFileStatuses.length ? <p className="aui-ops-muted">후보 파일이 아직 없습니다. 파일 경로 확인 또는 테스트를 실행하세요.</p> : null}
+              </div>
+            </section>
+            <section>
+              <strong>하위 명령 로그</strong>
               <div className="aui-pipeline-batch-status">
                 {batchStatusCards.map((item) => (
                   <div className={item.run?.status || "idle"} key={item.key}>

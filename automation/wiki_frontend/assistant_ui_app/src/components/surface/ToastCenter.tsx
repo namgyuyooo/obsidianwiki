@@ -23,6 +23,10 @@ function nextToastId() {
   return `toast-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
+function toastKey(toast: Pick<AppToast, "tone" | "title" | "body">) {
+  return `${toast.tone}::${toast.title}::${toast.body}`;
+}
+
 export function ToastCenterProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<AppToast[]>([]);
 
@@ -30,7 +34,14 @@ export function ToastCenterProvider({ children }: { children: ReactNode }) {
     toasts,
     notify: (tone, title, body, options) => {
       const id = nextToastId();
-      setToasts((current) => [...current, { id, tone, title, body, durationMs: options?.durationMs }].slice(-5));
+      const nextToast = { id, tone, title, body, durationMs: options?.durationMs };
+      setToasts((current) => {
+        const deduped = current.filter((toast) => toastKey(toast) !== toastKey(nextToast));
+        const clearedRunning = tone !== "running"
+          ? deduped.filter((toast) => !(toast.tone === "running" && toast.title === title))
+          : deduped;
+        return [...clearedRunning, nextToast].slice(-4);
+      });
       return id;
     },
     dismiss: (id) => {
@@ -57,8 +68,8 @@ export function useToastCenter() {
 
 function ToastCard({ toast, onDismiss }: { toast: AppToast; onDismiss: (id: string) => void }) {
   useEffect(() => {
-    if (toast.tone === "running") return undefined;
-    const timer = window.setTimeout(() => onDismiss(toast.id), toast.durationMs ?? 5200);
+    const timeout = toast.durationMs ?? (toast.tone === "running" ? 2600 : 5200);
+    const timer = window.setTimeout(() => onDismiss(toast.id), timeout);
     return () => window.clearTimeout(timer);
   }, [onDismiss, toast.durationMs, toast.id, toast.tone]);
 

@@ -19,6 +19,7 @@ const wikiGraphSnapshotPath = join(driveRuntime, "wiki_graph_snapshot.json");
 const apiRuntime = resolvePathEnv("WIKI_API_RUNTIME", "automation/wiki_api/runtime");
 const runHistoryPath = join(apiRuntime, "runs.json");
 const pipelineStatePath = join(apiRuntime, "pipeline_state.json");
+const pipelineRunsPath = join(apiRuntime, "pipeline_runs.json");
 const driveCollectionStatePath = join(apiRuntime, "drive_collection_state.json");
 const paperclipTasksPath = join(apiRuntime, "paperclip_tasks.json");
 const paperclipEventsPath = join(apiRuntime, "paperclip_events.json");
@@ -47,6 +48,8 @@ const decisionQueueAuditPath = join(apiRuntime, "decision_queue_audit.jsonl");
 const wikiDeletionAuditPath = join(apiRuntime, "wiki_deletion_audit.jsonl");
 const projectRegistryPath = join(apiRuntime, "project_registry.json");
 const llmUsagePath = join(apiRuntime, "llm_usage.json");
+const hostUserPathPrefix = "/Users/rtm";
+const hostUserMountRoot = process.env.WIKI_HOST_USER_MOUNT_ROOT || "/host/Users/rtm";
 const activeJobs = new Map();
 const activeChatRequests = new Map();
 const activeChatControllers = new Map();
@@ -62,6 +65,13 @@ const autoSkillAllowedRoots = [
   chatUploadsRoot,
   // Local Google Drive/Dropbox-style sync folders are read-only evidence sources for Paperclip.
   "/Users/rtm/Library/CloudStorage",
+  "/Users/rtm/Documents",
+  "/Users/rtm/Desktop",
+  "/Users/rtm/Downloads",
+  join(hostUserMountRoot, "Documents"),
+  join(hostUserMountRoot, "Desktop"),
+  join(hostUserMountRoot, "Downloads"),
+  join(hostUserMountRoot, "Library/CloudStorage"),
   ...configuredAutoSkillRoots,
 ].map((item) => resolve(item));
 
@@ -110,10 +120,13 @@ const editableSettings = new Set([
   "GLM_CHAT_MAX_TOKENS",
   "GLM_CHAT_STREAM",
   "GLM_CONTEXT_MODE",
+  "GLM_TIMEOUT_MS",
+  "GLM_PAPERCLIP_TIMEOUT_MS",
   "OPENCLAW_WEBHOOK_URL",
   "OPENCLAW_API_KEY",
   "PAPERCLIP_URL",
   "PAPERCLIP_API_KEY",
+  "PAPERCLIP_EXTRACTION_TIMEOUT_MS",
   "SLACK_BOT_TOKEN",
   "SLACK_USER_TOKEN",
   "SLACK_WORKSPACE_NAME",
@@ -154,6 +167,12 @@ const protectedWikiDeletionFiles = new Set([
   "Decisions.md",
   "Conflict_Register.md",
   "Change_Log.md",
+  "Status.md",
+  "Business_Flow.md",
+  "CEO_Brief.md",
+  "PM_Action_Plan.md",
+  "Customer_Followup.md",
+  "Raw_Evidence_Index.md",
   "KPI.md",
   "Next_Meeting_Prep.md",
   "Project_Relationships.md",
@@ -503,6 +522,539 @@ async function writePipelineState(nextState = {}) {
   return { updatedAt: state.updatedAt, state };
 }
 
+async function pipelineRunHistory() {
+  return readJsonFile(pipelineRunsPath, []);
+}
+
+async function writePipelineRuns(runs = []) {
+  await mkdir(apiRuntime, { recursive: true });
+  const trimmed = runs.slice(0, 100);
+  await writeFile(pipelineRunsPath, JSON.stringify(trimmed, null, 2), "utf-8");
+  return trimmed;
+}
+
+async function appendPipelineRun(entry = {}) {
+  const runs = await pipelineRunHistory();
+  runs.unshift(entry);
+  await writePipelineRuns(runs);
+  return entry;
+}
+
+async function updatePipelineRun(runId, updates = {}) {
+  const runs = await pipelineRunHistory();
+  const now = new Date().toISOString();
+  const next = runs.map((run) => (run.runId === runId ? { ...run, ...updates, updatedAt: now } : run));
+  await writePipelineRuns(next);
+  return next.find((run) => run.runId === runId) || null;
+}
+
+function collectionPlanFromBody(body = {}) {
+  const plan = body.collectionPlan || body.plan || body || {};
+  return {
+    objective: String(plan.objective || "").trim(),
+    sources: {
+      slack: Boolean(plan.sources?.slack),
+      drive: Boolean(plan.sources?.drive),
+      filesystem: Boolean(plan.sources?.filesystem),
+    },
+    scope: plan.scope || {},
+    execution: plan.execution || {},
+    rules: plan.rules || {},
+    existingMode: plan.existingMode === "overwrite" ? "overwrite" : "skip-existing",
+    skillRoutes: Array.isArray(plan.skillRoutes) ? plan.skillRoutes : [],
+  };
+}
+
+function sourceEnabled(plan = {}, key = "") {
+  if (Array.isArray(plan.sources)) return plan.sources.includes(key);
+  return Boolean(plan.sources?.[key]);
+}
+
+function planStep(id, label, status = "planned", detail = "", meta = {}) {
+  return { id, label, status, detail, updatedAt: new Date().toISOString(), ...meta };
+}
+
+function extractorForExtension(ext = "") {
+  const key = String(ext || "").toLowerCase();
+  return {
+    ".hwp": "rhwp_dump_text",
+    ".hwpx": "hwpx_zip_xml",
+    ".pdf": "pypdf",
+    ".pptx": "pptx_zip_xml",
+    ".docx": "python_docx",
+    ".xlsx": "xlsx_zip_xml",
+    ".xls": "xls_string_fallback",
+    ".csv": "csv_reader",
+    ".html": "html_report_parser",
+    ".htm": "html_report_parser",
+    ".md": "plain_text",
+    ".txt": "plain_text",
+    ".json": "plain_text",
+  }[key] || "unknown";
+}
+
+function skillForExtension(ext = "") {
+  const key = String(ext || "").toLowerCase();
+  if ([".hwp", ".hwpx"].includes(key)) return "hwp-evidence-reader";
+  if (key === ".pdf") return "pdf-document-reader";
+  if (key === ".pptx") return "pptx-slide-reader";
+  if (key === ".docx") return "docx-document-reader";
+  if ([".xlsx", ".xls", ".csv"].includes(key)) return "spreadsheet-evidence-reader";
+  if ([".html", ".htm"].includes(key)) return "html-report-reader";
+  if ([".md", ".txt", ".json"].includes(key)) return "plain-text-intake";
+  return "manual-review";
+}
+
+function pipelineAllowedSuffixes() {
+  return new Set([".hwp", ".hwpx", ".pdf", ".docx", ".pptx", ".xlsx", ".xls", ".csv", ".html", ".htm", ".md", ".txt", ".json"]);
+}
+
+function isExcludedPipelinePath(path = "") {
+  const normalizedPath = String(path || "").replace(/\\/g, "/");
+  const parts = normalizedPath.split("/").filter(Boolean);
+  const blockedParts = new Set([
+    ".git",
+    "node_modules",
+    ".obsidian",
+    "__pycache__",
+    ".cache",
+    ".pytest_cache",
+    ".mypy_cache",
+    "dist",
+    "build",
+    ".next",
+    ".vite",
+  ]);
+  if (parts.some((part) => blockedParts.has(part))) return true;
+  if (/(^|\/)(\.DS_Store|Thumbs\.db)$/i.test(normalizedPath)) return true;
+  if (/[~#]$|\.tmp$|\.temp$|\.cache$/i.test(normalizedPath)) return true;
+  return [
+    "/automation/wiki_frontend/assistant-ui/assets/",
+    "/automation/wiki_frontend/assistant_ui_app/node_modules/",
+    "/automation/wiki_api/runtime/",
+    "/automation/drive_wikify/runtime/wiki_sparse_index.json",
+    "/automation/drive_wikify/runtime/wiki_graph_snapshot.json",
+  ].some((needle) => normalizedPath.includes(needle));
+}
+
+function fileStatusFromPath(path = "", source = "filesystem", status = "candidate", meta = {}) {
+  const normalizedPath = String(path || "");
+  const ext = extname(normalizedPath).toLowerCase();
+  return {
+    path: displayPath(resolveReadablePath(normalizedPath)),
+    source,
+    ext: ext || "",
+    extractor: extractorForExtension(ext),
+    skill: skillForExtension(ext),
+    status,
+    wikiTarget: meta.wikiTarget || "",
+    action: meta.action || (status === "candidate" ? "test_then_run" : ""),
+    warnings: meta.warnings || [],
+  };
+}
+
+function filterPipelineCandidateFiles(files = []) {
+  const allowed = pipelineAllowedSuffixes();
+  return files
+    .filter((file) => !isExcludedPipelinePath(file))
+    .filter((file) => allowed.has(extname(file).toLowerCase()));
+}
+
+async function pipelineFileStatusesFromRunOutput(env = {}) {
+  const runOutputPath = resolveRepoPath(env.RUN_OUTPUT_PATH || "automation/drive_wikify/runtime/run_output.json");
+  const runOutput = await readJsonFile(runOutputPath, { results: [] });
+  return (runOutput.results || []).map((result) => {
+    const record = result.record || {};
+    const filePath = record.file_path || result.file_path || "";
+    if (!filePath) return null;
+    const ext = extname(String(filePath)).toLowerCase();
+    const warnings = [
+      ...(Array.isArray(result.warnings) ? result.warnings : []),
+      ...(Array.isArray(result.validation?.issues) ? result.validation.issues : []),
+      ...(result.skill_warning ? [result.skill_warning] : []),
+    ].filter(Boolean).map(String);
+    return {
+      path: displayPath(resolveRepoPath(filePath)),
+      source: result.source || record.drive_name || "manifest",
+      ext,
+      extractor: result.extractor || extractorForExtension(ext),
+      skill: result.skill || skillForExtension(ext),
+      status: result.status || "processed",
+      wikiTarget: result.wikiTarget || result.project_path || result.decision?.project_name || "",
+      action: result.action || result.decision?.action || "",
+      warnings,
+    };
+  }).filter(Boolean);
+}
+
+async function pipelinePlanPreview(plan = {}) {
+  const { values: env } = await readEnvFile();
+  const steps = [
+    planStep("scope", "범위 확인", "ready", "목표, 증거원, 범위를 확인했습니다."),
+    planStep("connect", "임시 작업공간/경로 연결", "planned", "Drive는 mirror copy, 파일 브라우징은 원본 경로 우선 사용"),
+    planStep("manifest", "manifest", "planned", "확장자와 제외 룰 기준으로 읽기 목록 생성"),
+    planStep("skill_analysis", "스킬 분석", "planned", "PDF/PPTX/HWP/HWPX/Office 스킬 라우팅"),
+    planStep("wiki_reflect", "위키 반영", "planned", "Sources/Evidence/Change/Conflict 후보 반영"),
+    planStep("refresh", "검색/그래프 갱신", plan.execution?.refreshAfterCollect === false ? "skipped" : "planned", "검색/그래프 갱신"),
+    planStep("review", "검수", "planned", "파일별 결과와 경고 확인"),
+  ];
+  const fileStatuses = [];
+  const errors = [];
+  const summary = {
+    sources: Object.entries(plan.sources || {}).filter(([, enabled]) => enabled).map(([key]) => key),
+    candidateFiles: 0,
+    skippedByRule: 0,
+    slackChannels: 0,
+    driveTargets: 0,
+    existingMode: plan.existingMode || "skip-existing",
+  };
+
+  if (sourceEnabled(plan, "slack")) {
+    const slack = plan.scope?.slack || {};
+    const channels = Array.isArray(slack.channels) ? slack.channels : [];
+    summary.slackChannels = channels.length;
+    steps.push(planStep(
+      "slack_scope",
+      "Slack 기간/채널",
+      channels.length ? "ready" : "hold",
+      `${slack.sinceDate || "-"} ~ ${slack.untilDate || "-"} KST · ${channels.length}개 채널 · 최신순`,
+    ));
+    for (const channel of channels) {
+      fileStatuses.push({
+        path: `slack://${channel}`,
+        source: "slack",
+        ext: ".json",
+        extractor: "slack_history_api",
+        skill: "slack-wiki-evidence-ingest",
+        status: "candidate",
+        wikiTarget: "Slack_Project_Intake / Slack_Company_News",
+        action: "period_collect_latest_first",
+        warnings: [],
+      });
+    }
+    if (!channels.length) errors.push("Slack source selected but no channels are selected.");
+  }
+
+  if (sourceEnabled(plan, "drive")) {
+    const drive = plan.scope?.drive || {};
+    const remotePath = drive.remotePath || drive.candidate?.remotePath || "";
+    summary.driveTargets = remotePath ? 1 : 0;
+    steps.push(planStep(
+      "drive_scope",
+      "Drive 표적",
+      remotePath ? "ready" : "hold",
+      remotePath || "목표 기반 Drive 표적 후보가 필요합니다.",
+    ));
+    if (remotePath) {
+      const mirrorRoot = join(repoRoot, env.RCLONE_MIRROR_ROOT || "automation/drive_wikify/runtime/mirror", safePathSegment(remotePath));
+      fileStatuses.push({
+        path: `drive://${remotePath}`,
+        source: "drive",
+        ext: "",
+        extractor: "rclone_copy",
+        skill: "manifest-builder",
+        status: existsSync(mirrorRoot) && plan.existingMode !== "overwrite" ? "precollected" : "candidate",
+        wikiTarget: displayPath(mirrorRoot),
+        action: plan.existingMode === "overwrite" ? "overwrite_local_mirror" : "skip_existing_local_mirror",
+        warnings: existsSync(mirrorRoot) && plan.existingMode !== "overwrite" ? ["기수집 mirror가 있어 기본값으로 제외됩니다."] : [],
+      });
+    } else {
+      errors.push("Drive source selected but no remotePath is selected.");
+    }
+  }
+
+  if (sourceEnabled(plan, "filesystem")) {
+    const filesystem = plan.scope?.filesystem || {};
+    const rawPath = String(filesystem.path || "").trim();
+    if (!rawPath) {
+      errors.push("Filesystem source selected but no path is selected.");
+      steps.push(planStep("filesystem_scope", "파일 브라우징 경로", "hold", "시작 경로가 필요합니다."));
+    } else {
+      const targetPath = resolveReadablePath(rawPath);
+      const browse = await inspectFilesystemTargets(targetPath, {
+        includeDirectories: true,
+        maxDepth: Number(filesystem.maxDepth || env.FILESYSTEM_BROWSE_MAX_DEPTH || 8),
+        maxFiles: Number(filesystem.maxFiles || env.FILESYSTEM_BROWSE_MAX_FILES || 5000),
+        maxEntriesPerDirectory: Number(filesystem.maxEntriesPerDirectory || env.FILESYSTEM_BROWSE_MAX_ENTRIES || 300),
+        maxTreeEntries: 180,
+      });
+      const allowedFiles = filterPipelineCandidateFiles((browse.files || []).map((file) => resolveReadablePath(file)));
+      summary.candidateFiles += allowedFiles.length;
+      summary.skippedByRule += Math.max(0, (browse.files || []).length - allowedFiles.length);
+      steps.push(planStep(
+        "filesystem_scope",
+        "파일 브라우징 경로",
+        allowedFiles.length ? "ready" : "hold",
+        `${displayPath(targetPath)} · 후보 ${allowedFiles.length}개 · 제외 ${summary.skippedByRule}개`,
+      ));
+      fileStatuses.push(...allowedFiles.slice(0, Number(filesystem.maxFiles || env.FILESYSTEM_BROWSE_MAX_FILES || 5000)).map((file) => (
+        fileStatusFromPath(file, "filesystem", "candidate")
+      )));
+    }
+  }
+
+  const preview = {
+    runId: `preview-${Date.now()}`,
+    command: "pipeline-plan",
+    status: errors.length ? "hold" : "previewed",
+    createdAt: new Date().toISOString(),
+    startedAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    currentStep: errors.length ? "범위 보완 필요" : "테스트 실행 가능",
+    steps,
+    fileStatuses,
+    summary,
+    errors,
+  };
+  return preview;
+}
+
+function stepFromCommandResult(id, label, result = {}) {
+  const detail = result.stdout || result.stderr || result.progress?.summary || result.error || "";
+  return planStep(id, label, result.status || "unknown", String(detail).split("\n").filter(Boolean).slice(-3).join(" / "), {
+    command: result.command,
+    runId: result.runId,
+  });
+}
+
+function slackFileStatusesFromRunResult(result = {}) {
+  const text = String(result.stdout || "");
+  const rows = [];
+  for (const line of text.split("\n")) {
+    const match = line.match(/-\s+#(.+?)\s+\(([^)]+)\):\s+(\d+)\s+messages(?:\s+·\s+order=([^\s·]+))?(?:\s+·\s+pages=([^\s·]+))?(?:\s+·\s+exhausted=([^\s·]+))?(?:\s+·\s+files=(\d+)\s+downloaded\/(\d+)\s+analyzed)?(?:\s+·\s+promoted=(\d+)\s+docs\/(\d+)\s+projects)?(?:\s+·\s+newest=([^\s·]+))?(?:\s+·\s+oldest=([^\s·]+))?\s+->\s+(.+)$/);
+    if (!match) continue;
+    rows.push({
+      path: match[13].trim(),
+      source: "slack",
+      ext: ".json",
+      extractor: Number(match[8] || 0) > 0 ? "slack_history_api + attachment_extractors" : "slack_history_api",
+      skill: "slack-wiki-evidence-ingest",
+      status: result.status || "completed",
+      wikiTarget: Number(match[10] || 0) > 0 ? `Slack project pages (${match[10]} projects)` : "Slack_Project_Intake / Slack_Company_News",
+      action: Number(match[7] || 0) > 0 ? "newest_first_period_collect_with_files" : "newest_first_period_collect",
+      warnings: [],
+      channel: match[1].trim(),
+      channelId: match[2].trim(),
+      messages: Number(match[3] || 0),
+      order: match[4] || "newest_first",
+      pages: Number(match[5] || 0),
+      exhausted: match[6] === "True" || match[6] === "true",
+      downloadedFiles: Number(match[7] || 0),
+      analyzedFiles: Number(match[8] || 0),
+      promotedDocuments: Number(match[9] || 0),
+      promotedProjects: Number(match[10] || 0),
+      newestTs: match[11] || "",
+      oldestTs: match[12] || "",
+    });
+  }
+  return rows;
+}
+
+async function createPipelineRun(planInput = {}, mode = "test") {
+  const plan = collectionPlanFromBody(planInput);
+  const preview = await pipelinePlanPreview(plan);
+  const now = new Date().toISOString();
+  const runId = `${Date.now()}-pipeline-${mode}`;
+  const run = {
+    ...preview,
+    runId,
+    command: mode === "test" ? "pipeline-test" : "pipeline-run",
+    status: "running",
+    createdAt: now,
+    startedAt: now,
+    updatedAt: now,
+    currentStep: mode === "test" ? "범위 확인" : "실제 수집 시작",
+    collectionPlan: plan,
+  };
+  await appendPipelineRun(run);
+
+  if (mode === "test") {
+    const testSteps = [...preview.steps];
+    const testErrors = [...preview.errors];
+    let testSlackStatuses = [];
+    if (!testErrors.length && sourceEnabled(plan, "slack")) {
+      const slack = plan.scope?.slack || {};
+      const extraArgs = [];
+      for (const channel of slack.channels || []) extraArgs.push("--channel", String(channel));
+      if (slack.sinceDate) extraArgs.push("--since-date", String(slack.sinceDate));
+      if (slack.untilDate) extraArgs.push("--until-date", String(slack.untilDate));
+      if (slack.oldestDays) extraArgs.push("--oldest-days", String(slack.oldestDays));
+      if (slack.limitPerChannel) extraArgs.push("--limit-per-channel", String(slack.limitPerChannel));
+      if (slack.includeThreads === false) extraArgs.push("--no-threads");
+      if (slack.includeFiles === false) extraArgs.push("--no-files");
+      await updatePipelineRun(runId, { currentStep: "Slack 테스트", steps: testSteps, status: "running" });
+      const result = await runCommand("slack-collect", true, {
+        source: "pipeline_test",
+        extraArgs,
+        pipelineRunId: runId,
+        slackScopeKey: slackScopeKeyFromBody(slack),
+        slackScope: slack,
+      });
+      testSteps.push(stepFromCommandResult("slack_dry_run", "Slack 테스트", result));
+      testSlackStatuses = slackFileStatusesFromRunResult(result);
+      if (!["completed", "previewed"].includes(result.status)) {
+        testErrors.push(result.stderr || result.error || "Slack dry-run failed.");
+      }
+    }
+    if (!testErrors.length && sourceEnabled(plan, "drive")) {
+      const drive = plan.scope?.drive || {};
+      const remotePath = drive.remotePath || drive.candidate?.remotePath || "";
+      await updatePipelineRun(runId, { currentStep: "Drive 표적 테스트", steps: testSteps, status: "running" });
+      const result = await targetRcloneCopy(remotePath, true, { existingMode: plan.existingMode });
+      testSteps.push(stepFromCommandResult("drive_dry_run", "Drive 표적 테스트", result));
+      if (!["completed", "previewed", "skipped"].includes(result.status)) {
+        testErrors.push(result.stderr || result.error || "Drive dry-run failed.");
+      }
+    }
+    const completed = {
+      ...run,
+      status: testErrors.length ? "hold" : "completed",
+      currentStep: testErrors.length ? "범위 보완 필요" : "테스트 완료",
+      steps: testSteps.map((step) => ({ ...step, status: step.status === "planned" ? "ready" : step.status })),
+      fileStatuses: testSlackStatuses.length ? testSlackStatuses : run.fileStatuses,
+      summary: {
+        ...run.summary,
+        slackMessages: testSlackStatuses.reduce((sum, item) => sum + Number(item.messages || 0), 0),
+        totalFiles: testSlackStatuses.length || run.fileStatuses.length,
+        processedFiles: 0,
+      },
+      errors: testErrors,
+      finishedAt: new Date().toISOString(),
+    };
+    await updatePipelineRun(runId, completed);
+    await appendRunHistory({
+      runId,
+      command: "pipeline-test",
+      status: completed.status,
+      code: testErrors.length ? 1 : 0,
+      stdout: `Pipeline test: ${completed.summary.candidateFiles || 0} files, ${completed.summary.slackChannels || 0} Slack channels, ${completed.summary.driveTargets || 0} Drive targets`,
+      stderr: testErrors.join("\n"),
+      createdAt: now,
+      startedAt: now,
+      finishedAt: completed.finishedAt,
+      progress: {
+        summary: completed.currentStep,
+        recentLines: testErrors.length ? testErrors : ["테스트 성공. 같은 범위의 실제 수집을 시작할 수 있습니다."],
+        updatedAt: completed.finishedAt,
+      },
+    }).catch(() => null);
+    return completed;
+  }
+
+  if (preview.errors.length) {
+    const blocked = {
+      ...run,
+      status: "blocked",
+      currentStep: "범위 보완 필요",
+      errors: preview.errors,
+      finishedAt: new Date().toISOString(),
+    };
+    await updatePipelineRun(runId, blocked);
+    return blocked;
+  }
+
+  const steps = [...preview.steps];
+  const errors = [];
+  let slackStatuses = [];
+  const pushStep = async (step) => {
+    steps.push(step);
+    await updatePipelineRun(runId, {
+      steps,
+      currentStep: step.label,
+      status: ["failed", "blocked"].includes(step.status) ? "failed" : "running",
+      errors,
+    });
+  };
+
+  try {
+    if (sourceEnabled(plan, "slack")) {
+      const slack = plan.scope?.slack || {};
+      const extraArgs = [];
+      for (const channel of slack.channels || []) extraArgs.push("--channel", String(channel));
+      if (slack.sinceDate) extraArgs.push("--since-date", String(slack.sinceDate));
+      if (slack.untilDate) extraArgs.push("--until-date", String(slack.untilDate));
+      if (slack.oldestDays) extraArgs.push("--oldest-days", String(slack.oldestDays));
+      if (slack.limitPerChannel) extraArgs.push("--limit-per-channel", String(slack.limitPerChannel));
+      if (slack.includeThreads === false) extraArgs.push("--no-threads");
+      if (slack.includeFiles === false) extraArgs.push("--no-files");
+      const result = await runCommand("slack-collect", false, {
+        source: "pipeline_run",
+        extraArgs,
+        pipelineRunId: runId,
+        slackScopeKey: slackScopeKeyFromBody(slack),
+        slackScope: slack,
+      });
+      await pushStep(stepFromCommandResult("slack_collect", "Slack 최신순 기간 수집", result));
+      slackStatuses = slackFileStatusesFromRunResult(result);
+      if (!["completed", "skipped"].includes(result.status)) errors.push(result.stderr || result.error || "Slack collection failed.");
+    }
+
+    if (sourceEnabled(plan, "drive")) {
+      const drive = plan.scope?.drive || {};
+      const remotePath = drive.remotePath || drive.candidate?.remotePath || "";
+      const copy = await targetRcloneCopy(remotePath, false, { existingMode: plan.existingMode });
+      await pushStep(stepFromCommandResult("drive_copy", "Drive 임시 작업공간 연결", copy));
+      if (!["completed", "skipped"].includes(copy.status)) errors.push(copy.stderr || copy.error || "Drive copy failed.");
+      if (!errors.length && copy.status !== "skipped") {
+        const manifest = await runCommand("build-manifest", false, { source: "pipeline_run", pipelineRunId: runId });
+        await pushStep(stepFromCommandResult("drive_manifest", "manifest", manifest));
+        if (manifest.status !== "completed") errors.push(manifest.stderr || "manifest failed.");
+        const ingest = await runCommand("run", false, { source: "pipeline_run", pipelineRunId: runId });
+        await pushStep(stepFromCommandResult("drive_ingest", "스킬 분석 + 위키 반영", ingest));
+        if (ingest.status !== "completed") errors.push(ingest.stderr || "wiki ingest failed.");
+      }
+    }
+
+    if (sourceEnabled(plan, "filesystem")) {
+      const filesystem = plan.scope?.filesystem || {};
+      const result = await collectFilesystemPath({
+        path: filesystem.path,
+        dryRun: false,
+        continueAfter: plan.execution?.continueAfterCollect !== false,
+        refreshAfter: false,
+        maxDepth: filesystem.maxDepth,
+        maxFiles: filesystem.maxFiles,
+        maxEntriesPerDirectory: filesystem.maxEntriesPerDirectory,
+      });
+      await pushStep(stepFromCommandResult("filesystem_ingest", "파일 경로 manifest + 스킬 분석", result));
+      if (!["completed", "skipped"].includes(result.status)) errors.push(result.stderr || result.error || "Filesystem collection failed.");
+    }
+
+    if (plan.execution?.refreshAfterCollect !== false) {
+      const refresh = await runCommand("refresh-global", false, { source: "pipeline_run", pipelineRunId: runId });
+      await pushStep(stepFromCommandResult("refresh_global", "검색/그래프 갱신", refresh));
+      if (refresh.status !== "completed") errors.push(refresh.stderr || "refresh-global failed.");
+    }
+  } catch (error) {
+    errors.push(error instanceof Error ? error.message : String(error));
+  }
+
+  const { values: env } = await readEnvFile();
+  const outputStatuses = await pipelineFileStatusesFromRunOutput(env).catch(() => []);
+  const shouldUseManifestOutput = sourceEnabled(plan, "drive") || sourceEnabled(plan, "filesystem");
+  const finalFileStatuses = shouldUseManifestOutput && outputStatuses.length
+    ? outputStatuses
+    : slackStatuses.length
+      ? slackStatuses
+      : preview.fileStatuses;
+  const finished = {
+    status: errors.length ? "failed" : "completed",
+    currentStep: errors.length ? "오류 확인 필요" : "검수",
+    steps,
+    fileStatuses: finalFileStatuses,
+    summary: {
+      ...preview.summary,
+      candidateFiles: shouldUseManifestOutput ? (preview.summary.candidateFiles || finalFileStatuses.length) : preview.summary.candidateFiles,
+      slackMessages: slackStatuses.reduce((sum, item) => sum + Number(item.messages || 0), 0),
+      processedFiles: shouldUseManifestOutput ? finalFileStatuses.filter((item) => !["candidate", "precollected"].includes(item.status)).length : 0,
+      totalFiles: finalFileStatuses.length,
+    },
+    errors,
+    finishedAt: new Date().toISOString(),
+  };
+  return updatePipelineRun(runId, finished);
+}
+
 function slackScopeKeyFromBody(body = {}) {
   return JSON.stringify({
     channels: [...(body.channels || []).map((channel) => String(channel))].sort(),
@@ -532,7 +1084,7 @@ async function collectFilesystemPath(body = {}) {
   }
   const rawPath = String(body.path || "").trim();
   if (!rawPath) return { status: "failed", error: "path is required" };
-  const targetPath = isAbsolute(rawPath) ? resolve(rawPath) : resolveRepoPath(rawPath);
+  const targetPath = resolveReadablePath(rawPath);
   if (!localPathAllowedForAutoSkill(targetPath)) {
     return { status: "blocked", error: "허용된 로컬 repo/mirror/upload 범위 밖의 경로입니다.", path: displayPath(targetPath) };
   }
@@ -756,14 +1308,14 @@ function llmPolicyCatalog(env = {}, usage = []) {
       id: "wiki_management",
       title: "위키 관리 명령 계획",
       surface: "위키 관리",
-      purpose: "명칭 정리, 프로젝트 승격, 링크 정합성 같은 위키 운영 명령을 적용 전 계획으로 바꾼다.",
+      purpose: "명칭 정리, 프로젝트 승격, 링크 정합성, 운영형 위키 컨버팅 같은 위키 운영 명령을 적용 전 계획으로 바꾼다.",
       modelClass: "general",
       recommendedModel: "glm-4.5",
       maxTokens: 1800,
       thinking: "enabled",
       envKeys: ["GLM_MODEL", "GLM_THINKING_TYPE"],
       currentModel: current("GLM_MODEL", "glm-5.1"),
-      prompt: "실제 파일 수정이 완료되었다고 말하지 말고 summaryMarkdown, operations, targetPages, risks, nextActions JSON으로 안전한 preview plan만 생성한다.",
+      prompt: "실제 파일 수정이 완료되었다고 말하지 말고 summaryMarkdown, operations, targetPages, risks, nextActions JSON으로 안전한 preview plan만 생성한다. 파일 원문은 요약 대체 금지이며 Raw_Evidence_Index/Evidence_Log 보존 레이어와 Status/CEO/PM 운영 레이어를 분리한다.",
       usageCount: countFeature([/wiki_management/]),
       applySettings: { GLM_MODEL: current("GLM_MODEL", "glm-5.1"), GLM_THINKING_TYPE: "enabled" },
     },
@@ -791,7 +1343,7 @@ function llmPolicyCatalog(env = {}, usage = []) {
       recommendedModel: "glm-4.5",
       maxTokens: Number(current("GLM_CHAT_MAX_TOKENS", 10000)),
       thinking: "enabled",
-      envKeys: ["GLM_PAPERCLIP_MODEL", "GLM_CHAT_MAX_TOKENS"],
+      envKeys: ["GLM_PAPERCLIP_MODEL", "GLM_CHAT_MAX_TOKENS", "GLM_PAPERCLIP_TIMEOUT_MS", "PAPERCLIP_EXTRACTION_TIMEOUT_MS"],
       currentModel: current("GLM_PAPERCLIP_MODEL", current("GLM_MODEL", "glm-5.1")),
       prompt: "템플릿별 전문 역할을 적용하되 사실/해석/전략/가정/추가 요청을 분리하고 증거 위치가 없으면 근거 위치 미확인으로 표시한다.",
       usageCount: countFeature([/paperclip/]),
@@ -861,7 +1413,28 @@ function resolveRepoPath(path) {
   return isAbsolute(path) ? resolve(path) : resolve(repoRoot, path);
 }
 
+function hostMountedPath(path) {
+  const fullPath = resolve(path || "");
+  if (fullPath === hostUserPathPrefix) return resolve(hostUserMountRoot);
+  if (fullPath.startsWith(`${hostUserPathPrefix}/`)) {
+    return resolve(hostUserMountRoot, relative(hostUserPathPrefix, fullPath));
+  }
+  return fullPath;
+}
+
+function resolveReadablePath(path) {
+  const fullPath = resolveRepoPath(path);
+  if (existsSync(fullPath)) return fullPath;
+  const mountedPath = hostMountedPath(fullPath);
+  if (mountedPath !== fullPath && existsSync(mountedPath)) return mountedPath;
+  return fullPath;
+}
+
 function displayPath(path) {
+  const mountedPath = resolve(path || "");
+  if (mountedPath === resolve(hostUserMountRoot) || mountedPath.startsWith(`${resolve(hostUserMountRoot)}/`)) {
+    return join(hostUserPathPrefix, relative(resolve(hostUserMountRoot), mountedPath)).replace(/\\/g, "/");
+  }
   const relativePath = relative(repoRoot, path);
   if (!relativePath || relativePath.startsWith("..") || isAbsolute(relativePath)) return path;
   return relativePath;
@@ -1272,7 +1845,7 @@ function titleFromMarkdown(path, markdown) {
   return path.split("/").pop()?.replace(/\.md$/, "") || path;
 }
 
-const canonicalProjectDocNames = ["hub.md", "Sources.md", "Evidence_Log.md", "Action_Items.md", "Risks.md", "Decisions.md", "Conflict_Register.md"];
+const canonicalProjectDocNames = ["hub.md", "Project_Overview.md", "Sources.md", "Evidence_Log.md", "Status.md", "Business_Flow.md", "CEO_Brief.md", "PM_Action_Plan.md", "Customer_Followup.md", "Action_Items.md", "Risks.md", "Decisions.md", "Conflict_Register.md", "Change_Log.md", "Raw_Evidence_Index.md"];
 
 function isProjectScopedDivision(division = "") {
   return ["project", "account"].includes(division);
@@ -1799,13 +2372,16 @@ function docKindPriorityBoost(docKind = "", path = "") {
 }
 
 function localPathAllowedForAutoSkill(path) {
-  const fullPath = resolve(path || "");
+  const fullPath = resolveReadablePath(path || "");
   return autoSkillAllowedRoots.some((root) => fullPath === root || fullPath.startsWith(`${root}/`));
 }
 
 async function filesystemRootOptions() {
   const roots = [
     { key: "wiki-repo", label: "Wiki repo", path: repoRoot },
+    { key: "documents", label: "Documents", path: "/Users/rtm/Documents" },
+    { key: "desktop", label: "Desktop", path: "/Users/rtm/Desktop" },
+    { key: "downloads", label: "Downloads", path: "/Users/rtm/Downloads" },
     { key: "drive-mirror", label: "Drive mirror", path: join(driveRuntime, "mirror") },
     { key: "drive-runtime", label: "Drive runtime", path: driveRuntime },
     { key: "chat-uploads", label: "Chat uploads", path: chatUploadsRoot },
@@ -1816,7 +2392,7 @@ async function filesystemRootOptions() {
   const unique = [];
   const seen = new Set();
   for (const root of roots) {
-    const resolvedPath = resolve(root.path);
+    const resolvedPath = resolveReadablePath(root.path);
     if (seen.has(resolvedPath) || !localPathAllowedForAutoSkill(resolvedPath)) continue;
     seen.add(resolvedPath);
     const info = await stat(resolvedPath).catch(() => null);
@@ -1961,16 +2537,30 @@ async function searchWiki(query, workspaceId = "rtm") {
   const files = (await Promise.all(roots.map(walkMarkdown))).flat();
   const terms = query.toLowerCase().split(/\s+/).filter(Boolean);
   const results = [];
+  const statusStore = await wikiStatusStore();
   for (const file of files) {
     const markdown = await readFile(file, "utf-8");
     const haystack = `${relative(repoRoot, file)}\n${markdown}`.toLowerCase();
     const score = terms.reduce((count, term) => count + (haystack.includes(term) ? 1 : 0), 0);
     if (!score) continue;
     const path = relative(repoRoot, file);
-    results.push({
+    const frontmatter = parseFrontmatter(markdown);
+    const section = path.startsWith("obsidian/L1_memory/") ? "L1_memory" : path.split("/")[2] || "Wiki";
+    const projectKeyState = projectKeyRule(path, frontmatter);
+    const classified = applyWikiStatus({
       title: titleFromMarkdown(path, markdown),
       path,
-      frontmatter: parseFrontmatter(markdown),
+      section,
+      frontmatter,
+      updatedAt: "",
+      size: markdown.length,
+      ...projectKeyState.classification,
+    }, statusStore);
+    if (shouldHideWikiPage(classified)) continue;
+    results.push({
+      title: classified.title,
+      path,
+      frontmatter,
       snippet: findSnippet(markdown, query),
       score,
     });
@@ -1991,7 +2581,7 @@ async function wikiIndex(workspaceId = "rtm") {
     const section = path.startsWith("obsidian/L1_memory/") ? "L1_memory" : path.split("/")[2] || "Wiki";
     const projectKeyState = projectKeyRule(path, frontmatter);
     const classification = projectKeyState.classification;
-    pages.push(applyWikiStatus({
+    const page = applyWikiStatus({
       title: titleFromMarkdown(path, markdown),
       path,
       section,
@@ -2004,7 +2594,9 @@ async function wikiIndex(workspaceId = "rtm") {
       updatedAt: fileStat?.mtime?.toISOString?.() || "",
       size: fileStat?.size || markdown.length,
       ...classification,
-    }, statusStore));
+    }, statusStore);
+    if (shouldHideWikiPage(page)) continue;
+    pages.push(page);
   }
   return pages.sort((a, b) => a.section.localeCompare(b.section) || a.title.localeCompare(b.title));
 }
@@ -2031,6 +2623,12 @@ function classifyWikiPage(path, frontmatter = {}) {
     ["overview", /overview|summary|profile|project_overview/.test(lowerBase) || type === "overview"],
     ["sources", /sources|source/.test(lowerBase)],
     ["evidence", /evidence|connected|근거/.test(lowerBase) || type === "evidence"],
+    ["status", /^status$|current_status|운영현황|현황/.test(lowerBase) || type === "status"],
+    ["business_flow", /business[_-]?flow|flow|pipeline|프로세스|흐름/.test(lowerBase) || type === "business_flow"],
+    ["ceo_brief", /ceo[_-]?brief|executive|경영진|대표/.test(lowerBase) || type === "ceo_brief"],
+    ["pm_action", /pm[_-]?action|action[_-]?plan|실행계획|pm/.test(lowerBase) || type === "pm_action"],
+    ["customer_followup", /customer[_-]?followup|follow[_-]?up|고객.*후속|후속/.test(lowerBase) || type === "customer_followup"],
+    ["raw_evidence", /raw[_-]?evidence|source[_-]?archive|original|원문|원본/.test(lowerBase) || type === "raw_evidence"],
     ["conflict", /conflict|충돌/.test(lowerBase) || type === "conflict"],
     ["actions", /action|todo|next/.test(lowerBase) || type === "actions"],
     ["decisions", /decision|결정/.test(lowerBase) || type === "decisions"],
@@ -2065,6 +2663,7 @@ const wikiStatusCatalog = {
   hold: { label: "보류", color: "amber", highlight: "추가 판단 또는 외부 입력 대기" },
   planned: { label: "계획", color: "gray", highlight: "아직 실행 전 계획 단계" },
   archived: { label: "보관", color: "slate", highlight: "운영 종료 후 참조 보관" },
+  hidden: { label: "숨김", color: "slate", highlight: "위키 목록과 트리에서 기본 숨김 처리" },
   unknown: { label: "미지정", color: "muted", highlight: "사용자 상태 지정 필요" },
 };
 
@@ -2089,8 +2688,26 @@ function normalizeWikiStatus(value) {
     archived: "archived",
     archive: "archived",
     보관: "archived",
+    hidden: "hidden",
+    hide: "hidden",
+    숨김: "hidden",
+    deleted: "hidden",
+    delete: "hidden",
+    삭제: "hidden",
+    discarded: "hidden",
+    discard: "hidden",
+    폐기: "hidden",
   };
   return aliases[text] || (wikiStatusCatalog[text] ? text : "unknown");
+}
+
+function shouldHideWikiPage(page) {
+  const hiddenFlag = page.frontmatter?.hidden === true
+    || String(page.frontmatter?.hidden || "").trim().toLowerCase() === "true"
+    || page.frontmatter?.deleted === true
+    || String(page.frontmatter?.deleted || "").trim().toLowerCase() === "true";
+  if (hiddenFlag) return true;
+  return ["hidden"].includes(String(page.workflowStatus || "").trim().toLowerCase());
 }
 
 function defaultWikiStatusForPage(page) {
@@ -3004,7 +3621,7 @@ function documentTitle(record = {}) {
 
 async function projectMarkdownBundle(projectKey, workspaceId = "rtm") {
   const projectDir = projectDirForKey(projectKey, workspaceId);
-  const names = ["hub.md", "Project_Overview.md", "Sources.md", "Evidence_Log.md", "Action_Items.md", "Risks.md", "Decisions.md", "Conflict_Register.md", "Document_Usage_Log.md"];
+  const names = ["hub.md", "Project_Overview.md", "Sources.md", "Evidence_Log.md", "Status.md", "Business_Flow.md", "CEO_Brief.md", "PM_Action_Plan.md", "Customer_Followup.md", "Action_Items.md", "Risks.md", "Decisions.md", "Conflict_Register.md", "Change_Log.md", "Raw_Evidence_Index.md", "Document_Usage_Log.md"];
   const bundle = {};
   for (const name of names) {
     bundle[name] = await readFile(join(projectDir, name), "utf-8").catch(() => "");
@@ -3894,7 +4511,7 @@ async function driveTargetAnalysis(options = {}) {
   const coverage = await coverageSummary().catch(() => ({ rows: [], statuses: {}, documentsInManifest: 0, processedDocuments: 0 }));
   const manifest = await readJsonFile(join(driveRuntime, "manifest.json"), { documents: [] });
   const runOutput = await readJsonFile(join(driveRuntime, "run_output.json"), { results: [] });
-  const requiredKinds = ["hub", "overview", "sources", "evidence", "actions", "risks", "decisions", "conflict", "changelog"];
+  const requiredKinds = ["hub", "overview", "sources", "evidence", "status", "business_flow", "ceo_brief", "pm_action", "customer_followup", "actions", "risks", "decisions", "conflict", "changelog"];
   const projectGroups = new Map();
 
   for (const page of pages) {
@@ -4143,6 +4760,7 @@ async function wikiManagementCommand(command) {
   const { values: env } = await readEnvFile();
   const hints = extractWikiCommandHints(command);
   const pages = await wikiIndex();
+  const wantsBusinessOpsConversion = /운영형|실무\s*중심|CEO|PM|프로젝트\s*허브|허브\s*연결|중복|충돌|컨버팅|컨버전|business\s*ops|status|decision\s*brief/i.test(command || "");
   const candidatePaths = new Set();
   for (const keyword of hints.keywords) {
     const results = await searchWiki(keyword).catch(() => []);
@@ -4179,6 +4797,16 @@ async function wikiManagementCommand(command) {
     operations: [
       ...(hints.renamePairs.length ? [{ type: "term_replace", pairs: hints.renamePairs, applyMode: "preview_only" }] : []),
       { type: "project_customer_promotion", targetProjects: [...new Set(targetPages.map((page) => page.projectKey).filter(Boolean))], applyMode: "preview_only" },
+      ...(wantsBusinessOpsConversion ? [{
+        type: "business_ops_conversion",
+        targetProjects: [...new Set(targetPages.map((page) => page.projectKey).filter(Boolean))],
+        applyMode: "preview_only",
+        proposedChanges: {
+          createOrUpdate: ["Status.md", "Business_Flow.md", "CEO_Brief.md", "PM_Action_Plan.md", "Customer_Followup.md", "Raw_Evidence_Index.md"],
+          hubRole: "프로젝트 허브를 중복/충돌 방지 앵커와 CEO/PM 운영 브리프로 사용",
+          sourcePreservation: "파일 원문과 긴 추출문은 요약으로 대체하지 않고 원문 경로/발췌/버전/한계를 보존",
+        },
+      }] : []),
     ],
     targetPages: targetPages.map(({ title, path, division, projectKey, docKind }) => ({ title, path, division, projectKey, docKind })),
     risks: [
@@ -4213,6 +4841,8 @@ async function wikiManagementCommand(command) {
               "출력은 JSON 객체만 반환한다: summaryMarkdown, operations, targetPages, risks, nextActions.",
               "operations에는 type, rationale, targetPaths, proposedChanges, validationChecks를 넣는다.",
               "프로젝트/고객사 승격, 명칭 일괄수정, 링크 정합성, 출처 보존 관점으로 판단한다.",
+              "사용자가 운영형/실무중심/CEO/PM/프로젝트 허브 연결/중복/충돌/컨버팅을 말하면 business_ops_conversion 작업을 포함한다.",
+              "중요: 파일 해석 결과를 짧은 요약으로 대체하지 말고 원문/긴 추출문 보존, Raw_Evidence_Index, Evidence_Log, Decision Queue 승인 단계를 제안한다.",
             ].join(" "),
           },
           {
@@ -4382,6 +5012,11 @@ function hubOperationalScaffold(title, description) {
     "",
     description,
     "",
+    "## 운영 원칙",
+    "- 이 허브는 자료 보관함이 아니라 CEO/PM이 현재 상태, 막힌 지점, 다음 결정을 판단하는 운영 브리프입니다.",
+    "- 파일/문서 원문은 요약으로 대체하지 않고 `Raw_Evidence_Index.md`, `Sources.md`, `Evidence_Log.md`에 원문 위치와 핵심 발췌를 분리 보존합니다.",
+    "- LLM 변환 결과는 확정 지식이 아니라 Decision Queue 검토 후보입니다.",
+    "",
     "## 운영 메모",
     "- 한줄 요약: 진행상황 확인 필요",
     "- 진행 맥락: 이 허브는 관리 이력이 아니라 실제 프로젝트/고객사 업무 추진상황을 빠르게 파악하기 위한 메모입니다.",
@@ -4392,6 +5027,9 @@ function hubOperationalScaffold(title, description) {
     "- 현재 상태: 진행상황 확인 필요",
     "- 최근 추진: 최신 실무 메모 입력 전",
     "- 다음 액션: 운영 메모를 기준으로 Action_Items, Risks, Decisions를 갱신",
+    "- CEO 결정 필요: 확인 필요",
+    "- PM 실행 필요: 확인 필요",
+    "- 고객 후속 필요: 확인 필요",
     "",
     "## 일시별 추진내용",
     "| 일시 | 추진내용 | 실무 의미 | 연결 증적 | 다음 액션 |",
@@ -4401,6 +5039,87 @@ function hubOperationalScaffold(title, description) {
     "- 아직 연결된 증적 없음",
     "",
   ];
+}
+
+function businessOpsDocScaffold(fileName, title, projectName, evidenceLinks = []) {
+  const links = evidenceLinks.length ? evidenceLinks : ["- 아직 연결된 증적 없음"];
+  const commonHeader = [
+    `# ${title}`,
+    "",
+    "## 원문 보존 원칙",
+    "- 파일/슬랙/Drive 문서 내용은 요약으로 대체하지 않습니다.",
+    "- 이 문서는 CEO/PM 운영 판단을 위한 구조화 레이어이며, 원문과 긴 추출문은 Sources, Evidence_Log, Raw_Evidence_Index에 경로/발췌/버전으로 보존합니다.",
+    "- LLM 해석은 확정이 아니라 검토 후보이며, 확정 반영은 Decision Queue 승인 후 수행합니다.",
+    "",
+    "## 연결 근거",
+    ...links,
+    "",
+  ];
+  const sections = {
+    "Status.md": [
+      "## 현재 상태",
+      "- 단계: 확인 필요",
+      "- 최근 추진: 확인 필요",
+      "- 다음 액션: 확인 필요",
+      "- 담당/Owner: 확인 필요",
+      "- 고객 온도감: 확인 필요",
+      "- 내부 준비도: 확인 필요",
+      "- 의사결정 필요: 확인 필요",
+      "",
+      "## 상태 변경 이력",
+      "| 일시 | 이전 상태 | 변경 상태 | 근거 | 판단 |",
+      "| --- | --- | --- | --- | --- |",
+    ],
+    "Business_Flow.md": [
+      "## 비즈니스 흐름",
+      "| 단계 | 상태 | 근거 | 다음 게이트 | 담당 |",
+      "| --- | --- | --- | --- | --- |",
+      "| 리드/기회 | 확인 필요 |  |  |  |",
+      "| 고객 미팅/요구사항 | 확인 필요 |  |  |  |",
+      "| 제안/견적/PoC | 확인 필요 |  |  |  |",
+      "| 기술 검증 | 확인 필요 |  |  |  |",
+      "| 계약/과제/납품 | 확인 필요 |  |  |  |",
+      "| 운영/확장 | 확인 필요 |  |  |  |",
+      "",
+      "## 흐름상 병목",
+      "- 확인 필요",
+    ],
+    "CEO_Brief.md": [
+      "## CEO 판단 브리프",
+      "- 지금 볼 것: 현재 사업 단계, 수익/전략성, 리스크, 의사결정 기한",
+      "- 결정 필요: 확인 필요",
+      "- 추천안: 근거 부족",
+      "",
+      "## 선택지",
+      "| 선택지 | 기대효과 | 비용/리스크 | 필요한 근거 | 추천 여부 |",
+      "| --- | --- | --- | --- | --- |",
+    ],
+    "PM_Action_Plan.md": [
+      "## PM 실행 계획",
+      "| 액션 | Owner | 기한 | 선행조건 | 근거 | 상태 |",
+      "| --- | --- | --- | --- | --- | --- |",
+      "",
+      "## 이번 주 실무 포인트",
+      "- 확인 필요",
+    ],
+    "Customer_Followup.md": [
+      "## 고객 후속 대응",
+      "| 고객/상대 | 마지막 접점 | 요청/관심사 | 다음 연락 | 준비물 | 상태 |",
+      "| --- | --- | --- | --- | --- | --- |",
+      "",
+      "## 고객에게 확인할 질문",
+      "- 확인 필요",
+    ],
+    "Raw_Evidence_Index.md": [
+      "## 원문/추출문 인덱스",
+      "- 긴 파일 내용은 이 문서에서 원문 위치, 추출 산출물, 버전, 확인 한계를 연결합니다.",
+      "- 운영 문서에는 판단 레이어만 두고, 근거 본문은 가능한 한 원문 경로와 발췌 단위로 추적합니다.",
+      "",
+      "| 원천 | 원문/추출 경로 | 유형 | 버전/일시 | 보존 범위 | 위키 반영 상태 |",
+      "| --- | --- | --- | --- | --- | --- |",
+    ],
+  };
+  return [...commonHeader, ...(sections[fileName] || [`## ${projectName} 운영 메모`, "- 확인 필요"])];
 }
 
 function baseHubMarkdown(type, title, description) {
@@ -4548,6 +5267,136 @@ async function applyProjectCustomerPromotion(entry, operation, targetPages, dryR
   return changed;
 }
 
+function projectRootsFromTargets(entry, operation = {}, targetPages = []) {
+  const roots = new Map();
+  for (const page of targetPages || []) {
+    const projectKey = page.projectKey || (page.path || "").split("/")[2] || "";
+    if (!projectKey || !["project", "account"].includes(page.division || "")) continue;
+    const projectLabel = page.projectLabel || projectKey.replace(/_/g, " ");
+    roots.set(projectKey, {
+      projectKey,
+      projectLabel,
+      root: `obsidian/Wiki/${projectKey}`,
+      hubPath: page.docKind === "hub" ? page.path : `obsidian/Wiki/${projectKey}/hub.md`,
+    });
+  }
+  const explicitProjectKey = operationValue(operation, ["projectKey", "project_key", "targetProjectKey", "target_project_key"]);
+  if (explicitProjectKey && !roots.has(explicitProjectKey)) {
+    roots.set(explicitProjectKey, {
+      projectKey: explicitProjectKey,
+      projectLabel: operationValue(operation, ["projectLabel", "project_label"]) || explicitProjectKey.replace(/_/g, " "),
+      root: `obsidian/Wiki/${explicitProjectKey}`,
+      hubPath: `obsidian/Wiki/${explicitProjectKey}/hub.md`,
+    });
+  }
+  if (!roots.size) {
+    const names = promotionNames(entry, operation);
+    roots.set(names.projectKey, {
+      projectKey: names.projectKey,
+      projectLabel: names.projectName,
+      root: `obsidian/Wiki/${names.projectKey}`,
+      hubPath: `obsidian/Wiki/${names.projectKey}/hub.md`,
+    });
+  }
+  return [...roots.values()];
+}
+
+async function applyBusinessOpsConversion(entry, operation, targetPages, dryRun) {
+  const now = new Date().toISOString();
+  const marker = `<!-- wiki-management:${entry.id}:business_ops_conversion -->`;
+  const changed = [];
+  const evidenceLinks = (targetPages || [])
+    .filter((page) => page.path)
+    .map((page) => `- ${wikiLinkFromPath(page.path)}: ${page.title || page.path}`)
+    .slice(0, 40);
+  const evidenceSummary = evidenceLinks.length
+    ? evidenceLinks.slice(0, 6).map((line) => line.replace(/^- /, "")).join("<br>")
+    : "연결 증적 없음";
+  const roots = projectRootsFromTargets(entry, operation, targetPages);
+  const opsDocs = [
+    ["Status.md", "status", "Status"],
+    ["Business_Flow.md", "business_flow", "Business Flow"],
+    ["CEO_Brief.md", "ceo_brief", "CEO Brief"],
+    ["PM_Action_Plan.md", "pm_action", "PM Action Plan"],
+    ["Customer_Followup.md", "customer_followup", "Customer Follow-up"],
+    ["Raw_Evidence_Index.md", "raw_evidence", "Raw Evidence Index"],
+  ];
+
+  for (const root of roots) {
+    const hubResult = await upsertManagedMarkdown(root.hubPath, (before) => {
+      const base = before || baseHubMarkdown("hub", `${root.projectLabel} Project Hub`, `${root.projectLabel} 운영형 프로젝트 허브입니다.`);
+      const lines = [
+        "",
+        "### 운영형 위키 전환",
+        `- 전환 시각: ${now}`,
+        `- 명령: ${entry.command}`,
+        "- 목적: 수집 자료를 단순 요약하지 않고 원문 보존, 실무 상태, CEO/PM 의사결정, 고객 후속, PM 액션으로 분리 관리",
+        "- 중복 방지: 프로젝트 허브를 기준 앵커로 삼고 새 자료는 Status/Business_Flow/CEO_Brief/PM_Action_Plan/Customer_Followup/Raw_Evidence_Index 후보로 라우팅",
+        "- 충돌 방지: 상충 수치/일정/버전/주장은 Conflict_Register 또는 Decision Queue 검토 대상으로 유지",
+        "- 원문 보존: 파일 원문과 긴 추출문은 요약 대체 금지. Raw_Evidence_Index와 Evidence_Log에 원천 경로, 추출 산출물, 버전, 한계를 남김",
+        "",
+        "### 운영 링크",
+        `- Status: ${wikiLinkFromPath(`${root.root}/Status.md`)}`,
+        `- Business Flow: ${wikiLinkFromPath(`${root.root}/Business_Flow.md`)}`,
+        `- CEO Brief: ${wikiLinkFromPath(`${root.root}/CEO_Brief.md`)}`,
+        `- PM Action Plan: ${wikiLinkFromPath(`${root.root}/PM_Action_Plan.md`)}`,
+        `- Customer Follow-up: ${wikiLinkFromPath(`${root.root}/Customer_Followup.md`)}`,
+        `- Raw Evidence Index: ${wikiLinkFromPath(`${root.root}/Raw_Evidence_Index.md`)}`,
+        "",
+        "### 연결 대상 증적",
+        ...evidenceLinks,
+      ];
+      return appendManagedBlock(base, marker, `Business Ops Conversion ${now}`, lines);
+    }, dryRun);
+    if (hubResult) changed.push({ ...hubResult, operation: "business_ops_conversion" });
+
+    for (const [fileName, type, label] of opsDocs) {
+      const result = await upsertManagedMarkdown(`${root.root}/${fileName}`, (before) => {
+        const heading = `${root.projectLabel} ${label}`;
+        const base = before || [
+          "---",
+          `type: ${type}`,
+          `created: ${now.slice(0, 10)}`,
+          `updated: ${now.slice(0, 10)}`,
+          'source: "wiki management business ops conversion"',
+          "---",
+          "",
+          ...businessOpsDocScaffold(fileName, heading, root.projectLabel, evidenceLinks),
+          "",
+        ].join("\n");
+        const lines = [
+          `- 명령: ${entry.command}`,
+          `- 실행시각: ${now}`,
+          `- 프로젝트 허브: ${wikiLinkFromPath(root.hubPath)}`,
+          "- 실무 의미: 수집 자료를 CEO/PM 운영 판단에 쓰기 위한 구조화 후보를 생성",
+          "- 보존 원칙: 원문/긴 추출문을 요약으로 대체하지 않고 Raw_Evidence_Index/Evidence_Log에서 추적",
+          `- 대표 연결 증적: ${evidenceSummary}`,
+        ];
+        return appendManagedBlock(base, marker, `Business Ops Conversion ${now}`, lines);
+      }, dryRun);
+      if (result) changed.push({ ...result, operation: "business_ops_conversion" });
+    }
+
+    if (!dryRun) {
+      await enqueueDecisionQueueItem({
+        id: `business-ops-${entry.id}-${root.projectKey}`,
+        sourceType: "wiki_management",
+        kind: "business_ops_conversion",
+        title: `운영형 위키 전환 검토: ${root.projectLabel}`,
+        projectKey: root.projectKey,
+        projectLabel: root.projectLabel,
+        path: root.hubPath,
+        content: [
+          "프로젝트 허브를 운영형 관리 앵커로 연결했습니다.",
+          "CEO/PM 판단 문서와 Raw_Evidence_Index가 생성/갱신되었습니다.",
+          "파일 원문은 요약 대체 금지이며, 실제 근거 발췌와 상태 판단은 검토 후 승인해야 합니다.",
+        ].join("\n"),
+      });
+    }
+  }
+  return changed;
+}
+
 async function applyWikiManagementCommand(commandId, options = {}) {
   const history = await readJsonFile(wikiManagementPath, []);
   const entry = history.find((item) => item.id === commandId);
@@ -4600,8 +5449,15 @@ async function applyWikiManagementCommand(commandId, options = {}) {
     const promotionChanges = await applyProjectCustomerPromotion(entry, promoteOperation, targetPages, dryRun);
     changedFiles.push(...promotionChanges);
   }
+  const shouldConvertBusinessOps = structuralOps.some((operation) => /business[_-]?ops|operational|status|ceo|pm|hub[_-]?link|컨버|운영형|실무|허브\s*연결|중복|충돌/i.test(operation.type || ""))
+    || /운영형|실무\s*중심|CEO|PM|프로젝트\s*허브|허브\s*연결|중복|충돌|컨버팅|컨버전|business\s*ops/i.test(entry.command || "");
+  if (shouldConvertBusinessOps) {
+    const opsOperation = structuralOps.find((operation) => /business[_-]?ops|operational|status|ceo|pm|hub[_-]?link|컨버|운영형|실무|허브\s*연결/i.test(operation.type || "")) || { type: "business_ops_conversion" };
+    const opsChanges = await applyBusinessOpsConversion(entry, opsOperation, targetPages, dryRun);
+    changedFiles.push(...opsChanges);
+  }
   const unsupportedStructuralOps = structuralOps
-    .filter((operation) => !/project|customer|account|promotion|promote|승격/i.test(operation.type || ""))
+    .filter((operation) => !/project|customer|account|promotion|promote|승격|business[_-]?ops|operational|status|ceo|pm|hub[_-]?link|컨버|운영형|실무|허브\s*연결/i.test(operation.type || ""))
     .map((operation) => ({ type: operation.type, reason: "지원하지 않는 구조 작업 유형이라 자동 실행하지 않음" }));
   skippedOperations.push(...unsupportedStructuralOps);
 
@@ -5359,7 +6215,7 @@ async function requestGlmChatCompletion(apiUrl, apiKey, body, options = {}) {
   const primary = normalizeGlmChatUrl(apiUrl);
   const codingFallback = codingPlanGlmUrl(apiUrl);
   const candidates = [primary, codingFallback].filter(Boolean);
-  const timeoutMs = Number(process.env.GLM_TIMEOUT_MS || 45000);
+  const timeoutMs = Number(options.timeoutMs || process.env.GLM_TIMEOUT_MS || 45000);
   const started = Date.now();
   let lastError = null;
   const bodyVariants = [body];
@@ -5733,6 +6589,7 @@ function routeChatSkills(message, evidence = [], paperclip = null, options = {})
   const needsValidation = wantsComprehensiveAnalysis
     || /검수|검증|coverage|커버리지|누락|충돌|conflict|정합|리스크 점검|근거 점검/i.test(lower)
     || evidence.some((item) => item.docKind === "conflict" || (item.conflicts || []).length);
+  const needsWikiOpsConversion = /운영형|실무\s*중심|CEO|PM|프로젝트\s*허브|허브\s*연결|중복|충돌|컨버팅|컨버전|business\s*ops|status|decision\s*brief|위키\s*관리\s*llm/i.test(text);
   const blockedWriteActions = [];
   const suggestedTemplateIds = [];
   if (/위키화|반영|실행|run\b|ingest|수집|manifest|rclone|openclaw|동기화/i.test(lower)) {
@@ -5744,6 +6601,7 @@ function routeChatSkills(message, evidence = [], paperclip = null, options = {})
   }
   if (needsFileBrowsing) suggestedTemplateIds.push("os-file-browser");
   if (needsFilesystemWikiIntake) suggestedTemplateIds.push("filesystem-wiki-intake");
+  if (needsWikiOpsConversion) suggestedTemplateIds.push("wiki-ops-converter");
   if (needsGrantRfp) suggestedTemplateIds.push("grant-rfp-strategy");
   if (needsHwp) suggestedTemplateIds.push("rhwp-hwp-reader");
   if (needsPdf) suggestedTemplateIds.push("pdf-document-reader");
@@ -5754,9 +6612,9 @@ function routeChatSkills(message, evidence = [], paperclip = null, options = {})
   const forcedTemplateIds = [...new Set([].concat(options.forcedTemplateIds || []).map((item) => String(item || "").trim()).filter(Boolean))]
     .filter((id) => availableTemplates.size ? availableTemplates.has(id) : true);
   suggestedTemplateIds.push(...forcedTemplateIds);
-  const readOnlySkillIds = ["os-file-browser", "filesystem-wiki-intake", "rhwp-hwp-reader", "pdf-document-reader", "pptx-slide-reader", "spreadsheet-stat-analyzer", "grant-rfp-strategy"];
+  const readOnlySkillIds = ["os-file-browser", "filesystem-wiki-intake", "wiki-ops-converter", "rhwp-hwp-reader", "pdf-document-reader", "pptx-slide-reader", "spreadsheet-stat-analyzer", "grant-rfp-strategy"];
   return {
-    needs_reading_skill: needsFileBrowsing || needsFilesystemWikiIntake || needsHwp || needsPdf || needsPptx || needsSpreadsheet || needsGrantRfp || forcedTemplateIds.some((id) => readOnlySkillIds.includes(id)),
+    needs_reading_skill: needsFileBrowsing || needsFilesystemWikiIntake || needsWikiOpsConversion || needsHwp || needsPdf || needsPptx || needsSpreadsheet || needsGrantRfp || forcedTemplateIds.some((id) => readOnlySkillIds.includes(id)),
     needs_validation_skill: needsValidation || forcedTemplateIds.includes("validator"),
     suggested_template_ids: [...new Set(suggestedTemplateIds)].filter((id) => availableTemplates.size ? availableTemplates.has(id) : true),
     blocked_write_actions: [...new Set(blockedWriteActions)],
@@ -5765,6 +6623,7 @@ function routeChatSkills(message, evidence = [], paperclip = null, options = {})
       wantsComprehensiveAnalysis ? `다중 파일 종합 분석 요청(${totalContextFiles} files)` : "",
       needsFileBrowsing ? "OS 파일/폴더 구조 조회 필요" : "",
       needsFilesystemWikiIntake ? "로컬 파일시스템 위키화 intake 필요" : "",
+      needsWikiOpsConversion ? "프로젝트 허브 연결/운영형 위키 컨버팅 필요" : "",
       needsGrantRfp ? "공고/RFP/사업계획서 전략 분석 필요" : "",
       needsHwp ? "hwp/hwpx 문서 해석 필요" : "",
       needsPdf ? "PDF 문서 조회 필요" : "",
@@ -5799,7 +6658,7 @@ function autoReadablePathsForTemplate(route = {}, templateId = "") {
   return candidatePaths
     .filter((path) => {
       const ext = extname(path).toLowerCase();
-      if (templateId === "filesystem-wiki-intake") return [".hwp", ".hwpx", ".pdf", ".docx", ".pptx", ".xlsx", ".xls", ".csv", ".html", ".htm", ".md", ".txt", ".json"].includes(ext);
+      if (templateId === "filesystem-wiki-intake" || templateId === "wiki-ops-converter") return [".hwp", ".hwpx", ".pdf", ".docx", ".pptx", ".xlsx", ".xls", ".csv", ".html", ".htm", ".md", ".txt", ".json"].includes(ext);
       if (templateId === "rhwp-hwp-reader") return [".hwp", ".hwpx"].includes(ext);
       if (templateId === "pdf-document-reader") return ext === ".pdf";
       if (templateId === "pptx-slide-reader") return ext === ".pptx";
@@ -5915,7 +6774,7 @@ async function createPaperclipAgentDrafts(route, message, project = {}) {
   const suggested = (route.suggested_template_ids || [])
     .filter((templateId) => {
       if (!route.has_auto_read_input) return true;
-      if (!["filesystem-wiki-intake", "rhwp-hwp-reader", "pdf-document-reader", "pptx-slide-reader", "grant-rfp-strategy", "spreadsheet-stat-analyzer"].includes(templateId)) return true;
+      if (!["filesystem-wiki-intake", "wiki-ops-converter", "rhwp-hwp-reader", "pdf-document-reader", "pptx-slide-reader", "grant-rfp-strategy", "spreadsheet-stat-analyzer"].includes(templateId)) return true;
       return !autoReadablePathsForTemplate(route, templateId).length;
     })
     .filter((templateId) => templateId !== "validator")
@@ -7396,6 +8255,16 @@ function skillCatalog() {
       output: "automation/wiki_api/runtime/skill_outputs/*.md",
     },
     {
+      id: "wiki-ops-converter",
+      name: "운영형 위키 컨버터",
+      type: "paperclip-glm-skill",
+      status: "available",
+      safety: "local_markdown_output_decision_queue_required",
+      description: "기존 자료/허브/파일 해석 결과를 CEO/PM 운영형 위키 구조로 변환할 후보를 만들고, 프로젝트 허브 연결/중복/충돌 방지 기준을 제안한다.",
+      bestFor: ["프로젝트 허브 연결", "기존 자료 운영형 전환", "CEO/PM 브리프", "중복/충돌 방지 라우팅"],
+      output: "automation/wiki_api/runtime/skill_outputs/*.md + Decision Queue 검토 후보",
+    },
+    {
       id: "meeting-minutes-writer",
       name: "회의록/미팅정리 작성",
       type: "paperclip-glm-skill",
@@ -7679,6 +8548,17 @@ function paperclipTemplates() {
       output: "automation/wiki_api/runtime/skill_outputs/*.md",
     },
     {
+      id: "wiki-ops-converter",
+      agent: "Wiki Ops Manager",
+      title: "운영형 위키 컨버터",
+      description: "기존 위키/파일 해석 결과를 원문 보존형 근거 레이어와 CEO/PM 운영 레이어로 분리하고 프로젝트 허브 연결 후보를 만든다.",
+      command: "glm-skill",
+      dryRun: false,
+      safety: "local_markdown_output_decision_queue_required",
+      inputHint: "연결할 프로젝트 허브, 기존 자료 경로, 운영 관점(CEO/PM/고객 후속/중복/충돌)을 적으세요.",
+      output: "automation/wiki_api/runtime/skill_outputs/*.md",
+    },
+    {
       id: "meeting-minutes-writer",
       agent: "PM Minutes Writer",
       title: "회의록/미팅정리 작성",
@@ -7944,6 +8824,7 @@ function paperclipSkillSystemPrompt(templateId) {
     return [
       "당신은 RTM의 로컬 파일시스템 위키화 intake 담당자입니다.",
       "목표는 로컬 파일/폴더를 읽기 전용으로 조사하여, rclone 수집의 보조 또는 대체 입력으로 위키 반영 후보를 만드는 것입니다.",
+      "가장 중요한 원칙: 파일 내용을 요약본으로 대체하지 마십시오. 원문/긴 추출문/표/수치/버전/출처 위치를 보존하고, 운영 요약은 별도 레이어로만 작성하십시오.",
       "반드시 다음 순서로 답하십시오.",
       "1) Intake 범위 요약: 어떤 폴더/파일이 들어왔는지, 경로 범위와 구조 특징",
       "2) Source inventory: 문서 유형별 분류(HWP/HWPX/PDF/DOCX/PPTX/XLSX/CSV/HTML/MD/TXT/JSON 등), 대표 파일, 추출 한계",
@@ -7954,10 +8835,32 @@ function paperclipSkillSystemPrompt(templateId) {
       "문서 내용이 실제로 추출된 부분과 구조만 보고 추정한 부분을 구분하고, 위키에 이미 쓴 것처럼 표현하지 마십시오.",
     ].join("\n");
   }
+  if (templateId === "wiki-ops-converter") {
+    return [
+      "당신은 RTM의 위키 관리 LLM입니다.",
+      "목표는 산재한 기존 자료와 파일 해석 결과를 프로젝트 허브에 연결하고, 중복/충돌을 막으면서 실무 중심의 운영형 위키로 전환할 검토 초안을 만드는 것입니다.",
+      "",
+      "[절대 원칙]",
+      "1. 파일 내용, 긴 추출문, 표, 수치, 원문 문장은 요약본으로 대체하지 않습니다.",
+      "2. 원문 보존 레이어(Sources, Evidence_Log, Raw_Evidence_Index)와 운영 판단 레이어(Status, Business_Flow, CEO_Brief, PM_Action_Plan, Customer_Followup)를 분리합니다.",
+      "3. 새 사실을 확정하지 말고, 근거 위치가 없으면 '근거 위치 미확인'으로 둡니다.",
+      "4. 중복 가능 문서는 기존 프로젝트 허브 후보와 비교하고, 상충 수치/일정/버전은 Conflict_Register 또는 Decision Queue 후보로 남깁니다.",
+      "5. 실제 위키에 반영된 것처럼 쓰지 말고 적용 전 변환 계획과 append 후보만 제시합니다.",
+      "",
+      "[필수 출력]",
+      "1. 프로젝트 허브 연결 후보: projectKey, hub path, 연결 이유, confidence, 중복 후보",
+      "2. 원문 보존 계획: 원천별 Sources/Evidence_Log/Raw_Evidence_Index에 남길 내용과 보존 단위",
+      "3. 운영형 변환 계획: Status, Business_Flow, CEO_Brief, PM_Action_Plan, Customer_Followup별 append 후보",
+      "4. 충돌/중복 방지: 같은 고객/프로젝트/버전/수치/일정 후보와 처리 원칙",
+      "5. Decision Queue 카드 초안: 사람이 승인해야 할 결정 항목",
+      "6. LLM Chat 활용 방식: 이후 질문에 어떤 운영 컨텍스트를 우선 검색해야 하는지",
+    ].join("\n");
+  }
   if (templateId === "rhwp-hwp-reader") {
     return [
       "당신은 RTM의 문서 해석 담당자입니다.",
       "제공된 한글문서 추출문을 왜곡 없이 분석해 핵심 내용, 수치, 조직/참석자, 결정/요청, 리스크, 확인 필요 항목을 한국어 Markdown으로 정리하십시오.",
+      "파일 내용을 요약본으로 대체하지 말고, 원문/긴 추출문/표/수치/버전/출처 위치를 보존해야 할 단위로 분리하십시오.",
       "추출 품질 경고가 있으면 한계로 명시하십시오.",
       "중요: 입력에 `Paperclip 경로 차단`, `Paperclip 경로 미해결`, `Paperclip 입력 파일 없음`이 있으면 파일을 읽지 못한 것입니다. 이 경우를 HWP 보안 설정, 암호화, 배포용 문서, 권한 잠금으로 단정하지 마십시오.",
       "보안/암호화 실패라고 말할 수 있는 경우는 로컬 추출 결과 또는 extractor warning에 그 원인이 명시된 때뿐입니다.",
@@ -7967,6 +8870,7 @@ function paperclipSkillSystemPrompt(templateId) {
     return [
       "당신은 RTM의 PDF 증거 문서 조회 담당자입니다.",
       "제공된 PDF 추출문을 페이지/섹션 단위 근거로 보존하면서 핵심 주장, 수치, 일정, 조직/고객명, 결정/요청, 리스크, 확인 필요 항목을 한국어 Markdown으로 정리하십시오.",
+      "요약은 운영 판단 보조일 뿐이며, 원문 페이지/섹션/표 단위 근거를 보존 대상으로 별도 표시하십시오.",
       "pypdf 또는 fallback 추출 한계가 있으면 반드시 한계로 명시하고, 스캔 이미지처럼 텍스트가 비어 있는 부분은 추측하지 마십시오.",
       "위키 승격 후보는 Sources/Evidence_Log/Conflict_Register/Change_Log 관점으로 나누되, 실제 반영된 것처럼 쓰지 마십시오.",
     ].join("\n");
@@ -7975,6 +8879,7 @@ function paperclipSkillSystemPrompt(templateId) {
     return [
       "당신은 RTM의 PowerPoint 슬라이드 조회 담당자입니다.",
       "제공된 PPTX 추출문을 슬라이드 흐름 기준으로 해석하고, 제목/표/도형 텍스트/발표 노트에서 확인되는 핵심 주장, 수치, 제품명, 고객명, 일정, 리스크, 버전 차이를 한국어 Markdown으로 정리하십시오.",
+      "슬라이드별 원문 텍스트와 운영 판단 요약을 분리하고, 슬라이드 원문을 요약으로 대체하지 마십시오.",
       "슬라이드 이미지나 차트에만 존재해 텍스트로 추출되지 않은 정보는 추출 한계로 표시하고 추측하지 마십시오.",
       "위키 승격 후보는 Sources/Evidence_Log/Conflict_Register/Change_Log 관점으로 나누되, 실제 반영된 것처럼 쓰지 마십시오.",
     ].join("\n");
@@ -8096,6 +9001,111 @@ function normalizeBrowserHintName(value = "") {
     .replace(/^["'`]+|["'`]+$/g, "")
     .replace(/^[★☆•\s]+/, "")
     .replace(/\s+/g, " ");
+}
+
+function normalizeFileHintForMatch(value = "") {
+  return normalizeBrowserHintName(value)
+    .normalize("NFC")
+    .toLowerCase()
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function fileHintTokens(value = "") {
+  return [...new Set(
+    normalizeFileHintForMatch(value)
+      .replace(/\.[a-z0-9]+$/i, "")
+      .match(/[0-9a-z가-힣]{2,}/giu) || [],
+  )].filter((token) => !["hwp", "hwpx", "pdf", "docx", "pptx", "xlsx", "xls", "csv", "html", "htm", "file", "source"].includes(token));
+}
+
+function extractFilenameHints(text, extensions = []) {
+  const allowed = new Set((extensions || []).map((item) => `.${String(item).toLowerCase().replace(/^\./, "")}`));
+  const extensionPattern = (allowed.size ? [...allowed].map((item) => item.slice(1)) : ["hwp", "hwpx", "pdf", "docx", "pptx", "xlsx", "xls", "csv", "html", "htm", "md", "txt", "json"]).join("|");
+  const hints = [];
+  const raw = String(text || "");
+  for (const match of raw.matchAll(new RegExp("`([^`]+\\.(" + extensionPattern + "))`", "gi"))) {
+    hints.push(match[1]);
+  }
+  for (const line of raw.split(/\r?\n/)) {
+    if (!new RegExp(`\\.(${extensionPattern})\\b`, "i").test(line)) continue;
+    const cleaned = line
+      .replace(/^[-*]\s+/, "")
+      .replace(/^(file|source|path)\s*:\s*/i, "")
+      .replace(/^.*?:\s*(?=[^:]*\.(?:hwp|hwpx|pdf|docx|pptx|xlsx|xls|csv|html|htm|md|txt|json)\b)/i, "")
+      .replace(/^["'`]+|["'`]+$/g, "")
+      .replace(/[),.;]+$/g, "")
+      .trim();
+    if (cleaned && !cleaned.includes("/")) hints.push(cleaned);
+  }
+  return [...new Set(hints.map(normalizeBrowserHintName).filter(Boolean))]
+    .filter((hint) => {
+      const ext = extname(hint).toLowerCase();
+      return ext && (!allowed.size || allowed.has(ext));
+    });
+}
+
+async function resolveFilenameHintFiles(text, extensions = [], options = {}) {
+  const hints = extractFilenameHints(text, extensions);
+  if (!hints.length) return [];
+  const roots = [
+    chatUploadMirrorRoot,
+    chatUploadsRoot,
+    resolveRepoPath("automation/drive_wikify/runtime/mirror"),
+    "/Users/rtm/Library/CloudStorage",
+    "/Users/rtm/Library/CloudStorage/GoogleDrive-jaykafka12@gmail.com",
+    "/Users/rtm/Library/CloudStorage/GoogleDrive-jaykafka12@gmail.com/.shortcut-targets-by-id",
+    repoRoot,
+  ].map((item) => resolve(item));
+  const maxMatches = Math.max(4, Number(options.maxHintMatches || 16));
+  const maxVisited = Math.max(2000, Number(options.maxHintSearchFiles || 100000));
+  const allowedExts = new Set((extensions || []).map((item) => `.${String(item).toLowerCase().replace(/^\./, "")}`));
+  const matches = [];
+  const seen = new Set();
+  let visited = 0;
+
+  function matchesHint(fileName, hint) {
+    const normalizedName = normalizeFileHintForMatch(fileName);
+    const normalizedHint = normalizeFileHintForMatch(hint);
+    if (normalizedName === normalizedHint || normalizedName.includes(normalizedHint)) return true;
+    const tokens = fileHintTokens(hint);
+    if (!tokens.length) return false;
+    const required = tokens.filter((token) => /\d{4,}/.test(token) || /[가-힣a-z]{3,}/iu.test(token));
+    const score = required.filter((token) => normalizedName.includes(token)).length;
+    return score >= Math.min(required.length, Math.max(2, Math.ceil(required.length * 0.65)));
+  }
+
+  async function walk(rootPath) {
+    if (matches.length >= maxMatches || visited >= maxVisited) return;
+    const entries = await readdir(rootPath, { withFileTypes: true }).catch(() => []);
+    for (const entry of entries) {
+      if (matches.length >= maxMatches || visited >= maxVisited) return;
+      if (entry.name === "node_modules" || entry.name === ".git" || entry.name === "__pycache__") continue;
+      const fullPath = join(rootPath, entry.name);
+      if (entry.isDirectory()) {
+        await walk(fullPath);
+        continue;
+      }
+      if (!entry.isFile()) continue;
+      visited += 1;
+      const ext = extname(entry.name).toLowerCase();
+      if (allowedExts.size && !allowedExts.has(ext)) continue;
+      if (!localPathAllowedForAutoSkill(fullPath)) continue;
+      if (!hints.some((hint) => matchesHint(entry.name, hint))) continue;
+      const key = resolve(fullPath);
+      if (seen.has(key)) continue;
+      seen.add(key);
+      matches.push(key);
+    }
+  }
+
+  for (const rootPath of [...new Set(roots)]) {
+    const info = await stat(rootPath).catch(() => null);
+    if (!info?.isDirectory?.()) continue;
+    await walk(rootPath);
+    if (matches.length >= maxMatches || visited >= maxVisited) break;
+  }
+  return matches;
 }
 
 const RESOLVED_BROWSER_FILE_BLOCK_START = "[자동해결 파일경로]";
@@ -8256,10 +9266,12 @@ async function resolvePaperclipInputTargets(text, extensions = [], options = {})
   const filePaths = extractLocalPaths(text, extensions);
   const directoryPaths = extractDirectoryLikePaths(text);
   const browserHintPaths = await resolveBrowserHintFiles(text, extensions, options);
+  const filenameHintPaths = await resolveFilenameHintFiles(text, extensions, options);
   const targets = [];
   const blocked = [];
   const missing = [];
-  for (const fullPath of [...new Set(filePaths.concat(directoryPaths, browserHintPaths))]) {
+  for (const inputPath of [...new Set(filePaths.concat(directoryPaths, browserHintPaths, filenameHintPaths))]) {
+    const fullPath = resolveReadablePath(inputPath);
     const allowed = localPathAllowedForAutoSkill(fullPath);
     if (!allowed) {
       blocked.push(fullPath);
@@ -8417,6 +9429,7 @@ async function readRawBody(req) {
 
 async function extractHwpLike(paths) {
   if (!paths.length) return "";
+  const timeoutMs = Number(process.env.PAPERCLIP_EXTRACTION_TIMEOUT_MS || 500000);
   const script = [
     "import json, sys",
     "from pathlib import Path",
@@ -8432,7 +9445,7 @@ async function extractHwpLike(paths) {
     "print(json.dumps(out, ensure_ascii=False))",
   ].join("\n");
   const result = await runCapture(resolvePythonBin(), ["-c", script, ...paths], {
-    timeoutMs: 60000,
+    timeoutMs,
     env: { PYTHONPATH: driveWikifySrc },
   });
   return result.stdout || result.stderr;
@@ -8928,20 +9941,48 @@ async function runPaperclipGlmSkill(task) {
     extraction.extracted ? "## 로컬 추출 결과" : "",
     extraction.extracted ? extraction.extracted.slice(0, 18000) : "",
   ].filter(Boolean).join("\n");
-  const completion = await requestGlmChatCompletion(apiUrl, apiKey, {
-    model,
-    messages: [
-      { role: "system", content: paperclipSkillSystemPrompt(task.templateId) },
-      { role: "user", content: input },
-    ],
-    temperature: 0.2,
-    max_tokens: glmChatMaxTokens(env),
-    thinking: glmThinkingOptions(env),
-  }, {
-    feature: `paperclip_skill:${task.templateId || "unknown"}`,
-    reason: "approved Paperclip GLM skill execution",
-  });
-  const markdown = glmMessageContent(completion.payload) || "GLM 응답이 비어 있습니다.";
+  const paperclipTimeoutMs = Number(process.env.GLM_PAPERCLIP_TIMEOUT_MS || env.GLM_PAPERCLIP_TIMEOUT_MS || process.env.GLM_TIMEOUT_MS || env.GLM_TIMEOUT_MS || 500000);
+  let completion = null;
+  let markdown = "";
+  let provider = "glm";
+  let endpoint = "";
+  try {
+    completion = await requestGlmChatCompletion(apiUrl, apiKey, {
+      model,
+      messages: [
+        { role: "system", content: paperclipSkillSystemPrompt(task.templateId) },
+        { role: "user", content: input },
+      ],
+      temperature: 0.2,
+      max_tokens: glmChatMaxTokens(env),
+      thinking: glmThinkingOptions(env),
+    }, {
+      feature: `paperclip_skill:${task.templateId || "unknown"}`,
+      reason: "approved Paperclip GLM skill execution",
+      timeoutMs: paperclipTimeoutMs,
+    });
+    endpoint = completion.endpoint;
+    markdown = glmMessageContent(completion.payload) || "GLM 응답이 비어 있습니다.";
+  } catch (error) {
+    if (!extraction.extracted) throw error;
+    provider = "local-extraction";
+    endpoint = "local";
+    markdown = [
+      "# Paperclip 로컬 추출 결과",
+      "",
+      "GLM 분석 단계는 실패했지만, 문서 본문 추출은 완료되었습니다. 이 상태를 HWP 보안/암호화/본문 추출 실패로 해석하지 마십시오.",
+      "",
+      `- 스킬: ${task.templateId}`,
+      `- GLM 상태: ${error.message}`,
+      `- 추출 파일 수: ${extraction.paths.length}`,
+      "",
+      "## 추출 소스",
+      ...extraction.paths.map((path) => `- ${displayPath(path)}`),
+      "",
+      "## 로컬 추출문",
+      extraction.extracted.slice(0, 24000),
+    ].join("\n");
+  }
   await mkdir(skillOutputsRoot, { recursive: true });
   const outputPath = join(skillOutputsRoot, `${new Date().toISOString().replace(/[:.]/g, "-")}_${slugifyName(task.templateId)}_${slugifyName(task.title)}.md`);
   const payload = [
@@ -8958,12 +9999,12 @@ async function runPaperclipGlmSkill(task) {
   await writeFile(outputPath, payload, "utf-8");
   return {
     status: "completed",
-    provider: "glm",
+    provider,
     model,
-    endpoint: completion.endpoint,
+    endpoint,
     path: relative(repoRoot, outputPath),
     markdown: payload,
-    extractedSources: extraction.paths.map((path) => relative(repoRoot, path)),
+    extractedSources: extraction.paths.map((path) => displayPath(path)),
   };
 }
 
@@ -9023,6 +10064,28 @@ const server = createServer(async (req, res) => {
     if (pathname === "/api/pipeline/state" && req.method === "POST") {
       const body = await readBody(req);
       return sendJson(res, 200, await writePipelineState(body.state || {}));
+    }
+    if (pathname === "/api/pipeline/plan" && req.method === "POST") {
+      const body = await readBody(req);
+      const plan = collectionPlanFromBody(body);
+      return sendJson(res, 200, { plan, preview: await pipelinePlanPreview(plan) });
+    }
+    if (pathname === "/api/pipeline/test" && req.method === "POST") {
+      const body = await readBody(req);
+      return sendJson(res, 200, { run: await createPipelineRun(body, "test") });
+    }
+    if (pathname === "/api/pipeline/run" && req.method === "POST") {
+      const body = await readBody(req);
+      const run = await createPipelineRun(body, "run");
+      return sendJson(res, ["completed", "blocked"].includes(run.status) ? 200 : run.status === "failed" ? 500 : 200, { run });
+    }
+    if (pathname === "/api/pipeline/runs" && req.method === "GET") {
+      return sendJson(res, 200, { runs: await pipelineRunHistory() });
+    }
+    if (pathname.match(/^\/api\/pipeline\/runs\/[^/]+$/) && req.method === "GET") {
+      const runId = decodeURIComponent(pathname.replace("/api/pipeline/runs/", ""));
+      const run = (await pipelineRunHistory()).find((entry) => entry.runId === runId);
+      return run ? sendJson(res, 200, { run }) : sendJson(res, 404, { error: "Pipeline run not found" });
     }
     if (pathname === "/api/coverage" && req.method === "GET") {
       return sendJson(res, 200, await coverageSummary());

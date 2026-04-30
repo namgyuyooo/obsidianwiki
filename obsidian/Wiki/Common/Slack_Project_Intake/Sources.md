@@ -81,3 +81,31 @@ source: "Slack channel routing"
 - filtered export: `obsidian/raw/exports/slack_filtered/2026-04-30/tf_cross_team_sales_C01L5SA4Y4C_2026-04-30T11-20-46Z.json`
 - 대상 버킷: `project`
 - 반영 메시지 수: `57`
+
+<!-- slack-promotion:C01L5SA4Y4C:2026-04-30/tf_cross_team_sales_C01L5SA4Y4C_2026-04-30T13-43-46Z.json:project -->
+## Slack Collect - 2026-04-30 - #tf_cross_team_sales
+
+- 운영 메모: 링크 우선 참조는 [[Reference_Register]]에서 관리
+- 채널: `#tf_cross_team_sales` (`C01L5SA4Y4C`)
+- 수집 시각: `2026-04-30T13:43:46.780658+00:00`
+- 수집 기간 시작 ts: `1767193200.000000`
+- 필터 제공자: `disabled`
+- 필터 오류: `none`
+- raw export: `obsidian/raw/exports/slack/2026-04-30/tf_cross_team_sales_C01L5SA4Y4C_2026-04-30T13-43-46Z.json`
+- filtered export: `obsidian/raw/exports/slack_filtered/2026-04-30/tf_cross_team_sales_C01L5SA4Y4C_2026-04-30T13-43-46Z.json`
+- 대상 버킷: `project`
+- 반영 메시지 수: `59`
+
+<!-- slack-promotion:C01L5SA4Y4C:project:1777544778.439319:1767777065.786109:57 -->
+## Slack Collect - 2026-04-30 - #tf_cross_team_sales
+
+- 운영 메모: 링크 우선 참조는 [[Reference_Register]]에서 관리
+- 채널: `#tf_cross_team_sales` (`C01L5SA4Y4C`)
+- 수집 시각: `2026-04-30T13:52:15.180844+00:00`
+- 수집 기간 시작 ts: `1767193200.000000`
+- 필터 제공자: `local_rule`
+- 필터 오류: `http_429:{"error":{"code":"1113","message":"Insufficient balance or no resource package. Please recharge."}}`
+- raw export: `obsidian/raw/exports/slack/2026-04-30/tf_cross_team_sales_C01L5SA4Y4C_2026-04-30T13-52-15Z.json`
+- filtered export: `obsidian/raw/exports/slack_filtered/2026-04-30/tf_cross_team_sales_C01L5SA4Y4C_2026-04-30T13-52-15Z.json`
+- 대상 버킷: `project`
+- 반영 메시지 수: `57`

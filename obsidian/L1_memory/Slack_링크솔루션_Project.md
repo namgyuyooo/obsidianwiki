@@ -1,0 +1,11 @@
+# Slack_링크솔루션_Project
+
+- 한줄 요약: 신규 자동 생성 프로젝트 공간
+- 프로젝트 유형: 확인 필요
+- 현재 상태: 문서 인제스트 시작
+- 핵심 결정사항: 신규 프로젝트 공간 자동 생성
+- 핵심 수치 / 파일: 추후 업데이트
+- 핵심 참조 링크: 추후 업데이트
+- 미해결 이슈: 프로젝트 범위 확인 필요
+- 주의사항 (Gotchas): 자동 분기 결과 검토 필요
+- 드릴다운: [[Wiki/Slack_링크솔루션_Project/hub]], [[Wiki/Slack_링크솔루션_Project/Reference_Register]], [[Wiki/Slack_링크솔루션_Project/Evidence_Log]]
