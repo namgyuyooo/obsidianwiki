@@ -75,6 +75,17 @@ const editableSettings = new Set([
   "GLM_API_URL",
   "GLM_API_KEY",
   "GLM_MODEL",
+  "GLM_LIGHT_MODEL",
+  "GLM_LIGHT_MAX_TOKENS",
+  "GLM_DECISION_MODEL",
+  "GLM_DECISION_MAX_TOKENS",
+  "GLM_CONFLICT_MODEL",
+  "GLM_CONFLICT_MAX_TOKENS",
+  "GLM_FILE_ANALYSIS_MODEL",
+  "GLM_VLM_MODEL",
+  "GLM_PAPERCLIP_MODEL",
+  "GLM_SLACK_FILTER_MODEL",
+  "GLM_SLACK_FILTER_MAX_TOKENS",
   "GLM_AVAILABLE_MODELS",
   "GLM_THINKING_TYPE",
   "GLM_THINKING_BUDGET_TOKENS",
@@ -451,6 +462,188 @@ async function recordLlmUsage(entry = {}) {
   };
   await prependJsonHistory(llmUsagePath, payload, 300);
   return payload;
+}
+
+function llmPolicyCatalog(env = {}, usage = []) {
+  const current = (key, fallback = "") => process.env[key] || env[key] || fallback;
+  const countFeature = (patterns = []) => usage.filter((item) => patterns.some((pattern) => pattern.test(item.feature || ""))).length;
+  return [
+    {
+      id: "decision_triage",
+      title: "Decision Deck 경량 판정",
+      surface: "위키 정합성 대기",
+      purpose: "위키 원본 간 데이터 불일치, 충돌, Conflict_Register 반영 여부만 판정한다.",
+      modelClass: "light",
+      recommendedModel: "glm-4.5-air",
+      maxTokens: Number(current("GLM_DECISION_MAX_TOKENS", 900)),
+      thinking: "disabled",
+      envKeys: ["GLM_DECISION_MODEL", "GLM_DECISION_MAX_TOKENS"],
+      currentModel: current("GLM_DECISION_MODEL", "glm-4.5-air"),
+      prompt: [
+        "당신은 Decision Deck 안에서만 동작하는 위키 데이터 정합성 판정 보조자다.",
+        "범위는 실무 리스크, 다음 액션, 고객 대응이 아니라 위키 원본 간 데이터 불일치와 Conflict_Register 반영 판단이다.",
+        "thinking 또는 추론 과정은 출력하지 않는다.",
+        "출력은 1) 판정 approve|hold|investigate 2) 충돌 요약 3) 권장 처리 4) Conflict_Register 반영 문구 5) 확인할 근거 path 순서로 한다.",
+      ].join("\n"),
+      usageCount: countFeature([/decision_triage/]),
+      applySettings: { GLM_DECISION_MODEL: "glm-4.5-air", GLM_DECISION_MAX_TOKENS: "900" },
+    },
+    {
+      id: "conflict_merge",
+      title: "충돌 문서 병합안",
+      surface: "Decision Deck diff/compare",
+      purpose: "출처 문서와 대상 문서를 동시에 비교해 보존/수정/확인 필요 병합 초안을 제시한다.",
+      modelClass: "general",
+      recommendedModel: "glm-4.5",
+      maxTokens: Number(current("GLM_CONFLICT_MAX_TOKENS", 2800)),
+      thinking: "enabled",
+      envKeys: ["GLM_CONFLICT_MODEL", "GLM_CONFLICT_MAX_TOKENS"],
+      currentModel: current("GLM_CONFLICT_MODEL", current("GLM_MODEL", "glm-4.5")),
+      prompt: [
+        "당신은 Obsidian 위키 충돌 병합 보조자다.",
+        "출처 문서와 대상 문서를 비교해 사용자가 판단할 수 있는 병합안을 한국어 JSON으로 제시한다.",
+        "사실 확정이 어려운 항목은 단정하지 말고 [확인 필요]로 둔다.",
+        "출력 키는 summary, conflictingPoints, mergeStrategy, caution, mergedMarkdown만 사용한다.",
+      ].join("\n"),
+      usageCount: countFeature([/conflict_merge_suggestion/]),
+      applySettings: { GLM_CONFLICT_MODEL: "glm-4.5", GLM_CONFLICT_MAX_TOKENS: "2800" },
+    },
+    {
+      id: "search_brief",
+      title: "선택 근거 검색 요약",
+      surface: "위키 검색",
+      purpose: "사용자가 선택한 Markdown 근거 카드만 짧게 요약하고 충돌 후보를 표시한다.",
+      modelClass: "light",
+      recommendedModel: "glm-4.5-air",
+      maxTokens: Number(current("GLM_LIGHT_MAX_TOKENS", 1000)),
+      thinking: "disabled",
+      envKeys: ["GLM_LIGHT_MODEL", "GLM_LIGHT_MAX_TOKENS"],
+      currentModel: current("GLM_LIGHT_MODEL", "glm-4.5-air"),
+      prompt: "선택된 근거 Markdown path만 사용해 summaryMarkdown, keyFindings, relatedProjects, conflictCandidates, nextActions JSON을 짧게 작성한다.",
+      usageCount: countFeature([/wiki_search_light_brief/]),
+      applySettings: { GLM_LIGHT_MODEL: "glm-4.5-air", GLM_LIGHT_MAX_TOKENS: "1000" },
+    },
+    {
+      id: "spotlite_digest",
+      title: "Spotlite/Mission 요약",
+      surface: "Mission Control",
+      purpose: "진행 프로젝트의 실제 고객 업무 상태와 오늘/이번주 액션만 요약한다.",
+      modelClass: "light",
+      recommendedModel: "glm-4.5-air",
+      maxTokens: 1200,
+      thinking: "disabled",
+      envKeys: ["GLM_LIGHT_MODEL", "GLM_LIGHT_MAX_TOKENS"],
+      currentModel: current("GLM_LIGHT_MODEL", "glm-4.5-air"),
+      prompt: "위키관리/구조 정비 이야기는 제외하고 진행 중 프로젝트의 실제 업무 상태, 우선순위, 리스크, 부족한 입력만 JSON으로 정리한다.",
+      usageCount: countFeature([/spotlite_light_digest/]),
+      applySettings: { GLM_LIGHT_MODEL: "glm-4.5-air", GLM_LIGHT_MAX_TOKENS: "1000" },
+    },
+    {
+      id: "drive_instruction",
+      title: "Drive 수집 지시 해석",
+      surface: "수집 파이프라인",
+      purpose: "한 문장 수집 지시를 안전한 키워드/별칭/후보 경로 분석으로 바꾼다.",
+      modelClass: "light",
+      recommendedModel: "glm-4.5-air",
+      maxTokens: 600,
+      thinking: "disabled",
+      envKeys: ["GLM_LIGHT_MODEL", "GLM_LIGHT_MAX_TOKENS"],
+      currentModel: current("GLM_LIGHT_MODEL", "glm-4.5-air"),
+      prompt: "Google Drive 원본 삭제/수정은 금지하고 rclone copy 후보만 만들며 intent, keywords, aliases, requestedAction, confidence, notes JSON을 반환한다.",
+      usageCount: countFeature([/drive_instruction_light_plan/]),
+      applySettings: { GLM_LIGHT_MODEL: "glm-4.5-air", GLM_LIGHT_MAX_TOKENS: "1000" },
+    },
+    {
+      id: "ingest_digest",
+      title: "지식 주입 다이제스트",
+      surface: "지식 주입/승격",
+      purpose: "원문을 위키 반영 후보, 근거 후보, 수치 후보, 충돌 후보로 구조화한다.",
+      modelClass: "hybrid",
+      recommendedModel: "glm-4.5-air <= 8k chars, glm-4.5 for long evidence",
+      maxTokens: 1200,
+      thinking: "short disabled, long enabled",
+      envKeys: ["GLM_LIGHT_MODEL", "GLM_MODEL", "GLM_LIGHT_MAX_TOKENS"],
+      currentModel: `${current("GLM_LIGHT_MODEL", "glm-4.5-air")} / ${current("GLM_MODEL", "glm-5.1")}`,
+      prompt: "확정 지식과 보조 대화 맥락을 구분하고 판정, 프로젝트_후보, 출처_초안, 핵심_근거_후보, 수치_후보, 충돌_후보, 위키_반영_초안, 다음_액션을 한국어 JSON으로 쓴다.",
+      usageCount: countFeature([/ingest_light_digest/, /ingest_digest/]),
+      applySettings: { GLM_LIGHT_MODEL: "glm-4.5-air", GLM_LIGHT_MAX_TOKENS: "1000", GLM_MODEL: current("GLM_MODEL", "glm-5.1") },
+    },
+    {
+      id: "chat_ops",
+      title: "일반 업무 운영 챗",
+      surface: "GLM 챗",
+      purpose: "검색/그래프/Paperclip/coverage 맥락을 묶어 프로젝트 업무 상태, 리스크, 다음 액션을 답한다.",
+      modelClass: "general",
+      recommendedModel: "glm-5.1 or glm-4.5",
+      maxTokens: Number(current("GLM_CHAT_MAX_TOKENS", 10000)),
+      thinking: current("GLM_THINKING_TYPE", "enabled"),
+      envKeys: ["GLM_MODEL", "GLM_CHAT_MAX_TOKENS", "GLM_THINKING_TYPE", "GLM_THINKING_BUDGET_TOKENS"],
+      currentModel: current("GLM_MODEL", "glm-5.1"),
+      prompt: "위키 검색 결과 설명이 아니라 로컬 Obsidian 위키를 근거 저장소로 쓰는 한국어 업무 운영 매니저로 답한다. 근거 path와 확인 필요를 명시한다.",
+      usageCount: countFeature([/^chat_stream$/, /^glm_chat_completion$/]),
+      applySettings: { GLM_MODEL: current("GLM_MODEL", "glm-5.1"), GLM_CHAT_MAX_TOKENS: "10000", GLM_THINKING_TYPE: "enabled" },
+    },
+    {
+      id: "wiki_management",
+      title: "위키 관리 명령 계획",
+      surface: "위키 관리",
+      purpose: "명칭 정리, 프로젝트 승격, 링크 정합성 같은 위키 운영 명령을 적용 전 계획으로 바꾼다.",
+      modelClass: "general",
+      recommendedModel: "glm-4.5",
+      maxTokens: 1800,
+      thinking: "enabled",
+      envKeys: ["GLM_MODEL", "GLM_THINKING_TYPE"],
+      currentModel: current("GLM_MODEL", "glm-5.1"),
+      prompt: "실제 파일 수정이 완료되었다고 말하지 말고 summaryMarkdown, operations, targetPages, risks, nextActions JSON으로 안전한 preview plan만 생성한다.",
+      usageCount: countFeature([/wiki_management/]),
+      applySettings: { GLM_MODEL: current("GLM_MODEL", "glm-5.1"), GLM_THINKING_TYPE: "enabled" },
+    },
+    {
+      id: "file_analysis",
+      title: "채팅 파일/문서 분석",
+      surface: "GLM 챗 파일 업로드",
+      purpose: "hwp/hwpx/pdf/docx/pptx/html/xlsx/csv 추출문을 근거 보존 Markdown으로 분석한다.",
+      modelClass: "general",
+      recommendedModel: "glm-4.5",
+      maxTokens: 6000,
+      thinking: "enabled",
+      envKeys: ["GLM_FILE_ANALYSIS_MODEL", "GLM_VLM_MODEL"],
+      currentModel: current("GLM_FILE_ANALYSIS_MODEL", current("GLM_MODEL", "glm-5.1")),
+      prompt: "문서 추출 품질 한계를 밝히고 핵심 내용, 수치, 조직/참석자, 결정/요청, 리스크, 확인 필요 항목을 한국어 Markdown으로 보존한다.",
+      usageCount: countFeature([/attachment/, /file/]),
+      applySettings: { GLM_FILE_ANALYSIS_MODEL: "glm-4.5", GLM_VLM_MODEL: "glm-4.5v" },
+    },
+    {
+      id: "paperclip_skill",
+      title: "Paperclip 스킬 실행",
+      surface: "Paperclip Studio",
+      purpose: "전문 스킬 템플릿으로 문서 해석, RFP 전략, 통계 분석 결과물을 생성한다.",
+      modelClass: "general",
+      recommendedModel: "glm-4.5",
+      maxTokens: Number(current("GLM_CHAT_MAX_TOKENS", 10000)),
+      thinking: "enabled",
+      envKeys: ["GLM_PAPERCLIP_MODEL", "GLM_CHAT_MAX_TOKENS"],
+      currentModel: current("GLM_PAPERCLIP_MODEL", current("GLM_MODEL", "glm-5.1")),
+      prompt: "템플릿별 전문 역할을 적용하되 사실/해석/전략/가정/추가 요청을 분리하고 증거 위치가 없으면 근거 위치 미확인으로 표시한다.",
+      usageCount: countFeature([/paperclip/]),
+      applySettings: { GLM_PAPERCLIP_MODEL: "glm-4.5" },
+    },
+    {
+      id: "slack_filter",
+      title: "Slack 수집 필터",
+      surface: "Slack evidence ingest",
+      purpose: "Slack 메시지를 project/company_news/casual로 빠르게 분류하고 수집할 메시지만 남긴다.",
+      modelClass: "light",
+      recommendedModel: "glm-4.5-air",
+      maxTokens: Number(current("GLM_SLACK_FILTER_MAX_TOKENS", 1200)),
+      thinking: "disabled",
+      envKeys: ["GLM_SLACK_FILTER_MODEL", "GLM_SLACK_FILTER_MAX_TOKENS", "SLACK_FILTER_WITH_GLM"],
+      currentModel: current("GLM_SLACK_FILTER_MODEL", current("GLM_LIGHT_MODEL", "glm-4.5-air")),
+      prompt: "채널 대화 중 실제 업무 메시지만 keep하고 project/company_news/casual bucket, reason을 JSON으로 반환한다. 잡담/시스템 메시지는 제외한다.",
+      usageCount: countFeature([/slack/]),
+      applySettings: { GLM_SLACK_FILTER_MODEL: "glm-4.5-air", GLM_SLACK_FILTER_MAX_TOKENS: "1200", SLACK_FILTER_WITH_GLM: "true" },
+    },
+  ];
 }
 
 async function walkMarkdown(root) {
@@ -936,7 +1129,8 @@ async function refreshSpotliteGlm(scope = "work") {
   const { values: env } = await readEnvFile();
   const apiKey = process.env.GLM_API_KEY || env.GLM_API_KEY;
   const apiUrl = process.env.GLM_API_URL || env.GLM_API_URL;
-  const model = process.env.GLM_MODEL || env.GLM_MODEL || "glm-5.1";
+  const lightOptions = glmLightTaskOptions(env, { maxTokens: 1200, cap: 1500 });
+  const model = lightOptions.model;
   const localDigest = {
     provider: "local",
     markdown: [
@@ -978,10 +1172,13 @@ async function refreshSpotliteGlm(scope = "work") {
         },
         { role: "user", content: JSON.stringify(compressed) },
       ],
-      temperature: 0.1,
-      max_tokens: 1800,
-      thinking: glmThinkingOptions(env),
+      temperature: lightOptions.temperature,
+      max_tokens: lightOptions.maxTokens,
+      thinking: lightOptions.thinking,
       response_format: { type: "json_object" },
+    }, {
+      feature: "spotlite_light_digest",
+      reason: "short structured PMO summary from compressed wiki signals",
     });
     let parsed;
     try {
@@ -1599,7 +1796,8 @@ async function searchWikiBrief(query, selectedPaths = [], mode = "standard", wor
   const { values: env } = await readEnvFile();
   const apiKey = process.env.GLM_API_KEY || env.GLM_API_KEY;
   const apiUrl = process.env.GLM_API_URL || env.GLM_API_URL;
-  const model = process.env.GLM_MODEL || env.GLM_MODEL || "glm-4.5";
+  const lightOptions = glmLightTaskOptions(env, { maxTokens: 900, cap: 1200 });
+  const model = lightOptions.model;
 
   if (!query || !apiKey || !apiUrl || !evidence.length) {
     return { query, results: allResults, selectedResults: results, brief: localSearchBrief(query, results) };
@@ -1632,10 +1830,13 @@ async function searchWikiBrief(query, selectedPaths = [], mode = "standard", wor
             }),
           },
         ],
-        temperature: 0.1,
-        max_tokens: 1200,
-        thinking: glmThinkingOptions(env),
+        temperature: lightOptions.temperature,
+        max_tokens: lightOptions.maxTokens,
+        thinking: lightOptions.thinking,
         response_format: { type: "json_object" },
+    }, {
+      feature: "wiki_search_light_brief",
+      reason: "short structured brief from compressed wiki cards",
     });
     const content = glmMessageContent(payload);
     let parsed;
@@ -2631,7 +2832,8 @@ async function driveInstructionPlan(instruction = "") {
   const { values: env } = await readEnvFile();
   const apiKey = process.env.GLM_API_KEY || env.GLM_API_KEY;
   const apiUrl = process.env.GLM_API_URL || env.GLM_API_URL;
-  const model = process.env.GLM_MODEL || env.GLM_MODEL || "glm-5.1";
+  const lightOptions = glmLightTaskOptions(env, { maxTokens: 600, cap: 800 });
+  const model = lightOptions.model;
   if (!instruction || !apiKey || !apiUrl) return { ...local, provider: "local-rule" };
   try {
     const { payload, endpoint } = await requestGlmChatCompletion(apiUrl, apiKey, {
@@ -2651,10 +2853,13 @@ async function driveInstructionPlan(instruction = "") {
           content: JSON.stringify({ instruction, localFallback: local }),
         },
       ],
-      temperature: 0.1,
-      max_tokens: 700,
-      thinking: glmThinkingOptions(env),
+      temperature: lightOptions.temperature,
+      max_tokens: lightOptions.maxTokens,
+      thinking: lightOptions.thinking,
       response_format: { type: "json_object" },
+    }, {
+      feature: "drive_instruction_light_plan",
+      reason: "short safe routing plan for drive collection",
     });
     const parsed = JSON.parse(glmMessageContent(payload));
     const keywords = [...new Set([...(local.keywords || []), ...(parsed.keywords || []), ...(parsed.aliases || [])].map((item) => String(item || "").trim()).filter(Boolean))].slice(0, 16);
@@ -4035,6 +4240,26 @@ function glmChatMaxTokens(env = {}) {
   return Number.isFinite(value) && value > 0 ? value : 10000;
 }
 
+function glmLightTaskOptions(env = {}, defaults = {}) {
+  const maxTokens = Number(process.env.GLM_LIGHT_MAX_TOKENS || env.GLM_LIGHT_MAX_TOKENS || defaults.maxTokens || 1000);
+  return {
+    model: process.env.GLM_LIGHT_MODEL || env.GLM_LIGHT_MODEL || "glm-4.5-air",
+    maxTokens: Number.isFinite(maxTokens) && maxTokens > 0 ? Math.min(maxTokens, defaults.cap || 1500) : (defaults.maxTokens || 1000),
+    thinking: { type: "disabled" },
+    temperature: defaults.temperature ?? 0.1,
+  };
+}
+
+function glmDecisionTriageOptions(env = {}) {
+  const maxTokens = Number(process.env.GLM_DECISION_MAX_TOKENS || env.GLM_DECISION_MAX_TOKENS || 900);
+  return {
+    model: process.env.GLM_DECISION_MODEL || env.GLM_DECISION_MODEL || "glm-4.5-air",
+    maxTokens: Number.isFinite(maxTokens) && maxTokens > 0 ? Math.min(maxTokens, 1200) : 900,
+    thinking: { type: "disabled" },
+    temperature: 0.1,
+  };
+}
+
 function glmContextMode(env = {}, requested = "") {
   const mode = requested || process.env.GLM_CONTEXT_MODE || env.GLM_CONTEXT_MODE || "standard";
   return ["economy", "standard", "deep"].includes(mode) ? mode : "standard";
@@ -4128,7 +4353,9 @@ async function glmDigest(text, projectHint) {
   const { values: env } = await readEnvFile();
   const apiKey = process.env.GLM_API_KEY || env.GLM_API_KEY;
   const apiUrl = process.env.GLM_API_URL || env.GLM_API_URL;
-  const model = process.env.GLM_MODEL || env.GLM_MODEL || "glm-4.5";
+  const shortInput = String(text || "").length <= 8000;
+  const lightOptions = shortInput ? glmLightTaskOptions(env, { maxTokens: 1100, cap: 1300 }) : null;
+  const model = lightOptions?.model || process.env.GLM_MODEL || env.GLM_MODEL || "glm-4.5";
   if (!apiKey || !apiUrl) {
     return localDigest(text, projectHint);
   }
@@ -4152,10 +4379,13 @@ async function glmDigest(text, projectHint) {
           content: JSON.stringify({ projectHint, text }),
         },
       ],
-      temperature: 0.1,
-      max_tokens: 1200,
-      thinking: glmThinkingOptions(env),
+      temperature: lightOptions?.temperature ?? 0.1,
+      max_tokens: lightOptions?.maxTokens || 1200,
+      thinking: lightOptions?.thinking || glmThinkingOptions(env),
       response_format: { type: "json_object" },
+    }, {
+      feature: shortInput ? "ingest_light_digest" : "ingest_digest",
+      reason: shortInput ? "short Korean wiki ingest digest" : "long evidence-preserving wiki ingest digest",
     });
     const content = glmMessageContent(payload);
     if (!isKoreanDigestContent(content)) {
@@ -4270,9 +4500,10 @@ async function suggestConflictMerge(body = {}) {
 function routeChatSkills(message, evidence = [], paperclip = null, options = {}) {
   const text = String(message || "");
   const lower = text.toLowerCase();
-  const localPaths = extractLocalPaths(text, ["hwp", "hwpx", "xlsx", "xls", "csv", "html", "htm"]);
+  const localPaths = extractLocalPaths(text, ["hwp", "hwpx", "pdf", "docx", "pptx", "xlsx", "xls", "csv", "html", "htm"]);
   const needsHwp = localPaths.some((path) => [".hwp", ".hwpx"].includes(extname(path).toLowerCase())) || /\.(hwp|hwpx)\b/i.test(text);
   const needsSpreadsheet = localPaths.some((path) => [".xlsx", ".xls", ".csv"].includes(extname(path).toLowerCase())) || /\.(xlsx|xls|csv)\b/i.test(text);
+  const needsGrantRfp = /공고|rfp|사업계획서|연구개발계획서|작성양식|평가방안|심사표|평가기준|지원 가능|지원가능|support gate|kpi|성과지표|연차계획|예산 전략|국책과제|바우처/i.test(text);
   const needsValidation = /검수|검증|coverage|커버리지|누락|충돌|conflict|정합|리스크 점검|근거 점검/i.test(lower)
     || evidence.some((item) => item.docKind === "conflict" || (item.conflicts || []).length);
   const blockedWriteActions = [];
@@ -4284,6 +4515,7 @@ function routeChatSkills(message, evidence = [], paperclip = null, options = {})
     if (/위키화|반영|ingest|run\b|동기화/i.test(lower)) suggestedTemplateIds.push("wiki-ingest-operator");
     blockedWriteActions.push("wiki_or_drive_write_requested");
   }
+  if (needsGrantRfp) suggestedTemplateIds.push("grant-rfp-strategy");
   if (needsHwp) suggestedTemplateIds.push("rhwp-hwp-reader");
   if (needsSpreadsheet) suggestedTemplateIds.push("spreadsheet-stat-analyzer");
   if (needsValidation) suggestedTemplateIds.push("validator");
@@ -4292,12 +4524,13 @@ function routeChatSkills(message, evidence = [], paperclip = null, options = {})
     .filter((id) => availableTemplates.size ? availableTemplates.has(id) : true);
   suggestedTemplateIds.push(...forcedTemplateIds);
   return {
-    needs_reading_skill: needsHwp || needsSpreadsheet || forcedTemplateIds.some((id) => ["rhwp-hwp-reader", "spreadsheet-stat-analyzer"].includes(id)),
+    needs_reading_skill: needsHwp || needsSpreadsheet || needsGrantRfp || forcedTemplateIds.some((id) => ["rhwp-hwp-reader", "spreadsheet-stat-analyzer", "grant-rfp-strategy"].includes(id)),
     needs_validation_skill: needsValidation || forcedTemplateIds.includes("validator"),
     suggested_template_ids: [...new Set(suggestedTemplateIds)].filter((id) => availableTemplates.size ? availableTemplates.has(id) : true),
     blocked_write_actions: [...new Set(blockedWriteActions)],
     reason: [
       forcedTemplateIds.length ? `사용자 태그 요청: ${forcedTemplateIds.join(", ")}` : "",
+      needsGrantRfp ? "공고/RFP/사업계획서 전략 분석 필요" : "",
       needsHwp ? "hwp/hwpx 문서 해석 필요" : "",
       needsSpreadsheet ? "xlsx/csv 통계 해석 필요" : "",
       needsValidation ? "coverage/충돌 검수 필요" : "",
@@ -4342,9 +4575,11 @@ async function autoRunAllowedSkills(route, options = {}) {
       blockedActions.push(`path_outside_allowed_root:${blockedPaths.map((item) => item.path).join(",")}`);
     }
     const matchingPaths = allowedPaths
-      .filter((item) => templateId === "rhwp-hwp-reader"
-        ? [".hwp", ".hwpx", ".pdf", ".docx", ".pptx", ".html", ".htm"].includes(item.ext)
-        : [".xlsx", ".xls", ".csv"].includes(item.ext))
+      .filter((item) => {
+        if (templateId === "rhwp-hwp-reader") return [".hwp", ".hwpx", ".pdf", ".docx", ".pptx", ".html", ".htm"].includes(item.ext);
+        if (templateId === "grant-rfp-strategy") return [".hwp", ".hwpx", ".pdf", ".docx", ".pptx", ".xlsx", ".xls", ".csv", ".html", ".htm"].includes(item.ext);
+        return [".xlsx", ".xls", ".csv"].includes(item.ext);
+      })
       .map((item) => item.path);
     if (!matchingPaths.length) {
       recommendedTasks.push({
@@ -4502,6 +4737,33 @@ async function buildGlmChatContext(message, project, workspaceId = "rtm", mode =
       title: item.title,
       conflicts: (item.conflicts || []).slice(0, 3),
     }));
+  const linkedWikiProject = normalizeLinkedWikiProject(project?.linkedWikiProject, workspaceId);
+  let linkedProjectContext = null;
+  if (linkedWikiProject?.projectKey) {
+    const pages = await wikiIndex(linkedWikiProject.workspace || workspaceId).catch(() => []);
+    const projectPages = pages.filter((page) => page.projectKey === linkedWikiProject.projectKey);
+    const bundle = await projectMarkdownBundle(linkedWikiProject.projectKey, linkedWikiProject.workspace || workspaceId).catch(() => ({}));
+    linkedProjectContext = {
+      projectKey: linkedWikiProject.projectKey,
+      projectLabel: linkedWikiProject.projectLabel,
+      workspace: linkedWikiProject.workspace || workspaceId,
+      path: linkedWikiProject.path || projectPages.find((page) => page.docKind === "hub")?.path || "",
+      summary: {
+        hub: compactLine(bundle["hub.md"] || bundle["Project_Overview.md"] || "", 320),
+        evidence: extractMeaningfulLines(bundle["Evidence_Log.md"] || "", linkedWikiProject.projectLabel, contextBudget(mode)).slice(0, 6),
+        decisions: extractPatternLines(bundle["Decisions.md"] || bundle["Action_Items.md"] || "", /결정|완료|진행|리스크|이슈|다음|액션|납기|고객|일정/i, 6),
+      },
+      relatedPages: projectPages
+        .filter((page) => ["hub", "overview", "sources", "evidence", "conflict", "actions", "decisions", "risks"].includes(page.docKind))
+        .slice(0, 12)
+        .map((page) => ({
+          title: page.title,
+          path: page.path,
+          docKind: page.docKind,
+          updatedAt: page.updatedAt,
+        })),
+    };
+  }
   return {
     tokenBudget: {
       mode,
@@ -4544,6 +4806,12 @@ async function buildGlmChatContext(message, project, workspaceId = "rtm", mode =
     validation: {
       coverageWarnings,
       conflictHotspots,
+    },
+    projectBinding: {
+      chatProjectId: project?.id || "",
+      chatProjectName: project?.name || "",
+      linkedWikiProject,
+      linkedProjectContext,
     },
     ops: {
       running: automation.running,
@@ -4612,6 +4880,7 @@ function defaultChatProject() {
     id: "default",
     name: "기본 업무 챗",
     workspace: "work",
+    linkedWikiProject: null,
     instructions: "",
     memories: [],
     messages: [],
@@ -4704,10 +4973,13 @@ function migrateGlobalInstructionMemories(projects) {
     });
     const instructions = isGlobalInstructionText(project.instructions) ? "" : project.instructions;
     if (instructions !== project.instructions) changed = true;
+    const linkedWikiProject = normalizeLinkedWikiProject(project.linkedWikiProject, project.workspace === "personal" ? "personal" : "rtm");
+    if (JSON.stringify(linkedWikiProject) !== JSON.stringify(project.linkedWikiProject || null)) changed = true;
     return {
       ...project,
       instructions,
       memories,
+      linkedWikiProject,
     };
   });
   return { projects: migrated, changed };
@@ -4753,10 +5025,23 @@ function chatProjectMemoryPath(project) {
   return join(l1Root, "GLM_Chat_Projects", fileName);
 }
 
+function normalizeLinkedWikiProject(linked = {}, workspaceId = "rtm") {
+  const projectKey = String(linked?.projectKey || "").trim();
+  if (!projectKey) return null;
+  return {
+    workspace: String(linked?.workspace || workspaceId || "rtm").trim() || "rtm",
+    projectKey,
+    projectLabel: String(linked?.projectLabel || projectKey).trim() || projectKey,
+    path: String(linked?.path || "").trim(),
+    linkedAt: String(linked?.linkedAt || new Date().toISOString()),
+  };
+}
+
 function chatProjectMarkdown(project, options = {}) {
   const now = new Date().toISOString();
   const memories = project.memories || [];
   const messages = project.messages || [];
+  const linkedWikiProject = normalizeLinkedWikiProject(project.linkedWikiProject, project.workspace === "personal" ? "personal" : "rtm");
   return [
     "---",
     "type: auxiliary_chat_project_memory",
@@ -4778,6 +5063,17 @@ function chatProjectMarkdown(project, options = {}) {
     "",
     "## 프로젝트별 특수 지침",
     project.instructions ? quoteMarkdown(project.instructions) : "- 없음",
+    "",
+    "## 연결된 위키 프로젝트",
+    linkedWikiProject
+      ? [
+          `- workspace: ${linkedWikiProject.workspace}`,
+          `- project_key: ${linkedWikiProject.projectKey}`,
+          `- project_label: ${linkedWikiProject.projectLabel}`,
+          linkedWikiProject.path ? `- path: [[${linkedWikiProject.path.replace(/\.md$/i, "")}]]` : "",
+          `- linked_at: ${linkedWikiProject.linkedAt || now}`,
+        ].filter(Boolean).join("\n")
+      : "- 연결 안 됨",
     "",
     "## 관리 메모리",
     memories.length
@@ -4825,11 +5121,18 @@ async function upsertChatProject(body) {
   const now = new Date().toISOString();
   const id = body.id || `${Date.now()}-${slugifyName(body.name || "chat-project")}`;
   const existing = projects.find((project) => project.id === id);
+  const linkedWikiProject = body.linkedWikiProject === null
+    ? null
+    : normalizeLinkedWikiProject(
+        body.linkedWikiProject || existing?.linkedWikiProject,
+        body.workspace === "personal" ? "personal" : "rtm",
+      );
   const next = {
     ...(existing || { id, createdAt: now, messages: [], memories: [] }),
     name: body.name || existing?.name || "새 GLM 프로젝트",
     instructions: body.instructions ?? existing?.instructions ?? "",
     workspace: body.workspace || existing?.workspace || "work",
+    linkedWikiProject,
     updatedAt: now,
   };
   await saveChatProjects(existing ? projects.map((project) => project.id === id ? next : project) : [next, ...projects]);
@@ -5074,6 +5377,7 @@ async function glmChat(message, projectId = "default", options = {}) {
               `전역 운영 지침: ${globalSettings.instructions || "없음"}`,
               `현재 GLM 챗 프로젝트: ${project.name}`,
               `프로젝트별 특수 지침: ${project.instructions || "없음"}`,
+              `연결된 위키 프로젝트: ${project.linkedWikiProject?.projectLabel || project.linkedWikiProject?.projectKey || "없음"}`,
               "충분히 깊게 내부 추론하되, 최종 답변에는 추론 과정을 장황하게 노출하지 말고 검토 결과와 근거만 정리하라.",
               "프로젝트 메모리는 관리되는 보조 기억이고, 최근 대화내역은 결정/검증된 지식이 아닐 수 있는 보조 맥락이다.",
               "대화 내용은 사용자가 명시적으로 결정했거나 별도 근거 Markdown으로 확인된 경우에만 확정 사실처럼 취급하라.",
@@ -5122,7 +5426,40 @@ async function glmChat(message, projectId = "default", options = {}) {
   }
 }
 
-function glmChatMessages(project, globalSettings, message, context, mode = "standard") {
+function glmDecisionTriageMessages(project, globalSettings, message, context, mode = "economy") {
+  return [
+    {
+      role: "system",
+      content: [
+        "당신은 Decision Deck 안에서만 동작하는 위키 데이터 정합성 판정 보조자다.",
+        "범위는 실무 리스크, 다음 액션, 고객 대응이 아니라 위키 원본 간 데이터 불일치와 Conflict_Register 반영 판단이다.",
+        "thinking 또는 추론 과정은 출력하지 않는다. 짧고 실행 가능한 검토 결과만 한국어로 낸다.",
+        "출력 형식은 반드시 1) 판정 2) 충돌 요약 3) 권장 처리 4) Conflict_Register 반영 문구 5) 확인할 근거 path 순서로 한다.",
+        "판정은 approve, hold, investigate 중 하나로 시작한다.",
+        "근거가 부족하면 승인하지 말고 hold 또는 investigate를 제안한다.",
+        "실무 일정, 마감, 담당자 같은 업무 질문은 Decision Deck 대상이 아니라고 표시한다.",
+        `전역 운영 지침: ${globalSettings.instructions || "없음"}`,
+        `현재 프로젝트: ${project.name}`,
+        `프로젝트별 특수 지침: ${project.instructions || "없음"}`,
+        `연결된 위키 프로젝트: ${project.linkedWikiProject?.projectLabel || project.linkedWikiProject?.projectKey || "없음"}`,
+      ].join(" "),
+    },
+    {
+      role: "user",
+      content: JSON.stringify({
+        decision_card_request: message,
+        output_policy: "no_thinking_short_decision_triage",
+        wiki_evidence_and_ops_context: context,
+        token_budget_policy: context.tokenBudget || { mode },
+      }),
+    },
+  ];
+}
+
+function glmChatMessages(project, globalSettings, message, context, mode = "standard", options = {}) {
+  if (options.profile === "decision_triage") {
+    return glmDecisionTriageMessages(project, globalSettings, message, context, mode);
+  }
   return [
     {
       role: "system",
@@ -5132,6 +5469,7 @@ function glmChatMessages(project, globalSettings, message, context, mode = "stan
         `전역 운영 지침: ${globalSettings.instructions || "없음"}`,
         `현재 GLM 챗 프로젝트: ${project.name}`,
         `프로젝트별 특수 지침: ${project.instructions || "없음"}`,
+        `연결된 위키 프로젝트: ${project.linkedWikiProject?.projectLabel || project.linkedWikiProject?.projectKey || "없음"}`,
         "충분히 깊게 내부 추론하되, 최종 답변에는 추론 과정을 장황하게 노출하지 말고 검토 결과와 근거만 정리하라.",
         "프로젝트 메모리는 관리되는 보조 기억이고, 최근 대화내역은 결정/검증된 지식이 아닐 수 있는 보조 맥락이다.",
         "대화 내용은 사용자가 명시적으로 결정했거나 별도 근거 Markdown으로 확인된 경우에만 확정 사실처럼 취급하라.",
@@ -5178,11 +5516,13 @@ async function streamGlmChat(message, projectId, res, options = {}) {
   const project = projects.find((item) => item.id === projectId) || projects[0] || defaultChatProject();
   const globalSettings = await getGlobalChatSettings();
   const { values: env } = await readEnvFile();
-  const mode = glmContextMode(env, options.contextMode);
+  const decisionMode = options.profile === "decision_triage";
+  const mode = decisionMode ? "economy" : glmContextMode(env, options.contextMode);
   const context = await buildGlmChatContext(message, project, options.workspace || project.workspace || "rtm", mode, { skillTags: options.skillTags || [] });
   const apiKey = process.env.GLM_API_KEY || env.GLM_API_KEY;
   const apiUrl = process.env.GLM_API_URL || env.GLM_API_URL;
-  const model = process.env.GLM_MODEL || env.GLM_MODEL || "glm-4.5";
+  const decisionOptions = decisionMode ? glmDecisionTriageOptions(env) : null;
+  const model = decisionOptions?.model || process.env.GLM_MODEL || env.GLM_MODEL || "glm-4.5";
   if (!apiKey || !apiUrl) {
     const fallback = "GLM_API_URL과 GLM_API_KEY를 운영 설정에 넣으면 위키 기반 업무 운영 챗이 연결됩니다.";
     sseWrite(res, "delta", { content: fallback });
@@ -5191,10 +5531,10 @@ async function streamGlmChat(message, projectId, res, options = {}) {
 
   const body = {
     model,
-    messages: glmChatMessages(project, globalSettings, message, context, mode),
-    temperature: 0.2,
-    max_tokens: glmChatMaxTokens(env),
-    thinking: glmThinkingOptions(env),
+    messages: glmChatMessages(project, globalSettings, message, context, mode, { profile: options.profile || "" }),
+    temperature: decisionOptions?.temperature ?? 0.2,
+    max_tokens: decisionOptions?.maxTokens || glmChatMaxTokens(env),
+    thinking: decisionOptions?.thinking || glmThinkingOptions(env),
     stream: true,
   };
   const primary = normalizeGlmChatUrl(apiUrl);
@@ -5215,7 +5555,7 @@ async function streamGlmChat(message, projectId, res, options = {}) {
     }
     const timeout = setTimeout(() => controller.abort(), timeoutMs);
     try {
-      sseWrite(res, "status", { phase: "connecting", endpoint: url.includes("/api/coding/paas/") ? "coding" : "paas", maxTokens: body.max_tokens, thinking: body.thinking, tokenBudget: context.tokenBudget });
+      sseWrite(res, "status", { phase: "connecting", endpoint: url.includes("/api/coding/paas/") ? "coding" : "paas", maxTokens: body.max_tokens, thinking: body.thinking, tokenBudget: context.tokenBudget, profile: options.profile || "chat", model });
       const response = await fetch(url, {
         method: "POST",
         signal: controller.signal,
@@ -5249,7 +5589,7 @@ async function streamGlmChat(message, projectId, res, options = {}) {
             continue;
           }
           const { thinking, content } = extractStreamDelta(payload);
-          if (thinking) {
+          if (thinking && !decisionMode) {
             fullThinking += thinking;
             sseWrite(res, "thinking", { content: thinking });
           }
@@ -5262,8 +5602,8 @@ async function streamGlmChat(message, projectId, res, options = {}) {
       clearTimeout(timeout);
       if (options.signal) options.signal.removeEventListener("abort", abortFromParent);
       await recordLlmUsage({
-        feature: "chat_stream",
-        reason: "project operating chat with wiki evidence",
+        feature: decisionMode ? "decision_triage_stream" : "chat_stream",
+        reason: decisionMode ? "decision deck lightweight consistency triage" : "project operating chat with wiki evidence",
         model,
         endpoint: url.includes("/api/coding/paas/") ? "coding" : "paas",
         status: "completed",
@@ -5279,8 +5619,8 @@ async function streamGlmChat(message, projectId, res, options = {}) {
     }
   }
   await recordLlmUsage({
-    feature: "chat_stream",
-    reason: "project operating chat with wiki evidence",
+    feature: decisionMode ? "decision_triage_stream" : "chat_stream",
+    reason: decisionMode ? "decision deck lightweight consistency triage" : "project operating chat with wiki evidence",
     model,
     status: "failed",
     durationMs: Date.now() - started,
@@ -5503,6 +5843,16 @@ function skillCatalog() {
       safety: "local_read_and_markdown_output",
       description: "hwp/hwpx 문서를 로컬 추출 후 GLM으로 업무 관점 해석 Markdown을 생성한다.",
       bestFor: ["HWP 제안서", "HWPX 결과보고서", "한글 원문 검토"],
+      output: "automation/wiki_api/runtime/skill_outputs/*.md",
+    },
+    {
+      id: "grant-rfp-strategy",
+      name: "Grant RFP 전략 분석",
+      type: "paperclip-glm-skill",
+      status: "available",
+      safety: "local_read_and_markdown_output",
+      description: "공고문, RFP, 작성양식, 평가방안, 기존 작성본을 교차 해석해 Support Gate, RTM, KPI, 연차계획, 증빙/예산/RAG 추천 전략을 만든다.",
+      bestFor: ["국책과제 공고/RFP", "사업계획서 작성 전략", "KPI/예산/증빙 설계"],
       output: "automation/wiki_api/runtime/skill_outputs/*.md",
     },
     {
@@ -5729,6 +6079,17 @@ function paperclipTemplates() {
       output: "automation/wiki_api/runtime/skill_outputs/*.md",
     },
     {
+      id: "grant-rfp-strategy",
+      agent: "Grant RFP Strategist",
+      title: "공고/RFP 전략 분석",
+      description: "공고문, RFP, 작성양식, 평가방안, 기존 작성본을 교차 분석해 지원 가능성, 평가 대응, KPI, 연차계획, 증빙, 예산, RAG 추천 카드를 만든다.",
+      command: "glm-skill",
+      dryRun: false,
+      safety: "local_read_and_markdown_output",
+      inputHint: "공고문/RFP/양식/평가표/기존 작성본 경로와 과제명, 분석 모드(Quick Scan/Strategy Build/Draft Ready 등)를 적으세요.",
+      output: "automation/wiki_api/runtime/skill_outputs/*.md",
+    },
+    {
       id: "spreadsheet-stat-analyzer",
       agent: "Spreadsheet Analyst",
       title: "엑셀 분석/통계",
@@ -5929,6 +6290,42 @@ function paperclipSkillSystemPrompt(templateId) {
   if (templateId === "rhwp-hwp-reader") {
     return "당신은 RTM의 문서 해석 담당자입니다. 제공된 한글문서 추출문을 왜곡 없이 분석해 핵심 내용, 수치, 조직/참석자, 결정/요청, 리스크, 확인 필요 항목을 한국어 Markdown으로 정리하십시오. 추출 품질 경고가 있으면 한계로 명시하십시오.";
   }
+  if (templateId === "grant-rfp-strategy") {
+    return [
+      "당신은 RTM의 Grant/RFP 전략 PMO입니다. 업로드된 공고문, RFP, 작성양식, 평가방안, 기존 작성본, 증빙자료를 교차 해석해 지원 가능성 및 작성 전략을 산출합니다.",
+      "",
+      "[핵심 원칙]",
+      "1. 단순 요약 금지: 평가자가 묻는 질문, 탈락 조건, 배점 대응, KPI/증빙/예산 설계가 중심입니다.",
+      "2. 사실/해석/전략/가정/추가 요청을 반드시 분리합니다.",
+      "3. 문서 간 충돌은 통합하지 말고 원문 기준 문서 우선순위와 함께 Conflict로 남깁니다.",
+      "4. 허위 성능 수치, 출처 없는 benchmark, 법률/회계 확정 판단을 만들지 않습니다.",
+      "5. 지식승격 전제: 모든 확정값은 문서명, 페이지/섹션/표 위치 또는 추출 근거를 붙일 수 있어야 합니다. 위치가 없으면 '근거 위치 미확인'으로 표시합니다.",
+      "6. 내부 위키/RAG 추천은 업로드 문서에서 확인된 키워드와 requirement 기반으로 제안하되, 실제 외부 API 조회를 수행한 척하지 않습니다.",
+      "",
+      "[작동 순서]",
+      "Support Gate -> 평가구조 해석 -> Requirement Traceability Matrix -> KPI 카드 -> 연차별 개발계획 -> Evidence Log/Data Request -> Risk Matrix -> 예산 전략 -> 유사 과제/RAG 추천 -> 작성 초안 블록 순서로 작성합니다.",
+      "",
+      "[필수 출력]",
+      "1. 문서 인벤토리: 파일명, 문서유형, 핵심 포함 내용, 우선순위, 추출 한계",
+      "2. Support Gate: Go/Conditional Go/High Risk/No-Go, fatal blockers, critical risks, missing documents, deadline feasibility, budget fit, confidence, next action",
+      "3. 평가기준 해석표: 평가항목, 배점, 평가 질문, 대응 논리, 필요 근거",
+      "4. Requirement Traceability Matrix: req_id, 출처문서, 위치, 요구사항 원문, 유형, 우선순위, 대응 전략, 반영 목차, 필요한 증빙, 상태, 담당",
+      "5. KPI 카드: 지표명, 단위, 기준값, 최종목표, 비중, 국내/글로벌 benchmark, 평가방법, 평가환경, 설정근거, 연차목표, 증빙자료, 상태",
+      "6. 연차별 개발계획: 연차, 연결 KPI, 개발 범위, 산출물, 측정방법, 검증게이트, 파트너 역할, 예산 포인트, 리스크",
+      "7. Evidence Log와 Data Request: 주장별 근거, 부족한 증빙, owner, 우선순위, 마감 제안",
+      "8. Risk Matrix: 자격/기술/일정/증빙/예산/사업화/파트너 리스크와 완화조치",
+      "9. 예산 전략: 보수안/목표안/적극안, 비목별 근거, KPI/과업 연결, 허용성, 필요 증빙",
+      "10. 유사 과제/RAG 추천 카드: 검색 차원, 추천 이유, 재사용 가능 항목, 재사용 금지 항목, 후속 질의",
+      "11. 바로 작성 가능한 초안 블록: 확정 근거가 있는 문장과 보류 문장을 분리",
+      "",
+      "[검증 규칙]",
+      "- KPI weight 합계가 100인지 점검하고, 모르면 미확정으로 둡니다.",
+      "- 기준값/단위/평가방법/평가환경 없는 KPI는 draft 또는 gap으로 분류합니다.",
+      "- 필수 제출서류, 신청자격, 민간부담, 마감, 파트너 조건은 Support Gate에서 먼저 다룹니다.",
+      "- 예산 숫자는 산출 근거가 없으면 basis_missing으로 표시합니다.",
+      "- 모든 핵심 주장에 Evidence Log 또는 Data Request를 연결합니다.",
+    ].join("\n");
+  }
   if (templateId === "spreadsheet-stat-analyzer") {
     return "당신은 RTM의 데이터 분석 담당자입니다. 제공된 엑셀/CSV 구조와 기초통계를 바탕으로 업무적으로 중요한 패턴, 이상치, 결측, 리스크, 추가 분석 액션을 한국어 Markdown으로 정리하십시오. 수치는 입력 근거를 보존하십시오.";
   }
@@ -5940,7 +6337,13 @@ function paperclipSkillSystemPrompt(templateId) {
 
 function extractLocalPaths(text, extensions = []) {
   const allowed = new Set(extensions.map((item) => item.toLowerCase()));
-  const matches = String(text || "").match(/(?:\/[^\s'"<>]+|[A-Za-z0-9_.\-가-힣][^\s'"<>]*)\.(?:hwp|hwpx|xlsx|xls|csv|html|htm)/gi) || [];
+  const extensionPattern = "hwp|hwpx|pdf|docx|pptx|xlsx|xls|csv|html|htm";
+  const matches = [];
+  for (const line of String(text || "").split(/\r?\n/)) {
+    const absolutePath = line.match(new RegExp(`(/.*?\\.(${extensionPattern}))(?=$|[\\s'"\\]>},;])`, "i"))?.[1];
+    if (absolutePath) matches.push(absolutePath);
+  }
+  matches.push(...(String(text || "").match(new RegExp(`(?:/[^\n'"<>]+|[A-Za-z0-9_.\\-가-힣][^\\s'"<>]*)\\.(${extensionPattern})`, "gi")) || []));
   return [...new Set(matches)]
     .map((item) => item.trim().replace(/[),.;]+$/g, ""))
     .filter((item) => !allowed.size || allowed.has(extname(item).toLowerCase().replace(".", "")))
@@ -6180,7 +6583,11 @@ async function handleChatFileUpload(req) {
 async function paperclipSkillExtraction(task) {
   const note = task.payload?.note || "";
   if (task.templateId === "rhwp-hwp-reader") {
-    const paths = extractLocalPaths(note, ["hwp", "hwpx"]);
+    const paths = extractLocalPaths(note, ["hwp", "hwpx", "pdf", "docx", "pptx", "html", "htm"]);
+    return { paths, extracted: await extractHwpLike(paths) };
+  }
+  if (task.templateId === "grant-rfp-strategy") {
+    const paths = extractLocalPaths(note, ["hwp", "hwpx", "pdf", "docx", "pptx", "xlsx", "xls", "csv", "html", "htm"]);
     return { paths, extracted: await extractHwpLike(paths) };
   }
   if (task.templateId === "spreadsheet-stat-analyzer") {
@@ -6578,25 +6985,31 @@ const server = createServer(async (req, res) => {
       activeChatRequests.set(projectId, active);
       activeChatControllers.set(projectId, controller);
       try {
-        const userMessage = await appendChatProjectMessage(projectId, { role: "user", content: body.message || "" });
-        sseWrite(res, "user_saved", { message: userMessage });
-        const remembered = await autoRememberFromMessage(projectId, body.message || "");
+        const transient = body.transient === true || body.profile === "decision_triage";
+        const userMessage = transient
+          ? { id: "", role: "user", content: body.message || "", transient: true }
+          : await appendChatProjectMessage(projectId, { role: "user", content: body.message || "" });
+        if (!transient) sseWrite(res, "user_saved", { message: userMessage });
+        const remembered = transient ? null : await autoRememberFromMessage(projectId, body.message || "");
         if (remembered) sseWrite(res, "memory", { remembered });
         const result = await streamGlmChat(body.message || "", projectId, res, {
           signal: controller.signal,
           contextMode: body.contextMode || body.mode,
           workspace: body.workspace || "rtm",
           skillTags: Array.isArray(body.skillTags) ? body.skillTags : [],
+          profile: body.profile === "decision_triage" ? "decision_triage" : "",
         });
         if (controller.signal.aborted) {
           sseWrite(res, "done", { status: "stopped", message: "GLM 추론이 사용자 요청으로 중지되었습니다.", messages: { user: userMessage }, context: result.context || null });
           return res.end();
         }
-        const assistantMessage = await appendChatProjectMessage(result.projectId || projectId, {
-          role: "assistant",
-          content: result.message || "",
-          thinking: result.thinking || "",
-        });
+        const assistantMessage = transient
+          ? { id: "", role: "assistant", content: result.message || "", thinking: "", transient: true }
+          : await appendChatProjectMessage(result.projectId || projectId, {
+            role: "assistant",
+            content: result.message || "",
+            thinking: result.thinking || "",
+          });
         sseWrite(res, "done", {
           status: "completed",
           provider: result.provider,

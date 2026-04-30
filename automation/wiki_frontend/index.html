@@ -286,9 +286,9 @@
                 <div class="decision-chat-dock-head">
                   <div>
                     <strong>LLM 처리 지시</strong>
-                    <p>현재 충돌 카드에 대해 GLM 챗으로 근거 비교, 병합안, 보류 조건을 직접 지시합니다.</p>
+                    <p>현재 충돌 카드 안에서 바로 GLM 추론을 실행하고, 응답을 승인/보류 메모로 함께 남깁니다.</p>
                   </div>
-                  <button id="decision-chat-open" class="command-button accent" type="button">지시 들고 GLM 챗 열기</button>
+                  <button id="decision-chat-open" class="command-button accent" type="button">덱 안에서 추론</button>
                 </div>
                 <textarea id="decision-chat-directive" rows="3" placeholder="예: 승인 전 근거 충돌을 먼저 따지고, 보류 조건과 확인 담당자까지 정리해줘."></textarea>
                 <div class="decision-chat-presets">
@@ -296,6 +296,10 @@
                   <button class="command-button" id="decision-chat-preset-hold" type="button">보류 판단</button>
                   <button class="command-button" id="decision-chat-preset-investigate" type="button">추가 조사</button>
                   <button class="command-button" id="decision-chat-preset-plan" type="button">병합안</button>
+                </div>
+                <div id="decision-llm-output" class="decision-llm-output" aria-live="polite">
+                  <strong>GLM 응답 대기</strong>
+                  <p>지시를 입력하고 Enter 또는 버튼을 누르면 이 카드 안에서 바로 추론합니다.</p>
                 </div>
               </section>
             </section>
@@ -578,8 +582,16 @@
                 <input name="GLM_MODEL" />
               </label>
               <label>
+                <span>경량 LLM 모델</span>
+                <input name="GLM_LIGHT_MODEL" placeholder="glm-4.5-air" />
+              </label>
+              <label>
+                <span>경량 LLM 최대 토큰</span>
+                <input name="GLM_LIGHT_MAX_TOKENS" placeholder="1000" />
+              </label>
+              <label>
                 <span>GLM 선택 가능 모델</span>
-                <input name="GLM_AVAILABLE_MODELS" placeholder="glm-5.1,glm-4.5,glm-4-flash" />
+                <input name="GLM_AVAILABLE_MODELS" placeholder="glm-5.1,glm-4.5,glm-4.5-air,glm-4.5-flash,glm-4-flash" />
               </label>
               <label>
                 <span>GLM thinking</span>
@@ -1153,7 +1165,14 @@
               <div id="chat-project-list" class="chat-project-list"></div>
             </aside>
 
-            <section class="chat-main-panel" data-anchor="GLM 챗">
+            <section class="chat-main-panel assistantui-migrated" data-anchor="GLM 챗">
+              <div class="chat-assistantui-shell">
+                <iframe
+                  id="chat-assistantui-frame"
+                  title="assistant-ui workspace chat"
+                  src="/assistant-ui/index.html?workspace=rtm&projectId=assistant-ui"
+                ></iframe>
+              </div>
               <div class="chat-main-header">
                 <div>
                   <span class="eyebrow">Workspace Chat</span>
@@ -1184,6 +1203,19 @@
                   <strong>결정 전 보조 지식으로 저장</strong>
                 </article>
               </div>
+              <section class="chat-intro-panel" aria-label="GLM chat introduction">
+                <div>
+                  <span class="eyebrow">assistant-ui inspired</span>
+                  <h4>프로젝트 문맥 + 위키 근거 + 스킬 태그를 한 흐름으로</h4>
+                  <p>업무 질문, 위키 정합성 검토, 파일 분석, Paperclip 라우팅을 같은 composer에서 처리합니다.</p>
+                </div>
+                <div class="chat-starter-prompts">
+                  <button class="chat-starter-prompt" type="button" data-chat-prompt="현재 프로젝트 상태, 핵심 리스크, 오늘 바로 움직여야 할 액션을 요약해줘.">오늘 할 일</button>
+                  <button class="chat-starter-prompt" type="button" data-chat-prompt="최근 들어온 자료 기준으로 위키에 반영이 필요한 변경점과 충돌 가능성을 정리해줘.">위키 반영 포인트</button>
+                  <button class="chat-starter-prompt" type="button" data-chat-prompt="현재 프로젝트에서 미팅 전에 꼭 확인해야 할 질문 리스트를 만들어줘.">미팅 준비</button>
+                  <button class="chat-starter-prompt" type="button" data-chat-prompt="첨부 자료와 기존 위키 근거를 함께 보고, 추가로 읽어야 할 문서와 조사 순서를 제안해줘.">추가 조사</button>
+                </div>
+              </section>
               <div id="chat-log" class="chat-log"></div>
               <div id="chat-status-detail" class="chat-status-detail">GLM 응답 대기 중에는 다음 메시지를 잠급니다.</div>
               <section class="chat-skill-strip" aria-label="GLM 스킬 태그">
@@ -1311,6 +1343,13 @@
                   <span>이 프로젝트만</span>
                 </div>
                 <input id="chat-project-name" placeholder="프로젝트 이름" />
+                <label>
+                  <span>연결할 위키 프로젝트</span>
+                  <select id="chat-linked-wiki-project">
+                    <option value="">연결 안 함</option>
+                  </select>
+                </label>
+                <div id="chat-linked-project-meta" class="chat-project-linked-meta">위키 프로젝트를 연결하면 GLM 챗이 해당 프로젝트 문서를 우선 근거로 사용합니다.</div>
                 <textarea id="chat-project-instructions" placeholder="전역 지침과 다른 이 프로젝트만의 특수 규칙"></textarea>
                 <div class="chat-project-actions">
                   <button id="chat-project-save" class="command-button accent" type="button">저장</button>

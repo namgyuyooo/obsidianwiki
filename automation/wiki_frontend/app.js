@@ -44,6 +44,7 @@ const state = {
   decisionLastResolution: null,
   decisionPending: { busy: false, itemId: "", action: "" },
   decisionChatDirective: localStorage.getItem("wiki_ops_decision_chat_directive") || "",
+  decisionInference: { busy: false, itemId: "", status: "", content: "", thinking: "", error: "", assistantId: "" },
   decisionCompare: {
     itemId: "",
     sourcePath: "",
@@ -87,6 +88,7 @@ const state = {
   },
   skills: [],
   chatProjects: [],
+  chatProjectWikiOptions: [],
   chatGlobal: { instructions: "", autoMemory: true },
   chatAttachments: [],
   chatPendingFiles: [],
@@ -145,6 +147,10 @@ const settingLabels = {
   GLM_API_URL: "GLM API URL",
   GLM_API_KEY: "GLM API Key",
   GLM_MODEL: "GLM 모델",
+  GLM_LIGHT_MODEL: "경량 LLM 모델",
+  GLM_LIGHT_MAX_TOKENS: "경량 LLM 최대 토큰",
+  GLM_DECISION_MODEL: "Decision Deck 경량 모델",
+  GLM_DECISION_MAX_TOKENS: "Decision Deck 최대 토큰",
   GLM_AVAILABLE_MODELS: "GLM 선택 가능 모델",
   GLM_THINKING_TYPE: "GLM thinking",
   GLM_THINKING_BUDGET_TOKENS: "GLM thinking budget",
@@ -182,6 +188,15 @@ function personalSpotlitePin() {
 
 function wikiWorkspaceParam() {
   return state.activeSpace === "personal" ? "personal" : "rtm";
+}
+
+function syncAssistantUiFrame() {
+  const frame = $("#chat-assistantui-frame");
+  if (!frame) return;
+  const workspace = wikiWorkspaceParam();
+  const projectId = state.activeChatProjectId || "assistant-ui";
+  const next = `/assistant-ui/index.html?workspace=${encodeURIComponent(workspace)}&projectId=${encodeURIComponent(projectId)}`;
+  if (frame.getAttribute("src") !== next) frame.setAttribute("src", next);
 }
 
 function $(selector) {
@@ -923,41 +938,168 @@ function buildDecisionChatPrompt(item = {}, project = null, directive = "") {
   const conflicts = (project?.conflicts || []).slice(0, 5);
   const coreDocs = (project?.coreDocuments || []).slice(0, 5);
   const targetFile = decisionApplyTargetFile(item);
-  const instruction = directive.trim() || "이 위키 정합성 카드의 근거 충돌을 비교하고, Conflict_Register.md에 남길 병합안과 보류 조건을 정리해줘.";
-  return [
-    `[Wiki Consistency Deck 카드 지시]`,
-    `프로젝트: ${item.projectLabel || project?.projectLabel || item.projectKey || "미분류"}`,
-    `카드 제목: ${item.title || item.id || "제목 없음"}`,
-    `카드 성격: ${decisionStatusLabel(item)}`,
-    `승인 반영 파일: ${targetFile}`,
-    "",
-    `판단 내용`,
-    ...(contentItems.length ? contentItems.map((line) => `- ${line}`) : [`- ${item.content || "내용 없음"}`]),
-    "",
-    `위키 정합성 맥락`,
-    `- 한 줄 상태: ${project?.oneLine || "요약 없음"}`,
-    ...(conflicts.length ? conflicts.map((line) => `- 기존 충돌 기록: ${line}`) : ["- 기존 충돌 기록: 명시 없음"]),
-    ...(coreDocs.length ? coreDocs.map((doc) => `- 관련 문서: ${doc.title || doc.key || "문서"} (${doc.path || doc.key || ""})`) : ["- 관련 문서: 명시 없음"]),
-    "",
-    `요청`,
+  const instruction = directive.trim() || "근거 충돌을 비교하고 Conflict_Register.md에 남길 병합안과 보류 조건만 짧게 제안해줘.";
+  return JSON.stringify({
+    task: "decision_deck_lightweight_triage",
     instruction,
-  ].join("\n");
+    card: {
+      id: item.id || "",
+      title: item.title || "",
+      projectKey: item.projectKey || project?.projectKey || "",
+      projectLabel: item.projectLabel || project?.projectLabel || "",
+      sourceType: item.sourceType || "",
+      sourcePath: item.path || "",
+      targetFile,
+      content: contentItems.length ? contentItems : [item.content || "내용 없음"],
+    },
+    context: {
+      oneLine: project?.oneLine || "",
+      existingConflicts: conflicts,
+      coreDocuments: coreDocs.map((doc) => ({ title: doc.title || doc.key || "", path: doc.path || doc.key || "" })),
+    },
+    outputContract: [
+      "판정: approve | hold | investigate",
+      "충돌 요약: 2줄 이하",
+      "권장 처리: 3개 이하",
+      "Conflict_Register 반영 문구: 바로 붙여넣을 Markdown bullet",
+      "확인할 근거 path: 3개 이하",
+    ],
+  });
 }
 
-async function openDecisionChatForItem(item = null, directive = "") {
+function renderDecisionInferencePanel() {
+  const panel = $("#decision-llm-output");
+  if (!panel) return;
+  const active = ensureActiveDecision();
+  const inference = state.decisionInference;
+  if (!active) {
+    panel.className = "decision-llm-output";
+    panel.innerHTML = `<strong>GLM 응답 대기</strong><p>정합성 카드를 선택하면 이 안에서 바로 추론할 수 있습니다.</p>`;
+    return;
+  }
+  const belongsToActive = inference.itemId === active.id;
+  if (inference.busy && belongsToActive) {
+    panel.className = "decision-llm-output pending";
+    panel.innerHTML = [
+      `<strong>${escapeHtml(inference.status || "GLM 추론 중…")}</strong>`,
+      inference.content ? `<div class="decision-llm-body">${renderMarkdownDocument(inference.content)}</div>` : `<p>근거 비교와 병합안을 생성하는 중입니다.</p>`,
+    ].join("");
+    return;
+  }
+  if (inference.error && belongsToActive) {
+    panel.className = "decision-llm-output warning";
+    panel.innerHTML = `<strong>GLM 추론 실패</strong><p>${escapeHtml(inference.error)}</p>`;
+    return;
+  }
+  if (inference.content && belongsToActive) {
+    const recommended = decisionInferenceRecommendedAction(inference.content);
+    panel.className = "decision-llm-output success";
+    panel.innerHTML = [
+      `<strong>${escapeHtml(inference.status || "GLM 추론 완료")}</strong>`,
+      `<div class="decision-llm-body">${renderMarkdownDocument(inference.content)}</div>`,
+      `<div class="decision-llm-actions">`,
+      `<button class="command-button accent" type="button" data-decision-inference-apply="${escapeHtml(recommended)}">추천대로 반영 (${escapeHtml(decisionActionLabel(recommended))})</button>`,
+      `<button class="command-button" type="button" data-decision-inference-apply="hold">보류로 반영</button>`,
+      `<button class="command-button" type="button" data-decision-inference-apply="investigate">추가 조사로 반영</button>`,
+      `</div>`,
+      `<small>반영하면 이 GLM 응답이 처리 메모로 함께 저장되고 다음 카드로 이동합니다.</small>`,
+    ].join("");
+    panel.querySelectorAll("[data-decision-inference-apply]").forEach((button) => {
+      button.addEventListener("click", () => applyDecisionInference(button.dataset.decisionInferenceApply));
+    });
+    return;
+  }
+  if (inference.content && !belongsToActive) {
+    panel.className = "decision-llm-output";
+    panel.innerHTML = `<strong>현재 카드 응답 없음</strong><p>이전 카드의 GLM 응답은 보존되어 있습니다. 현재 카드에서 새로 추론하려면 지시를 실행하세요.</p>`;
+    return;
+  }
+  panel.className = "decision-llm-output";
+  panel.innerHTML = `<strong>GLM 응답 대기</strong><p>지시를 입력하고 Enter 또는 버튼을 누르면 이 카드 안에서 바로 추론합니다.</p>`;
+}
+
+function decisionInferenceRecommendedAction(content = "") {
+  const text = String(content || "").toLowerCase();
+  const firstLine = text.split("\n").find((line) => /판정|decision|recommend|권장/.test(line)) || text.slice(0, 240);
+  if (/investigate|추가\s*조사|조사/.test(firstLine)) return "investigate";
+  if (/hold|보류|대기|확인\s*필요/.test(firstLine)) return "hold";
+  if (/approve|승인|반영/.test(firstLine)) return "approve";
+  return "hold";
+}
+
+function decisionActionLabel(action = "") {
+  if (action === "approve") return "승인 반영";
+  if (action === "investigate") return "추가 조사";
+  return "보류";
+}
+
+function applyDecisionInference(action = "") {
+  const active = ensureActiveDecision();
+  if (!active || state.decisionPending.busy || state.decisionInference.busy) return;
+  if (state.decisionInference.itemId !== active.id || !state.decisionInference.content.trim()) return;
+  resolveActiveDecision(["approve", "hold", "investigate"].includes(action) ? action : decisionInferenceRecommendedAction(state.decisionInference.content));
+}
+
+async function runDecisionInference(item = null, directive = "") {
+  if (state.decisionPending.busy || state.decisionInference.busy) return;
   const activeItem = item || ensureActiveDecision();
   if (!activeItem) return;
   await ensureActiveChatProject();
   const project = decisionProject(activeItem.projectKey);
   const matchedProject = findChatProjectForDecision(activeItem, project);
-  if (matchedProject?.id) {
-    state.activeChatProjectId = matchedProject.id;
-    renderChatProjects();
+  const projectId = matchedProject?.id || state.activeChatProjectId || "default";
+  const message = buildDecisionChatPrompt(activeItem, project, directive || state.decisionChatDirective);
+  state.decisionInference = {
+    busy: true,
+    itemId: activeItem.id,
+    status: "GLM 연결 준비 중",
+    content: "",
+    thinking: "",
+    error: "",
+    assistantId: "",
+  };
+  renderDecisionInferencePanel();
+  setDecisionDeckControlsDisabled(true);
+  try {
+    await apiStream("/api/chat/glm/stream", {
+      message,
+      projectId,
+      workspace: wikiWorkspaceParam(),
+      profile: "decision_triage",
+      contextMode: "economy",
+      transient: true,
+      skillTags: state.chatSelectedSkillTags || [],
+    }, {
+      status: (data) => {
+        state.decisionInference.status = `경량 판정 모델 연결됨: ${data.model || "glm-4.5-air"} · ${data.maxTokens || "short"} tokens`;
+        renderDecisionInferencePanel();
+      },
+      delta: (data) => {
+        state.decisionInference.content += data.content || "";
+        state.decisionInference.status = "응답 생성 중";
+        renderDecisionInferencePanel();
+      },
+      paperclip: (data) => {
+        const drafts = data.paperclip?.agentDrafts?.length || 0;
+        const autoRuns = data.paperclip?.autoRuns?.length || 0;
+        state.decisionInference.status = `Paperclip context 반영: draft ${drafts} · read ${autoRuns}`;
+        renderDecisionInferencePanel();
+      },
+      done: (data) => {
+        state.decisionInference.assistantId = data.messages?.assistant?.id || "";
+        state.decisionInference.status = data.status === "stopped" ? "GLM 추론 중지됨" : "GLM 추론 완료";
+      },
+      error: (data) => {
+        state.decisionInference.error = data.error || "GLM 추론 실패";
+      },
+    });
+  } catch (error) {
+    state.decisionInference.error = error.message;
+  } finally {
+    state.decisionInference.busy = false;
+    renderDecisionInferencePanel();
+    renderDecisionWorkbench();
   }
-  document.querySelector("[data-view='chat']")?.click();
-  $("#chat-input").value = buildDecisionChatPrompt(activeItem, project, directive);
-  $("#chat-input").focus();
-  setChatPhase("idle", "위키 정합성 카드 문맥과 처리 지시를 GLM 챗 입력창에 채웠습니다.");
 }
 
 function decisionApplyTargetFile(item = {}) {
@@ -1021,7 +1163,7 @@ function renderDecisionMergeSuggestion() {
   if (!panel || !body || !meta || !applyButton) return;
   const suggestion = state.decisionCompare.mergeSuggestion;
   panel.hidden = !suggestion && !state.decisionCompare.mergePending;
-  applyButton.disabled = !suggestion?.mergedMarkdown || state.decisionCompare.mergePending || state.decisionPending.busy;
+  applyButton.disabled = !suggestion?.mergedMarkdown || state.decisionCompare.mergePending || state.decisionPending.busy || state.decisionInference.busy;
   if (state.decisionCompare.mergePending) {
     meta.textContent = "GLM 분석 중";
     body.innerHTML = `<p class="pipeline-note">출처와 대상 문서를 비교해 병합안과 확인 포인트를 생성하고 있습니다.</p>`;
@@ -1070,6 +1212,15 @@ function setDecisionDeckControlsDisabled(disabled) {
   if (directiveInput) directiveInput.disabled = disabled;
 }
 
+function activeDecisionInferenceNote(itemId = "") {
+  const inference = state.decisionInference;
+  if (!itemId || inference.itemId !== itemId || !inference.content.trim()) return "";
+  return [
+    "[GLM 정합성 검토]",
+    inference.content.trim(),
+  ].join("\n");
+}
+
 function renderDecisionActivityStrip() {
   const node = $("#decision-activity-strip");
   if (!node) return;
@@ -1114,7 +1265,7 @@ function closeDecisionEvidenceModal() {
 }
 
 async function openDecisionCompareModal(itemId = "") {
-  if (state.decisionPending.busy) return;
+  if (state.decisionPending.busy || state.decisionInference.busy) return;
   const item = state.decisionQueue.find((entry) => entry.id === (itemId || state.activeDecisionId));
   if (!item) return;
   const project = decisionProject(item.projectKey);
@@ -1173,7 +1324,7 @@ function closeDecisionCompareModal() {
 }
 
 async function requestDecisionMergeSuggestion() {
-  if (state.decisionPending.busy || state.decisionCompare.mergePending) return;
+  if (state.decisionPending.busy || state.decisionInference.busy || state.decisionCompare.mergePending) return;
   const item = state.decisionQueue.find((entry) => entry.id === state.decisionCompare.itemId) || {};
   state.decisionCompare.mergePending = true;
   renderDecisionMergeSuggestion();
@@ -1221,7 +1372,7 @@ function applyDecisionMergeSuggestion() {
 }
 
 async function saveDecisionCompareTarget() {
-  if (state.decisionPending.busy) return false;
+  if (state.decisionPending.busy || state.decisionInference.busy) return false;
   const path = state.decisionCompare.targetPath;
   if (!path) {
     $("#decision-compare-status").textContent = "대상 경로가 없어 저장할 수 없습니다.";
@@ -1253,7 +1404,7 @@ function renderDecisionWorkbench() {
   const queue = pendingDecisionItems();
   const resolved = resolvedDecisionItems();
   const active = ensureActiveDecision();
-  const busy = state.decisionPending.busy;
+  const busy = state.decisionPending.busy || state.decisionInference.busy;
   const activeIndex = active ? queue.findIndex((item) => item.id === active.id) : -1;
   $("#decision-summary-pending").textContent = String(queue.length);
   $("#decision-summary-approved").textContent = String(resolved.filter((item) => item.status === "approved").length);
@@ -1266,11 +1417,12 @@ function renderDecisionWorkbench() {
   setDecisionDeckControlsDisabled(busy || !queue.length);
   renderDecisionActivityStrip();
   setDecisionChatDirective(state.decisionChatDirective, false);
+  renderDecisionInferencePanel();
   const decisionChatOpen = $("#decision-chat-open");
   if (decisionChatOpen) {
     decisionChatOpen.textContent = active
-      ? `${active.projectLabel || active.projectKey || "현재 카드"} 지시 들고 GLM 챗 열기`
-      : "지시 들고 GLM 챗 열기";
+      ? `${active.projectLabel || active.projectKey || "현재 카드"} 덱 안에서 추론`
+      : "덱 안에서 추론";
   }
 
   const stack = $("#decision-card-stack");
@@ -1321,7 +1473,7 @@ function renderDecisionWorkbench() {
       `</div>`,
       coreDocs.length ? `<div class="decision-card-panel"><span>연결 핵심문서</span><div class="decision-doc-chips">${coreDocs.map((doc) => `<button type="button" data-decision-doc="${escapeHtml(doc.key)}">${escapeHtml(doc.title)} · ${escapeHtml(doc.statusLabel || doc.priority || "")}</button>`).join("")}</div></div>` : "",
       `<div class="decision-card-actions">`,
-      `<button class="command-button" type="button" data-decision-chat="${escapeHtml(active.projectLabel || project?.projectLabel || active.projectKey || "미분류")}" ${busy ? "disabled" : ""}>GLM 논의</button>`,
+      `<button class="command-button" type="button" data-decision-chat="${escapeHtml(active.projectLabel || project?.projectLabel || active.projectKey || "미분류")}" ${busy ? "disabled" : ""}>덱 추론</button>`,
       project?.hubPath ? `<button class="command-button" type="button" data-decision-hub="${escapeHtml(project.hubPath)}" ${busy ? "disabled" : ""}>허브 열기</button>` : "",
       isConflictDecision(active) ? `<button class="command-button" type="button" data-decision-compare="${escapeHtml(active.id)}" ${busy ? "disabled" : ""}>충돌 비교</button>` : "",
       `<button class="command-button" type="button" data-decision-investigate="${escapeHtml(active.id)}" ${busy ? "disabled" : ""}>추가 조사</button>`,
@@ -1356,7 +1508,7 @@ function renderDecisionWorkbench() {
 
   document.querySelectorAll("[data-decision-focus]").forEach((button) => {
     button.addEventListener("click", () => {
-      if (state.decisionPending.busy) return;
+      if (state.decisionPending.busy || state.decisionInference.busy) return;
       state.activeDecisionId = button.dataset.decisionFocus;
       renderDecisionWorkbench();
     });
@@ -1384,7 +1536,7 @@ function renderDecisionWorkbench() {
   });
   document.querySelectorAll("[data-decision-chat]").forEach((button) => {
     button.addEventListener("click", () => {
-      openDecisionChatForItem(active, state.decisionChatDirective || `${button.dataset.decisionChat} 관련 위키 정합성 항목을 검토해서 충돌 근거, 병합안, 보류 조건, Conflict_Register.md 반영 문구를 정리해줘.`);
+      runDecisionInference(active, state.decisionChatDirective || `${button.dataset.decisionChat} 관련 위키 정합성 항목을 검토해서 충돌 근거, 병합안, 보류 조건, Conflict_Register.md 반영 문구를 정리해줘.`);
     });
   });
   document.querySelectorAll("[data-decision-investigate]").forEach((button) => {
@@ -1465,7 +1617,7 @@ function resolvedDecisionStatus(action) {
 async function resolveDecision(id, action, options = {}) {
   const result = await api(`/api/decision-queue/${encodeURIComponent(id)}/resolve`, {
     method: "POST",
-    body: JSON.stringify({ action, workspace: wikiWorkspaceParam() }),
+    body: JSON.stringify({ action, workspace: wikiWorkspaceParam(), note: options.note || "" }),
   });
   if (result.error && options.alertOnError !== false) alert(`결정 처리 실패: ${result.error}`);
   state.decisionLastResolution = result.error ? {
@@ -1488,7 +1640,7 @@ async function resolveDecision(id, action, options = {}) {
 }
 
 function moveDecisionFocus(offset) {
-  if (state.decisionPending.busy) return;
+  if (state.decisionPending.busy || state.decisionInference.busy) return;
   const queue = pendingDecisionItems();
   if (!queue.length) return;
   const currentIndex = Math.max(0, queue.findIndex((item) => item.id === state.activeDecisionId));
@@ -1499,7 +1651,7 @@ function moveDecisionFocus(offset) {
 
 async function resolveActiveDecision(action) {
   const queue = pendingDecisionItems();
-  if (!queue.length || state.decisionPending.busy) return;
+  if (!queue.length || state.decisionPending.busy || state.decisionInference.busy) return;
   const currentIndex = Math.max(0, queue.findIndex((item) => item.id === state.activeDecisionId));
   const current = queue[currentIndex] || queue[0];
   const next = queue[currentIndex + 1] || queue[currentIndex - 1] || null;
@@ -1512,7 +1664,11 @@ async function resolveActiveDecision(action) {
   state.activeDecisionId = next?.id || "";
   renderMissionControl();
   renderDecisionWorkbench();
-  const result = await resolveDecision(current.id, action, { skipReload: true, alertOnError: false });
+  const result = await resolveDecision(current.id, action, {
+    skipReload: true,
+    alertOnError: false,
+    note: activeDecisionInferenceNote(current.id),
+  });
   if (result.error) {
     state.decisionPending = { busy: false, itemId: "", action: "" };
     state.decisionQueue = previousQueue;
@@ -1523,6 +1679,9 @@ async function resolveActiveDecision(action) {
     return;
   }
   state.decisionPending = { busy: false, itemId: "", action: "" };
+  if (state.decisionInference.itemId === current.id) {
+    state.decisionInference = { busy: false, itemId: "", status: "", content: "", thinking: "", error: "", assistantId: "" };
+  }
   closeDecisionCompareModal();
   await loadMissionControl();
 }
@@ -2329,6 +2488,31 @@ function activeChatProject() {
   return projects.find((project) => project.id === state.activeChatProjectId) || projects[0] || null;
 }
 
+function chatWikiProjectOptionsForSpace() {
+  const workspace = wikiWorkspaceParam();
+  return state.chatProjectWikiOptions.filter((item) => item.workspace === workspace);
+}
+
+function renderChatLinkedProjectOptions() {
+  const select = $("#chat-linked-wiki-project");
+  const meta = $("#chat-linked-project-meta");
+  if (!select) return;
+  const options = chatWikiProjectOptionsForSpace();
+  const project = activeChatProject();
+  const currentKey = project?.linkedWikiProject?.projectKey || "";
+  select.innerHTML = [
+    `<option value="">연결 안 함</option>`,
+    ...options.map((item) => `<option value="${escapeHtml(item.projectKey)}">${escapeHtml(item.projectLabel)}</option>`),
+  ].join("");
+  select.value = currentKey;
+  if (meta) {
+    const active = options.find((item) => item.projectKey === currentKey);
+    meta.textContent = active
+      ? `${active.projectLabel} · ${active.path || active.projectKey}`
+      : "위키 프로젝트를 연결하면 GLM 챗이 해당 프로젝트 문서를 우선 근거로 사용합니다.";
+  }
+}
+
 function chatProjectsForSpace() {
   return state.chatProjects.filter((project) => (project.workspace || "work") === state.activeSpace);
 }
@@ -2340,7 +2524,7 @@ function renderChatProjects() {
   $("#chat-global-instructions").value = state.chatGlobal.instructions || "";
   $("#chat-auto-memory").checked = state.chatGlobal.autoMemory !== false;
   $("#chat-project-list").innerHTML = projects
-    .map((item) => `<button class="chat-project-item ${item.id === state.activeChatProjectId ? "active" : ""}" data-chat-project="${escapeHtml(item.id)}"><strong>${escapeHtml(item.name)}</strong><small>${escapeHtml((item.instructions || "지침 없음").slice(0, 72))}</small></button>`)
+    .map((item) => `<button class="chat-project-item ${item.id === state.activeChatProjectId ? "active" : ""}" data-chat-project="${escapeHtml(item.id)}"><strong>${escapeHtml(item.name)}</strong><small>${escapeHtml(item.linkedWikiProject?.projectLabel || (item.instructions || "지침 없음").slice(0, 72))}</small></button>`)
     .join("") || `<article class="chat-project-empty">${workspaceLabel()} 프로젝트가 없습니다. 새 프로젝트를 만들면 이 공간에만 표시됩니다.</article>`;
   document.querySelectorAll("[data-chat-project]").forEach((button) => {
     button.addEventListener("click", () => {
@@ -2353,14 +2537,18 @@ function renderChatProjects() {
     .join("");
   if (project) {
     $("#chat-project-select").value = project.id;
-    $("#chat-active-title").textContent = project.name || "GLM 프로젝트";
+    $("#chat-active-title").textContent = project.linkedWikiProject?.projectLabel
+      ? `${project.name || "GLM 프로젝트"} · ${project.linkedWikiProject.projectLabel}`
+      : (project.name || "GLM 프로젝트");
     $("#chat-project-name").value = project.name || "";
     $("#chat-project-instructions").value = project.instructions || "";
     $("#chat-log").innerHTML = "";
     (project.messages || []).forEach((message) => appendMessage(message.role, message.content, message.id));
   }
+  renderChatLinkedProjectOptions();
   renderChatMemories();
   setChatPhase(state.chatPhase || "idle");
+  syncAssistantUiFrame();
 }
 
 function renderChatMemories() {
@@ -2737,6 +2925,34 @@ async function loadChatProjects() {
     ? previous
     : projects[0]?.id || "";
   renderChatProjects();
+}
+
+async function loadChatProjectWikiOptions() {
+  const payload = await api(`/api/wiki/index?workspace=${encodeURIComponent(wikiWorkspaceParam())}`);
+  if (payload.mock || !payload.pages) return;
+  const seen = new Map();
+  for (const page of payload.pages) {
+    if (!["project", "account"].includes(page.division)) continue;
+    if (!page.projectKey) continue;
+    const next = {
+      workspace: wikiWorkspaceParam(),
+      projectKey: page.projectKey,
+      projectLabel: page.projectLabel || page.projectKey,
+      path: page.path,
+      isProjectHub: Boolean(page.isProjectHub),
+    };
+    const existing = seen.get(page.projectKey);
+    if (!existing || (!existing.isProjectHub && next.isProjectHub)) {
+      seen.set(page.projectKey, next);
+    }
+  }
+  state.chatProjectWikiOptions = [
+    ...state.chatProjectWikiOptions.filter((item) => item.workspace !== wikiWorkspaceParam()),
+    ...[...seen.values()]
+      .map(({ isProjectHub, ...item }) => item)
+      .sort((a, b) => a.projectLabel.localeCompare(b.projectLabel)),
+  ];
+  renderChatLinkedProjectOptions();
 }
 
 async function saveChatGlobal() {
@@ -3180,7 +3396,7 @@ function syncChatRuntimeControls(settings = {}) {
   const contextMode = $("#chat-context-mode");
   const modelSelect = $("#chat-model-select");
   const activeModel = settings.GLM_MODEL || "glm-5.1";
-  const modelList = (settings.GLM_AVAILABLE_MODELS || "glm-5.1,glm-4.5,glm-4.5-air,glm-4-flash")
+  const modelList = (settings.GLM_AVAILABLE_MODELS || "glm-5.1,glm-4.5,glm-4.5-air,glm-4.5-flash,glm-4-flash")
     .split(",")
     .map((item) => item.trim())
     .filter(Boolean);
@@ -3271,6 +3487,7 @@ function closeChatSettingsModal() {
 function openChatProjectSettingsModal() {
   const modal = $("#chat-project-settings-modal");
   if (!modal) return;
+  loadChatProjectWikiOptions();
   if (typeof modal.showModal === "function") modal.showModal();
   else modal.setAttribute("open", "open");
 }
@@ -3347,6 +3564,7 @@ function updateWorkspaceChrome() {
   $("#ingest-nav-item").textContent = isPersonal ? "개인 지식 주입" : "업무 지식 주입";
   $("#chat-nav-item").textContent = isPersonal ? "개인 GLM 챗" : "업무 GLM 챗";
   $("#decisions-nav-item").textContent = "정합성 대기";
+  syncAssistantUiFrame();
 }
 
 function activateWorkspace(space) {
@@ -3357,6 +3575,7 @@ function activateWorkspace(space) {
   state.activeProjectKey = "";
   updateWorkspaceChrome();
   loadChatProjects();
+  loadChatProjectWikiOptions();
   const current = document.querySelector(".view.active")?.id || "mission";
   activateView(logicalViewId(current));
 }
@@ -3499,6 +3718,8 @@ async function deleteSchedule(id) {
 
 async function saveChatProject() {
   const id = $("#chat-project-select").value || undefined;
+  const linkedProjectKey = $("#chat-linked-wiki-project")?.value?.trim() || "";
+  const linkedOption = chatWikiProjectOptionsForSpace().find((item) => item.projectKey === linkedProjectKey) || null;
   const result = await api("/api/chat/projects", {
     method: "POST",
     body: JSON.stringify({
@@ -3506,6 +3727,12 @@ async function saveChatProject() {
       name: $("#chat-project-name").value.trim(),
       instructions: $("#chat-project-instructions").value.trim(),
       workspace: state.activeSpace,
+      linkedWikiProject: linkedOption ? {
+        workspace: linkedOption.workspace,
+        projectKey: linkedOption.projectKey,
+        projectLabel: linkedOption.projectLabel,
+        path: linkedOption.path,
+      } : null,
     }),
   });
   if (result.project) state.activeChatProjectId = result.project.id;
@@ -3515,12 +3742,20 @@ async function saveChatProject() {
 async function createNewChatProject() {
   $("#chat-project-name").value = "새 GLM 프로젝트";
   $("#chat-project-instructions").value = "이 프로젝트에만 적용되는 고객/범위/산출물/금지 표현을 적는다.";
+  const linkedProjectKey = $("#chat-linked-wiki-project")?.value?.trim() || "";
+  const linkedOption = chatWikiProjectOptionsForSpace().find((item) => item.projectKey === linkedProjectKey) || null;
   const result = await api("/api/chat/projects", {
     method: "POST",
     body: JSON.stringify({
       name: $("#chat-project-name").value.trim() || "새 GLM 프로젝트",
       instructions: $("#chat-project-instructions").value.trim(),
       workspace: state.activeSpace,
+      linkedWikiProject: linkedOption ? {
+        workspace: linkedOption.workspace,
+        projectKey: linkedOption.projectKey,
+        projectLabel: linkedOption.projectLabel,
+        path: linkedOption.path,
+      } : null,
     }),
   });
   if (result.project) state.activeChatProjectId = result.project.id;
@@ -4263,7 +4498,7 @@ $("#decision-compare-copy-source")?.addEventListener("click", copyDecisionSource
 $("#decision-compare-save-target")?.addEventListener("click", saveDecisionCompareTarget);
 $("#decision-compare-apply-merge")?.addEventListener("click", applyDecisionMergeSuggestion);
 $("#decision-compare-approve")?.addEventListener("click", async () => {
-  if (state.decisionPending.busy || !state.decisionCompare.itemId) return;
+  if (state.decisionPending.busy || state.decisionInference.busy || !state.decisionCompare.itemId) return;
   const editorValue = $("#decision-compare-target-editor")?.value || "";
   if (editorValue !== state.decisionCompare.targetMarkdown) {
     const saved = await saveDecisionCompareTarget();
@@ -4424,6 +4659,7 @@ $("#chat-settings-cancel").addEventListener("click", closeChatSettingsModal);
 $("#chat-runtime-save").addEventListener("click", saveChatRuntimeSettings);
 $("#chat-project-settings-open")?.addEventListener("click", openChatProjectSettingsModal);
 $("#chat-project-settings-close")?.addEventListener("click", closeChatProjectSettingsModal);
+$("#chat-linked-wiki-project")?.addEventListener("change", renderChatLinkedProjectOptions);
 $("#close-promotion-panel").addEventListener("click", closeKnowledgePromotionPanel);
 $("#execute-promotion").addEventListener("click", executeKnowledgePromotion);
 $("#decision-chat-directive")?.addEventListener("input", (event) => {
@@ -4434,9 +4670,9 @@ $("#decision-chat-directive")?.addEventListener("keydown", (event) => {
   if (event.isComposing) return;
   if (event.shiftKey) return;
   event.preventDefault();
-  openDecisionChatForItem();
+  runDecisionInference();
 });
-$("#decision-chat-open")?.addEventListener("click", () => openDecisionChatForItem());
+$("#decision-chat-open")?.addEventListener("click", () => runDecisionInference());
 $("#decision-chat-preset-approve")?.addEventListener("click", () => {
   setDecisionChatDirective("근거 충돌을 비교해 승인 가능 여부를 먼저 판단하고, Conflict_Register.md 반영 문구 초안과 남길 provenance를 정리해줘.");
 });
@@ -4539,7 +4775,7 @@ document.addEventListener("keydown", (event) => {
   if (activeView !== "decisions") return;
   if (["INPUT", "TEXTAREA", "SELECT"].includes(tag)) return;
   if (event.metaKey || event.ctrlKey || event.altKey) return;
-  if (state.decisionPending.busy) return;
+  if (state.decisionPending.busy || state.decisionInference.busy) return;
   if (event.key === "ArrowLeft") {
     event.preventDefault();
     resolveActiveDecision("hold");
