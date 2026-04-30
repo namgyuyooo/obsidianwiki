@@ -34,6 +34,7 @@ type ExecutionMode = "now" | "scheduled";
 type CompletionMode = "timebox" | "objective";
 type ConnectionPolicy = "stop" | "retry";
 type ExistingMode = "skip-existing" | "overwrite";
+type ToastTone = "running" | "success" | "error" | "info";
 
 type ScheduleDraft = {
   name: string;
@@ -42,6 +43,12 @@ type ScheduleDraft = {
   runAt: string;
   timeOfDay: string;
   intervalMinutes: number;
+};
+
+type PipelineToast = {
+  tone: ToastTone;
+  title: string;
+  body: string;
 };
 
 const SOURCE_LABELS: Array<{ key: SourceKey; label: string; detail: string }> = [
@@ -84,7 +91,17 @@ const BATCH_COMMANDS = [
 ] as const;
 
 function shortDate(value = "") {
-  return value ? value.slice(0, 16).replace("T", " ") : "-";
+  if (!value) return "-";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value.slice(0, 16).replace("T", " ");
+  return new Intl.DateTimeFormat("ko-KR", {
+    timeZone: "Asia/Seoul",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).format(date).replace(/\\.\\s?/g, "-").replace(/-$/, "") + " KST";
 }
 
 function currentDriveAnalysis(analyses: DriveAnalysis[]) {
@@ -110,9 +127,21 @@ function conservativeNumber(settings: Record<string, string>, key: string, fallb
   return Number.isFinite(value) && value > 0 ? value : fallback;
 }
 
+function elapsedLabel(startedAt = "", now = Date.now()) {
+  const started = Date.parse(startedAt);
+  if (!Number.isFinite(started)) return "-";
+  const totalSeconds = Math.max(0, Math.floor((now - started) / 1000));
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${minutes}분 ${String(seconds).padStart(2, "0")}초`;
+}
+
 export function PipelineCockpit({ chatContext }: PipelineCockpitProps) {
   const [phase, setPhase] = useState("loading");
   const [message, setMessage] = useState("수집 화면을 불러오는 중입니다.");
+  const [activeAction, setActiveAction] = useState("");
+  const [toast, setToast] = useState<PipelineToast | null>(null);
+  const [nowTick, setNowTick] = useState(Date.now());
   const [slackStatus, setSlackStatus] = useState<SlackStatusSnapshot>({});
   const [slackChannels, setSlackChannels] = useState<SlackChannel[]>([]);
   const [selectedChannels, setSelectedChannels] = useState<string[]>([]);
@@ -149,6 +178,11 @@ export function PipelineCockpit({ chatContext }: PipelineCockpitProps) {
   const topCandidate = candidates[0];
   const runningJob = automation.running[0];
   const recentRuns = [...automation.running, ...automation.runs.filter((run) => !automation.running.some((live) => live.runId === run.runId))].slice(0, 6);
+  const progressRun = runningJob || recentRuns[0];
+  const progressPercent = typeof progressRun?.progress?.percent === "number" ? Math.max(0, Math.min(100, progressRun.progress.percent)) : null;
+  const progressLines = progressRun?.progress?.recentLines?.length
+    ? progressRun.progress.recentLines
+    : [progressRun?.progress?.summary || progressRun?.progress?.lastLogLine || (runningJob ? "로그 수신 대기 중입니다. 작업은 실행 중입니다." : "최근 실행 로그가 없습니다.")];
   const latestRunsByCommand = new Map<string, AutomationRun>();
   [...automation.running, ...automation.runs].forEach((run) => {
     const key = commandKey(run.command);
@@ -210,16 +244,53 @@ export function PipelineCockpit({ chatContext }: PipelineCockpitProps) {
     return { ...item, run };
   });
 
-  const runAction = async (action: () => Promise<unknown>, success: string) => {
+  const notify = (tone: ToastTone, title: string, body: string) => {
+    setToast({ tone, title, body });
+  };
+
+  useEffect(() => {
+    if (!toast || toast.tone === "running") return undefined;
+    const timer = window.setTimeout(() => setToast(null), 5200);
+    return () => window.clearTimeout(timer);
+  }, [toast]);
+
+  useEffect(() => {
+    if (phase !== "running" && !automation.running.length) return undefined;
+    const timer = window.setInterval(async () => {
+      try {
+        setAutomation(await fetchAutomationSnapshot());
+        setNowTick(Date.now());
+      } catch {
+        // Keep the visible run state stable if a transient poll fails.
+      }
+    }, 2500);
+    return () => window.clearInterval(timer);
+  }, [phase, automation.running.length]);
+
+  useEffect(() => {
+    if (!automation.running.length) return undefined;
+    const timer = window.setInterval(() => setNowTick(Date.now()), 1000);
+    return () => window.clearInterval(timer);
+  }, [automation.running.length]);
+
+  const runAction = async (action: () => Promise<unknown>, success: string, runningLabel = "작업") => {
     setPhase("running");
+    setActiveAction(runningLabel);
+    setMessage(`${runningLabel} 시작. 오른쪽 배치 명령 상태와 현재 실행에서 진행률을 확인하세요.`);
+    notify("running", `${runningLabel} 시작`, "작업을 접수했습니다. 현재 실행과 배치 명령 상태가 자동 갱신됩니다.");
     try {
       await action();
       setPhase("ready");
       setMessage(success);
+      notify("success", `${runningLabel} 완료`, success);
       await loadAll(channelQuery);
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Pipeline 작업 실패";
       setPhase("error");
-      setMessage(error instanceof Error ? error.message : "Pipeline 작업 실패");
+      setMessage(errorMessage);
+      notify("error", `${runningLabel} 실패`, errorMessage);
+    } finally {
+      setActiveAction("");
     }
   };
 
@@ -250,6 +321,7 @@ export function PipelineCockpit({ chatContext }: PipelineCockpitProps) {
       if (testOnly) setTested((current) => ({ ...current, slack: true }));
     },
     testOnly ? "Slack 테스트를 실행했습니다." : "Slack 실제 수집을 실행했습니다.",
+    testOnly ? "Slack 테스트" : "Slack 실제 수집",
   );
 
   const runPostCollection = async () => {
@@ -264,7 +336,7 @@ export function PipelineCockpit({ chatContext }: PipelineCockpitProps) {
       SLACK_OLDEST_DAYS: String(oldestDays),
       SLACK_HISTORY_LIMIT: String(limitPerChannel),
     });
-  }, "공통 보수 룰을 저장했습니다.");
+  }, "공통 보수 룰을 저장했습니다.", "보수 룰 저장");
 
   const scheduleCollection = () => runAction(async () => {
     await createSchedule({
@@ -275,34 +347,66 @@ export function PipelineCockpit({ chatContext }: PipelineCockpitProps) {
       connectionPolicy,
       retryAfterMinutes,
     });
-  }, "실제 수집 예약을 생성했습니다.");
+  }, "실제 수집 예약을 생성했습니다.", "수집 예약 생성");
 
   const runSlackCollectWithAutomation = (testOnly: boolean) => runAction(async () => {
     await collectSlack({ channels: selectedChannels, oldestDays, limitPerChannel, dryRun: testOnly });
     if (testOnly) setTested((current) => ({ ...current, slack: true }));
     if (!testOnly) await runPostCollection();
-  }, testOnly ? "Slack 테스트를 실행했습니다." : "Slack 실제 수집과 후속 자동화를 실행했습니다.");
+  }, testOnly ? "Slack 테스트를 실행했습니다." : "Slack 실제 수집과 후속 자동화를 실행했습니다.", testOnly ? "Slack 테스트" : "Slack 실제 수집");
 
   const runDrivePlanner = () => runAction(async () => {
     const result = await analyzeDriveInstruction(objective.trim());
     setDriveAnalyses((current) => [result, ...current].slice(0, 8));
-  }, "표적 후보를 갱신했습니다.");
+  }, "표적 후보를 갱신했습니다.", "표적 후보 생성");
 
   const runTarget = (candidate: DriveCandidate, testOnly: boolean) => runAction(async () => {
     await runTargetedRclone(candidate.remotePath, testOnly, { existingMode });
     if (testOnly) setTested((current) => ({ ...current, drive: true }));
-  }, testOnly ? `${candidate.remotePath} 테스트를 실행했습니다.` : `${candidate.remotePath} 실제 수집을 실행했습니다.`);
+  }, testOnly ? `${candidate.remotePath} 테스트를 실행했습니다.` : `${candidate.remotePath} 실제 수집을 실행했습니다.`, testOnly ? "표적 테스트" : "표적 실제 수집");
 
   const runTargetWithAutomation = (candidate: DriveCandidate, testOnly: boolean) => runAction(async () => {
     await runTargetedRclone(candidate.remotePath, testOnly, { existingMode });
     if (testOnly) setTested((current) => ({ ...current, drive: true }));
     if (!testOnly) await runPostCollection();
-  }, testOnly ? `${candidate.remotePath} 테스트를 실행했습니다.` : `${candidate.remotePath} 실제 수집과 후속 자동화를 실행했습니다.`);
+  }, testOnly ? `${candidate.remotePath} 테스트를 실행했습니다.` : `${candidate.remotePath} 실제 수집과 후속 자동화를 실행했습니다.`, testOnly ? "표적 테스트" : "표적 실제 수집");
 
   const runMirrorTest = () => runAction(async () => {
     await triggerAutomation("rclone-copy", true);
     setTested((current) => ({ ...current, mirror: true }));
-  }, "전체 mirror 테스트를 실행했습니다.");
+  }, "전체 mirror 테스트를 실행했습니다.", "전체 mirror 테스트");
+
+  const requestSlackActualCollect = () => {
+    if (!selectedChannels.length) {
+      setPhase("error");
+      setMessage("Slack 실제 수집 전 채널을 먼저 선택하세요.");
+      notify("error", "Slack 실제 수집 보류", "채널을 먼저 선택해야 실제 수집을 시작할 수 있습니다.");
+      return;
+    }
+    if (!tested.slack) {
+      setPhase("error");
+      setMessage("Slack 실제 수집 전 `Slack 테스트`를 먼저 눌러 범위와 권한을 확인하세요.");
+      notify("error", "Slack 실제 수집 보류", "먼저 Slack 테스트를 눌러 범위와 권한을 확인하세요.");
+      return;
+    }
+    runSlackCollectWithAutomation(false);
+  };
+
+  const requestDriveActualCollect = () => {
+    if (!activeTopCandidate?.remotePath) {
+      setPhase("error");
+      setMessage("Drive 실제 수집 전 표적 후보를 먼저 만들거나 기수집 제외 옵션을 확인하세요.");
+      notify("error", "Drive 실제 수집 보류", "표적 후보를 먼저 만들거나 기수집 제외 옵션을 확인하세요.");
+      return;
+    }
+    if (!tested.drive) {
+      setPhase("error");
+      setMessage("Drive 실제 수집 전 `최우선 표적 테스트`를 먼저 눌러 대상과 mirror 경로를 확인하세요.");
+      notify("error", "Drive 실제 수집 보류", "먼저 최우선 표적 테스트로 대상과 mirror 경로를 확인하세요.");
+      return;
+    }
+    runTargetWithAutomation(activeTopCandidate, false);
+  };
 
   const openFilesystemBrowser = () => {
     const nextUrl = new URL(window.location.href);
@@ -328,9 +432,46 @@ export function PipelineCockpit({ chatContext }: PipelineCockpitProps) {
         </div>
         <aside className={`aui-ops-live ${phase}`}>
           <strong>{phase}</strong>
+          {activeAction ? <em>{activeAction}</em> : null}
           <span>{message}</span>
           <button onClick={() => loadAll(channelQuery)} type="button">새로고침</button>
         </aside>
+      </section>
+
+      {toast ? (
+        <aside aria-live="polite" className={`aui-pipeline-toast ${toast.tone}`} role="status">
+          <strong>{toast.title}</strong>
+          <span>{toast.body}</span>
+          <button onClick={() => setToast(null)} type="button">닫기</button>
+        </aside>
+      ) : null}
+
+      <section className={`aui-pipeline-progress ${runningJob ? "running" : "idle"}`} aria-live="polite">
+        <div className="aui-pipeline-progress-head">
+          <div>
+            <span>{runningJob ? "진행 중" : "최근 진행"}</span>
+            <strong>{progressRun?.command || "대기 중"}</strong>
+          </div>
+          <div>
+            <b>{progressRun?.status || "idle"}</b>
+            <small>{progressRun ? shortDate(progressRun.updatedAt || progressRun.startedAt || progressRun.createdAt) : "-"}</small>
+          </div>
+        </div>
+        <div className="aui-pipeline-progress-bar" data-empty={progressPercent === null ? "true" : "false"}>
+          <i style={{ width: `${progressPercent ?? (runningJob ? 42 : 0)}%` }} />
+        </div>
+        <div className="aui-pipeline-progress-grid">
+          <div><span>실행 ID</span><strong>{progressRun?.runId || "-"}</strong></div>
+          <div><span>시작</span><strong>{shortDate(progressRun?.startedAt || progressRun?.createdAt)}</strong></div>
+          <div><span>경과</span><strong>{runningJob ? elapsedLabel(progressRun?.startedAt || progressRun?.createdAt, nowTick) : "-"}</strong></div>
+          <div><span>진행률</span><strong>{progressPercent === null ? (runningJob ? "측정 대기" : "-") : `${progressPercent}%`}</strong></div>
+          <div><span>현재 파일</span><strong>{progressRun?.progress?.currentFile || "-"}</strong></div>
+          <div><span>속도/ETA</span><strong>{[progressRun?.progress?.speed, progressRun?.progress?.eta ? `ETA ${progressRun.progress.eta}` : ""].filter(Boolean).join(" · ") || "-"}</strong></div>
+        </div>
+        <div className="aui-pipeline-progress-log">
+          <span>최근 로그</span>
+          {progressLines.slice(-5).map((line, index) => <code key={`${line}-${index}`}>{line || "로그 수신 대기 중"}</code>)}
+        </div>
       </section>
 
       <section className="aui-pipeline-core">
@@ -639,13 +780,26 @@ export function PipelineCockpit({ chatContext }: PipelineCockpitProps) {
           <p className="aui-ops-muted">
             현재 정책: {completionMode === "objective" ? "목적 완료 시 종료" : `${ruleDraft.RCLONE_COPY_MAX_MINUTES || "30"}분 시간박스`} · 연결 유실 시 {connectionPolicy === "retry" ? `${retryAfterMinutes}분 후 재시도` : "즉시 종료"}
           </p>
+          <div className="aui-pipeline-readiness">
+            {sources.slack ? (
+              <span className={selectedChannels.length && tested.slack ? "ready" : "hold"}>
+                Slack: {selectedChannels.length ? tested.slack ? "실제 수집 가능" : "테스트 필요" : "채널 선택 필요"}
+              </span>
+            ) : null}
+            {sources.drive ? (
+              <span className={activeTopCandidate?.remotePath && tested.drive ? "ready" : "hold"}>
+                Drive: {activeTopCandidate?.remotePath ? tested.drive ? "실제 수집 가능" : "표적 테스트 필요" : "표적 후보 필요"}
+              </span>
+            ) : null}
+            {sources.filesystem ? <span className="ready">파일: 브라우저에서 큐 확인</span> : null}
+          </div>
           <div className="aui-pipeline-actions vertical">
-            {sources.slack ? <button className="primary" disabled={!selectedChannels.length || !tested.slack} onClick={() => runSlackCollectWithAutomation(false)} type="button">Slack 실제 수집</button> : null}
-            {sources.drive ? <button disabled={!activeTopCandidate?.remotePath || !tested.drive} onClick={() => activeTopCandidate && runTargetWithAutomation(activeTopCandidate, false)} type="button">최우선 표적 실제 수집</button> : null}
+            {sources.slack ? <button className="primary" onClick={requestSlackActualCollect} type="button">Slack 실제 수집</button> : null}
+            {sources.drive ? <button onClick={requestDriveActualCollect} type="button">최우선 표적 실제 수집</button> : null}
             {sources.filesystem ? <button onClick={openFilesystemBrowser} type="button">파일 큐로 넘기기</button> : null}
-            <button onClick={() => runAction(() => continueAfterCollection(), "후속 반영을 실행했습니다.")} type="button">후속 반영</button>
-            <button onClick={() => runAction(() => triggerAutomation("refresh-global"), "그래프맵 업데이트를 요청했습니다.")} type="button">그래프맵 업데이트</button>
-            <button disabled={!runningJob?.runId} onClick={() => runAction(() => stopAutomation(runningJob?.runId || ""), "실행 중인 작업에 중지를 요청했습니다.")} type="button">현재 작업 중지</button>
+            <button onClick={() => runAction(() => continueAfterCollection(), "후속 반영을 실행했습니다.", "후속 반영")} type="button">후속 반영</button>
+            <button onClick={() => runAction(() => triggerAutomation("refresh-global"), "그래프맵 업데이트를 요청했습니다.", "그래프맵 업데이트")} type="button">그래프맵 업데이트</button>
+            <button disabled={!runningJob?.runId} onClick={() => runAction(() => stopAutomation(runningJob?.runId || ""), "실행 중인 작업에 중지를 요청했습니다.", "작업 중지")} type="button">현재 작업 중지</button>
           </div>
         </article>
       </section>
@@ -662,11 +816,6 @@ export function PipelineCockpit({ chatContext }: PipelineCockpitProps) {
               </div>
             ))}
           </div>
-        </article>
-        <article>
-          <strong>현재 실행</strong>
-          <span>{runningJob?.status || "idle"}</span>
-          <p>{runningJob?.progress?.summary || runningJob?.progress?.lastLogLine || "실행 중인 작업이 없습니다."}</p>
         </article>
         <article>
           <strong>예약</strong>

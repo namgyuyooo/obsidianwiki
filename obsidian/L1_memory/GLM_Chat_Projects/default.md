@@ -5,7 +5,7 @@ project_name: "쏘닉스"
 status: "active"
 knowledge_role: auxiliary_not_decision
 created: 2026-04-30T03:34:54.975Z
-updated: 2026-04-30T11:00:43.258Z
+updated: 2026-04-30T11:13:03.202Z
 source: wiki_api chat_projects.json
 ---
 

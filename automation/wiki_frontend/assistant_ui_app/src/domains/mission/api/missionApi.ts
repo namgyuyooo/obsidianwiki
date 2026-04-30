@@ -67,12 +67,19 @@ export type AutomationRun = {
   command?: string;
   status?: string;
   createdAt?: string;
+  startedAt?: string;
+  finishedAt?: string;
   updatedAt?: string;
   progress?: {
     summary?: string;
     percent?: number;
+    transferred?: string;
+    speed?: string;
+    eta?: string;
     currentFile?: string;
     lastLogLine?: string;
+    recentLines?: string[];
+    updatedAt?: string;
   };
 };
 

@@ -7080,6 +7080,19 @@ body {
   color: var(--aui-ink);
 }
 
+.aui-ops-live em {
+  background: rgba(9, 105, 218, 0.1);
+  border: 1px solid rgba(9, 105, 218, 0.22);
+  border-radius: 999px;
+  color: #255a8a;
+  display: inline-flex;
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 850;
+  justify-self: start;
+  padding: 4px 9px;
+}
+
 .aui-paperclip-bridge small {
   color: var(--aui-muted);
 }
@@ -8685,19 +8698,224 @@ pre,
   color: var(--aui-ink);
 }
 
+.aui-pipeline-toast {
+  align-items: start;
+  background: #111827;
+  border: 1px solid rgba(17, 24, 39, 0.16);
+  border-radius: var(--aui-radius-card);
+  box-shadow: var(--aui-shadow-strong);
+  color: #ffffff;
+  display: grid;
+  gap: 5px;
+  max-width: min(520px, calc(100vw - 32px));
+  padding: 14px 16px;
+  position: fixed;
+  right: 24px;
+  top: 24px;
+  z-index: 80;
+}
+
+.aui-pipeline-toast.running {
+  background: #1d4ed8;
+}
+
+.aui-pipeline-toast.success {
+  background: #047857;
+}
+
+.aui-pipeline-toast.error {
+  background: #b91c1c;
+}
+
+.aui-pipeline-toast strong {
+  font-size: 14px;
+  line-height: 1.25;
+}
+
+.aui-pipeline-toast span {
+  color: rgba(255, 255, 255, 0.86);
+  font-size: var(--aui-type-caption);
+  line-height: 1.45;
+}
+
+.aui-pipeline-toast button {
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 999px;
+  color: #ffffff;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 850;
+  justify-self: start;
+  padding: 4px 9px;
+}
+
+.aui-pipeline-progress {
+  background:
+    linear-gradient(135deg, rgba(15, 23, 42, 0.96), rgba(30, 64, 175, 0.9)),
+    #111827;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--aui-radius-panel);
+  box-shadow: var(--aui-shadow-soft);
+  color: #ffffff;
+  display: grid;
+  gap: var(--aui-space-3);
+  padding: var(--aui-card-pad);
+}
+
+.aui-pipeline-progress.idle {
+  background:
+    linear-gradient(135deg, rgba(30, 41, 59, 0.94), rgba(51, 65, 85, 0.88)),
+    #1f2937;
+}
+
+.aui-pipeline-progress-head {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+  gap: var(--aui-space-3);
+}
+
+.aui-pipeline-progress-head > div {
+  display: grid;
+  gap: 4px;
+}
+
+.aui-pipeline-progress-head span,
+.aui-pipeline-progress-grid span,
+.aui-pipeline-progress-log span {
+  color: rgba(255, 255, 255, 0.68);
+  font-size: var(--aui-type-caption);
+  font-weight: 850;
+  letter-spacing: 0.04em;
+}
+
+.aui-pipeline-progress-head strong {
+  color: #ffffff;
+  font-size: clamp(18px, 2vw, 28px);
+  line-height: var(--aui-line-tight);
+}
+
+.aui-pipeline-progress-head b {
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+  justify-self: end;
+  padding: 5px 10px;
+}
+
+.aui-pipeline-progress-head small {
+  color: rgba(255, 255, 255, 0.74);
+}
+
+.aui-pipeline-progress-bar {
+  background: rgba(255, 255, 255, 0.16);
+  border-radius: 999px;
+  height: 12px;
+  overflow: hidden;
+}
+
+.aui-pipeline-progress-bar i {
+  background: linear-gradient(90deg, #22c55e, #7dd3fc);
+  border-radius: inherit;
+  display: block;
+  height: 100%;
+  min-width: 10px;
+  transition: width 0.3s ease;
+}
+
+.aui-pipeline-progress.running .aui-pipeline-progress-bar[data-empty="true"] i {
+  animation: aui-progress-pulse 1.4s ease-in-out infinite alternate;
+}
+
+@keyframes aui-progress-pulse {
+  from { transform: translateX(-24%); }
+  to { transform: translateX(138%); }
+}
+
+.aui-pipeline-progress-grid {
+  display: grid;
+  gap: var(--aui-space-2);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.aui-pipeline-progress-grid div {
+  background: rgba(255, 255, 255, 0.09);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--aui-radius-control);
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  padding: 9px 11px;
+}
+
+.aui-pipeline-progress-grid strong {
+  color: #ffffff;
+  font-size: var(--aui-type-caption);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.aui-pipeline-progress-log {
+  display: grid;
+  gap: 6px;
+}
+
+.aui-pipeline-progress-log code {
+  background: rgba(15, 23, 42, 0.74);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--aui-radius-control);
+  color: rgba(255, 255, 255, 0.86);
+  font-family: "SFMono-Regular", Consolas, monospace;
+  font-size: 11px;
+  overflow: hidden;
+  padding: 7px 9px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.aui-pipeline-readiness {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--aui-space-2);
+}
+
+.aui-pipeline-readiness span {
+  border: 1px solid var(--aui-line);
+  border-radius: 999px;
+  font-size: var(--aui-type-caption);
+  font-weight: 850;
+  padding: 5px 10px;
+}
+
+.aui-pipeline-readiness span.ready {
+  background: rgba(12, 166, 120, 0.1);
+  border-color: rgba(12, 166, 120, 0.28);
+  color: #047857;
+}
+
+.aui-pipeline-readiness span.hold {
+  background: rgba(217, 119, 6, 0.1);
+  border-color: rgba(217, 119, 6, 0.28);
+  color: #92400e;
+}
+
 .aui-pipeline-batch-status {
   display: grid;
   gap: var(--aui-space-2);
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: 1fr;
 }
 
 .aui-pipeline-batch-status div {
+  align-items: start;
   background: #f8fafc;
   border: 1px solid var(--aui-line);
   border-radius: var(--aui-radius-control);
   display: grid;
-  gap: 4px;
-  min-height: 96px;
+  gap: var(--aui-space-2);
+  grid-template-columns: minmax(140px, 0.22fr) minmax(160px, 0.22fr) minmax(0, 1fr);
+  min-height: auto;
   padding: var(--aui-row-pad-y) var(--aui-row-pad-x);
 }
 
@@ -8722,6 +8940,8 @@ pre,
   color: var(--aui-muted);
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: normal;
+  word-break: break-word;
 }
 
 .aui-pipeline-choice-list label,
@@ -8798,7 +9018,7 @@ pre,
 .aui-pipeline-rail {
   display: grid;
   gap: var(--aui-section-gap);
-  grid-template-columns: minmax(260px, 0.55fr) minmax(420px, 1fr);
+  grid-template-columns: 1fr;
 }
 
 @media (max-width: 1120px) {
@@ -8812,8 +9032,14 @@ pre,
   .aui-pipeline-policy-grid,
   .aui-pipeline-rule-grid,
   .aui-pipeline-existing-mode,
-  .aui-pipeline-batch-status {
+  .aui-pipeline-batch-status,
+  .aui-pipeline-progress-grid {
     grid-template-columns: 1fr;
+  }
+
+  .aui-pipeline-progress-head {
+    align-items: start;
+    display: grid;
   }
 }
 

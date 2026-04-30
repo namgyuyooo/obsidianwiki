@@ -825,7 +825,9 @@ def _fetch_channel_messages(
             break
         if throttle:
             throttle.pause_between_history_pages()
-    return list(reversed(messages))
+    # Slack conversations.history returns newest messages first. Keep that order
+    # so the pipeline promotes the most recent evidence before older context.
+    return messages
 
 
 def _fetch_thread_replies(token: str, channel_id: str, thread_ts: str, throttle: SlackThrottle | None = None) -> list[dict[str, Any]]:
@@ -938,7 +940,7 @@ def collect_channels(
 
         export_relpath = f"{run_started_at.strftime('%Y-%m-%d')}/{channel_name}_{channel_id}_{run_stamp}.json"
         export_path = export_root / export_relpath
-        latest_ts = normalized_messages[-1]["ts"] if normalized_messages else channel_states.get(channel_id, {}).get("latest_message_ts", "")
+        latest_ts = normalized_messages[0]["ts"] if normalized_messages else channel_states.get(channel_id, {}).get("latest_message_ts", "")
         export_payload = {
             "type": "slack_channel_export",
             "workspace": config.slack_workspace_name or "",
@@ -947,6 +949,7 @@ def collect_channels(
             "routing": channel_profile,
             "history_window": {
                 "oldest_ts": oldest_ts,
+                "message_order": "newest_first",
                 "limit_per_channel": max_messages,
                 "include_threads": use_threads,
                 "include_files": use_files,
