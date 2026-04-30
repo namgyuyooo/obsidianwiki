@@ -1,0 +1,145 @@
+{
+  "type": "slack_channel_filtered_export",
+  "workspace": "RTM Slack",
+  "collected_at": "2026-04-30T11:01:46.721196+00:00",
+  "channel": {
+    "id": "C01L5SA4Y4C",
+    "name": "tf_cross_team_sales",
+    "type": "public_channel",
+    "is_archived": false,
+    "is_private": false,
+    "created": "2021-01-27T04:41:26+00:00",
+    "topic": "고객 대응업무 관련 일체에 대한 크로스팀 소통 채널",
+    "purpose": "",
+    "member_count": 39,
+    "routing": {
+      "channel_bucket": "project",
+      "conversation_mode": "project_updates",
+      "rationale": "project_topic_keywords",
+      "wiki_workspace": "rtm",
+      "wiki_target_root": "obsidian/Wiki/Common/Slack_Project_Intake",
+      "wiki_target_kind": "common"
+    }
+  },
+  "routing": {
+    "channel_profile": {
+      "channel_bucket": "project",
+      "conversation_mode": "project_updates",
+      "rationale": "project_topic_keywords",
+      "wiki_workspace": "rtm",
+      "wiki_target_root": "obsidian/Wiki/Common/Slack_Project_Intake",
+      "wiki_target_kind": "common",
+      "project_wiki_target_root": "obsidian/Wiki/Common/Slack_Project_Intake",
+      "company_wiki_target_root": "obsidian/Wiki/Common/Slack_Company_News"
+    },
+    "primary_bucket": "project",
+    "bucket_counts": {
+      "project": 2,
+      "company_news": 0,
+      "casual": 0
+    },
+    "wiki_targets": [
+      {
+        "path": "obsidian/Wiki/Common/Slack_Project_Intake",
+        "count": 2
+      }
+    ]
+  },
+  "history_window": {
+    "oldest_ts": "1777366436.794978",
+    "limit_per_channel": 200,
+    "include_threads": true,
+    "include_files": true
+  },
+  "filter": {
+    "provider": "local_rule",
+    "summary": "GLM unavailable; local rule filter applied (http_429:{\"error\":{\"code\":\"1113\",\"message\":\"Insufficient balance or no resource package. Please recharge.\"}})",
+    "error": "http_429:{\"error\":{\"code\":\"1113\",\"message\":\"Insufficient balance or no resource package. Please recharge.\"}}",
+    "kept_count": 2,
+    "excluded_count": 0
+  },
+  "messages": [
+    {
+      "ts": "1777366436.794979",
+      "type": "message",
+      "subtype": null,
+      "user": "U0A11G512F3",
+      "text": "<@U04C3UYFY1F>\nCC : <@UBKL1FZ28> <@U05AWGZ1TRD> <@U02MA1AEU8K> <@U07DYT1V7UH> <@U03NJDDPZPZ> <@U025MG70MNX>\n\n■ 고객명: 엠티에스코리아 (<http://www.mts-posco.co.kr|www.mts-posco.co.kr>)\n■ 방문 일자: 2026.04.28\n■ 참석자: 심충도 상무 (연구소장), 황인선 이사 (전기팀) / RTM: 허정, 이욱\n■ 방문 목적: RISA 소개 및 도입 협의\n■ 결과\n• RISA 도입 의지 적극 표명 \n• 안전 펜스 솔루션과 연계한 상품화 및 사업 확대 추진 의사 확인\n■ 미팅 및 논의 내용\n• 엠티에스코리아는 제철소 내 설비 유지보수 및 안전펜스 제작/설치\n• 포스코 사내벤처로 출범\n• 주요 고객: 광양 포스코, 당진 현대제철 등\n• SIMTOS 전시회에서 RISA 확인 후 안전 펜스와 결합 모델 제안\n• 안전 펜스 도어를 비추는 CCTV를 통해 사람의 입출입을 모니터링하고 \n• 펜스 내에 사람이 있을 경우 설비 가동 인터락 \n• 펜스 길이는 라인에 따라 300~500m (현재 제안 중인 포스코 내 안전 펜스는 500m)\n• 약 10개 구역, CCTV 50~150개로 구성 예정 (CCTV 화각은 서로 겹치지 않게 설치)\n• 펜스 도어 30~40개 \n• 요구 기능은 사람 감지가 아닌 출입 인원 추적 기반 안전 관리가 목적\n• RISA에서 CCTV 10개당 PC 1대면, 현재의 컨셉에서 몇대의 PC를 운영할지 검토 필요\n• 여러 PC를 운영할 경우 (사람 출입)정보 전달이 가능하게끔 개발 필요\n■ 협의 결과\n• RISA를 안전 펜스와 결합한 형태로 적용 검토\n• 포스코 프로젝트에 RISA 포함한 제안 방향 설정\n■ Next Plan\n• 엠티에스코리아: 포스코 대상 RISA를 포함한 제안서 작성 예정\n• RTM: 기능 구현 가능여부 검토 및 적용 컨셉, 견적서 제출 (~5/15)\n• 양사: 추가 협의 및 기술 지원 진행",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [
+        {
+          "name": "+1",
+          "users": [
+            "U07DYT1V7UH",
+            "U05AWGZ1TRD",
+            "U04C3UYFY1F",
+            "U03NJDDPZPZ",
+            "U0A4WTXD15L",
+            "UBKL1FZ28"
+          ],
+          "count": 6
+        },
+        {
+          "name": "eyes",
+          "users": [
+            "U04C3UYFY1F",
+            "UBKL1FZ28"
+          ],
+          "count": 2
+        }
+      ],
+      "edited": null,
+      "files": []
+    },
+    {
+      "ts": "1777544778.439319",
+      "type": "message",
+      "subtype": null,
+      "user": "U04C3UYFY1F",
+      "text": "<@UBKL1FZ28> <@U0A11G512F3> <@U03NJDDPZPZ> <@U025MG70MNX> \n\n2사 방문( KNJ, STI) 각 채널에 개별 보고\n\n■ 고객명: 에스티아이(STI)\n■ 방문 일자: 2026.04.30\n■ 참석자: STI 품질보증팀: 김재웅 그룹장, 구익회 프로, 임지수 프로, 주세민 프로, 변현준 프로 외 2명 / RTM: 허정\n■ 방문 목적\n• 중소기업 벤처 연수원 AI 교육 참여 고객\n• 자사 솔루션 적용 가능성 검토 및 협업 논의\n■ 결과 (Summary)\n• STI 내부 적용 과제 발굴 후 RTM에 의뢰 예정\n• 허블(Hubble) 데모 전달. 용접 검사 및 X-ray 검사 데이터로 사전 검토 후 → 커스텀 개발 또는 라이선스 도입 검토\n■ 미팅 및 논의 내용\n• 반도체·디스플레이 공정용 화학 공급 시스템 및 WET 장비 제조 설비 기업\n• 주요 니즈\n      설계 도면 vs 실제 조립 상태 비교\n      배관/전장/PLC 구성 일치 여부 검증\n      용접 비드(크기, 높이) 검사 등\n• 현장 기준 판단\n      완성 설비 기준 검사(조립 상태)는 난이도 높음\n       → 단품 기준 검사부터 적용 방향 합의\n• 품질 이슈 대응 목적\n      고객사 이슈로 검사 정확도 및 효율 개선 필요\n• EHM은 관심 낮음. 허블 기반으로 내부 데이터 테스트 후 → 추가 협의 진행 예정\n■ Next Plan\nSTI 내부 보유 데이터 기반 허블 테스트 진행\nSTI내부 검토 내용 확인 및 추가 미팅 등을 통해 협업 범위 구체화",
+      "thread_ts": "",
+      "reply_count": 0,
+      "reply_users": [],
+      "latest_reply": "",
+      "reactions": [
+        {
+          "name": "eyes",
+          "users": [
+            "U0A11G512F3"
+          ],
+          "count": 1
+        },
+        {
+          "name": "+1",
+          "users": [
+            "U0A11G512F3",
+            "U03NJDDPZPZ"
+          ],
+          "count": 2
+        }
+      ],
+      "edited": null,
+      "files": []
+    }
+  ],
+  "routed_messages": [
+    {
+      "ts": "1777366436.794979",
+      "bucket": "project",
+      "reason": "project_keywords",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Project_Intake",
+      "text": "<@U04C3UYFY1F>\nCC : <@UBKL1FZ28> <@U05AWGZ1TRD> <@U02MA1AEU8K> <@U07DYT1V7UH> <@U03NJDDPZPZ> <@U025MG70MNX>\n\n■ 고객명: 엠티에스코리아 (<http://www.mts-posco.co.kr|www.mts-posco.co.kr>)\n■ 방문 일자: 2026.04.28\n■ 참석자: 심충도 상무 (연구소장), 황인선 이사 (전기팀) / RTM: 허정, 이욱\n■ 방문 목적: RISA 소개 및 도입 협의\n■ 결과\n• RISA 도입 의지 적극 표명 \n• 안전 펜스 솔루션과 연계한 상품화 및 사업 확대 추진 의사 확인\n■ 미팅 및 논의 내용\n• 엠티에스코리아는 제철소 내 설비 유지보수 및 안전펜스 제작/설치\n• 포스코 사내벤처로 출범\n• 주요 고객: 광양 포스코, 당진 현대제철 등\n• SIMTOS 전시회에서 RISA 확인 후 안전 펜스와 결합 모델 제안\n• 안전 펜스 도어를 비추는 CCTV를 통해 사람의 입출입을 모니터링하고 \n• 펜스 내에 사람이 있을 경우 설비 가동 인터락 \n• 펜스 길이는 라인에 따라 300~500m (현재 제안 중인 포스코 내 안전 펜스는 500m)\n• 약 10개 구역, CCTV 50~150개로 구성 예정 (CCTV 화각은 서로 겹치지 않게 설치)\n• 펜스 도어 30~40개 \n• 요구 기능은 사람 감지가 아닌 출입 인원 추적 기반 안전 관리가 목적\n• RISA에서 CCTV 10개당 PC 1대면, 현재의 컨셉에서 몇대의 PC를 운영할지 검토 필요\n• 여러 PC를 운영할 경우 (사람 출입)정보 전달이 가능하게끔 개발 필요\n■ 협의 결과\n• RISA를 안전 펜스와 결합한 형태로 적용 검토\n• 포스코 프로젝트에 RISA 포함한 제안 방향 설정\n■ Next Plan\n• 엠티에스코리아: 포스코 대상 RISA를 포함한 제안서 작성 예정\n• RTM: 기능 구현 가능여부 검토 및 적용 컨셉, 견적서 제출 (~5/15)\n• 양사: 추가 협의 및 기술 지원 진행"
+    },
+    {
+      "ts": "1777544778.439319",
+      "bucket": "project",
+      "reason": "project_keywords",
+      "wiki_target": "obsidian/Wiki/Common/Slack_Project_Intake",
+      "text": "<@UBKL1FZ28> <@U0A11G512F3> <@U03NJDDPZPZ> <@U025MG70MNX> \n\n2사 방문( KNJ, STI) 각 채널에 개별 보고\n\n■ 고객명: 에스티아이(STI)\n■ 방문 일자: 2026.04.30\n■ 참석자: STI 품질보증팀: 김재웅 그룹장, 구익회 프로, 임지수 프로, 주세민 프로, 변현준 프로 외 2명 / RTM: 허정\n■ 방문 목적\n• 중소기업 벤처 연수원 AI 교육 참여 고객\n• 자사 솔루션 적용 가능성 검토 및 협업 논의\n■ 결과 (Summary)\n• STI 내부 적용 과제 발굴 후 RTM에 의뢰 예정\n• 허블(Hubble) 데모 전달. 용접 검사 및 X-ray 검사 데이터로 사전 검토 후 → 커스텀 개발 또는 라이선스 도입 검토\n■ 미팅 및 논의 내용\n• 반도체·디스플레이 공정용 화학 공급 시스템 및 WET 장비 제조 설비 기업\n• 주요 니즈\n      설계 도면 vs 실제 조립 상태 비교\n      배관/전장/PLC 구성 일치 여부 검증\n      용접 비드(크기, 높이) 검사 등\n• 현장 기준 판단\n      완성 설비 기준 검사(조립 상태)는 난이도 높음\n       → 단품 기준 검사부터 적용 방향 합의\n• 품질 이슈 대응 목적\n      고객사 이슈로 검사 정확도 및 효율 개선 필요\n• EHM은 관심 낮음. 허블 기반으로 내부 데이터 테스트 후 → 추가 협의 진행 예정\n■ Next Plan\nSTI 내부 보유 데이터 기반 허블 테스트 진행\nSTI내부 검토 내용 확인 및 추가 미팅 등을 통해 협업 범위 구체화"
+    }
+  ],
+  "excluded_messages": []
+}

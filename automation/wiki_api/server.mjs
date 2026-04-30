@@ -3792,7 +3792,7 @@ async function driveInstructionTargetAnalysis(instruction = "") {
   return analysis;
 }
 
-async function targetRcloneCopy(remotePath, dryRun = true) {
+async function targetRcloneCopy(remotePath, dryRun = true, options = {}) {
   const { values: env } = await readEnvFile();
   if (isExcludedDrivePath(remotePath, env)) {
     return {
@@ -3802,11 +3802,40 @@ async function targetRcloneCopy(remotePath, dryRun = true) {
     };
   }
   const mirrorRoot = join(repoRoot, env.RCLONE_MIRROR_ROOT || "automation/drive_wikify/runtime/mirror", safePathSegment(remotePath));
+  const existingMode = options.existingMode === "overwrite" ? "overwrite" : "skip-existing";
+  const localMirrorExists = existsSync(mirrorRoot);
+  if (localMirrorExists && existingMode === "skip-existing") {
+    const entry = {
+      runId: `${Date.now()}-target-rclone-skip`,
+      command: dryRun ? "target-rclone-copy --dry-run" : "target-rclone-copy",
+      status: "skipped",
+      code: 0,
+      stdout: `기수집 mirror가 있어 제외했습니다: ${relative(repoRoot, mirrorRoot)}`,
+      stderr: "",
+      createdAt: new Date().toISOString(),
+      targetRemotePath: remotePath,
+      targetMirrorRoot: relative(repoRoot, mirrorRoot),
+      existingMode,
+      progress: {
+        summary: "기수집 대상 제외",
+        currentFile: relative(repoRoot, mirrorRoot),
+        updatedAt: new Date().toISOString(),
+      },
+      safety: "local mirror only; source Google Drive delete is not implemented",
+    };
+    await appendRunHistory(entry);
+    return entry;
+  }
+  if (localMirrorExists && existingMode === "overwrite" && !dryRun) {
+    await rm(mirrorRoot, { recursive: true, force: true });
+  }
   return runCommand("rclone-copy", Boolean(dryRun), {
     extraArgs: ["--remote-path", remotePath, "--mirror-root", mirrorRoot],
     targeted: true,
     targetRemotePath: remotePath,
     targetMirrorRoot: relative(repoRoot, mirrorRoot),
+    existingMode,
+    localMirrorExisted: localMirrorExists,
     safety: "local mirror only; source Google Drive delete is not implemented",
   });
 }
@@ -4847,6 +4876,9 @@ async function createSchedule(body) {
     intervalMinutes: Number(body.intervalMinutes || 60),
     enabled: body.enabled !== false,
     createdAt: new Date().toISOString(),
+    completionMode: body.completionMode === "timebox" ? "timebox" : "objective",
+    connectionPolicy: body.connectionPolicy === "stop" ? "stop" : "retry",
+    retryAfterMinutes: Math.max(1, Number(body.retryAfterMinutes || 10)),
     retentionDays: Number(body.retentionDays || 0) || undefined,
     scope: body.scope === "all" ? "all" : body.scope === "uploads" ? "uploads" : undefined,
     retentionManaged: Boolean(body.retentionManaged),
@@ -4907,7 +4939,8 @@ async function tickSchedules() {
   for (const schedule of schedules) {
     if (!schedule.enabled || !schedule.nextRunAt || new Date(schedule.nextRunAt) > now) continue;
     if (activeJobs.size > 0) {
-      schedule.nextRunAt = new Date(now.getTime() + 5 * 60 * 1000).toISOString();
+      const retryMinutes = Math.max(1, Number(schedule.retryAfterMinutes || 5));
+      schedule.nextRunAt = new Date(now.getTime() + retryMinutes * 60 * 1000).toISOString();
       changed = true;
       continue;
     }
@@ -4916,6 +4949,16 @@ async function tickSchedules() {
     if (schedule.mode === "once") schedule.enabled = false;
     changed = true;
     runScheduledCommand(schedule).catch((error) => {
+      if (schedule.connectionPolicy !== "stop") {
+        const retryMinutes = Math.max(1, Number(schedule.retryAfterMinutes || 10));
+        readJsonFile(schedulesPath, [])
+          .then((latestSchedules) => saveSchedules(latestSchedules.map((latestSchedule) => (
+            latestSchedule.id === schedule.id
+              ? { ...latestSchedule, enabled: true, nextRunAt: new Date(Date.now() + retryMinutes * 60 * 1000).toISOString() }
+              : latestSchedule
+          ))))
+          .catch(() => {});
+      }
       appendRunHistory({
         runId: `${Date.now()}-schedule-error`,
         command: schedule.command,
@@ -7801,6 +7844,17 @@ function inspectUploadContextBlock(text) {
   };
 }
 
+function stripStaleUploadContextSummaries(text = "") {
+  const raw = String(text || "");
+  const contextMatch = raw.match(/\[파일 해석 컨텍스트\]([\s\S]*?)\[\/파일 해석 컨텍스트\]/);
+  if (!contextMatch) return raw;
+  const cleanedBlock = contextMatch[0]
+    .split(/\r?\n/)
+    .filter((line) => !line.trim().startsWith("summary:"))
+    .join("\n");
+  return raw.replace(contextMatch[0], cleanedBlock);
+}
+
 async function collectFilesFromDirectory(rootPath, allowedExtensions = [], options = {}) {
   const maxDepth = Number(options.maxDepth || 4);
   const maxFiles = Number(options.maxFiles || 80);
@@ -8598,8 +8652,8 @@ const server = createServer(async (req, res) => {
     if (pathname === "/api/automation/target-rclone-copy" && req.method === "POST") {
       const body = await readBody(req);
       if (!body.remotePath) return sendJson(res, 400, { error: "remotePath is required" });
-      const result = await targetRcloneCopy(body.remotePath, body.dryRun !== false);
-      return sendJson(res, ["completed", "blocked"].includes(result.status) ? 200 : 500, result);
+      const result = await targetRcloneCopy(body.remotePath, body.dryRun !== false, { existingMode: body.existingMode });
+      return sendJson(res, ["completed", "blocked", "skipped"].includes(result.status) ? 200 : 500, result);
     }
     if (pathname === "/api/collection/status" && req.method === "GET") {
       const { values: env } = await readEnvFile();
@@ -8806,7 +8860,9 @@ const server = createServer(async (req, res) => {
     if (pathname === "/api/chat/glm/stream" && req.method === "POST") {
       const body = await readBody(req);
       const projectId = body.projectId || "default";
-      const effectiveMessage = await enrichMessageWithResolvedBrowserFiles(body.message || "");
+      const effectiveMessage = stripStaleUploadContextSummaries(
+        await enrichMessageWithResolvedBrowserFiles(body.message || ""),
+      );
       const busy = chatBusyPayload(projectId);
       if (busy) return sendJson(res, 409, busy);
       res.writeHead(200, {
@@ -8871,7 +8927,9 @@ const server = createServer(async (req, res) => {
     if (pathname === "/api/chat/glm" && req.method === "POST") {
       const body = await readBody(req);
       const projectId = body.projectId || "default";
-      const effectiveMessage = await enrichMessageWithResolvedBrowserFiles(body.message || "");
+      const effectiveMessage = stripStaleUploadContextSummaries(
+        await enrichMessageWithResolvedBrowserFiles(body.message || ""),
+      );
       const busy = chatBusyPayload(projectId);
       if (busy) return sendJson(res, 409, busy);
       const controller = new AbortController();

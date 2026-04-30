@@ -112,6 +112,9 @@ export type AutomationSchedule = {
   intervalMinutes?: number;
   nextRunAt?: string;
   enabled?: boolean;
+  completionMode?: string;
+  connectionPolicy?: string;
+  retryAfterMinutes?: number;
   retentionDays?: number;
   scope?: "uploads" | "all";
   retentionManaged?: boolean;
@@ -256,10 +259,10 @@ export function analyzeDriveInstruction(instruction: string) {
   });
 }
 
-export function runTargetedRclone(remotePath: string, dryRun = true) {
+export function runTargetedRclone(remotePath: string, dryRun = true, options: { existingMode?: string } = {}) {
   return requestJson("/api/automation/target-rclone-copy", {
     method: "POST",
-    body: JSON.stringify({ remotePath, dryRun }),
+    body: JSON.stringify({ remotePath, dryRun, ...options }),
   });
 }
 
@@ -340,6 +343,9 @@ export function createSchedule(input: {
   runAt?: string;
   timeOfDay?: string;
   intervalMinutes?: number;
+  completionMode?: string;
+  connectionPolicy?: string;
+  retryAfterMinutes?: number;
   retentionDays?: number;
   scope?: "uploads" | "all";
   retentionManaged?: boolean;
