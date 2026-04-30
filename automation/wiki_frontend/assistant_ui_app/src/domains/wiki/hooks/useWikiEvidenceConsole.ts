@@ -61,7 +61,9 @@ export function useWikiEvidenceConsole(workspace: string) {
       setStatusCatalog(status.catalog || {});
       setMessage(`${index.pages?.length || 0}개 위키 문서를 불러왔습니다.`);
       setPhase("idle");
-      const firstPath = activePath || index.pages?.find((page) => page.docKind === "hub")?.path || index.pages?.[0]?.path || "";
+      const firstPath = index.pages?.some((page) => page.path === activePath)
+        ? activePath
+        : index.pages?.find((page) => page.docKind === "hub")?.path || index.pages?.[0]?.path || "";
       if (firstPath) await openPage(firstPath);
     } catch (error) {
       setPhase("error");

@@ -112,6 +112,54 @@ export type AutomationSchedule = {
   intervalMinutes?: number;
   nextRunAt?: string;
   enabled?: boolean;
+  retentionDays?: number;
+  scope?: "uploads" | "all";
+  retentionManaged?: boolean;
+};
+
+export type MirrorRootSnapshot = {
+  path?: string;
+  exists?: boolean;
+  fileCount?: number;
+  directoryCount?: number;
+  totalBytes?: number;
+  oldestAt?: string;
+  newestAt?: string;
+  olderThanDays?: number;
+  staleFileCount?: number;
+  staleBytes?: number;
+};
+
+export type MirrorStatusPayload = {
+  roots?: {
+    all?: MirrorRootSnapshot;
+    uploads?: MirrorRootSnapshot;
+  };
+  retention?: {
+    enabled?: boolean;
+    days?: number;
+    scope?: "uploads" | "all";
+    timeOfDay?: string;
+    updatedAt?: string;
+    scheduleId?: string;
+    nextRunAt?: string;
+    scheduleEnabled?: boolean;
+  };
+};
+
+export type MirrorCleanupPayload = {
+  scope?: "uploads" | "all";
+  rootPath?: string;
+  dryRun?: boolean;
+  deleteAll?: boolean;
+  olderThanDays?: number;
+  exists?: boolean;
+  matchedFiles?: number;
+  deletedFiles?: number;
+  deletedDirectories?: number;
+  freedBytes?: number;
+  samplePaths?: Array<{ path?: string; size?: number; modifiedAt?: string }>;
+  executedAt?: string;
 };
 
 export type SpotliteItem = {
@@ -156,9 +204,16 @@ async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
     },
   });
   const text = await response.text();
-  const payload = text ? JSON.parse(text) : {};
+  let payload: Record<string, unknown> = {};
+  if (text) {
+    try {
+      payload = JSON.parse(text) as Record<string, unknown>;
+    } catch {
+      throw new Error(response.ok ? `JSON parse failure from ${path}` : text);
+    }
+  }
   if (!response.ok || payload.error) {
-    throw new Error(payload.error || `HTTP ${response.status}`);
+    throw new Error(String(payload.error || `HTTP ${response.status}`));
   }
   return payload as T;
 }
@@ -249,6 +304,34 @@ export function fetchSchedules() {
   return requestJson<{ schedules: AutomationSchedule[] }>("/api/automation/schedules");
 }
 
+export function fetchMirrorStatus() {
+  return requestJson<MirrorStatusPayload>("/api/mirror/status");
+}
+
+export function cleanupMirror(input: {
+  scope?: "uploads" | "all";
+  olderThanDays?: number;
+  dryRun?: boolean;
+  deleteAll?: boolean;
+}) {
+  return requestJson<MirrorCleanupPayload>("/api/mirror/cleanup", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+
+export function saveMirrorRetention(input: {
+  enabled: boolean;
+  days?: number;
+  scope?: "uploads" | "all";
+  timeOfDay?: string;
+}) {
+  return requestJson<MirrorStatusPayload>("/api/mirror/retention", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+
 export function createSchedule(input: {
   name?: string;
   command: string;
@@ -257,6 +340,9 @@ export function createSchedule(input: {
   runAt?: string;
   timeOfDay?: string;
   intervalMinutes?: number;
+  retentionDays?: number;
+  scope?: "uploads" | "all";
+  retentionManaged?: boolean;
 }) {
   return requestJson<{ schedule: AutomationSchedule }>("/api/automation/schedules", {
     method: "POST",

@@ -12,6 +12,7 @@ source: "public Slack evidence sweep (2024-04-21 to 2026-04-21)"
 - [ ] [[Wiki/Mecaro_Forecast_Project/hub]] 실행 현황판 기준으로 현재 최우선 액션 재정렬
 - [ ] 담당자, 기한, 외부 확인 필요 여부를 각 액션에 보강
 - [ ] [[Wiki/Mecaro_Forecast_Project/Conflict_Register]]와 [[Wiki/Mecaro_Forecast_Project/Risks]]에서 액션으로 승격할 항목 재검토
+- [ ] PoC 결과발표와 FCST 제안 방어 자료를 연결하는 핵심 근거 문서 묶음을 다시 확인하고, 방어 논리에 직접 쓸 파일명을 `Reference_Register`에 보강
 
 ## Waiting
 - [ ] 고객 회신, 내부 승인, 최신 문서본 등 외부 입력 대기 항목 정리

@@ -39,8 +39,14 @@ const EMPTY_COMPARE: DecisionCompareState = {
   suggestion: null,
 };
 
+function isDeletionDecision(item: DecisionItem | null) {
+  if (!item) return false;
+  return /deletion_candidate/i.test(`${item.kind || ""}`) || /wiki_deletion/i.test(`${item.sourceType || ""}`);
+}
+
 function decisionTargetPath(item: DecisionItem | null, workspace: string) {
   if (!item) return "";
+  if (isDeletionDecision(item)) return item.path || "";
   if (item.path && /obsidian\/(Wiki|Personal_Wiki)\//.test(item.path)) {
     return item.path.replace(/[^/]+\.md$/i, "Conflict_Register.md");
   }
@@ -90,6 +96,7 @@ export function useDecisionDeck(workspace: string) {
   const activeContentItems = decisionContentItems(activeItem?.content || "");
   const activeTargetPath = decisionTargetPath(activeItem, workspace);
   const activeIsConflict = isConflictDecision(activeItem);
+  const activeIsDeletion = isDeletionDecision(activeItem);
 
   async function reload(preferredItemId = activeItemId) {
     setStatus({ phase: "loading", message: "Decision Queue를 동기화하는 중입니다." });
@@ -306,6 +313,7 @@ export function useDecisionDeck(workspace: string) {
     activeContentItems,
     activeTargetPath,
     activeIsConflict,
+    activeIsDeletion,
     directive,
     inference,
     resolutionNote,

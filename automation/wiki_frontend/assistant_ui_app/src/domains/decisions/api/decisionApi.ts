@@ -1,6 +1,7 @@
 export type DecisionItem = {
   id: string;
   status: string;
+  workspace?: string;
   sourceType?: string;
   kind?: string;
   title?: string;

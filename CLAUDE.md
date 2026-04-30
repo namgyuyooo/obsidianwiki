@@ -71,6 +71,7 @@ When a new work event appears, promote it through the wiki in this order:
 7. Refresh the relevant `obsidian/L1_memory/{ProjectName}.md`
 
 Do not jump straight from a new event to a cleaned-up conclusion if source facts, conflicts, or version changes need to remain visible.
+Do not overuse `Conflict_Register.md` for vague uncertainty when the more practical next step is to update `Action_Items.md`, `Decisions.md`, `Risks.md`, `Status.md`, or the hub.
 
 ### Practical Operating Bias
 For meaningful updates, bias toward:
@@ -79,6 +80,8 @@ For meaningful updates, bias toward:
 3. What is still conflicting
 4. What action belongs to whom next
 5. Which evidence supports that action
+
+When possible, be proactive: recommend which wiki page should be reviewed or edited next, and prefer directly making that wiki edit over merely naming a possible conflict.
 
 ### Ingest Workflow
 When new source material arrives:
@@ -164,6 +167,7 @@ Avoid creating parallel space-named files such as `Evidence Log.md`, `Conflict R
 - Don't store secrets or credentials
 - Don't casually edit `obsidian/.obsidian/workspace.json` (user-local state)
 - Don't overwrite unrelated in-progress user changes
+- Generic "확인 필요", "정합성 점검", "검토 필요" notes should not become standalone conflict items unless they point to a concrete contradictory fact or source mismatch.
 
 ## Key Operating Principles
 

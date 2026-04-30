@@ -8,6 +8,11 @@ The new assistant-ui frontend is the migration target. Legacy UI remains only as
 a temporary fallback for workflows that do not yet have primary-action parity in
 React.
 
+Design direction changed on 2026-04-30: the target product language is no longer
+consumer LLM chat glamour. It should read like a B2B email/operations system:
+folder/queue navigation, central thread or document body, right-side inspector,
+compact status chips, dense review tables, and conservative enterprise colors.
+
 Every TODO item must declare:
 
 - Target surface.
@@ -47,6 +52,8 @@ workflow is silently collapsed into a generic page.
 - [x] Replace decorative skill chips with composer-level `@` mention search.
 - [x] Add composer-level `@` wiki project mentions and pass them into GLM
   retrieval/project binding.
+- [x] Add chat conversation move: current project messages can be transferred
+  into another project without moving wiki links or fixed instructions.
 
 ### Wiki Related
 
@@ -105,21 +112,43 @@ compressing every page into the same simplified card layout.
 - [x] App Shell: apply one top-level product frame for all React surfaces,
   including full-bleed layout rules, persistent workspace/project context,
   right-rail behavior, and mobile stacked navigation.
+- [x] App Shell: pivot the visual system toward B2B email-system patterns with
+  an operations systembar, mailbox-style queue language, compact tabs, and
+  enterprise-neutral color tokens.
+- [x] Internal Surfaces: push the B2B email-system grammar into Wiki,
+  Paperclip, Ingest, Pipeline, and Decision surfaces instead of styling only the
+  outer frame.
+- [x] Typography System: add a final stabilization layer that unifies font
+  family, heading scale, body rhythm, labels, buttons, chips, inputs, and code
+  blocks across the React surfaces.
+- [x] Spacing System: define explicit app, panel, card, row, control, and
+  layout-gap rules so component padding and section separation no longer drift
+  per surface.
 - [x] Chat: rebuild the composer as a GPT/Claude-grade command surface with
   `@` project/wiki mentions, skill tags, file chips, enter/send parity,
   stop/regenerate/delete, and evidence promotion actions.
+- [x] Chat: adapt the shell to a mailbox/thread/inspector pattern so projects,
+  wiki links, skill tags, and orchestration events read like operational queues.
 - [x] Wiki: split Notion-like read mode and edit mode, add folder/project
   tree, graph drawer, command drawer, page properties, and primary live
   preview without stealing reading space.
+- [x] Wiki: merge Live Preview and Markdown editor into one document body with
+  a view/edit mode toggle instead of side-by-side duplicated panes.
 - [x] Decision Deck: convert to a 3-pane review cockpit with queue,
   evidence compare, merge/audit trail, and explicit approve/reject/apply
   actions.
+- [x] Decision Deck: restyle the card deck as a decision mailbox with pending
+  queue, record body, LLM directive, evidence compare, and audit trail.
 - [x] Paperclip: extend the current result workbench with result preview,
   generated-file trace, Decision Queue handoff, download, and promotion
   action.
+- [x] Paperclip/Ingest/Pipeline: align internal headers, rails, queues, result
+  records, and run history to B2B work-request/mailbox patterns.
 - [x] Mission Control: raise information density with project radar,
   risk/decision lanes, automation timeline, document status, GLM policy,
   and governance warnings in one central command dashboard.
+- [x] Mission Control: reduce dark-dashboard spectacle and restyle as a B2B
+  command desk with dense cards, queue lists, and conservative action controls.
 - [x] Pipeline/Spotlite/Operations: replace fallback placeholders with live
   run controls, logs, schedules, settings, and safety state before removing
   legacy routes.

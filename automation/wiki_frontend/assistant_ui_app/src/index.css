@@ -16,21 +16,21 @@
   --aui-accent-strong: #1d4f3a;
   --aui-warn: #b85c24;
   --aui-danger: #a9332a;
-  --aui-radius-xs: 10px;
-  --aui-radius-sm: 16px;
-  --aui-radius-md: 24px;
-  --aui-radius-lg: 34px;
-  --aui-radius-xl: 44px;
-  --aui-shell-gap: clamp(14px, 2vw, 22px);
+  --aui-radius-xs: 8px;
+  --aui-radius-sm: 12px;
+  --aui-radius-md: 18px;
+  --aui-radius-lg: 24px;
+  --aui-radius-xl: 30px;
+  --aui-shell-gap: clamp(10px, 1.4vw, 16px);
   --aui-content-width: min(100%, 880px);
   --aui-message-width: min(74ch, 100%);
-  --aui-shadow-soft: 0 18px 48px rgba(18, 22, 29, 0.08);
-  --aui-shadow-lifted: 0 34px 90px rgba(18, 22, 29, 0.16);
+  --aui-shadow-soft: 0 12px 28px rgba(18, 22, 29, 0.07);
+  --aui-shadow-lifted: 0 22px 54px rgba(18, 22, 29, 0.12);
   --aui-focus: 0 0 0 4px rgba(47, 107, 79, 0.16);
   background: var(--aui-canvas);
   color: var(--aui-ink);
   font-family: var(--aui-font-sans);
-  font-size: 15px;
+  font-size: 14px;
 }
 
 * {
@@ -82,7 +82,7 @@ textarea:focus-visible {
   gap: var(--aui-shell-gap);
   grid-template-columns: minmax(220px, 0.78fr) minmax(520px, 1.9fr) minmax(230px, 0.82fr);
   height: 100%;
-  padding: clamp(14px, 2vw, 24px);
+  padding: clamp(10px, 1.4vw, 16px);
 }
 
 .aui-brand-panel,
@@ -1347,6 +1347,7 @@ textarea:focus-visible {
 .aui-message {
   display: grid;
   gap: 9px;
+  min-width: 0;
 }
 
 .aui-message.user {
@@ -1368,9 +1369,20 @@ textarea:focus-visible {
   border-radius: 28px;
   line-height: 1.72;
   max-width: var(--aui-message-width);
+  min-width: 0;
+  overflow-wrap: anywhere;
   padding: 17px 19px;
   white-space: pre-wrap;
+  word-break: break-word;
   width: fit-content;
+}
+
+.aui-bubble :where(p, span, code, pre) {
+  max-width: 100%;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 
 .aui-bubble.user {
@@ -2422,6 +2434,14 @@ body {
   line-height: 1.5;
 }
 
+.aui-settings-section input:disabled,
+.aui-settings-section select:disabled,
+.aui-settings-section textarea:disabled,
+.aui-secondary-action:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
+}
+
 .aui-link-preview {
   background: #ffffff;
   border: 1px solid var(--aui-line);
@@ -2455,6 +2475,51 @@ body {
 
 .aui-secondary-action {
   justify-self: start;
+}
+
+.aui-settings-note-list {
+  display: grid;
+  gap: 10px;
+}
+
+.aui-settings-note-card {
+  background: rgba(17, 19, 24, 0.03);
+  border: 1px solid #e7e7ea;
+  border-radius: 16px;
+  display: grid;
+  gap: 6px;
+  padding: 12px;
+}
+
+.aui-settings-note-card.candidate {
+  background: rgba(47, 107, 79, 0.04);
+  border-color: rgba(47, 107, 79, 0.16);
+}
+
+.aui-settings-note-card strong {
+  color: var(--aui-ink);
+  font-size: 13px;
+}
+
+.aui-settings-note-card small {
+  color: var(--aui-muted);
+  font-size: 11px;
+}
+
+.aui-settings-note-card p,
+.aui-settings-empty {
+  color: var(--aui-ink-soft);
+  font-size: 12px;
+  line-height: 1.55;
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+.aui-settings-note-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
 }
 
 .aui-settings-footer {
@@ -3770,6 +3835,28 @@ body {
   min-height: 0;
 }
 
+.aui-paperclip-shell {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: minmax(620px, 1.45fr) minmax(320px, 0.82fr);
+  min-height: 0;
+}
+
+.aui-paperclip-main,
+.aui-paperclip-side {
+  display: grid;
+  gap: 16px;
+  min-height: 0;
+}
+
+.aui-paperclip-main {
+  grid-template-columns: minmax(0, 1.1fr) minmax(280px, 0.74fr);
+}
+
+.aui-paperclip-side {
+  align-content: start;
+}
+
 .aui-paperclip-template-rail,
 .aui-paperclip-composer,
 .aui-paperclip-queue,
@@ -3781,6 +3868,12 @@ body {
   min-height: 0;
   overflow: hidden;
   padding: 18px;
+}
+
+.aui-paperclip-focus-card {
+  background:
+    linear-gradient(135deg, rgba(47, 107, 79, 0.1), rgba(184, 92, 36, 0.06)),
+    rgba(255, 255, 255, 0.88);
 }
 
 .aui-paperclip-section-head {
@@ -4006,6 +4099,14 @@ body {
   gap: 16px;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   min-height: 0;
+}
+
+@media (max-width: 1160px) {
+  .aui-paperclip-shell,
+  .aui-paperclip-main,
+  .aui-paperclip-bottom {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* Mission Control: central command dashboard */
@@ -5485,44 +5586,14 @@ button.aui-notion-table-row.active {
   padding: 18px 36px 22px;
 }
 
-.aui-wiki-pipeline-summary {
-  display: grid;
-  gap: 12px;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-}
-
-.aui-wiki-pipeline-summary article {
-  background: #fffdf9;
-  border: 1px solid #e7e3dc;
-  border-radius: 12px;
-  display: grid;
-  gap: 4px;
-  padding: 14px;
-}
-
-.aui-wiki-pipeline-summary span {
-  color: var(--aui-muted);
-  font-size: 11px;
-  font-weight: 840;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.aui-wiki-pipeline-summary strong {
-  color: #2f3437;
-  font-size: 26px;
-  letter-spacing: -0.05em;
-}
-
-.aui-wiki-pipeline-summary small {
-  color: #7d776f;
-  line-height: 1.45;
-}
-
 .aui-wiki-pipeline-grid {
   display: grid;
   gap: 14px;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(320px, 0.9fr);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+
+.aui-wiki-collection-queue-card {
+  grid-column: 1 / -1;
 }
 
 .aui-wiki-page-properties div {
@@ -5756,6 +5827,32 @@ button.aui-notion-table-row.active {
   border: 1px solid #e7e3dc;
 }
 
+.aui-wiki-graph-toolbar {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.aui-wiki-graph-toolbar button {
+  background: #ffffff;
+  border: 1px solid #e5e0d8;
+  border-radius: 7px;
+  color: #37352f;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 760;
+  min-height: 28px;
+  padding: 4px 8px;
+}
+
+.aui-wiki-graph-toolbar span {
+  color: var(--aui-muted);
+  font-size: 11px;
+  font-weight: 760;
+  margin-left: 2px;
+}
+
 .aui-wiki-graph-canvas {
   background:
     radial-gradient(circle at 20% 20%, rgba(47, 107, 79, 0.13), transparent 30%),
@@ -5763,9 +5860,24 @@ button.aui-notion-table-row.active {
     #f7f6f3;
   border: 1px solid #ebe5dd;
   border-radius: 14px;
+  cursor: grab;
   height: 220px;
   overflow: hidden;
   position: relative;
+}
+
+.aui-wiki-graph-stage {
+  height: 100%;
+  left: 0;
+  position: absolute;
+  top: 0;
+  transform-origin: 0 0;
+  width: 100%;
+}
+
+.aui-wiki-graph-stage.dragging,
+.aui-wiki-graph-canvas:active {
+  cursor: grabbing;
 }
 
 .aui-wiki-graph-canvas svg {
@@ -5788,6 +5900,7 @@ button.aui-notion-table-row.active {
   cursor: pointer;
   position: absolute;
   transform: translate(-50%, -50%);
+  z-index: 1;
 }
 
 .aui-wiki-graph-canvas button.active {
@@ -5817,6 +5930,58 @@ button.aui-notion-table-row.active {
 .aui-wiki-graph-canvas button:hover span,
 .aui-wiki-graph-canvas button.active span {
   display: block;
+}
+
+.aui-wiki-graph-modal {
+  background: #ffffff;
+  border-left: 1px solid var(--aui-line);
+  box-shadow: -28px 0 70px rgba(15, 15, 16, 0.18);
+  color: var(--aui-ink);
+  display: grid;
+  gap: 10px;
+  grid-template-rows: auto minmax(0, 1fr);
+  height: 100%;
+  margin-left: auto;
+  max-width: min(1120px, 100vw);
+  min-width: min(960px, 100vw);
+  overflow: auto;
+  padding: 14px;
+  position: relative;
+}
+
+.aui-wiki-graph-modal-head {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+}
+
+.aui-wiki-graph-modal-head > div:first-child {
+  display: grid;
+  gap: 2px;
+}
+
+.aui-wiki-graph-modal-head span {
+  color: var(--aui-muted);
+  font-size: var(--aui-type-caption);
+  font-weight: var(--aui-weight-label);
+  letter-spacing: var(--aui-tracking-label);
+  text-transform: uppercase;
+}
+
+.aui-wiki-graph-modal-head strong {
+  color: var(--aui-ink);
+  font-size: var(--aui-type-section);
+}
+
+.aui-wiki-graph-modal .aui-wiki-graph-card {
+  border: 0;
+  box-shadow: none;
+  padding: 0;
+}
+
+.aui-wiki-graph-modal .aui-wiki-graph-canvas {
+  height: min(72vh, 820px);
 }
 
 .aui-wiki-graph-list,
@@ -5960,7 +6125,6 @@ button.aui-notion-table-row.active {
     display: none;
   }
 
-  .aui-wiki-pipeline-summary,
   .aui-wiki-pipeline-grid,
   .aui-wiki-editor-grid,
   .aui-wiki-page-properties {
@@ -6094,5 +6258,2460 @@ button.aui-notion-table-row.active {
 
   .aui-notion-table-row {
     grid-template-columns: 1fr;
+  }
+}
+
+/* Design pivot: B2B email-system operations surface */
+:root {
+  --aui-font-sans: "Aptos", "Pretendard", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+  --aui-font-display: "Aptos", "Pretendard", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+  --aui-ink: #172033;
+  --aui-ink-soft: #354256;
+  --aui-muted: #667085;
+  --aui-faint: #98a2b3;
+  --aui-line: #d9e0ea;
+  --aui-line-strong: #c6d0df;
+  --aui-paper: #ffffff;
+  --aui-paper-solid: #ffffff;
+  --aui-canvas: #edf2f7;
+  --aui-charcoal: #172033;
+  --aui-accent: #255a8a;
+  --aui-accent-strong: #17466f;
+  --aui-warn: #a15c15;
+  --aui-danger: #b42318;
+  --aui-radius-xs: 6px;
+  --aui-radius-sm: 8px;
+  --aui-radius-md: 12px;
+  --aui-radius-lg: 16px;
+  --aui-radius-xl: 18px;
+  --aui-content-width: min(100%, 1080px);
+  --aui-message-width: min(82ch, 100%);
+  --aui-shadow-soft: 0 1px 2px rgba(16, 24, 40, 0.06), 0 8px 24px rgba(16, 24, 40, 0.06);
+  --aui-shadow-lifted: 0 1px 2px rgba(16, 24, 40, 0.08), 0 18px 40px rgba(16, 24, 40, 0.1);
+  --aui-focus: 0 0 0 3px rgba(37, 90, 138, 0.18);
+}
+
+body {
+  background: var(--aui-canvas);
+  color: var(--aui-ink);
+}
+
+.aui-product-frame {
+  background: var(--aui-canvas);
+}
+
+.aui-product-nav {
+  backdrop-filter: none;
+  background: #f8fafc;
+  border-bottom: 1px solid var(--aui-line);
+  gap: 8px;
+  padding: 8px 14px;
+}
+
+.aui-product-systembar {
+  align-items: center;
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+}
+
+.aui-product-suite-id {
+  align-items: baseline;
+  display: flex;
+  gap: 10px;
+  min-width: 0;
+}
+
+.aui-product-suite-id span,
+.aui-product-system-actions span,
+.aui-mail-thread-kicker {
+  color: #667085;
+  font-size: 11px;
+  font-weight: 820;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.aui-product-suite-id strong {
+  color: #172033;
+  font-size: 13px;
+}
+
+.aui-product-suite-meta {
+  color: #667085;
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 600;
+  margin-left: 2px;
+  white-space: nowrap;
+}
+
+.aui-product-system-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: flex-end;
+}
+
+.aui-product-system-actions span {
+  background: #eef4fb;
+  border: 1px solid #d7e3f1;
+  border-radius: 999px;
+  color: #255a8a;
+  letter-spacing: 0;
+  padding: 4px 8px;
+  text-transform: none;
+}
+
+.aui-product-mainbar {
+  gap: 14px;
+  justify-content: flex-start;
+}
+
+.aui-product-title strong {
+  color: #172033;
+  font-size: 14px;
+}
+
+.aui-product-title span {
+  color: var(--aui-muted);
+  font-size: 11px;
+}
+
+.aui-product-tabs {
+  background: #e9eef5;
+  border: 1px solid var(--aui-line);
+  border-radius: 12px;
+  gap: 2px;
+  max-width: 700px;
+  padding: 3px;
+}
+
+.aui-product-tab {
+  border-radius: 9px;
+  color: #475467;
+  gap: 0;
+  padding: 7px 10px;
+}
+
+.aui-product-tab strong {
+  font-size: 12px;
+}
+
+.aui-product-tab span {
+  color: #667085;
+  font-size: 10px;
+}
+
+.aui-product-tab.active {
+  background: #ffffff;
+  border: 1px solid #d7dfeb;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.08);
+  color: #172033;
+}
+
+.aui-product-subtabs {
+  gap: 6px;
+}
+
+.aui-product-subtab {
+  background: #ffffff;
+  border-color: var(--aui-line);
+  border-radius: 8px;
+  color: #344054;
+  padding: 6px 9px;
+}
+
+.aui-product-subtab.active {
+  background: #1f4e79;
+  border-color: #1f4e79;
+  box-shadow: none;
+  color: #ffffff;
+}
+
+.aui-product-contextbar {
+  background: #ffffff;
+  border-color: var(--aui-line);
+  border-radius: 10px;
+  padding: 8px 10px;
+}
+
+.aui-product-contextbar strong {
+  color: #172033;
+}
+
+.aui-product-context-metrics span {
+  background: #f8fafc;
+  border-color: var(--aui-line);
+  border-radius: 6px;
+}
+
+.aui-chat-product-shell {
+  background: #ffffff;
+  grid-template-columns: 280px minmax(0, 1fr) 344px;
+}
+
+.aui-chat-product-shell.sidebar-collapsed {
+  grid-template-columns: 0 minmax(0, 1fr) 344px;
+}
+
+.aui-chat-product-shell.orchestration-collapsed {
+  grid-template-columns: 280px minmax(0, 1fr) 0;
+}
+
+.aui-project-sidebar,
+.aui-chat-orchestration-panel {
+  background: #f8fafc;
+  border-color: var(--aui-line);
+  gap: 10px;
+  padding: 12px;
+}
+
+.aui-sidebar-brand {
+  border-bottom: 1px solid var(--aui-line);
+  padding-bottom: 10px;
+}
+
+.aui-orb {
+  background: #1f4e79;
+  border-radius: 8px;
+}
+
+.aui-new-chat-button,
+.aui-manage-project-button,
+.aui-sidebar-status,
+.aui-orch-card,
+.aui-thinking-panel,
+.aui-orch-item,
+.aui-thinking-item,
+.aui-orch-debug-item {
+  background: #ffffff;
+  border: 1px solid var(--aui-line);
+  border-radius: 10px;
+  box-shadow: none;
+}
+
+.aui-new-chat-button {
+  min-height: 38px;
+}
+
+.aui-new-chat-button span,
+.aui-chat-main-toggle.active,
+.aui-chat-main-settings-button,
+.aui-settings-footer button.primary {
+  background: #1f4e79;
+  border-color: #1f4e79;
+}
+
+.aui-manage-project-button {
+  color: var(--aui-ink);
+  gap: 4px;
+}
+
+.aui-manage-project-button span {
+  color: var(--aui-muted);
+}
+
+.aui-mailbox-nav {
+  background: #ffffff;
+  border: 1px solid var(--aui-line);
+  border-radius: 10px;
+  display: grid;
+  overflow: hidden;
+}
+
+.aui-mailbox-row {
+  align-items: center;
+  border-bottom: 1px solid #edf1f6;
+  display: flex;
+  justify-content: space-between;
+  min-height: 34px;
+  padding: 8px 10px;
+}
+
+.aui-mailbox-row:last-child {
+  border-bottom: 0;
+}
+
+.aui-mailbox-row span {
+  color: #475467;
+  font-size: 12px;
+  font-weight: 720;
+}
+
+.aui-mailbox-row strong {
+  background: #eef4fb;
+  border: 1px solid #d7e3f1;
+  border-radius: 999px;
+  color: #255a8a;
+  font-size: 11px;
+  min-width: 24px;
+  padding: 2px 7px;
+  text-align: center;
+}
+
+.aui-conversation-list {
+  gap: 2px;
+}
+
+.aui-conversation-item {
+  border-bottom: 1px solid #edf1f6;
+  border-radius: 0;
+  padding: 9px 8px;
+}
+
+.aui-conversation-item:hover {
+  background: #eef4fb;
+}
+
+.aui-conversation-item.active {
+  background: #e6f0fa;
+  border-color: #c8d9ec;
+  border-left: 3px solid #1f4e79;
+  padding-left: 7px;
+}
+
+.aui-chat-main {
+  background: #ffffff;
+  border-left: 1px solid var(--aui-line);
+  border-right: 1px solid var(--aui-line);
+}
+
+.aui-chat-main-utility {
+  background: #ffffff;
+  border-bottom: 1px solid var(--aui-line);
+  min-height: 52px;
+  padding: 8px 16px;
+}
+
+.aui-chat-main-utility-copy {
+  gap: 4px 10px;
+}
+
+.aui-mail-thread-kicker {
+  flex: 0 0 100%;
+}
+
+.aui-chat-main-utility-copy strong {
+  color: #172033;
+  font-size: 14px;
+}
+
+.aui-model-pill,
+.aui-orch-metrics span {
+  background: #f2f5f9;
+  border-color: var(--aui-line);
+  border-radius: 6px;
+  color: #475467;
+}
+
+.aui-chat-main .aui-viewport {
+  background:
+    linear-gradient(#ffffff 0 0) padding-box,
+    repeating-linear-gradient(0deg, transparent 0, transparent 47px, rgba(217, 224, 234, 0.45) 48px);
+}
+
+.aui-chat-main .aui-viewport-inner {
+  gap: 14px;
+  padding: 20px 0 14px;
+}
+
+.aui-chat-main .aui-welcome-copy {
+  text-align: left;
+}
+
+.aui-chat-main .aui-welcome-copy h1 {
+  color: #172033;
+  font-size: clamp(28px, 3vw, 38px);
+  margin: 0;
+  max-width: 22ch;
+}
+
+.aui-chat-main .aui-welcome-copy p {
+  margin-left: 0;
+  margin-right: 0;
+}
+
+.aui-chat-main .aui-suggestions {
+  margin: 0;
+  max-width: 760px;
+}
+
+.aui-chat-main .aui-suggestion-card,
+.aui-chat-main .aui-history-message.user,
+.aui-chat-main .aui-bubble.user {
+  background: #f8fafc;
+  border: 1px solid var(--aui-line);
+  border-radius: 10px;
+}
+
+.aui-chat-main .aui-bubble.assistant {
+  background: #ffffff;
+  border-left: 3px solid #d7e3f1;
+  border-radius: 0;
+  padding-left: 14px;
+}
+
+.aui-chat-main .aui-footer,
+.aui-chat-main .aui-thread-composer {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0), #ffffff 22%, #ffffff);
+}
+
+.aui-chat-main .aui-composer-shell {
+  border-color: #b8c6d8;
+  border-radius: 12px;
+  box-shadow: 0 8px 20px rgba(16, 24, 40, 0.08);
+}
+
+.aui-chat-main .aui-mini-tool,
+.aui-chat-main .aui-icon-button.secondary,
+.aui-attachment-chip {
+  background: #f2f5f9;
+  border-color: var(--aui-line);
+}
+
+.aui-chat-main .aui-icon-button.primary {
+  background: #1f4e79;
+}
+
+.aui-command-dashboard {
+  background: #edf2f7;
+  color: var(--aui-ink);
+  gap: 12px;
+  padding: 14px;
+}
+
+.aui-command-hero,
+.aui-command-metrics article,
+.aui-command-panel,
+.aui-command-center-card,
+.aui-command-brief-grid section,
+.aui-command-brief-card,
+.aui-command-writer,
+.aui-command-question-grid article,
+.aui-command-mini-card {
+  background: #ffffff;
+  border: 1px solid var(--aui-line);
+  box-shadow: var(--aui-shadow-soft);
+}
+
+.aui-command-hero {
+  align-items: center;
+  border-radius: 14px;
+  padding: 16px;
+}
+
+.aui-command-hero span,
+.aui-command-live span,
+.aui-command-metrics span,
+.aui-command-panel-head span,
+.aui-command-run dt,
+.aui-command-risk-list > span,
+.aui-command-card-top span,
+.aui-command-question-grid span,
+.aui-command-writer label > span {
+  color: var(--aui-muted);
+}
+
+.aui-command-hero h1 {
+  color: var(--aui-ink);
+  font-size: clamp(26px, 3.4vw, 40px);
+  letter-spacing: -0.045em;
+}
+
+.aui-command-hero p,
+.aui-command-card-top p,
+.aui-command-brief-grid p,
+.aui-command-brief-grid li,
+.aui-command-brief-card ul,
+.aui-command-project-list span,
+.aui-command-project-list small,
+.aui-command-mini-card small,
+.aui-command-mini-card p {
+  color: var(--aui-muted);
+}
+
+.aui-command-live {
+  background: #f8fafc;
+  border: 1px solid var(--aui-line);
+  border-radius: 12px;
+  min-width: 250px;
+}
+
+.aui-command-live strong,
+.aui-command-metrics strong,
+.aui-command-panel-head strong,
+.aui-command-card-top strong,
+.aui-command-question-grid strong,
+.aui-command-brief-grid h2,
+.aui-command-mini-card strong {
+  color: var(--aui-ink);
+}
+
+.aui-command-live button,
+.aui-command-panel-head button,
+.aui-command-ops > button,
+.aui-command-writer button {
+  background: #1f4e79;
+  border: 1px solid #1f4e79;
+  border-radius: 8px;
+  color: #ffffff;
+}
+
+.aui-command-ops > button.secondary {
+  background: #ffffff;
+  border-color: var(--aui-line);
+  color: var(--aui-ink);
+}
+
+.aui-command-metrics {
+  gap: 8px;
+}
+
+.aui-command-metrics article {
+  border-radius: 10px;
+  gap: 4px;
+  padding: 12px;
+}
+
+.aui-command-metrics strong {
+  font-size: 24px;
+}
+
+.aui-command-layout {
+  gap: 12px;
+  grid-template-columns: minmax(250px, 0.78fr) minmax(520px, 1.5fr) minmax(300px, 0.82fr);
+}
+
+.aui-command-panel,
+.aui-command-center-card {
+  border-radius: 12px;
+  padding: 14px;
+}
+
+.aui-command-project-list button,
+.aui-command-risk-list button {
+  background: #ffffff;
+  border: 1px solid var(--aui-line);
+  border-radius: 8px;
+  color: var(--aui-ink);
+}
+
+.aui-command-project-list button.active {
+  background: #e6f0fa;
+  border-color: #b9d0e8;
+  border-left: 3px solid #1f4e79;
+}
+
+.aui-command-project-list strong {
+  color: var(--aui-ink);
+}
+
+.aui-command-card-top {
+  border-bottom-color: var(--aui-line);
+}
+
+.aui-command-chipline span {
+  background: #f2f5f9;
+  border-color: var(--aui-line);
+  border-radius: 6px;
+  color: #475467;
+}
+
+.aui-command-question-grid {
+  gap: 8px;
+}
+
+.aui-command-question-grid article,
+.aui-command-brief-grid section,
+.aui-command-brief-card,
+.aui-command-writer,
+.aui-command-mini-card {
+  border-radius: 10px;
+}
+
+.aui-command-writer textarea {
+  background: #f8fafc;
+  border-color: var(--aui-line);
+  border-radius: 8px;
+  color: var(--aui-ink);
+}
+
+.aui-command-writer textarea::placeholder {
+  color: var(--aui-faint);
+}
+
+/* Mission ops rail: denser typography for log/status-heavy side panel */
+.aui-command-ops {
+  font-size: 12px;
+}
+
+.aui-command-ops .aui-command-panel-head {
+  margin-bottom: 10px;
+}
+
+.aui-command-ops .aui-command-panel-head span,
+.aui-command-ops .aui-command-run dt,
+.aui-command-ops .aui-command-risk-list > span {
+  font-size: 10px;
+  letter-spacing: 0.06em;
+}
+
+.aui-command-ops .aui-command-panel-head strong {
+  font-size: 14px;
+  line-height: 1.2;
+}
+
+.aui-command-ops .aui-command-run {
+  gap: 9px;
+  margin: 0 0 10px;
+}
+
+.aui-command-ops .aui-command-run dd {
+  font-size: 11px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.aui-command-ops > button {
+  font-size: 11px;
+  margin-top: 6px;
+  min-height: 34px;
+}
+
+.aui-command-ops .aui-command-risk-list {
+  gap: 6px;
+  margin-top: 12px;
+  padding-top: 10px;
+}
+
+.aui-command-ops .aui-command-risk-list button {
+  font-size: 11px;
+  gap: 3px;
+  padding: 9px 10px;
+}
+
+.aui-command-ops .aui-command-mini-card {
+  gap: 4px;
+  padding: 10px;
+}
+
+.aui-command-ops .aui-command-mini-card strong {
+  font-size: 12px;
+  line-height: 1.3;
+}
+
+.aui-command-ops .aui-command-mini-card small,
+.aui-command-ops .aui-command-mini-card p {
+  font-size: 10px;
+  line-height: 1.35;
+}
+
+.aui-notion-workspace,
+.aui-notion-page,
+.aui-ingest-surface,
+.aui-wiki-console {
+  background: #f8fafc;
+}
+
+.aui-notion-sidebar,
+.aui-wiki-sidebar {
+  background: #eef3f8;
+  border-color: var(--aui-line);
+}
+
+.aui-notion-block,
+.aui-notion-card,
+.aui-notion-page-list button,
+.aui-ingest-card,
+.aui-wiki-card,
+.aui-wiki-page-properties,
+.aui-wiki-editor,
+.aui-wiki-preview {
+  background: #ffffff;
+  border-color: var(--aui-line);
+  border-radius: 12px;
+  box-shadow: none;
+}
+
+@media (max-width: 1180px) {
+  .aui-product-systembar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .aui-product-system-actions {
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 860px) {
+  .aui-chat-product-shell,
+  .aui-chat-product-shell.sidebar-collapsed,
+  .aui-chat-product-shell.orchestration-collapsed,
+  .aui-chat-product-shell.sidebar-collapsed.orchestration-collapsed,
+  .aui-chat-product-shell.focus-mode {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* Surface internals: force B2B mailbox/work-record grammar */
+.aui-work-surface {
+  background: #edf2f7;
+  color: var(--aui-ink);
+}
+
+.aui-work-titlebar {
+  background: #ffffff;
+  border: 1px solid var(--aui-line);
+  border-radius: 12px;
+  box-shadow: var(--aui-shadow-soft);
+}
+
+.aui-work-titlebar > div:first-child {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.aui-work-titlebar h1 {
+  color: var(--aui-ink);
+  font-family: var(--aui-font-sans);
+  font-size: clamp(22px, 2.2vw, 32px);
+  font-weight: 820;
+  letter-spacing: -0.035em;
+  line-height: 1.08;
+  margin: 0;
+}
+
+.aui-work-titlebar p {
+  color: var(--aui-muted);
+  font-size: 13px;
+  line-height: 1.55;
+  margin: 0;
+  max-width: 90ch;
+}
+
+.aui-work-metrics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.aui-work-metrics span {
+  background: #f2f5f9;
+  border: 1px solid var(--aui-line);
+  border-radius: 6px;
+  color: #475467;
+  font-size: 11px;
+  font-weight: 780;
+  padding: 4px 7px;
+}
+
+.aui-kicker,
+.aui-work-titlebar .aui-kicker {
+  color: #255a8a;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+}
+
+.aui-paperclip-studio,
+.aui-ingest-surface,
+.aui-ops-surface {
+  background: #edf2f7;
+  gap: 10px;
+  padding: 12px;
+}
+
+.aui-paperclip-hero,
+.aui-ingest-hero,
+.aui-ops-hero {
+  align-items: center;
+  background: #ffffff;
+  border-color: var(--aui-line);
+  color: var(--aui-ink);
+  display: grid;
+  gap: 12px;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 0.36fr);
+  padding: 12px 14px;
+}
+
+.aui-paperclip-hero h1,
+.aui-ingest-hero h1,
+.aui-ops-hero h1 {
+  color: var(--aui-ink);
+}
+
+.aui-paperclip-hero p,
+.aui-ingest-hero p,
+.aui-ops-hero p {
+  color: var(--aui-muted);
+}
+
+.aui-paperclip-bridge,
+.aui-ingest-live,
+.aui-ops-live {
+  align-self: stretch;
+  background: #f8fafc;
+  border: 1px solid var(--aui-line);
+  border-radius: 10px;
+  box-shadow: none;
+  color: var(--aui-ink);
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  padding: 10px;
+}
+
+.aui-paperclip-bridge span,
+.aui-ingest-live strong,
+.aui-ops-live strong {
+  color: #255a8a;
+  font-size: 11px;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.aui-paperclip-bridge strong,
+.aui-ingest-live span,
+.aui-ops-live span {
+  color: var(--aui-ink);
+}
+
+.aui-paperclip-bridge small {
+  color: var(--aui-muted);
+}
+
+.aui-paperclip-layout,
+.aui-ingest-layout,
+.aui-ops-workbench {
+  gap: 10px;
+}
+
+.aui-paperclip-layout {
+  grid-template-columns: minmax(240px, 0.72fr) minmax(440px, 1.34fr) minmax(260px, 0.78fr);
+}
+
+.aui-ingest-layout {
+  grid-template-columns: minmax(300px, 0.78fr) minmax(420px, 1.24fr) minmax(280px, 0.72fr);
+}
+
+.aui-ops-workbench {
+  grid-template-columns: minmax(340px, 0.9fr) minmax(420px, 1.1fr) minmax(280px, 0.72fr);
+}
+
+.aui-paperclip-template-rail,
+.aui-paperclip-composer,
+.aui-paperclip-queue,
+.aui-paperclip-bottom > article,
+.aui-ingest-card,
+.aui-ops-card,
+.aui-ops-summary-card {
+  background: #ffffff;
+  border: 1px solid var(--aui-line);
+  border-radius: 10px;
+  box-shadow: none;
+  padding: 12px;
+}
+
+.aui-paperclip-section-head,
+.aui-ingest-card-head,
+.aui-ops-card-head {
+  border-bottom: 1px solid #edf1f6;
+  padding-bottom: 8px;
+}
+
+.aui-paperclip-section-head span,
+.aui-ingest-card-head span,
+.aui-ops-card-head span,
+.aui-ops-field span,
+.aui-ops-inline-fields span,
+.aui-paperclip-field span,
+.aui-ingest-composer label > span,
+.aui-ingest-verdict span,
+.aui-ingest-grid span,
+.aui-ingest-list-block span {
+  color: var(--aui-muted);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+}
+
+.aui-paperclip-template-list,
+.aui-paperclip-task-list,
+.aui-paperclip-event-list,
+.aui-paperclip-result-list,
+.aui-ingest-promotion-list,
+.aui-ops-list {
+  gap: 4px;
+}
+
+.aui-paperclip-template-list button,
+.aui-paperclip-task-list article,
+.aui-paperclip-event-list div,
+.aui-paperclip-result-list article,
+.aui-ingest-promotion-list button,
+.aui-ops-checkcard,
+.aui-ops-log-card,
+.aui-ops-drive-card,
+.aui-ops-runbox {
+  background: #ffffff;
+  border: 1px solid #edf1f6;
+  border-radius: 0;
+  border-width: 0 0 1px;
+  box-shadow: none;
+  padding: 9px 8px;
+}
+
+.aui-paperclip-template-list button.active,
+.aui-paperclip-result-list article.active,
+.aui-ingest-promotion-list button.active,
+.aui-ops-checkcard.active {
+  background: #e6f0fa;
+  border-left: 3px solid #1f4e79;
+  padding-left: 8px;
+}
+
+.aui-paperclip-field input,
+.aui-paperclip-field textarea,
+.aui-ingest-composer input,
+.aui-ingest-composer textarea,
+.aui-ops-field input,
+.aui-ops-field textarea,
+.aui-ops-inline-fields input,
+.aui-ops-inline-fields select {
+  background: #f8fafc;
+  border-color: var(--aui-line);
+  border-radius: 8px;
+}
+
+.aui-paperclip-actions button,
+.aui-paperclip-result-actions button,
+.aui-paperclip-bridge button,
+.aui-ingest-actions button,
+.aui-ingest-result-actions button,
+.aui-ingest-live button,
+.aui-ops-actions button,
+.aui-ops-command-bar button,
+.aui-ops-live button,
+.aui-ops-card button {
+  background: #1f4e79;
+  border: 1px solid #1f4e79;
+  border-radius: 8px;
+  color: #ffffff;
+  box-shadow: none;
+}
+
+.aui-paperclip-result-preview,
+.aui-ingest-result pre,
+.aui-ops-markdown {
+  background: #f8fafc;
+  border: 1px solid var(--aui-line);
+  border-radius: 8px;
+}
+
+.aui-ops-summary-grid {
+  gap: 8px;
+}
+
+.aui-ops-summary-card {
+  gap: 3px;
+  padding: 10px;
+}
+
+.aui-ops-summary-card strong {
+  color: var(--aui-ink);
+  font-size: 20px;
+}
+
+.aui-ops-command-bar {
+  background: #ffffff;
+  border: 1px solid var(--aui-line);
+  border-radius: 10px;
+  padding: 8px;
+}
+
+.aui-wiki-console {
+  background: #edf2f7;
+  grid-template-columns: 248px minmax(760px, 1.55fr) 224px;
+  grid-template-rows: auto minmax(0, 1fr);
+}
+
+.aui-wiki-sidebar,
+.aui-wiki-main,
+.aui-wiki-inspector {
+  background: #ffffff;
+  border: 1px solid var(--aui-line);
+  border-radius: 10px;
+  margin: 10px;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.aui-wiki-sidebar {
+  border-right: 1px solid var(--aui-line);
+  margin-right: 0;
+  padding: 10px;
+}
+
+.aui-wiki-main {
+  display: grid;
+  grid-template-rows: auto auto auto minmax(0, 1fr);
+  margin-left: 0;
+  margin-right: 0;
+}
+
+.aui-wiki-inspector {
+  border-left: 1px solid var(--aui-line);
+  margin-left: 0;
+  overflow: auto;
+  padding: 10px;
+}
+
+.aui-wiki-brand {
+  border-bottom: 1px solid #edf1f6;
+  padding: 8px 4px 10px;
+}
+
+.aui-wiki-brand h1 {
+  color: var(--aui-ink);
+  font-size: 18px;
+}
+
+.aui-wiki-search,
+.aui-wiki-card,
+.aui-wiki-collection-card {
+  background: #ffffff;
+  border: 1px solid var(--aui-line);
+  border-radius: 8px;
+  box-shadow: none;
+}
+
+.aui-wiki-folder-tree button,
+.aui-wiki-result-list button,
+.aui-wiki-command-targets button,
+.aui-wiki-collection-entry,
+.aui-wiki-queue-item {
+  background: #ffffff;
+  border: 0;
+  border-bottom: 1px solid #edf1f6;
+  border-radius: 0;
+}
+
+.aui-wiki-folder-tree button.active,
+.aui-wiki-result-list button.active {
+  background: #e6f0fa;
+  border-left: 3px solid #1f4e79;
+}
+
+.aui-wiki-cover {
+  background: #f8fafc;
+  border-bottom: 1px solid var(--aui-line);
+  color: var(--aui-ink);
+  min-height: 42px;
+  padding: 10px 18px;
+}
+
+.aui-wiki-toolbar {
+  border-bottom: 1px solid var(--aui-line);
+  padding: 14px 18px 12px;
+}
+
+.aui-wiki-page-icon {
+  background: #e6f0fa;
+  border-radius: 8px;
+  color: #1f4e79;
+  font-size: 18px;
+  height: 34px;
+  width: 34px;
+}
+
+.aui-wiki-toolbar h2 {
+  color: var(--aui-ink);
+  font-size: clamp(24px, 2.8vw, 34px);
+  letter-spacing: -0.04em;
+  margin: 4px 0;
+}
+
+.aui-wiki-page-properties {
+  background: #ffffff;
+  border-bottom: 1px solid var(--aui-line);
+  margin: 0;
+  padding: 8px 18px;
+}
+
+.aui-wiki-pipeline-shell {
+  background: #f8fafc;
+  border-bottom: 1px solid var(--aui-line);
+  padding: 12px 18px;
+}
+
+.aui-wiki-pipeline-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.aui-wiki-editor-grid {
+  gap: 10px;
+  grid-template-columns: minmax(0, 1.35fr) minmax(320px, 0.65fr);
+  padding: 12px 18px 18px;
+}
+
+.aui-wiki-preview {
+  border: 1px solid var(--aui-line);
+  border-radius: 8px;
+}
+
+.aui-wiki-preview-head {
+  background: #f8fafc;
+  border-bottom: 1px solid var(--aui-line);
+  padding: 8px 12px;
+}
+
+.aui-wiki-preview-body {
+  color: var(--aui-ink-soft);
+  font-size: 14px;
+  line-height: 1.68;
+  max-width: none;
+  padding: 18px 22px 60px;
+}
+
+.aui-wiki-editor textarea {
+  background: #f8fafc;
+  border-color: var(--aui-line);
+  border-radius: 8px;
+}
+
+.aui-decision-shell {
+  background: #edf2f7;
+  grid-template-columns: minmax(260px, 0.78fr) minmax(560px, 1.44fr) minmax(320px, 0.9fr);
+  padding: 12px;
+}
+
+.aui-decision-shell .aui-brand-panel,
+.aui-decision-shell .aui-context-panel {
+  gap: 10px;
+}
+
+.aui-decision-shell .aui-brand-card,
+.aui-decision-shell .aui-panel-card,
+.aui-decision-shell .aui-stat-card,
+.aui-decision-shell .aui-chat-stage {
+  background: #ffffff;
+  border: 1px solid var(--aui-line);
+  border-radius: 10px;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
+.aui-decision-shell .aui-brand-card {
+  padding: 14px;
+}
+
+.aui-decision-shell .aui-brand-card::after {
+  display: none;
+}
+
+.aui-decision-shell .aui-brand-card h1 {
+  color: var(--aui-ink);
+  font-size: clamp(24px, 2.5vw, 34px);
+  max-width: none;
+}
+
+.aui-decision-shell .aui-stat-grid {
+  gap: 6px;
+}
+
+.aui-decision-shell .aui-stat-card {
+  padding: 10px;
+}
+
+.aui-decision-shell .aui-project-item,
+.aui-decision-history article {
+  background: #ffffff;
+  border: 0;
+  border-bottom: 1px solid #edf1f6;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.aui-decision-shell .aui-project-item.active {
+  background: #e6f0fa;
+  border-left: 3px solid #1f4e79;
+}
+
+.aui-decision-stage {
+  border-radius: 10px;
+}
+
+.aui-decision-stage .aui-topbar {
+  background: #ffffff;
+  border-bottom: 1px solid var(--aui-line);
+  min-height: auto;
+  padding: 12px 14px;
+}
+
+.aui-decision-stage .aui-topbar strong {
+  color: var(--aui-ink);
+  font-size: 18px;
+}
+
+.aui-decision-card-wrap {
+  gap: 10px;
+  padding: 12px;
+}
+
+.aui-decision-card {
+  background: #ffffff;
+  border: 1px solid var(--aui-line);
+  border-radius: 10px;
+  box-shadow: none;
+  min-height: 260px;
+  padding: 14px;
+}
+
+.aui-decision-card h2 {
+  color: var(--aui-ink);
+  font-size: clamp(24px, 3vw, 36px);
+  letter-spacing: -0.04em;
+  line-height: 1.08;
+}
+
+.aui-decision-card p {
+  font-size: 14px;
+}
+
+.aui-decision-card-meta span,
+.aui-decision-card-grid section,
+.aui-decision-merge-card,
+.aui-decision-inference,
+.aui-decision-compare-grid pre,
+.aui-decision-compare-grid textarea {
+  background: #f8fafc;
+  border: 1px solid var(--aui-line);
+  border-radius: 8px;
+}
+
+.aui-decision-actions,
+.aui-decision-compare-actions {
+  gap: 6px;
+}
+
+.aui-wide-action {
+  background: #f2f5f9;
+  border-color: var(--aui-line);
+  border-radius: 8px;
+  color: var(--aui-ink);
+}
+
+.aui-decision-actions .aui-wide-action:nth-child(4),
+.aui-decision-compare-actions .aui-wide-action:nth-child(1) {
+  background: #1f4e79;
+  border-color: #1f4e79;
+  color: #ffffff;
+}
+
+@media (max-width: 1180px) {
+  .aui-paperclip-layout,
+  .aui-ingest-layout,
+  .aui-ops-workbench,
+  .aui-wiki-pipeline-grid,
+  .aui-wiki-editor-grid,
+  .aui-decision-shell {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .aui-wiki-console {
+    grid-template-columns: minmax(0, 1fr);
+    overflow: auto;
+  }
+
+  .aui-wiki-sidebar,
+  .aui-wiki-main,
+  .aui-wiki-inspector {
+    margin: 10px;
+  }
+}
+
+@media (max-width: 760px) {
+  .aui-paperclip-hero,
+  .aui-ingest-hero,
+  .aui-ops-hero {
+    align-items: stretch;
+    flex-direction: column;
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* Typography stabilization layer */
+:root {
+  --aui-font-sans: "Pretendard", "Aptos", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+  --aui-font-mono: "SFMono-Regular", "Cascadia Mono", "Menlo", "Consolas", monospace;
+  --aui-type-hero: clamp(22px, 2.2vw, 28px);
+  --aui-type-title: clamp(18px, 1.6vw, 22px);
+  --aui-type-section: 14px;
+  --aui-type-body: 13px;
+  --aui-type-body-sm: 12px;
+  --aui-type-caption: 10px;
+  --aui-type-micro: 9px;
+  --aui-line-tight: 1.18;
+  --aui-line-body: 1.48;
+  --aui-line-control: 1.2;
+  --aui-tracking-title: -0.025em;
+  --aui-tracking-label: 0.06em;
+  --aui-weight-title: 780;
+  --aui-weight-section: 720;
+  --aui-weight-control: 700;
+  --aui-weight-label: 760;
+}
+
+html,
+body,
+button,
+input,
+textarea,
+select {
+  font-family: var(--aui-font-sans);
+  font-feature-settings: "tnum" 1, "kern" 1;
+  text-rendering: geometricPrecision;
+}
+
+body {
+  font-size: var(--aui-type-body);
+  line-height: var(--aui-line-body);
+}
+
+.aui-product-frame,
+.aui-work-surface,
+.aui-chat-product-shell,
+.aui-command-dashboard,
+.aui-wiki-console,
+.aui-paperclip-studio,
+.aui-ingest-surface,
+.aui-ops-surface,
+.aui-decision-shell {
+  font-size: var(--aui-type-body);
+}
+
+.aui-product-title strong,
+.aui-product-suite-id strong,
+.aui-sidebar-brand strong,
+.aui-chat-main-utility-copy strong,
+.aui-panel-heading strong,
+.aui-ops-card-head strong,
+.aui-paperclip-section-head strong,
+.aui-ingest-card-head strong,
+.aui-wiki-card-head strong,
+.aui-wiki-list-meta strong,
+.aui-command-panel-head strong,
+.aui-command-mini-card strong {
+  color: var(--aui-ink);
+  font-size: var(--aui-type-section);
+  font-weight: var(--aui-weight-section);
+  letter-spacing: -0.01em;
+  line-height: var(--aui-line-tight);
+}
+
+.aui-work-titlebar h1,
+.aui-brand-card h1,
+.aui-ops-hero h1,
+.aui-paperclip-hero h1,
+.aui-ingest-hero h1,
+.aui-command-hero h1,
+.aui-wiki-toolbar h2,
+.aui-decision-card h2,
+.aui-welcome-copy h1 {
+  color: var(--aui-ink);
+  font-family: var(--aui-font-sans);
+  font-size: var(--aui-type-hero);
+  font-weight: var(--aui-weight-title);
+  letter-spacing: var(--aui-tracking-title);
+  line-height: var(--aui-line-tight);
+}
+
+.aui-topbar strong,
+.aui-settings-header h2,
+.aui-notion-title-block h1,
+.aui-migration-hero h1 {
+  color: var(--aui-ink);
+  font-family: var(--aui-font-sans);
+  font-size: var(--aui-type-title);
+  font-weight: var(--aui-weight-title);
+  letter-spacing: var(--aui-tracking-title);
+  line-height: var(--aui-line-tight);
+}
+
+.aui-work-titlebar p,
+.aui-brand-card p,
+.aui-welcome-copy p,
+.aui-command-hero p,
+.aui-ops-hero p,
+.aui-paperclip-hero p,
+.aui-ingest-hero p,
+.aui-wiki-brand p,
+.aui-wiki-card p,
+.aui-history-message p,
+.aui-bubble,
+.aui-decision-card p,
+.aui-command-brief-grid p,
+.aui-command-brief-grid li,
+.aui-ingest-verdict p,
+.aui-ingest-list-block p,
+.aui-ops-muted {
+  font-size: var(--aui-type-body);
+  line-height: var(--aui-line-body);
+  letter-spacing: -0.002em;
+}
+
+.aui-product-title span,
+.aui-sidebar-brand span,
+.aui-conversation-item span,
+.aui-mailbox-row span,
+.aui-model-pill,
+.aui-command-mini-card small,
+.aui-ops-log-card span,
+.aui-ops-drive-card span,
+.aui-paperclip-template-list span,
+.aui-paperclip-template-list small,
+.aui-ingest-promotion-list span,
+.aui-ingest-promotion-list small,
+.aui-wiki-result-list button em,
+.aui-wiki-result-list button small,
+.aui-wiki-folder-tree small,
+.aui-decision-history span,
+.aui-decision-history small {
+  font-size: var(--aui-type-body-sm);
+  line-height: 1.42;
+}
+
+.aui-kicker,
+.aui-product-suite-id span,
+.aui-product-system-actions span,
+.aui-product-contextbar > div:first-child > span,
+.aui-sidebar-heading,
+.aui-mail-thread-kicker,
+.aui-stat-card span,
+.aui-panel-heading span,
+.aui-field span,
+.aui-ops-card-head span,
+.aui-ops-field span,
+.aui-ops-inline-fields span,
+.aui-paperclip-section-head span,
+.aui-paperclip-field span,
+.aui-ingest-card-head span,
+.aui-ingest-composer label > span,
+.aui-ingest-verdict span,
+.aui-ingest-grid span,
+.aui-ingest-list-block span,
+.aui-wiki-preview-head span,
+.aui-wiki-card-head span,
+.aui-wiki-properties dt,
+.aui-command-metrics span,
+.aui-command-panel-head span,
+.aui-command-run dt,
+.aui-command-risk-list > span,
+.aui-command-card-top span {
+  font-size: var(--aui-type-caption);
+  font-weight: var(--aui-weight-label);
+  letter-spacing: var(--aui-tracking-label);
+  line-height: var(--aui-line-control);
+  text-transform: uppercase;
+}
+
+button,
+.aui-wide-action,
+.aui-new-chat-button,
+.aui-chat-main-toggle,
+.aui-chat-main-settings-button,
+.aui-paperclip-actions button,
+.aui-paperclip-result-actions button,
+.aui-ingest-actions button,
+.aui-ingest-result-actions button,
+.aui-ops-command-bar button,
+.aui-ops-actions button,
+.aui-command-live button,
+.aui-command-panel-head button,
+.aui-command-ops > button,
+.aui-command-writer button,
+.aui-wiki-toolbar-actions button {
+  font-size: var(--aui-type-body-sm);
+  font-weight: var(--aui-weight-control);
+  letter-spacing: -0.004em;
+  line-height: var(--aui-line-control);
+}
+
+input,
+textarea,
+select,
+.aui-composer-input {
+  font-size: var(--aui-type-body);
+  font-weight: 450;
+  letter-spacing: -0.004em;
+  line-height: var(--aui-line-body);
+}
+
+code,
+pre,
+.aui-wiki-editor textarea,
+.aui-decision-compare-grid pre,
+.aui-decision-compare-grid textarea,
+.aui-paperclip-result-preview pre,
+.aui-ingest-result pre,
+.aui-orch-raw,
+.aui-orch-debug-item pre {
+  font-family: var(--aui-font-mono);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.aui-stat-card strong,
+.aui-command-metrics strong,
+.aui-ops-summary-card strong,
+.aui-command-run dd,
+.aui-ops-runbox strong {
+  font-size: clamp(18px, 1.8vw, 24px);
+  font-weight: var(--aui-weight-title);
+  letter-spacing: -0.02em;
+  line-height: var(--aui-line-tight);
+}
+
+.aui-product-tab strong,
+.aui-product-subtab strong,
+.aui-work-metrics span,
+.aui-command-chipline span,
+.aui-ops-chipline span,
+.aui-orch-metrics span,
+.aui-selected-tag strong,
+.aui-attachment-chip,
+.aui-wiki-save-state {
+  font-size: var(--aui-type-caption);
+  font-weight: var(--aui-weight-control);
+  letter-spacing: 0;
+  line-height: var(--aui-line-control);
+}
+
+.aui-message-label,
+.aui-history-meta span,
+.aui-history-meta time,
+.aui-browser-path-chip span {
+  font-size: var(--aui-type-caption);
+  font-weight: var(--aui-weight-label);
+  letter-spacing: var(--aui-tracking-label);
+}
+
+/* Stability hardening: protect chat/product layouts from long paths and mid-size viewports */
+.aui-product-frame,
+.aui-product-nav,
+.aui-product-mainbar,
+.aui-product-tabs,
+.aui-product-tab,
+.aui-product-contextbar,
+.aui-product-contextbar > div,
+.aui-product-context-metrics,
+.aui-chat-product-shell,
+.aui-project-sidebar,
+.aui-chat-main,
+.aui-chat-main-utility,
+.aui-chat-main-utility-copy,
+.aui-chat-main-utility-title,
+.aui-chat-main-utility-meta,
+.aui-chat-main-toolbar,
+.aui-chat-orchestration-panel,
+.aui-orch-card,
+.aui-orch-heading,
+.aui-manage-project-button,
+.aui-conversation-item,
+.aui-thinking-panel,
+.aui-thinking-summary,
+.aui-thinking-item,
+.aui-orch-item,
+.aui-orch-debug-item {
+  min-width: 0;
+}
+
+.aui-project-sidebar,
+.aui-chat-main,
+.aui-chat-orchestration-panel {
+  overflow-x: hidden;
+}
+
+.aui-product-systembar,
+.aui-product-system-actions,
+.aui-product-contextbar,
+.aui-product-context-metrics,
+.aui-chat-main-toolbar,
+.aui-chat-main-utility-meta,
+.aui-orch-metrics {
+  flex-wrap: wrap;
+}
+
+.aui-product-tab,
+.aui-product-subtab,
+.aui-model-pill,
+.aui-orch-metrics span,
+.aui-mailbox-row span,
+.aui-mailbox-row strong {
+  max-width: 100%;
+}
+
+.aui-manage-project-button strong,
+.aui-manage-project-button span,
+.aui-conversation-item strong,
+.aui-conversation-item span,
+.aui-chat-main-utility-copy strong,
+.aui-product-contextbar strong,
+.aui-product-contextbar small,
+.aui-orch-heading strong,
+.aui-orch-note,
+.aui-orch-empty,
+.aui-orch-item strong,
+.aui-orch-item span,
+.aui-orch-item small,
+.aui-thinking-item p,
+.aui-orch-debug-item span,
+.aui-orch-debug-item small {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.aui-product-tabs {
+  overflow: hidden;
+}
+
+.aui-product-tab {
+  min-width: 0;
+}
+
+.aui-product-tab strong,
+.aui-product-tab span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.aui-chat-main-utility {
+  row-gap: 6px;
+}
+
+.aui-chat-main-toolbar {
+  flex: 0 0 auto;
+}
+
+.aui-orch-heading {
+  align-items: flex-start;
+}
+
+.aui-orch-heading strong {
+  flex: 0 1 58%;
+  text-align: right;
+}
+
+.aui-orch-item,
+.aui-thinking-item,
+.aui-orch-debug-item {
+  overflow: hidden;
+}
+
+.aui-orch-debug-item pre,
+.aui-orch-raw {
+  max-width: 100%;
+}
+
+@media (max-width: 1480px) {
+  .aui-chat-product-shell {
+    grid-template-columns: 248px minmax(0, 1fr) 296px;
+  }
+
+  .aui-chat-product-shell.sidebar-collapsed {
+    grid-template-columns: 0 minmax(0, 1fr) 296px;
+  }
+
+  .aui-chat-product-shell.orchestration-collapsed {
+    grid-template-columns: 248px minmax(0, 1fr) 0;
+  }
+
+  .aui-chat-main .aui-viewport {
+    padding: 0 clamp(12px, 2vw, 18px);
+  }
+
+  .aui-chat-main .aui-footer {
+    padding: 8px clamp(12px, 2vw, 20px) 14px;
+  }
+}
+
+@media (max-width: 1220px) {
+  .aui-chat-product-shell,
+  .aui-chat-product-shell.sidebar-collapsed,
+  .aui-chat-product-shell.orchestration-collapsed,
+  .aui-chat-product-shell.sidebar-collapsed.orchestration-collapsed,
+  .aui-chat-product-shell.focus-mode {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr) auto;
+  }
+
+  .aui-project-sidebar {
+    border-bottom: 1px solid var(--aui-line);
+    border-right: 0;
+    max-height: 30vh;
+  }
+
+  .aui-chat-main {
+    border-left: 0;
+    border-right: 0;
+  }
+
+  .aui-chat-orchestration-panel {
+    border-left: 0;
+    border-top: 1px solid var(--aui-line);
+    max-height: 34vh;
+  }
+
+  .aui-chat-main-utility {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .aui-chat-main-toolbar {
+    justify-content: flex-start;
+    width: 100%;
+  }
+}
+
+/* Spacing stabilization layer: explicit padding/gutter hierarchy */
+:root {
+  --aui-space-1: 3px;
+  --aui-space-2: 6px;
+  --aui-space-3: 10px;
+  --aui-space-4: 12px;
+  --aui-space-5: 16px;
+  --aui-space-6: 20px;
+  --aui-app-pad: var(--aui-space-2);
+  --aui-panel-pad: var(--aui-space-2);
+  --aui-card-pad: var(--aui-space-3);
+  --aui-row-pad-y: 6px;
+  --aui-row-pad-x: 8px;
+  --aui-control-pad-y: 6px;
+  --aui-control-pad-x: 8px;
+  --aui-layout-gap: var(--aui-space-2);
+  --aui-section-gap: var(--aui-space-2);
+  --aui-inset-gap: var(--aui-space-2);
+  --aui-radius-control: 7px;
+  --aui-radius-panel: 8px;
+}
+
+.aui-product-nav,
+.aui-work-surface,
+.aui-command-dashboard,
+.aui-paperclip-studio,
+.aui-ingest-surface,
+.aui-ops-surface,
+.aui-decision-shell {
+  gap: var(--aui-section-gap);
+  padding: var(--aui-app-pad);
+}
+
+.aui-product-mainbar,
+.aui-product-systembar,
+.aui-product-contextbar,
+.aui-chat-main-utility,
+.aui-work-titlebar,
+.aui-paperclip-hero,
+.aui-ingest-hero,
+.aui-ops-hero,
+.aui-command-hero {
+  gap: var(--aui-layout-gap);
+  padding: var(--aui-panel-pad);
+}
+
+.aui-product-tabs {
+  gap: var(--aui-space-1);
+  padding: var(--aui-space-1);
+}
+
+.aui-product-tab,
+.aui-product-subtab,
+.aui-model-pill,
+.aui-work-metrics span,
+.aui-command-chipline span,
+.aui-ops-chipline span,
+.aui-orch-metrics span,
+.aui-wiki-save-state,
+.aui-selected-tag,
+.aui-attachment-chip {
+  border-radius: var(--aui-radius-control);
+  padding: 5px 8px;
+}
+
+.aui-product-contextbar,
+.aui-work-titlebar,
+.aui-paperclip-bridge,
+.aui-ingest-live,
+.aui-ops-live,
+.aui-command-live,
+.aui-brand-card,
+.aui-panel-card,
+.aui-stat-card,
+.aui-paperclip-template-rail,
+.aui-paperclip-composer,
+.aui-paperclip-queue,
+.aui-paperclip-bottom > article,
+.aui-ingest-card,
+.aui-ops-card,
+.aui-ops-summary-card,
+.aui-command-metrics article,
+.aui-command-panel,
+.aui-command-center-card,
+.aui-command-brief-grid section,
+.aui-command-brief-card,
+.aui-command-writer,
+.aui-command-question-grid article,
+.aui-command-mini-card,
+.aui-wiki-sidebar,
+.aui-wiki-main,
+.aui-wiki-inspector,
+.aui-wiki-search,
+.aui-wiki-card,
+.aui-wiki-collection-card,
+.aui-wiki-preview,
+.aui-decision-shell .aui-brand-card,
+.aui-decision-shell .aui-panel-card,
+.aui-decision-shell .aui-stat-card,
+.aui-decision-shell .aui-chat-stage,
+.aui-decision-card {
+  border-radius: var(--aui-radius-panel);
+}
+
+/* Product nav compaction: keep global chrome visible without dominating the viewport */
+.aui-product-nav {
+  gap: 6px;
+  padding: 8px 12px 6px;
+}
+
+.aui-product-systembar,
+.aui-product-mainbar {
+  padding: 0;
+}
+
+.aui-product-suite-id {
+  gap: 8px;
+}
+
+.aui-product-tabs {
+  max-width: 640px;
+  padding: 2px;
+}
+
+.aui-product-tab {
+  gap: 0;
+  padding: 6px 10px;
+}
+
+.aui-product-tab span {
+  font-size: 10px;
+}
+
+.aui-product-subtabs {
+  gap: 5px;
+}
+
+.aui-product-subtab {
+  gap: 6px;
+  padding: 5px 8px;
+}
+
+.aui-product-subtab span {
+  padding: 1px 5px;
+}
+
+.aui-brand-card,
+.aui-panel-card,
+.aui-stat-card,
+.aui-paperclip-template-rail,
+.aui-paperclip-composer,
+.aui-paperclip-queue,
+.aui-paperclip-bottom > article,
+.aui-ingest-card,
+.aui-ops-card,
+.aui-ops-summary-card,
+.aui-command-metrics article,
+.aui-command-panel,
+.aui-command-center-card,
+.aui-command-brief-grid section,
+.aui-command-brief-card,
+.aui-command-writer,
+.aui-command-question-grid article,
+.aui-command-mini-card,
+.aui-wiki-search,
+.aui-wiki-card,
+.aui-wiki-collection-card,
+.aui-decision-shell .aui-brand-card,
+.aui-decision-shell .aui-panel-card,
+.aui-decision-shell .aui-stat-card,
+.aui-decision-card {
+  gap: var(--aui-inset-gap);
+  padding: var(--aui-card-pad);
+}
+
+.aui-wiki-console {
+  gap: var(--aui-section-gap);
+  grid-template-columns: 290px minmax(620px, 1fr) 286px;
+  padding: var(--aui-app-pad);
+}
+
+.aui-wiki-sidebar,
+.aui-wiki-main,
+.aui-wiki-inspector {
+  margin: 0;
+}
+
+.aui-wiki-sidebar,
+.aui-wiki-inspector {
+  gap: var(--aui-section-gap);
+  padding: 10px;
+}
+
+.aui-wiki-main {
+  grid-template-rows: auto auto auto minmax(0, 1fr);
+}
+
+.aui-wiki-cover {
+  min-height: 40px;
+  padding: var(--aui-row-pad-y) var(--aui-card-pad);
+}
+
+.aui-wiki-toolbar,
+.aui-wiki-page-properties,
+.aui-wiki-pipeline-shell,
+.aui-wiki-editor-grid {
+  padding-left: 10px;
+  padding-right: 10px;
+}
+
+.aui-wiki-toolbar {
+  padding-bottom: var(--aui-space-2);
+  padding-top: var(--aui-card-pad);
+}
+
+.aui-wiki-page-properties {
+  gap: var(--aui-space-2);
+  padding-bottom: var(--aui-space-2);
+  padding-top: var(--aui-space-2);
+}
+
+.aui-wiki-pipeline-shell {
+  gap: var(--aui-section-gap);
+  padding-bottom: var(--aui-card-pad);
+  padding-top: var(--aui-card-pad);
+}
+
+.aui-wiki-editor-grid {
+  gap: var(--aui-section-gap);
+  grid-template-columns: minmax(0, 1fr);
+  padding-bottom: var(--aui-card-pad);
+  padding-top: var(--aui-card-pad);
+}
+
+.aui-wiki-document-pane {
+  background: #ffffff;
+  border: 1px solid var(--aui-line);
+  border-radius: var(--aui-radius-panel);
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  min-height: 0;
+  overflow: hidden;
+}
+
+.aui-wiki-document-head {
+  align-items: center;
+  background: #f8fafc;
+  border-bottom: 1px solid var(--aui-line);
+  display: flex;
+  gap: var(--aui-section-gap);
+  justify-content: space-between;
+  padding: var(--aui-row-pad-y) var(--aui-row-pad-x);
+}
+
+.aui-wiki-document-head > div:first-child {
+  display: grid;
+  gap: 2px;
+}
+
+.aui-wiki-document-head span {
+  color: var(--aui-muted);
+  font-size: var(--aui-type-caption);
+  font-weight: var(--aui-weight-label);
+  letter-spacing: var(--aui-tracking-label);
+  line-height: var(--aui-line-control);
+  text-transform: uppercase;
+}
+
+.aui-wiki-document-head strong {
+  color: var(--aui-ink);
+  font-size: var(--aui-type-section);
+  font-weight: var(--aui-weight-section);
+  line-height: var(--aui-line-tight);
+}
+
+.aui-wiki-mode-toggle {
+  background: #edf2f7;
+  border: 1px solid var(--aui-line);
+  border-radius: var(--aui-radius-control);
+  display: inline-flex;
+  flex: 0 0 auto;
+  gap: 2px;
+  padding: 2px;
+}
+
+.aui-wiki-mode-toggle button {
+  background: transparent;
+  border: 0;
+  border-radius: 6px;
+  color: var(--aui-muted);
+  cursor: pointer;
+  min-height: 28px;
+  padding: 5px 10px;
+}
+
+.aui-wiki-mode-toggle button.active {
+  background: #ffffff;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.08);
+  color: var(--aui-ink);
+}
+
+.aui-wiki-document-pane .aui-wiki-editor {
+  border: 0;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  min-height: 0;
+  padding: var(--aui-card-pad);
+}
+
+.aui-wiki-document-pane .aui-wiki-editor > span {
+  color: var(--aui-muted);
+  font-size: var(--aui-type-caption);
+  font-weight: var(--aui-weight-label);
+  letter-spacing: var(--aui-tracking-label);
+  line-height: var(--aui-line-control);
+  margin-bottom: var(--aui-space-2);
+  text-transform: uppercase;
+}
+
+.aui-wiki-document-pane .aui-wiki-editor textarea {
+  min-height: 0;
+}
+
+.aui-wiki-preview-head {
+  padding: var(--aui-row-pad-y) var(--aui-row-pad-x);
+}
+
+.aui-wiki-preview-body {
+  padding: var(--aui-space-4) var(--aui-space-5) var(--aui-space-6);
+}
+
+.aui-paperclip-layout,
+.aui-paperclip-bottom,
+.aui-ingest-layout,
+.aui-ops-summary-grid,
+.aui-ops-command-bar,
+.aui-ops-workbench,
+.aui-ops-rail,
+.aui-command-metrics,
+.aui-command-layout,
+.aui-command-question-grid,
+.aui-command-brief-grid,
+.aui-decision-card-wrap,
+.aui-decision-card-grid,
+.aui-decision-actions,
+.aui-decision-compare-grid,
+.aui-decision-compare-actions {
+  gap: var(--aui-section-gap);
+}
+
+.aui-paperclip-section-head,
+.aui-ingest-card-head,
+.aui-ops-card-head,
+.aui-wiki-card-head,
+.aui-command-panel-head {
+  margin: 0;
+  padding-bottom: var(--aui-space-2);
+}
+
+.aui-paperclip-template-list button,
+.aui-paperclip-task-list article,
+.aui-paperclip-event-list div,
+.aui-paperclip-result-list article,
+.aui-ingest-promotion-list button,
+.aui-ops-checkcard,
+.aui-ops-log-card,
+.aui-ops-status-card,
+.aui-ops-drive-card,
+.aui-ops-runbox,
+.aui-ops-sequence-step,
+.aui-command-project-list button,
+.aui-command-risk-list button,
+.aui-wiki-folder-tree button,
+.aui-wiki-result-list button,
+.aui-wiki-command-targets button,
+.aui-wiki-collection-entry,
+.aui-wiki-queue-item,
+.aui-project-item,
+.aui-decision-history article {
+  padding: var(--aui-row-pad-y) var(--aui-row-pad-x);
+}
+
+.aui-paperclip-template-list button.active,
+.aui-paperclip-result-list article.active,
+.aui-ingest-promotion-list button.active,
+.aui-ops-checkcard.active,
+.aui-command-project-list button.active,
+.aui-wiki-folder-tree button.active,
+.aui-wiki-result-list button.active,
+.aui-decision-shell .aui-project-item.active {
+  padding-left: calc(var(--aui-row-pad-x) - 3px);
+}
+
+.aui-paperclip-field,
+.aui-ingest-composer label,
+.aui-ops-field,
+.aui-ops-inline-fields label,
+.aui-field,
+.aui-wiki-status-form {
+  gap: var(--aui-space-1);
+}
+
+.aui-paperclip-field input,
+.aui-paperclip-field textarea,
+.aui-ingest-composer input,
+.aui-ingest-composer textarea,
+.aui-ops-field input,
+.aui-ops-field textarea,
+.aui-ops-inline-fields input,
+.aui-ops-inline-fields select,
+.aui-field input,
+.aui-field textarea,
+.aui-wiki-search input,
+.aui-wiki-search select,
+.aui-wiki-collection-card input,
+.aui-wiki-collection-card select,
+.aui-wiki-collection-card textarea,
+.aui-composer-input {
+  border-radius: var(--aui-radius-control);
+  padding: var(--aui-control-pad-y) var(--aui-control-pad-x);
+}
+
+.aui-paperclip-actions,
+.aui-paperclip-result-actions,
+.aui-ingest-actions,
+.aui-ingest-result-actions,
+.aui-ops-actions,
+.aui-wiki-toolbar-actions,
+.aui-wiki-collection-actions,
+.aui-wiki-queue-actions,
+.aui-command-writer > div {
+  gap: var(--aui-space-2);
+}
+
+.aui-paperclip-actions button,
+.aui-paperclip-result-actions button,
+.aui-ingest-actions button,
+.aui-ingest-result-actions button,
+.aui-ops-command-bar button,
+.aui-ops-actions button,
+.aui-command-live button,
+.aui-command-panel-head button,
+.aui-command-ops > button,
+.aui-command-writer button,
+.aui-wiki-toolbar-actions button,
+.aui-wiki-collection-actions button,
+.aui-wiki-queue-actions button,
+.aui-wide-action {
+  border-radius: var(--aui-radius-control);
+  min-height: 34px;
+  padding: var(--aui-control-pad-y) var(--aui-control-pad-x);
+}
+
+.aui-ops-sequence-grid {
+  display: grid;
+  gap: var(--aui-space-3);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.aui-pipeline-shell {
+  align-items: start;
+}
+
+.aui-pipeline-objective-card {
+  background:
+    linear-gradient(135deg, rgba(9, 105, 218, 0.08), rgba(12, 166, 120, 0.06)),
+    var(--aui-surface);
+}
+
+.aui-pipeline-core {
+  display: grid;
+  gap: var(--aui-section-gap);
+  grid-template-columns: minmax(360px, 1fr) minmax(360px, 1fr);
+}
+
+.aui-pipeline-step,
+.aui-pipeline-rail > article {
+  background: var(--aui-surface);
+  border: 1px solid var(--aui-line);
+  border-radius: var(--aui-radius-panel);
+  box-shadow: var(--aui-shadow-soft);
+  display: grid;
+  gap: var(--aui-space-3);
+  padding: var(--aui-card-pad);
+}
+
+.aui-pipeline-step header {
+  align-items: center;
+  display: flex;
+  gap: var(--aui-space-3);
+}
+
+.aui-pipeline-step header > span {
+  align-items: center;
+  background: #111827;
+  border-radius: 999px;
+  color: #ffffff;
+  display: inline-flex;
+  flex: 0 0 28px;
+  font-size: 13px;
+  font-weight: 850;
+  height: 28px;
+  justify-content: center;
+  width: 28px;
+}
+
+.aui-pipeline-step header strong,
+.aui-pipeline-rail strong {
+  color: var(--aui-ink);
+  font-size: var(--aui-type-section);
+  line-height: var(--aui-line-tight);
+}
+
+.aui-pipeline-step header small,
+.aui-pipeline-target-list span,
+.aui-pipeline-target-list small,
+.aui-pipeline-choice-list small,
+.aui-pipeline-rail span,
+.aui-pipeline-rail p {
+  color: var(--aui-muted);
+}
+
+.aui-pipeline-choice-list,
+.aui-pipeline-target-list {
+  display: grid;
+  gap: var(--aui-space-2);
+  max-height: 260px;
+  overflow: auto;
+}
+
+.aui-pipeline-choice-list label,
+.aui-pipeline-target-list article {
+  background: #f8fafc;
+  border: 1px solid var(--aui-line);
+  border-radius: var(--aui-radius-control);
+  display: grid;
+  gap: var(--aui-space-1);
+  padding: var(--aui-row-pad-y) var(--aui-row-pad-x);
+}
+
+.aui-pipeline-choice-list label {
+  align-items: center;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+}
+
+.aui-pipeline-choice-list label.active {
+  background: rgba(12, 166, 120, 0.08);
+  border-color: rgba(12, 166, 120, 0.32);
+}
+
+.aui-pipeline-target-list article {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.aui-pipeline-target-list article > div:last-child {
+  align-content: center;
+  display: grid;
+  gap: var(--aui-space-1);
+}
+
+.aui-pipeline-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--aui-space-2);
+}
+
+.aui-pipeline-actions.vertical {
+  align-content: start;
+  display: grid;
+}
+
+.aui-pipeline-actions button,
+.aui-pipeline-target-list button {
+  background: #f2f5f9;
+  border: 1px solid var(--aui-line);
+  border-radius: var(--aui-radius-control);
+  color: var(--aui-ink);
+  cursor: pointer;
+  font-weight: 800;
+  min-height: 34px;
+  padding: var(--aui-control-pad-y) var(--aui-control-pad-x);
+}
+
+.aui-pipeline-actions button.primary,
+.aui-pipeline-target-list button:last-child {
+  background: #111827;
+  border-color: #111827;
+  color: #ffffff;
+}
+
+.aui-pipeline-actions button:disabled,
+.aui-pipeline-target-list button:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
+}
+
+.aui-pipeline-rail {
+  display: grid;
+  gap: var(--aui-section-gap);
+  grid-template-columns: minmax(260px, 0.55fr) minmax(420px, 1fr);
+}
+
+@media (max-width: 1120px) {
+  .aui-pipeline-core,
+  .aui-pipeline-rail {
+    grid-template-columns: 1fr;
+  }
+}
+
+.aui-ops-sequence-step,
+.aui-ops-status-card {
+  border: 1px solid var(--aui-line);
+  border-radius: var(--aui-radius-card);
+  display: grid;
+  gap: var(--aui-space-1);
+}
+
+.aui-ops-sequence-step.ready,
+.aui-ops-status-card.ready {
+  background: rgba(12, 166, 120, 0.08);
+  border-color: rgba(12, 166, 120, 0.22);
+}
+
+.aui-ops-sequence-step.running {
+  background: rgba(9, 105, 218, 0.08);
+  border-color: rgba(9, 105, 218, 0.22);
+}
+
+.aui-ops-sequence-step.hold,
+.aui-ops-status-card.hold {
+  background: rgba(148, 163, 184, 0.1);
+}
+
+.aui-ops-sequence-step span,
+.aui-ops-status-card span {
+  color: var(--aui-muted);
+  font-size: var(--aui-type-caption);
+  font-weight: var(--aui-weight-label);
+  letter-spacing: var(--aui-tracking-label);
+  line-height: var(--aui-line-control);
+  text-transform: uppercase;
+}
+
+.aui-ops-sequence-step small,
+.aui-ops-status-card small {
+  color: var(--aui-muted);
+}
+
+@media (max-width: 1120px) {
+  .aui-ops-sequence-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 720px) {
+  .aui-ops-sequence-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.aui-decision-shell {
+  gap: var(--aui-section-gap);
+  grid-template-columns: minmax(260px, 0.78fr) minmax(560px, 1.44fr) minmax(320px, 0.9fr);
+}
+
+.aui-decision-shell .aui-brand-panel,
+.aui-decision-shell .aui-context-panel {
+  gap: var(--aui-section-gap);
+}
+
+.aui-decision-stage .aui-topbar {
+  padding: var(--aui-card-pad);
+}
+
+.aui-decision-card-wrap,
+.aui-decision-card {
+  padding: var(--aui-card-pad);
+}
+
+.aui-decision-card-meta {
+  gap: var(--aui-space-1);
+}
+
+.aui-decision-card-meta span {
+  padding: 4px 7px;
+}
+
+.aui-decision-card-grid section,
+.aui-decision-merge-card,
+.aui-decision-inference,
+.aui-decision-compare-grid pre,
+.aui-decision-compare-grid textarea {
+  padding: var(--aui-card-pad);
+}
+
+.aui-chat-product-shell {
+  grid-template-columns: 270px minmax(0, 1fr) 330px;
+}
+
+.aui-project-sidebar,
+.aui-chat-orchestration-panel {
+  gap: var(--aui-section-gap);
+  padding: var(--aui-panel-pad);
+}
+
+.aui-chat-main-utility {
+  min-height: 48px;
+}
+
+.aui-chat-main .aui-viewport-inner {
+  gap: var(--aui-section-gap);
+  padding-bottom: var(--aui-card-pad);
+  padding-top: var(--aui-card-pad);
+}
+
+.aui-chat-main .aui-footer {
+  padding-bottom: var(--aui-card-pad);
+  padding-top: var(--aui-space-2);
+}
+
+.aui-chat-main .aui-composer-shell {
+  border-radius: var(--aui-radius-panel);
+  gap: var(--aui-space-2);
+  padding: var(--aui-space-2);
+}
+
+@media (max-width: 1180px) {
+  .aui-wiki-console {
+    gap: var(--aui-section-gap);
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .aui-wiki-sidebar,
+  .aui-wiki-main,
+  .aui-wiki-inspector {
+    margin: 0;
   }
 }

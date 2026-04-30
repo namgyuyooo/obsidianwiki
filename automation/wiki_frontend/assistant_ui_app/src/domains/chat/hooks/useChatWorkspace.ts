@@ -1,10 +1,13 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { ChatContext } from "../constants";
 import {
+  deleteInstructionCandidate as deleteInstructionCandidateApi,
   deleteChatProject,
   fetchChatWorkspace,
   fetchSkillCatalog,
   fetchWikiProjectOptions,
+  moveChatProjectMessages,
+  promoteInstructionCandidate as promoteInstructionCandidateApi,
   projectWorkspaceFromContext,
   saveChatGlobalSettings,
   saveChatProject,
@@ -44,7 +47,10 @@ export type ChatWorkspaceState = {
   createProject: () => Promise<void>;
   saveActiveProject: (input: { name: string; instructions: string; linkedWikiProject: LinkedWikiProject | null }) => Promise<void>;
   deleteActiveProject: () => Promise<void>;
+  moveActiveConversation: (targetProjectId: string) => Promise<void>;
   saveGlobal: (global: ChatGlobalSettings) => Promise<void>;
+  promoteInstructionCandidate: (candidateId: string) => Promise<void>;
+  deleteInstructionCandidate: (candidateId: string) => Promise<void>;
   toggleSkillTag: (skillId: string) => void;
   selectSkillTag: (skillId: string) => void;
   removeSkillTag: (skillId: string) => void;
@@ -189,11 +195,32 @@ export function useChatWorkspace(initialContext: ChatContext): ChatWorkspaceStat
     await reload("");
   };
 
+  const moveActiveConversation = async (targetProjectId: string) => {
+    if (!activeProject || !targetProjectId || targetProjectId === activeProject.id) return;
+    setStatus({ phase: "saving", message: "현재 대화를 다른 프로젝트로 이동 중입니다." });
+    const result = await moveChatProjectMessages(activeProject.id, targetProjectId);
+    await reload(result.targetProject?.id || targetProjectId);
+  };
+
   const saveGlobal = async (nextGlobal: ChatGlobalSettings) => {
     setStatus({ phase: "saving", message: "전역 지침을 저장 중입니다." });
     const saved = await saveChatGlobalSettings(nextGlobal);
     setGlobal(saved);
     setStatus({ phase: "ready", message: "전역 지침을 저장했습니다." });
+  };
+
+  const promoteInstructionCandidate = async (candidateId: string) => {
+    if (!activeProject) return;
+    setStatus({ phase: "saving", message: "지침 승격 후보를 반영 중입니다." });
+    const project = await promoteInstructionCandidateApi(activeProject.id, candidateId);
+    await reload(project.id);
+  };
+
+  const deleteInstructionCandidate = async (candidateId: string) => {
+    if (!activeProject) return;
+    setStatus({ phase: "saving", message: "지침 승격 후보를 정리 중입니다." });
+    await deleteInstructionCandidateApi(activeProject.id, candidateId);
+    await reload(activeProject.id);
   };
 
   const toggleSkillTag = (skillId: string) => {
@@ -223,7 +250,10 @@ export function useChatWorkspace(initialContext: ChatContext): ChatWorkspaceStat
     createProject,
     saveActiveProject,
     deleteActiveProject,
+    moveActiveConversation,
     saveGlobal,
+    promoteInstructionCandidate,
+    deleteInstructionCandidate,
     toggleSkillTag,
     selectSkillTag,
     removeSkillTag,

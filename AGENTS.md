@@ -144,6 +144,7 @@ When a new work event appears, promote it through the wiki in this order:
 7. Refresh the relevant `obsidian/L1_memory/{ProjectName}.md`.
 
 Do not jump straight from a new event to a cleaned-up conclusion if source facts, conflicts, or version changes need to remain visible.
+Do not over-promote weak uncertainty into `Conflict_Register.md` when the more practical move is to update `Action_Items.md`, `Decisions.md`, `Risks.md`, `Status.md`, or the hub.
 
 ## Practical Operating Logic
 
@@ -157,6 +158,7 @@ Bias every meaningful update toward these questions:
 5. What evidence supports that action?
 
 If an update does not improve at least one of those five, it is probably too cosmetic.
+When possible, be proactive instead of passive: say what should be reviewed next, which wiki page should change, and whether you can update it directly.
 
 ## Query Workflow
 
@@ -196,6 +198,7 @@ Document notable fixes in `obsidian/Wiki/log.md`.
 - Do not store secrets or credentials.
 - Do not casually edit `obsidian/.obsidian/workspace.json`; it is usually user-local state.
 - Do not overwrite unrelated in-progress user changes.
+- Prefer practical recommendations over vague conflict surfacing. Generic "정합성 확인 필요" notes should become concrete review/update suggestions unless they are tied to an explicit contradictory fact.
 
 ## Project Space Minimum
 

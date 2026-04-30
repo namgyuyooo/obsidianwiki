@@ -5,7 +5,7 @@ project_name: "기본 업무 챗"
 status: "active"
 knowledge_role: auxiliary_not_decision
 created: 2026-04-29T04:11:08.843Z
-updated: 2026-04-30T08:57:53.234Z
+updated: 2026-04-30T10:36:02.104Z
 source: wiki_api chat_projects.json
 ---
 
@@ -26,11 +26,7 @@ source: wiki_api chat_projects.json
 - 없음
 
 ## 최근 대화내역
-### 1. user · 2026-04-29T04:18:52.355Z
-
-> Paperclip은 이 프로젝트에서 어떤 역할로 써야 해? 짧게 정리
-
-### 2. assistant · 2026-04-29T04:18:52.357Z
+### 1. assistant · 2026-04-29T04:18:52.357Z
 
 > **1) 현재 업무상태**
 > 현재 구글 드라이브에 흩어진 정부 R&D 과제 및 사업 계획서 자료를 로컬 Obsidian 위키로 구조화하여 수집하고 정리하는 'Drive Wikify' 파이프라인 구축 작업이 진행 중입니다.
@@ -51,7 +47,7 @@ source: wiki_api chat_projects.json
 > *   `obsidian/Wiki/Common/Drive_Wikify_Batch_Operating_Model.md` (배치 운영 기준)
 > *   `obsidian/Wiki/Common/RTM_YNG_Evidence_Log_2026-04-21.md` (검증된 핵심 근거)
 
-### 3. user · 2026-04-30T08:53:55.942Z
+### 2. user · 2026-04-30T08:53:55.942Z
 
 > [파일브라우징 경로]
 > - source: composer_file_browser
@@ -61,7 +57,7 @@ source: wiki_api chat_projects.json
 > 
 > 공고분석해봐
 
-### 4. assistant · 2026-04-30T08:54:55.224Z
+### 3. assistant · 2026-04-30T08:54:55.224Z
 
 > ## 1) 현재 업무상태
 > **2026년도 제조AI특화 스마트공장 구축지원사업 공고문 분석 요청**
@@ -99,6 +95,58 @@ source: wiki_api chat_projects.json
 > 6. 마감일 및 주요 일정
 > 
 > > 💡 **파일이 준비되면 즉시 `grant-rfp-strategy` 스킬로 공고 전략 분석에 들어갑니다.**
+
+### 4. assistant · 2026-04-30T09:23:13.579Z
+
+> ## 1) 현재 업무상태
+> 
+> **2026년도 제조AI특화 스마트공장 구축지원사업 공고 분석** — **진행 불가, 사용자 액션 필요**
+> 
+> 파일명은 확인되나 실제 로컬 경로가 전달되지 않아 PDF 내용 분석이 불가합니다.
+> 
+> ## 2) 진행/완료
+> 
+> | 항목 | 상태 |
+> |------|------|
+> | 공고문 파일 식별 | ✅ `★[공고] 2026년도 제조AI특화 스마트공장 구축지원사업 공고.pdf` |
+> | 로컬 경로 확보 | ❌ 브라우저 보안으로 미전달 |
+> | Paperclip 파일 읽기 | ❌ `fetch failed` |
+> | 공고 전략 분석 | 🔒 파일 접근 선행 필요 |
+> 
+> ## 3) 리스크/충돌
+> 
+> - **Paperclip 연결 불안정**: 현재 `http://127.0.0.1:3000` 연결 실패 상태. 이전 대화에서도 동일 이슈로 수집 파이프라인 대기 중 (`obsidian/L1_memory/GLM_Chat_Projects/default.md`)
+> - **경로 전달 불가**: 브라우저 보안 정책으로 파일 선택 시 실제 경로가 노출되지 않음
+> 
+> ## 4) 다음 액션
+> 
+> **다음 중 하나를 선택해 주세요:**
+> 
+> 1. **📄 파일 경로 직접 입력** — PDF의 절대경로(예: `/Users/rtm/Downloads/...`)를 텍스트로 복사해서 알려주시면 분석 즉시 진행
+> 2. **📋 텍스트 복사** — PDF를 열어서 전체 내용을 복사해 붙여넣어 주시면 공고 분석 수행
+> 3. **🔧 Paperclip 재시작** — 로컬 Paperclip 서버를 재시작한 후 다시 시도
+> 
+> 경로만 확보되면 `grant-rfp-strategy` 스킬로 지원 가능성, 평가 대응, KPI, 예산 분석까지 즉시 실행 가능합니다.
+> 
+> ## 5) 근거
+> 
+> - `obsidian/L1_memory/GLM_Chat_Projects/default.md` — Paperclip fetch failed, Drive 수집 지연 기록
+
+### 5. user · 2026-04-30T10:03:07.226Z
+
+> [파일브라우징 경로]
+> - source: composer_file_browser
+> - file: 별첨#02. (신청단계), 2025년 정부일반형 스마트공장 사업계획서_쏘닉스_20250117(보완2).hwp
+> - note: browser security may expose only relative paths or filenames
+> [/파일브라우징 경로]
+
+### 6. user · 2026-04-30T10:36:02.073Z
+
+> [파일브라우징 경로]
+> - source: composer_file_browser
+> - file: 별첨#02. (신청단계), 2025년 정부일반형 스마트공장 사업계획서_쏘닉스_20250117(보완2).hwp
+> - note: browser security may expose only relative paths or filenames
+> [/파일브라우징 경로]
 
 ## 승격 규칙
 - 대화 중 나온 사실은 원문 근거가 확인되기 전까지 확정 지식으로 쓰지 않는다.

@@ -43,11 +43,13 @@ function ProductFrame({
   activeSurface,
   onPrimaryChange,
   onSurfaceChange,
+  workspaceLabel,
   children,
 }: {
   activeSurface: SurfaceId;
   onPrimaryChange: (surface: PrimarySurfaceId) => void;
   onSurfaceChange: (surface: SurfaceId) => void;
+  workspaceLabel: string;
   children: ReactNode;
 }) {
   const surfaceDefinition = getSurfaceDefinition(activeSurface);
@@ -65,12 +67,15 @@ function ProductFrame({
 
   return (
     <div className="aui-product-frame">
-      <header className="aui-product-nav" aria-label="assistant-ui primary surfaces">
-        <div className="aui-product-mainbar">
-          <div className="aui-product-title">
-            <strong>Wiki Ops</strong>
-            <span>{primaryDefinition.label} · assistant-ui control plane</span>
+      <header className="aui-product-nav" aria-label="workspace primary surfaces">
+        <div className="aui-product-systembar" aria-label="workspace context">
+          <div className="aui-product-suite-id">
+            <span>WORKSPACE</span>
+            <strong>{workspaceLabel.toUpperCase()}</strong>
+            <small className="aui-product-suite-meta">{primaryDefinition.label} / {surfaceDefinition.label}</small>
           </div>
+        </div>
+        <div className="aui-product-mainbar">
           <nav className="aui-product-tabs">
             {PRIMARY_SURFACES.map((tab) => (
               <button
@@ -99,19 +104,6 @@ function ProductFrame({
             </button>
           ))}
         </nav>
-        <div className="aui-product-contextbar" aria-label="active surface context">
-          <div>
-            <span>{primaryDefinition.label}</span>
-            <strong>{surfaceDefinition.label}</strong>
-            <small>{surfaceDefinition.description}</small>
-          </div>
-          <div className="aui-product-context-metrics">
-            <span>{surfaceDefinition.densityPattern}</span>
-            <span>Live {surfaceCounts.live}</span>
-            {surfaceCounts.scaffold ? <span>Scaffold {surfaceCounts.scaffold}</span> : null}
-            {surfaceCounts.fallback ? <span>Fallback {surfaceCounts.fallback}</span> : null}
-          </div>
-        </div>
       </header>
       <div className="aui-product-body">{children}</div>
     </div>
@@ -244,7 +236,12 @@ export function App() {
   })();
 
   return (
-    <ProductFrame activeSurface={surface} onPrimaryChange={selectPrimarySurface} onSurfaceChange={selectSurface}>
+    <ProductFrame
+      activeSurface={surface}
+      onPrimaryChange={selectPrimarySurface}
+      onSurfaceChange={selectSurface}
+      workspaceLabel={chatContext.workspace}
+    >
       {content}
     </ProductFrame>
   );

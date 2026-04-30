@@ -571,17 +571,17 @@ export function Composer({
   };
 
   const mergePendingBrowserFiles = (incoming: BrowserPendingFile[]) => {
-    if (!incoming.length) return;
-    setPendingBrowserFiles((current) => {
-      const merged = [...current];
-      const seen = new Set(merged.map((item) => item.key));
-      for (const item of incoming) {
-        if (seen.has(item.key)) continue;
-        seen.add(item.key);
-        merged.push(item);
-      }
-      return merged.sort((a, b) => a.selection.path.localeCompare(b.selection.path, "ko"));
-    });
+    if (!incoming.length) return pendingBrowserFiles;
+    const merged = [...pendingBrowserFiles];
+    const seen = new Set(merged.map((item) => item.key));
+    for (const item of incoming) {
+      if (seen.has(item.key)) continue;
+      seen.add(item.key);
+      merged.push(item);
+    }
+    const sorted = merged.sort((a, b) => a.selection.path.localeCompare(b.selection.path, "ko"));
+    setPendingBrowserFiles(sorted);
+    return sorted;
   };
 
   const handleBrowseFiles = () => {
@@ -594,39 +594,18 @@ export function Composer({
     directoryBrowseInputRef.current?.click();
   };
 
-  const handleFileBrowseChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(event.target.files || []) as BrowserFile[];
-    mergePendingBrowserFiles(pendingBrowserFilesFromFiles(files, "file"));
-    mergeBrowserSelections(browserSelectionsFromFiles(files, "file"));
-    event.target.value = "";
-  };
-
-  const handleDirectoryBrowseChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(event.target.files || []) as BrowserFile[];
-    mergePendingBrowserFiles(pendingBrowserFilesFromFiles(files, "directory"));
-    mergeBrowserSelections(browserSelectionsFromFiles(files, "directory"));
-    event.target.value = "";
-  };
-
-  const handleRemoveBrowserSelection = (target: BrowserPathSelection) => {
-    clearImportedBrowserContext();
-    setPendingBrowserFiles((current) => current.filter((item) => !(item.selection.kind === target.kind && item.selection.path === target.path)));
-    const nextSelections = browserSelections.filter((item) => !(item.kind === target.kind && item.path === target.path));
-    syncBrowserSelections(nextSelections);
-  };
-
-  const handleImportBrowserSelections = async () => {
-    if (!pendingBrowserFiles.length) {
+  const importPendingBrowserFiles = async (filesToImport: BrowserPendingFile[]) => {
+    if (!filesToImport.length) {
       setBrowserImportPhase("error");
-      setBrowserImportMessage("브라우징으로 고른 실제 파일이 없어 미러 복사를 실행할 수 없습니다.");
+      setBrowserImportMessage("가져올 파일이 없습니다.");
       return;
     }
     setBrowserImportPhase("loading");
-    setBrowserImportMessage("선택 파일을 managed mirror로 복사하고 해석 중입니다.");
+    setBrowserImportMessage("파일 해석 중");
     try {
       const primaryProject = wikiMentions[0];
       const result = await importBrowserFilesToChat({
-        files: pendingBrowserFiles,
+        files: filesToImport,
         workspace: chatContext.workspace,
         projectId: chatContext.projectId,
         projectHint: primaryProject?.projectLabel || chatContext.projectId || "chat_project",
@@ -651,13 +630,34 @@ export function Composer({
       }
       setPendingBrowserFiles([]);
       setBrowserImportPhase("success");
-      setBrowserImportMessage(result.mirrorBatchPath
-        ? `미러 복사 및 해석 완료 · ${result.attachments?.length || 0} files · ${result.mirrorBatchPath}`
-        : `미러 복사 및 해석 완료 · ${result.attachments?.length || 0} files`);
+      setBrowserImportMessage(`해석 완료 · ${result.attachments?.length || 0}건`);
     } catch (error) {
       setBrowserImportPhase("error");
-      setBrowserImportMessage(error instanceof Error ? error.message : "브라우징 파일 가져오기에 실패했습니다.");
+      setBrowserImportMessage(error instanceof Error ? error.message : "파일 해석 실패");
     }
+  };
+
+  const handleFileBrowseChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files || []) as BrowserFile[];
+    const mergedPendingFiles = mergePendingBrowserFiles(pendingBrowserFilesFromFiles(files, "file"));
+    mergeBrowserSelections(browserSelectionsFromFiles(files, "file"));
+    event.target.value = "";
+    void importPendingBrowserFiles(mergedPendingFiles);
+  };
+
+  const handleDirectoryBrowseChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files || []) as BrowserFile[];
+    const mergedPendingFiles = mergePendingBrowserFiles(pendingBrowserFilesFromFiles(files, "directory"));
+    mergeBrowserSelections(browserSelectionsFromFiles(files, "directory"));
+    event.target.value = "";
+    void importPendingBrowserFiles(mergedPendingFiles);
+  };
+
+  const handleRemoveBrowserSelection = (target: BrowserPathSelection) => {
+    clearImportedBrowserContext();
+    setPendingBrowserFiles((current) => current.filter((item) => !(item.selection.kind === target.kind && item.selection.path === target.path)));
+    const nextSelections = browserSelections.filter((item) => !(item.kind === target.kind && item.path === target.path));
+    syncBrowserSelections(nextSelections);
   };
 
   const handleRemoveWikiMention = (target: WikiMentionSelection) => {
@@ -808,18 +808,6 @@ export function Composer({
                   : `파일 선택 ${browserSelections.length}건 펼치기`}
               </button>
             ) : null}
-            <div className="aui-browser-path-actions">
-              <button
-                type="button"
-                className="aui-browser-path-summary"
-                disabled={!pendingBrowserFiles.length || browserImportPhase === "loading"}
-                onClick={handleImportBrowserSelections}
-              >
-                {browserImportPhase === "loading"
-                  ? "미러 복사 + 해석 중"
-                  : `미러 복사 + 해석 ${pendingBrowserFiles.length}`}
-              </button>
-            </div>
             {browserImportMessage ? (
               <p className={`aui-browser-import-status ${browserImportPhase}`}>{browserImportMessage}</p>
             ) : null}

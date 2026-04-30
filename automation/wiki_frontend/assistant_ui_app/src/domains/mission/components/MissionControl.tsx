@@ -87,14 +87,14 @@ export function MissionControl({ chatContext }: MissionControlProps) {
     <main className="aui-command-dashboard">
       <section className="aui-command-hero">
         <div>
-          <span>Mission Control / Command Center</span>
-          <h1>중앙 운영 대시보드</h1>
-          <p>프로젝트 상태, 의사결정 대기, 자동화 실행, 리스크, 핵심문서를 한 화면에서 지휘합니다.</p>
+          <span>프로젝트 현황</span>
+          <h1>프로젝트 현황</h1>
+          <p>프로젝트 상태, 결정 대기, 자동화, 리스크, 핵심 문서를 확인합니다.</p>
         </div>
         <div className={`aui-command-live ${mission.status.phase}`}>
           <strong>{mission.status.phase}</strong>
           <span>{mission.status.message}</span>
-          <button onClick={mission.reload} type="button">Mission 갱신</button>
+          <button onClick={mission.reload} type="button">새로고침</button>
         </div>
       </section>
 
@@ -110,7 +110,7 @@ export function MissionControl({ chatContext }: MissionControlProps) {
       <section className="aui-command-layout">
         <aside className="aui-command-panel aui-command-projects">
           <div className="aui-command-panel-head">
-            <span>Project Radar</span>
+            <span>프로젝트</span>
             <strong>{mission.mission.projects.length}건</strong>
           </div>
           <div className="aui-command-project-list">
@@ -174,7 +174,7 @@ export function MissionControl({ chatContext }: MissionControlProps) {
 
           <section className="aui-command-brief-card">
             <div className="aui-command-panel-head">
-              <span>Project Brief</span>
+              <span>요약</span>
               <button onClick={mission.loadActiveProjectBrief} type="button">브리프 갱신</button>
             </div>
             <ul>
@@ -208,7 +208,7 @@ export function MissionControl({ chatContext }: MissionControlProps) {
 
         <aside className="aui-command-panel aui-command-ops">
           <div className="aui-command-panel-head">
-            <span>Automation</span>
+            <span>자동화</span>
             <strong>{mission.latestRun?.status || "대기"}</strong>
           </div>
           <dl className="aui-command-run">

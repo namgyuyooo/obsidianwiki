@@ -10,6 +10,9 @@ source: "Global wiki operations log"
 이 파일은 위키 운영의 append-only 로그입니다.
 
 ## 2026-04-30
+- `Wiki/DaehanCable_ProcessInnovation_Project/Conflict_Register.md`, `Wiki/Mecaro_Forecast_Project/Conflict_Register.md`, `Wiki/Common/Conflict_Register.md`, `Wiki/Sawnics_ManufacturingAI_Project/Action_Items.md`, `Wiki/Sawnics_ManufacturingAI_Project/Risks.md`: 자동 `Decision Queue Approval` 중복 append와 잡음성 conflict/approval 블록을 정리하고, 실무적으로 필요한 내용은 Action/Risk 문장으로 재배치
+- `automation/wiki_api/server.mjs`: 약한 `정합성/확인 필요` 문장이 불필요한 conflict로 승격되지 않도록 필터를 강화하고, Decision Deck 프롬프트가 `권장 위키 수정 문서`를 먼저 제안하도록 수정
+- `AGENTS.md`, `CLAUDE.md`, `Wiki/Schema.md`, `Wiki/Common/Wiki_Ingest_Operating_Model.md`: `쓸데없는 conflict`를 줄이고 `실무 영향 -> 권고 업데이트 -> 수정할 위키 문서`를 먼저 제안하는 능동형 운영 원칙을 추가
 - `Wiki/Common/Wiki_Reference_Operating_Model.md`, `AGENTS.md`, `CLAUDE.md`, `Wiki/Schema.md`: 위키 본문에 모든 내용을 복제하지 않고, 요약 + 설명 위치 + 관련 문서 + URL 또는 파일명 fallback을 남기는 링크 우선 참조 구조를 공식 운영 기준으로 추가
 - `Wiki/*/Reference_Register.md`: 전 프로젝트에 링크 우선 참조 레지스터를 생성하고, Slack/웹/Google Drive/로컬 경로/파일명 fallback을 기록하는 단일 진입점을 도입
 - `Wiki/Common/RTM_YNG*_Reference_Register.md`: Common 단일 페이지 기반 RTM_YNG 항목에도 참조 레지스터를 추가하고, 본문 페이지 및 L1 드릴다운과 연결
@@ -434,3 +437,9 @@ source: "Global wiki operations log"
 - 같은 자동 인제스트에서 L1 드릴다운도 `Sources` 대신 `Reference_Register`를 우선 가리키도록 조정함.
 - `automation/drive_wikify/src/drive_wikify/slack_collector.py`가 Slack 수집 승격 시 `Reference_Register.md`를 생성/갱신하고, `channel id`, `last_export_path`, `last_filtered_export_path`, `collection state` 중심의 재수집 식별자를 남기도록 변경함.
 - 위 변경으로 자동화 산출물도 `mirror/cache 경로 금지`, `원격 분류 + 파일명 + 식별자 우선` 정책을 직접 따르게 됨.
+
+## [2026-04-30] audit | singleton account vs project split
+
+- `Common/Account_Project_Singleton_Audit_2026-04-30.md`를 추가해 `Account` 허브가 단일 `Project`만 가리키는 케이스를 점검함.
+- `아사히카세히`, `PSK`, `SeoulBiosys`, `SeoulSemicon`, `LGEnergy`, `Pixel`은 통합 후보로 분류함.
+- `KumhoTire`는 실제 하위 프로젝트 2개를 보유해 계정 허브 유지 권장으로 분류함.

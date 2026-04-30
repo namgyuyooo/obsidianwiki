@@ -5,6 +5,7 @@ export type ChatMemory = {
   title?: string;
   content: string;
   source?: string;
+  confidence?: string;
   updatedAt?: string;
   createdAt?: string;
 };
@@ -27,6 +28,7 @@ export type ChatProject = {
   workspace?: string;
   linkedWikiProject?: LinkedWikiProject | null;
   memories?: ChatMemory[];
+  instructionCandidates?: ChatMemory[];
   messages?: Array<{ id?: string; role: string; content: string; createdAt?: string }>;
   updatedAt?: string;
 };
@@ -156,9 +158,34 @@ export async function deleteChatProjectMessage(projectId: string, messageId: str
   );
 }
 
+export async function moveChatProjectMessages(sourceProjectId: string, targetProjectId: string) {
+  return requestJson<{ moved: number; sourceProject: ChatProject; targetProject: ChatProject }>(
+    `${CHAT_API_ENDPOINTS.projects}/${encodeURIComponent(sourceProjectId)}/messages/move`,
+    {
+      method: "POST",
+      body: JSON.stringify({ targetProjectId }),
+    },
+  );
+}
+
 export async function stopChatProjectRun(projectId: string) {
   return requestJson<{ stopped: boolean; projectId: string }>(CHAT_API_ENDPOINTS.stop, {
     method: "POST",
     body: JSON.stringify({ projectId }),
   });
+}
+
+export async function promoteInstructionCandidate(projectId: string, candidateId: string): Promise<ChatProject> {
+  const payload = await requestJson<{ project: ChatProject }>(
+    `${CHAT_API_ENDPOINTS.projects}/${encodeURIComponent(projectId)}/instruction-candidates/${encodeURIComponent(candidateId)}/promote`,
+    { method: "POST" },
+  );
+  return payload.project;
+}
+
+export async function deleteInstructionCandidate(projectId: string, candidateId: string) {
+  return requestJson<{ deleted: boolean; projectId: string; candidateId: string }>(
+    `${CHAT_API_ENDPOINTS.projects}/${encodeURIComponent(projectId)}/instruction-candidates/${encodeURIComponent(candidateId)}`,
+    { method: "DELETE" },
+  );
 }

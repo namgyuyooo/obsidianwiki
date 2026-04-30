@@ -1,5 +1,5 @@
 import { createServer } from "node:http";
-import { readFile, readdir, stat, writeFile, mkdir, unlink } from "node:fs/promises";
+import { readFile, readdir, stat, writeFile, mkdir, unlink, rm } from "node:fs/promises";
 import { createReadStream, existsSync } from "node:fs";
 import { spawn } from "node:child_process";
 import { dirname, extname, isAbsolute, join, normalize, relative, resolve } from "node:path";
@@ -22,6 +22,7 @@ const driveCollectionStatePath = join(apiRuntime, "drive_collection_state.json")
 const paperclipTasksPath = join(apiRuntime, "paperclip_tasks.json");
 const paperclipEventsPath = join(apiRuntime, "paperclip_events.json");
 const schedulesPath = join(apiRuntime, "schedules.json");
+const mirrorRetentionPath = join(apiRuntime, "mirror_retention.json");
 const targetAnalysisPath = join(apiRuntime, "target_analysis.json");
 const wikiManagementPath = join(apiRuntime, "wiki_management_commands.json");
 const wikiManagementApplyPath = join(apiRuntime, "wiki_management_apply_log.json");
@@ -42,6 +43,7 @@ const documentUsageStatusPath = join(apiRuntime, "document_usage_statuses.json")
 const documentUsageAuditPath = join(apiRuntime, "document_usage_audit.jsonl");
 const decisionQueuePath = join(apiRuntime, "decision_queue.json");
 const decisionQueueAuditPath = join(apiRuntime, "decision_queue_audit.jsonl");
+const wikiDeletionAuditPath = join(apiRuntime, "wiki_deletion_audit.jsonl");
 const projectRegistryPath = join(apiRuntime, "project_registry.json");
 const llmUsagePath = join(apiRuntime, "llm_usage.json");
 const activeJobs = new Map();
@@ -125,6 +127,24 @@ const editableSettings = new Set([
   "SLACK_COMPANY_WIKI_ROOT",
 ]);
 const sensitiveSettings = new Set(["GLM_API_KEY", "OPENCLAW_API_KEY", "PAPERCLIP_API_KEY", "SLACK_BOT_TOKEN", "SLACK_USER_TOKEN"]);
+const protectedWikiDeletionFiles = new Set([
+  "index.md",
+  "hub.md",
+  "Project_Overview.md",
+  "Sources.md",
+  "Evidence_Log.md",
+  "Action_Items.md",
+  "Risks.md",
+  "Decisions.md",
+  "Conflict_Register.md",
+  "Change_Log.md",
+  "KPI.md",
+  "Next_Meeting_Prep.md",
+  "Project_Relationships.md",
+  "Reference_Register.md",
+  "Expansion_Structure.md",
+  "Document_Usage_Log.md",
+]);
 
 function resolvePathEnv(name, fallback) {
   const value = process.env[name] || fallback;
@@ -484,9 +504,10 @@ function llmPolicyCatalog(env = {}, usage = []) {
       currentModel: `${current("GLM_DECISION_MODEL", "glm-4.5-air")} -> ${current("GLM_DECISION_FINAL_MODEL", current("GLM_MODEL", "glm-5.1"))}`,
       prompt: [
         "당신은 Decision Deck 안에서만 동작하는 위키 데이터 정합성 판정 보조자다.",
-        "범위는 실무 리스크, 다음 액션, 고객 대응이 아니라 위키 원본 간 데이터 불일치와 Conflict_Register 반영 판단이다.",
+        "범위는 위키 원본 간 데이터 불일치와 반영 경로 판단이다. 불필요한 Conflict_Register 남발은 피한다.",
         "thinking 또는 추론 과정은 출력하지 않는다.",
-        "출력은 1) 판정 approve|hold|investigate 2) 충돌 요약 3) 권장 처리 4) Conflict_Register 반영 문구 5) 확인할 근거 path 순서로 한다.",
+        "명시적 상충값/상충주장이 없으면 Conflict_Register보다 Action_Items, Decisions, Risks, Status, hub 중 어디를 고치면 좋은지 먼저 제안한다.",
+        "출력은 1) 판정 approve|hold|investigate 2) 충돌 또는 문제 요약 3) 권장 처리 4) 권장 위키 수정 문서 5) 확인할 근거 path 순서로 한다.",
       ].join("\n"),
       usageCount: countFeature([/decision_triage/]),
       applySettings: { GLM_DECISION_MODEL: "glm-4.5-air", GLM_DECISION_MAX_TOKENS: "900", GLM_DECISION_FINAL_MODEL: "glm-5.1", GLM_DECISION_FINAL_MAX_TOKENS: "1400" },
@@ -504,8 +525,9 @@ function llmPolicyCatalog(env = {}, usage = []) {
       currentModel: current("GLM_DECISION_FINAL_MODEL", current("GLM_MODEL", "glm-5.1")),
       prompt: [
         "당신은 위키 반영 직전 최종 승인 검증자다.",
-        "Decision Deck 항목은 업무 리스크가 아니라 위키 데이터 정합성/충돌 관리 대상이다.",
+        "Decision Deck 항목은 위키 데이터 정합성/반영 경로 관리 대상이다.",
         "사용자 승인 의도와 GLM 1차 판정 메모를 비교하되, 근거 path, projectKey, targetFile이 불명확하면 approve하지 않는다.",
+        "명시적 충돌이 약한데 더 적절한 문서(Action_Items, Decisions, Risks, Status, hub)가 보이면 그쪽 append를 권고한다.",
         "JSON만 반환한다: decision, reason, blockingIssues, safeAppendNote.",
       ].join("\n"),
       usageCount: countFeature([/decision_final_approval/]),
@@ -794,6 +816,228 @@ async function collectionStatusSnapshot(env = {}) {
     processed: (runOutput.results || []).length,
     updatedAt: runOutput.generated_at || runOutput.updated_at || manifest.generated_at || manifest.updated_at || "",
   };
+}
+
+function mirrorRoots(env = {}) {
+  return {
+    all: resolveRepoPath(env.RCLONE_MIRROR_ROOT || "automation/drive_wikify/runtime/mirror"),
+    uploads: chatUploadMirrorRoot,
+  };
+}
+
+function defaultMirrorRetention() {
+  return {
+    enabled: false,
+    days: 7,
+    scope: "uploads",
+    timeOfDay: "03:30",
+    updatedAt: "",
+  };
+}
+
+async function readMirrorRetention() {
+  const stored = await readJsonFile(mirrorRetentionPath, defaultMirrorRetention());
+  return {
+    ...defaultMirrorRetention(),
+    ...stored,
+  };
+}
+
+async function collectMirrorTreeStats(rootPath, olderThanDays = 0) {
+  const summary = {
+    path: displayPath(rootPath),
+    exists: false,
+    fileCount: 0,
+    directoryCount: 0,
+    totalBytes: 0,
+    oldestAt: "",
+    newestAt: "",
+    olderThanDays,
+    staleFileCount: 0,
+    staleBytes: 0,
+  };
+  const cutoffMs = olderThanDays > 0 ? Date.now() - olderThanDays * 24 * 60 * 60 * 1000 : 0;
+  const rootStat = await stat(rootPath).catch(() => null);
+  if (!rootStat?.isDirectory?.()) return summary;
+  summary.exists = true;
+
+  async function walk(currentPath) {
+    const entries = await readdir(currentPath, { withFileTypes: true }).catch(() => []);
+    for (const entry of entries) {
+      const fullPath = join(currentPath, entry.name);
+      if (entry.isDirectory()) {
+        summary.directoryCount += 1;
+        await walk(fullPath);
+        continue;
+      }
+      if (!entry.isFile()) continue;
+      const fileStat = await stat(fullPath).catch(() => null);
+      if (!fileStat?.isFile?.()) continue;
+      summary.fileCount += 1;
+      summary.totalBytes += Number(fileStat.size || 0);
+      const modifiedAt = fileStat.mtime instanceof Date ? fileStat.mtime.toISOString() : "";
+      if (modifiedAt && (!summary.oldestAt || modifiedAt < summary.oldestAt)) summary.oldestAt = modifiedAt;
+      if (modifiedAt && (!summary.newestAt || modifiedAt > summary.newestAt)) summary.newestAt = modifiedAt;
+      if (cutoffMs && fileStat.mtimeMs < cutoffMs) {
+        summary.staleFileCount += 1;
+        summary.staleBytes += Number(fileStat.size || 0);
+      }
+    }
+  }
+
+  await walk(rootPath);
+  return summary;
+}
+
+async function mirrorStatusSnapshot(env = {}) {
+  const roots = mirrorRoots(env);
+  const retention = await readMirrorRetention();
+  const schedules = await readJsonFile(schedulesPath, []);
+  const retentionSchedule = schedules.find((schedule) => schedule.command === "mirror-cleanup" && schedule.retentionManaged);
+  const [allRoot, uploadsRoot] = await Promise.all([
+    collectMirrorTreeStats(roots.all, Number(retention.days || 7)),
+    collectMirrorTreeStats(roots.uploads, Number(retention.days || 7)),
+  ]);
+  return {
+    roots: {
+      all: allRoot,
+      uploads: uploadsRoot,
+    },
+    retention: {
+      ...retention,
+      scheduleId: retentionSchedule?.id || "",
+      nextRunAt: retentionSchedule?.nextRunAt || "",
+      scheduleEnabled: Boolean(retentionSchedule?.enabled),
+    },
+  };
+}
+
+async function cleanupMirrorData({
+  env = {},
+  scope = "uploads",
+  olderThanDays = 0,
+  dryRun = true,
+  deleteAll = false,
+} = {}) {
+  const roots = mirrorRoots(env);
+  const rootPath = roots[scope] || roots.uploads;
+  const rootStat = await stat(rootPath).catch(() => null);
+  const cutoffMs = !deleteAll && olderThanDays > 0 ? Date.now() - olderThanDays * 24 * 60 * 60 * 1000 : 0;
+  const files = [];
+  const directories = [];
+  if (!rootStat?.isDirectory?.()) {
+    return {
+      scope,
+      rootPath: displayPath(rootPath),
+      dryRun,
+      deleteAll,
+      olderThanDays,
+      exists: false,
+      matchedFiles: 0,
+      deletedFiles: 0,
+      deletedDirectories: 0,
+      freedBytes: 0,
+      samplePaths: [],
+    };
+  }
+
+  async function walk(currentPath) {
+    const entries = await readdir(currentPath, { withFileTypes: true }).catch(() => []);
+    for (const entry of entries) {
+      const fullPath = join(currentPath, entry.name);
+      if (entry.isDirectory()) {
+        directories.push(fullPath);
+        await walk(fullPath);
+        continue;
+      }
+      if (!entry.isFile()) continue;
+      const fileStat = await stat(fullPath).catch(() => null);
+      if (!fileStat?.isFile?.()) continue;
+      if (!deleteAll && cutoffMs && fileStat.mtimeMs >= cutoffMs) continue;
+      files.push({
+        path: fullPath,
+        size: Number(fileStat.size || 0),
+        modifiedAt: fileStat.mtime instanceof Date ? fileStat.mtime.toISOString() : "",
+      });
+    }
+  }
+
+  await walk(rootPath);
+  let deletedFiles = 0;
+  let deletedDirectories = 0;
+  let freedBytes = 0;
+
+  if (!dryRun) {
+    for (const file of files) {
+      await unlink(file.path).catch(() => {});
+      deletedFiles += 1;
+      freedBytes += file.size;
+    }
+    for (const directory of directories.sort((a, b) => b.length - a.length)) {
+      const remaining = await readdir(directory).catch(() => null);
+      if (Array.isArray(remaining) && remaining.length === 0) {
+        await rm(directory, { recursive: false, force: true }).catch(() => {});
+        deletedDirectories += 1;
+      }
+    }
+  }
+
+  return {
+    scope,
+    rootPath: displayPath(rootPath),
+    dryRun,
+    deleteAll,
+    olderThanDays,
+    exists: true,
+    matchedFiles: files.length,
+    deletedFiles: dryRun ? 0 : deletedFiles,
+    deletedDirectories: dryRun ? 0 : deletedDirectories,
+    freedBytes: dryRun ? files.reduce((sum, file) => sum + file.size, 0) : freedBytes,
+    samplePaths: files.slice(0, 12).map((file) => ({
+      path: displayPath(file.path),
+      size: file.size,
+      modifiedAt: file.modifiedAt,
+    })),
+    executedAt: new Date().toISOString(),
+  };
+}
+
+async function saveMirrorRetentionPolicy(body = {}, env = {}) {
+  const current = await readMirrorRetention();
+  const next = {
+    ...current,
+    enabled: body.enabled !== undefined ? Boolean(body.enabled) : current.enabled,
+    days: Math.max(1, Number(body.days || current.days || 7)),
+    scope: body.scope === "all" ? "all" : "uploads",
+    timeOfDay: String(body.timeOfDay || current.timeOfDay || "03:30"),
+    updatedAt: new Date().toISOString(),
+  };
+  await writeJsonFile(mirrorRetentionPath, next);
+
+  const schedules = await readJsonFile(schedulesPath, []);
+  const retained = schedules.filter((schedule) => !(schedule.command === "mirror-cleanup" && schedule.retentionManaged));
+  if (next.enabled) {
+    retained.unshift({
+      id: `mirror-retention-${Date.now()}`,
+      name: `미러 ${next.days}일 자동정리`,
+      command: "mirror-cleanup",
+      dryRun: false,
+      mode: "daily",
+      runAt: "",
+      timeOfDay: next.timeOfDay,
+      intervalMinutes: 0,
+      enabled: true,
+      createdAt: new Date().toISOString(),
+      retentionManaged: true,
+      retentionDays: next.days,
+      scope: next.scope,
+    });
+  }
+  for (const schedule of retained) {
+    if (!schedule.nextRunAt && schedule.enabled !== false) schedule.nextRunAt = nextScheduleRun(schedule);
+  }
+  await saveSchedules(retained.slice(0, 50));
+  return mirrorStatusSnapshot(env);
 }
 
 async function refreshManifestFromMirror(env = {}) {
@@ -2004,6 +2248,271 @@ async function writeWikiPage(body = {}) {
   };
 }
 
+function wikiDeletionRootsForWorkspace(workspaceId = "rtm") {
+  const workspace = wikiWorkspace(workspaceId);
+  return [workspace.wikiRoot];
+}
+
+function isProtectedWikiDeletionPage(page = {}) {
+  const fileName = String(page.path || "").split("/").pop() || "";
+  if (protectedWikiDeletionFiles.has(fileName)) return true;
+  if (page.isProjectHub) return true;
+  if (page.docKind === "hub") return true;
+  return false;
+}
+
+function deletionSignalRegex() {
+  return /(draft|tmp|temp|test|copy|old|backup|sample|unused|legacy|archive|실험|테스트|임시|복사본|백업|구버전)/i;
+}
+
+function daysSince(isoText = "") {
+  const time = Date.parse(String(isoText || ""));
+  if (!Number.isFinite(time)) return null;
+  return Math.max(0, Math.floor((Date.now() - time) / 86_400_000));
+}
+
+async function wikiLinkDegreeMap(workspaceId = "rtm") {
+  const pages = await wikiIndex(workspaceId);
+  const byTitle = new Map(pages.map((page) => [normalizeLinkKey(page.title), page]));
+  const byBasename = new Map(pages.map((page) => [normalizeLinkKey((page.path || "").split("/").pop()?.replace(/\.md$/i, "") || ""), page]));
+  const degree = new Map(pages.map((page) => [page.path, 0]));
+  for (const page of pages) {
+    const markdown = await readFile(resolve(repoRoot, page.path), "utf-8").catch(() => "");
+    for (const link of extractWikiLinks(markdown)) {
+      const key = normalizeLinkKey(link);
+      const target = byTitle.get(key) || byBasename.get(key);
+      if (!target || target.path === page.path) continue;
+      degree.set(page.path, (degree.get(page.path) || 0) + 1);
+      degree.set(target.path, (degree.get(target.path) || 0) + 1);
+    }
+  }
+  return degree;
+}
+
+function wikiDeletionAssessment(page = {}, degreeMap = new Map()) {
+  const reasons = [];
+  const path = String(page.path || "");
+  const pathParts = path.split("/");
+  const fileName = pathParts.at(-1) || "";
+  const ageDays = daysSince(page.updatedAt);
+  const linkDegree = degreeMap.get(path) || 0;
+  let score = 0;
+
+  if (page.statusManaged === false) {
+    return {
+      deletable: false,
+      protected: true,
+      score,
+      reasons: ["상태 관리 제외 문서는 삭제 추천 대상에서 제외합니다."],
+      ageDays,
+      linkDegree,
+    };
+  }
+  if (!path.startsWith("obsidian/Wiki/") && !path.startsWith("obsidian/Personal_Wiki/")) {
+    return {
+      deletable: false,
+      protected: true,
+      score,
+      reasons: ["위키 루트 밖 문서는 이 삭제 흐름에서 제외합니다."],
+      ageDays,
+      linkDegree,
+    };
+  }
+  if (isProtectedWikiDeletionPage(page)) {
+    return {
+      deletable: false,
+      protected: true,
+      score,
+      reasons: ["핵심 허브/운영 문서는 보호 대상으로 직접 삭제를 막습니다."],
+      ageDays,
+      linkDegree,
+    };
+  }
+
+  if (linkDegree === 0) {
+    score += 35;
+    reasons.push("그래프 연결이 없어 고아 페이지로 보입니다.");
+  } else if (linkDegree === 1) {
+    score += 10;
+    reasons.push("그래프 연결이 매우 적어 참조 가치가 낮을 수 있습니다.");
+  }
+
+  if (page.workflowStatus === "archived") {
+    score += 18;
+    reasons.push("현재 상태가 보관으로 표시되어 있습니다.");
+  } else if (page.workflowStatus === "hold") {
+    score += 8;
+    reasons.push("보류 상태 문서라 정리 후보일 수 있습니다.");
+  }
+
+  if (page.docKind === "log") {
+    score += 18;
+    reasons.push("로그성 문서라 운영 종료 후 정리 후보가 되기 쉽습니다.");
+  } else if (page.docKind === "knowledge") {
+    score += 12;
+    reasons.push("보조 지식 문서라 핵심 근거 문서보다 삭제 부담이 낮습니다.");
+  } else if (page.docKind === "overview") {
+    score += 4;
+  }
+
+  if (deletionSignalRegex().test(`${page.title || ""} ${fileName} ${path}`)) {
+    score += 20;
+    reasons.push("파일명/제목에 테스트·임시·백업 계열 신호가 있습니다.");
+  }
+
+  if (ageDays !== null && ageDays >= 180) {
+    score += 20;
+    reasons.push(`최근 ${ageDays}일 동안 갱신 흔적이 없습니다.`);
+  } else if (ageDays !== null && ageDays >= 90) {
+    score += 10;
+    reasons.push(`최근 ${ageDays}일 동안 갱신이 없어 stale 후보입니다.`);
+  } else if (ageDays !== null && ageDays >= 30) {
+    score += 4;
+  }
+
+  if (page.division === "common" && page.docKind === "knowledge") {
+    score += 8;
+    reasons.push("Common 보조 문서라 프로젝트 핵심 문서보다 삭제 후보성이 높습니다.");
+  }
+
+  return {
+    deletable: score >= 45,
+    protected: false,
+    score,
+    reasons,
+    ageDays,
+    linkDegree,
+  };
+}
+
+async function wikiDeletionCandidates(workspaceId = "rtm", limit = 24) {
+  const pages = await wikiIndex(workspaceId);
+  const degreeMap = await wikiLinkDegreeMap(workspaceId);
+  const candidates = pages
+    .map((page) => {
+      const assessment = wikiDeletionAssessment(page, degreeMap);
+      return {
+        title: page.title,
+        path: page.path,
+        projectKey: page.projectKey,
+        projectLabel: page.projectLabel,
+        division: page.division,
+        docKind: page.docKind,
+        workflowStatus: page.workflowStatus,
+        workflowStatusLabel: page.workflowStatusLabel,
+        updatedAt: page.updatedAt,
+        size: page.size,
+        ...assessment,
+      };
+    })
+    .filter((item) => item.deletable)
+    .sort((a, b) => b.score - a.score || String(a.path).localeCompare(String(b.path), "ko"))
+    .slice(0, limit);
+  return {
+    generatedAt: new Date().toISOString(),
+    workspace: workspaceId,
+    candidates,
+    summary: {
+      total: candidates.length,
+      high: candidates.filter((item) => item.score >= 70).length,
+      orphan: candidates.filter((item) => item.linkDegree === 0).length,
+    },
+  };
+}
+
+function deletableWikiPath(path, workspaceId = "rtm") {
+  const normalized = normalize(path || "");
+  if (!normalized.endsWith(".md")) throw new Error("Only Markdown wiki pages can be deleted");
+  const fullPath = resolve(repoRoot, normalized);
+  const allowed = wikiDeletionRootsForWorkspace(workspaceId);
+  if (!allowed.some((root) => fullPath === root || fullPath.startsWith(`${root}/`))) {
+    throw new Error("Page path is outside deletable wiki roots");
+  }
+  return fullPath;
+}
+
+async function deleteWikiPage(body = {}) {
+  const workspaceId = body.workspace || "rtm";
+  const fullPath = deletableWikiPath(body.path, workspaceId);
+  const relPath = relative(repoRoot, fullPath);
+  const markdown = await readFile(fullPath, "utf-8").catch(() => "");
+  if (!markdown.trim()) throw new Error("삭제 대상 문서를 읽을 수 없습니다.");
+  const frontmatter = parseFrontmatter(markdown);
+  const classification = classifyWikiPage(relPath, frontmatter);
+  const statusStore = await wikiStatusStore();
+  const page = applyWikiStatus({
+    title: titleFromMarkdown(relPath, markdown),
+    path: relPath,
+    updatedAt: (await stat(fullPath).catch(() => null))?.mtime?.toISOString?.() || "",
+    size: markdown.length,
+    frontmatter,
+    ...classification,
+  }, statusStore);
+  const assessment = wikiDeletionAssessment(page, new Map([[relPath, 0]]));
+  if (assessment.protected) {
+    throw new Error(assessment.reasons[0] || "보호 문서는 삭제할 수 없습니다.");
+  }
+  await unlink(fullPath);
+  if (statusStore.pages?.[relPath]) {
+    delete statusStore.pages[relPath];
+    await writeJsonFile(wikiStatusesPath, statusStore);
+  }
+  const payload = {
+    timestamp: new Date().toISOString(),
+    workspace: workspaceId,
+    path: relPath,
+    title: page.title,
+    projectKey: page.projectKey,
+    projectLabel: page.projectLabel,
+    docKind: page.docKind,
+    workflowStatus: page.workflowStatus,
+    reason: String(body.reason || "").trim(),
+    source: body.source || "manual",
+    decisionId: body.decisionId || "",
+  };
+  await appendJsonl(wikiDeletionAuditPath, payload);
+  return {
+    status: "deleted",
+    ...payload,
+  };
+}
+
+async function enqueueWikiDeletionCandidates(body = {}) {
+  const workspaceId = body.workspace || "rtm";
+  const requestedPaths = new Set((Array.isArray(body.paths) ? body.paths : []).map((value) => String(value).trim()).filter(Boolean));
+  const snapshot = await wikiDeletionCandidates(workspaceId, Number(body.limit || 24));
+  const selected = snapshot.candidates.filter((candidate) => !requestedPaths.size || requestedPaths.has(candidate.path));
+  const items = [];
+  for (const candidate of selected) {
+    const item = await enqueueDecisionQueueItem({
+      id: `deletion-${workspaceId}-${candidate.path}`,
+      workspace: workspaceId,
+      sourceType: "wiki_deletion_recommendation",
+      kind: "deletion_candidate",
+      title: `삭제 후보: ${candidate.title}`,
+      projectKey: candidate.projectKey || "",
+      projectLabel: candidate.projectLabel || "",
+      content: [
+        `score: ${candidate.score}`,
+        `path: ${candidate.path}`,
+        `status: ${candidate.workflowStatusLabel || candidate.workflowStatus || "-"}`,
+        `degree: ${candidate.linkDegree}`,
+        ...candidate.reasons.map((reason) => `reason: ${reason}`),
+      ].join("\n"),
+      path: candidate.path,
+      createdAt: snapshot.generatedAt,
+      original: candidate,
+    });
+    items.push(item);
+  }
+  return {
+    status: "queued",
+    workspace: workspaceId,
+    count: items.length,
+    items,
+  };
+}
+
 async function collectStatus() {
   const manifestPath = join(driveRuntime, "manifest.json");
   const runOutputPath = join(driveRuntime, "run_output.json");
@@ -2501,6 +3010,10 @@ function decisionTargetFile(kind) {
   return "Decisions.md";
 }
 
+function isDeletionDecisionItem(item = {}) {
+  return /deletion_candidate/i.test(String(item.kind || "")) || /wiki_deletion/i.test(String(item.sourceType || ""));
+}
+
 function projectContextFromDecision(item = {}, workspaceId = "rtm") {
   const fallback = {
     projectKey: String(item.projectKey || "").trim(),
@@ -2519,6 +3032,15 @@ function projectContextFromDecision(item = {}, workspaceId = "rtm") {
 }
 
 function decisionTargetPathFromContext(item = {}, workspaceId = "rtm") {
+  if (isDeletionDecisionItem(item)) {
+    return {
+      targetPath: String(item.path || "").trim() ? resolve(repoRoot, String(item.path || "").trim()) : "",
+      targetFile: "DELETE",
+      projectKey: String(item.projectKey || "").trim(),
+      projectLabel: String(item.projectLabel || "").trim(),
+      mode: "delete_source_path",
+    };
+  }
   const workspace = wikiWorkspace(workspaceId);
   const targetFile = decisionTargetFile(decisionKindFromItem(item));
   const sourcePath = String(item.path || "").trim();
@@ -2597,12 +3119,20 @@ function isOperationalWikiLine(line = "") {
 
 function hasStrongDataConflictSignal(line = "") {
   const text = String(line || "");
-  return /충돌|불일치|상이|상충|서로\s*다름|다르게\s*기재|값\s*차이|버전\s*차이|서술\s*차이|정합성|근거\s*불일치|수치\s*불일치|단위\s*불일치|일정\s*불일치|출처\s*(상충|불일치)|최신값\s*(불명|미확정|확인)|미확정\s*(값|수치|일정|버전|출처|기준)/i.test(text);
+  return /충돌|불일치|상이|상충|서로\s*다름|다르게\s*기재|값\s*차이|버전\s*차이|서술\s*차이|정합성\s*(불일치|문제|충돌)|근거\s*불일치|수치\s*불일치|단위\s*불일치|일정\s*불일치|출처\s*(상충|불일치)|최신값\s*(불명|미확정)|미확정\s*(값|수치|일정|버전|출처|기준)/i.test(text);
 }
 
 function isPracticalWorkLine(line = "") {
   const text = String(line || "");
   return /마감일|중간\s*리뷰|제출|서류|신청\s*주체|역할\s*분담|담당|기한|미팅|회의|방문|고객|후속|준비\s*가능|추가\s*확보|무엇인지|언제인지|어떻게|가능한지|해야\s*할|필요한\s*것|요청사항|질문|액션|리스크|위험|일정\s*(확인|정리|공유)/i.test(text);
+}
+
+function isActionableWikiSuggestionLine(line = "") {
+  const text = String(line || "");
+  if (!text.trim()) return false;
+  const hasUpdateVerb = /검토해|검토하면|검토\s*필요|수정해|수정하면|수정\s*필요|갱신해|갱신하면|갱신\s*필요|보강해|보강하면|보강\s*필요|업데이트해|업데이트하면|업데이트\s*필요|추가해|추가하면|정리해|정리하면|반영해|반영하면|권고|제안/.test(text);
+  const targetsWikiDocs = /위키|허브|hub|status|reference[_\s-]*register|sources|evidence[_\s-]*log|action[_\s-]*items|risks|decisions|conflict[_\s-]*register|change[_\s-]*log/i.test(text);
+  return hasUpdateVerb && targetsWikiDocs;
 }
 
 function isDataConflictLine(line = "") {
@@ -2614,7 +3144,8 @@ function isDataConflictLine(line = "") {
   if (/관리합니다|등록합니다|정리용|후보를 관리|현재 등록된 .*없음|없습니다\.?$/.test(text)) return false;
   if (/^[#>\-\*\d.\s]*[가-힣A-Za-z0-9 _-]+\s*:\s*$/.test(text)) return false;
   if (!hasStrongDataConflictSignal(text)) return false;
-  if (isPracticalWorkLine(text) && !/불일치|상이|상충|값\s*차이|버전\s*차이|서술\s*차이|정합성|다르게\s*기재|서로\s*다름|출처\s*(상충|불일치)/.test(text)) return false;
+  if (isActionableWikiSuggestionLine(text) && !/불일치|상이|상충|값\s*차이|버전\s*차이|서술\s*차이|다르게\s*기재|서로\s*다름|근거\s*불일치|수치\s*불일치|단위\s*불일치|일정\s*불일치|출처\s*(상충|불일치)|정합성\s*(불일치|문제|충돌)/.test(text)) return false;
+  if (isPracticalWorkLine(text) && !/불일치|상이|상충|값\s*차이|버전\s*차이|서술\s*차이|정합성\s*(불일치|문제|충돌)|다르게\s*기재|서로\s*다름|출처\s*(상충|불일치)/.test(text)) return false;
   return true;
 }
 
@@ -2685,6 +3216,11 @@ async function decisionQueue(workspaceId = "rtm") {
       });
     }
   }
+  for (const [id, storedItem] of Object.entries(store.items || {})) {
+    if (!storedItem || items.some((item) => item.id === id)) continue;
+    if (storedItem.workspace && storedItem.workspace !== workspaceId) continue;
+    items.push({ id, ...storedItem });
+  }
   const deduped = [...new Map(items.map((item) => [item.id, item])).values()];
   return {
     generatedAt: new Date().toISOString(),
@@ -2718,6 +3254,7 @@ async function resolveDecisionQueueItem(id, body = {}) {
   const status = action === "approve" || action === "edit_approve" ? "approved" : action === "reject" ? "rejected" : action === "investigate" ? "needs_investigation" : "hold";
   const resolved = {
     ...item,
+    workspace: workspaceId,
     status,
     resolvedAction: action,
     resolvedAt: now,
@@ -2733,13 +3270,24 @@ async function resolveDecisionQueueItem(id, body = {}) {
   let appliedPath = "";
   const targetFile = target.targetFile;
   let note = "";
+  if ((action === "approve" || action === "edit_approve") && isDeletionDecisionItem(resolved)) {
+    const deleted = await deleteWikiPage({
+      path: resolved.path,
+      workspace: workspaceId,
+      reason: resolved.note || body.note || "Decision Deck 승인 삭제",
+      source: "decision_queue",
+      decisionId: id,
+    });
+    appliedPath = deleted.path;
+    note = `삭제 후보 문서를 제거하고 deletion audit에 기록했습니다.`;
+  }
   if (target.projectKey && !resolved.projectKey) {
     resolved.projectKey = target.projectKey;
     resolved.projectLabel = resolved.projectLabel || target.projectLabel;
     store.items[id] = resolved;
     await writeJsonFile(decisionQueuePath, store);
   }
-  if ((action === "approve" || action === "edit_approve") && target.targetPath) {
+  if ((action === "approve" || action === "edit_approve") && target.targetPath && !isDeletionDecisionItem(resolved)) {
     const targetDir = dirname(target.targetPath);
     if (!existsSync(targetDir)) {
       await mkdir(targetDir, { recursive: true });
@@ -2765,7 +3313,7 @@ async function resolveDecisionQueueItem(id, body = {}) {
     appliedPath = relative(repoRoot, targetPath);
     note = `${targetFile}에 승인 내용을 append했습니다.`;
   }
-  if ((action === "approve" || action === "edit_approve") && !target.targetPath) {
+  if ((action === "approve" || action === "edit_approve") && !target.targetPath && !isDeletionDecisionItem(resolved)) {
     note = resolved.path
       ? `반영 경로를 계산하지 못했습니다. 근거 경로 ${resolved.path} 가 프로젝트/계정 위키 문서인지 확인하세요.`
       : "반영 경로를 계산하지 못했습니다. projectKey 또는 근거 path가 필요합니다.";
@@ -2793,6 +3341,7 @@ async function enqueueDecisionQueueItem(item = {}) {
   const nextItem = {
     id,
     status: "pending",
+    workspace: item.workspace || "rtm",
     sourceType: item.sourceType || "manual",
     kind: item.kind || "decision",
     title: item.title || "결정 필요 항목",
@@ -4284,7 +4833,7 @@ async function saveSchedules(schedules) {
 }
 
 async function createSchedule(body) {
-  const allowed = new Set(["rclone-copy", "build-manifest", "run", "full-cycle", "slack-collect"]);
+  const allowed = new Set(["rclone-copy", "build-manifest", "run", "full-cycle", "slack-collect", "mirror-cleanup"]);
   const command = body.command || "rclone-copy";
   if (!allowed.has(command)) throw new Error(`Unsupported schedule command: ${command}`);
   const schedule = {
@@ -4298,6 +4847,9 @@ async function createSchedule(body) {
     intervalMinutes: Number(body.intervalMinutes || 60),
     enabled: body.enabled !== false,
     createdAt: new Date().toISOString(),
+    retentionDays: Number(body.retentionDays || 0) || undefined,
+    scope: body.scope === "all" ? "all" : body.scope === "uploads" ? "uploads" : undefined,
+    retentionManaged: Boolean(body.retentionManaged),
   };
   schedule.nextRunAt = nextScheduleRun(schedule);
   const schedules = await readJsonFile(schedulesPath, []);
@@ -4316,6 +4868,35 @@ async function deleteSchedule(id) {
 async function runScheduledCommand(schedule) {
   const meta = { scheduleId: schedule.id, scheduled: true, intervalMinutes: schedule.intervalMinutes };
   if (schedule.command === "full-cycle") return fullCycle(Boolean(schedule.dryRun));
+  if (schedule.command === "mirror-cleanup") {
+    const { values: env } = await readEnvFile();
+    const result = await cleanupMirrorData({
+      env,
+      scope: schedule.scope === "all" ? "all" : "uploads",
+      olderThanDays: Math.max(1, Number(schedule.retentionDays || 7)),
+      dryRun: Boolean(schedule.dryRun),
+    });
+    const entry = {
+      runId: `${Date.now()}-mirror-cleanup`,
+      command: schedule.command,
+      status: "completed",
+      code: 200,
+      stdout: [
+        `scope=${result.scope}`,
+        `olderThanDays=${result.olderThanDays}`,
+        `matchedFiles=${result.matchedFiles}`,
+        `deletedFiles=${result.deletedFiles}`,
+        `deletedDirectories=${result.deletedDirectories}`,
+        `freedBytes=${result.freedBytes}`,
+      ].join("\n"),
+      stderr: "",
+      createdAt: new Date().toISOString(),
+      scheduleId: schedule.id,
+      retentionManaged: Boolean(schedule.retentionManaged),
+    };
+    await appendRunHistory(entry);
+    return entry;
+  }
   return runCommand(schedule.command, Boolean(schedule.dryRun), meta);
 }
 
@@ -4614,6 +5195,28 @@ function localConflictMergeSuggestion(body = {}) {
 }
 
 async function verifyDecisionFinalApproval(item = {}, body = {}, target = {}, workspaceId = "rtm") {
+  if (isDeletionDecisionItem(item)) {
+    try {
+      deletableWikiPath(item.path || body.path || "", workspaceId);
+      return {
+        provider: "local-rule",
+        model: "",
+        decision: "approve",
+        reason: "삭제 후보 카드로 판정되었고, 삭제 허용 루트 및 보호 문서 규칙을 통과했습니다.",
+        blockingIssues: [],
+        safeAppendNote: "승인 시 Decisions append 대신 실제 문서 삭제와 deletion audit 기록을 수행합니다.",
+      };
+    } catch (error) {
+      return {
+        provider: "local-rule",
+        model: "",
+        decision: "investigate",
+        reason: error instanceof Error ? error.message : "삭제 허용 규칙 검증 실패",
+        blockingIssues: ["delete_guard_failed"],
+        safeAppendNote: "",
+      };
+    }
+  }
   const { values: env } = await readEnvFile();
   const apiKey = process.env.GLM_API_KEY || env.GLM_API_KEY;
   const apiUrl = process.env.GLM_API_URL || env.GLM_API_URL;
@@ -4835,12 +5438,34 @@ function routeChatSkills(message, evidence = [], paperclip = null, options = {})
     raw_message: text,
     browser_block: browserBlock,
     upload_context: uploadContext,
+    has_auto_read_input: uploadContext.fileCount > 0,
     local_paths: localPaths.map((path) => ({
       path,
       allowed: localPathAllowedForAutoSkill(path),
       ext: extname(path).toLowerCase(),
     })),
   };
+}
+
+function autoReadablePathsForTemplate(route = {}, templateId = "") {
+  const uploadPaths = (route.upload_context?.files || [])
+    .map((item) => String(item.path || "").trim())
+    .filter(Boolean)
+    .map((path) => resolve(repoRoot, path))
+    .filter((path) => localPathAllowedForAutoSkill(path));
+  const allowedPaths = (route.local_paths || [])
+    .filter((item) => item.allowed)
+    .map((item) => item.path);
+  const candidatePaths = [...new Set(uploadPaths.concat(allowedPaths))];
+  return candidatePaths
+    .filter((path) => {
+      const ext = extname(path).toLowerCase();
+      if (templateId === "filesystem-wiki-intake") return [".hwp", ".hwpx", ".pdf", ".docx", ".pptx", ".xlsx", ".xls", ".csv", ".html", ".htm", ".md", ".txt", ".json"].includes(ext);
+      if (templateId === "rhwp-hwp-reader") return [".hwp", ".hwpx", ".pdf", ".docx", ".pptx", ".html", ".htm"].includes(ext);
+      if (templateId === "grant-rfp-strategy") return [".hwp", ".hwpx", ".pdf", ".docx", ".pptx", ".xlsx", ".xls", ".csv", ".html", ".htm"].includes(ext);
+      if (templateId === "spreadsheet-stat-analyzer") return [".xlsx", ".xls", ".csv"].includes(ext);
+      return true;
+    });
 }
 
 async function autoRunAllowedSkills(route, options = {}) {
@@ -4898,14 +5523,7 @@ async function autoRunAllowedSkills(route, options = {}) {
     if (blockedPaths.length) {
       blockedActions.push(`path_outside_allowed_root:${blockedPaths.map((item) => item.path).join(",")}`);
     }
-    const matchingPaths = allowedPaths
-      .filter((item) => {
-        if (templateId === "filesystem-wiki-intake") return [".hwp", ".hwpx", ".pdf", ".docx", ".pptx", ".xlsx", ".xls", ".csv", ".html", ".htm", ".md", ".txt", ".json"].includes(item.ext);
-        if (templateId === "rhwp-hwp-reader") return [".hwp", ".hwpx", ".pdf", ".docx", ".pptx", ".html", ".htm"].includes(item.ext);
-        if (templateId === "grant-rfp-strategy") return [".hwp", ".hwpx", ".pdf", ".docx", ".pptx", ".xlsx", ".xls", ".csv", ".html", ".htm"].includes(item.ext);
-        return [".xlsx", ".xls", ".csv"].includes(item.ext);
-      })
-      .map((item) => item.path);
+    const matchingPaths = autoReadablePathsForTemplate(route, templateId);
     if (!matchingPaths.length) {
       recommendedTasks.push({
         templateId,
@@ -4954,6 +5572,11 @@ async function autoRunAllowedSkills(route, options = {}) {
 
 async function createPaperclipAgentDrafts(route, message, project = {}) {
   const suggested = (route.suggested_template_ids || [])
+    .filter((templateId) => {
+      if (!route.has_auto_read_input) return true;
+      if (!["filesystem-wiki-intake", "rhwp-hwp-reader", "grant-rfp-strategy", "spreadsheet-stat-analyzer"].includes(templateId)) return true;
+      return !autoReadablePathsForTemplate(route, templateId).length;
+    })
     .filter((templateId) => templateId !== "validator")
     .slice(0, 4);
   if (!suggested.length) return [];
@@ -5277,6 +5900,7 @@ function defaultChatProject() {
     linkedWikiProject: null,
     instructions: "",
     memories: [],
+    instructionCandidates: [],
     messages: [],
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
@@ -5373,6 +5997,7 @@ function migrateGlobalInstructionMemories(projects) {
       ...project,
       instructions,
       memories,
+      instructionCandidates: project.instructionCandidates || [],
       linkedWikiProject,
     };
   });
@@ -5434,6 +6059,7 @@ function normalizeLinkedWikiProject(linked = {}, workspaceId = "rtm") {
 function chatProjectMarkdown(project, options = {}) {
   const now = new Date().toISOString();
   const memories = project.memories || [];
+  const instructionCandidates = project.instructionCandidates || [];
   const messages = project.messages || [];
   const linkedWikiProject = normalizeLinkedWikiProject(project.linkedWikiProject, project.workspace === "personal" ? "personal" : "rtm");
   return [
@@ -5455,7 +6081,7 @@ function chatProjectMarkdown(project, options = {}) {
     "- 대화내역은 검증/승인된 결정 사항이 아닐 수 있으므로 `보조 맥락`으로만 사용한다.",
     "- 실제 프로젝트 사실, 수치, 결정은 별도 근거 Markdown, Sources, Evidence Log, Change Log, Conflict Register로 승격되어야 한다.",
     "",
-    "## 프로젝트별 특수 지침",
+    "## 고정 지침",
     project.instructions ? quoteMarkdown(project.instructions) : "- 없음",
     "",
     "## 연결된 위키 프로젝트",
@@ -5469,7 +6095,7 @@ function chatProjectMarkdown(project, options = {}) {
         ].filter(Boolean).join("\n")
       : "- 연결 안 됨",
     "",
-    "## 관리 메모리",
+    "## 자동 축적 메모리",
     memories.length
       ? memories.map((memory) => [
           `### ${memory.title || "메모리"}`,
@@ -5479,6 +6105,19 @@ function chatProjectMarkdown(project, options = {}) {
           `- updated: ${memory.updatedAt || memory.createdAt || ""}`,
           "",
           quoteMarkdown(memory.content || ""),
+        ].join("\n")).join("\n\n")
+      : "- 없음",
+    "",
+    "## 지침 승격 후보",
+    instructionCandidates.length
+      ? instructionCandidates.map((candidate) => [
+          `### ${candidate.title || "후보"}`,
+          `- id: \`${candidate.id}\``,
+          `- source: ${candidate.source || "manual"}`,
+          `- confidence: ${candidate.confidence || "candidate_unconfirmed"}`,
+          `- updated: ${candidate.updatedAt || candidate.createdAt || ""}`,
+          "",
+          quoteMarkdown(candidate.content || ""),
         ].join("\n")).join("\n\n")
       : "- 없음",
     "",
@@ -5522,11 +6161,12 @@ async function upsertChatProject(body) {
         body.workspace === "personal" ? "personal" : "rtm",
       );
   const next = {
-    ...(existing || { id, createdAt: now, messages: [], memories: [] }),
+    ...(existing || { id, createdAt: now, messages: [], memories: [], instructionCandidates: [] }),
     name: body.name || existing?.name || "새 GLM 프로젝트",
     instructions: body.instructions ?? existing?.instructions ?? "",
     workspace: body.workspace || existing?.workspace || "work",
     linkedWikiProject,
+    instructionCandidates: existing?.instructionCandidates || [],
     updatedAt: now,
   };
   await saveChatProjects(existing ? projects.map((project) => project.id === id ? next : project) : [next, ...projects]);
@@ -5563,6 +6203,27 @@ async function upsertChatMemory(projectId, body) {
   return memory;
 }
 
+async function upsertInstructionCandidate(projectId, body) {
+  const projects = await listChatProjects();
+  const now = new Date().toISOString();
+  const candidate = {
+    id: body.id || `${Date.now()}-instruction-candidate`,
+    title: body.title || "지침 승격 후보",
+    content: body.content || "",
+    source: body.source || "manual",
+    confidence: body.confidence || "candidate_unconfirmed",
+    createdAt: body.createdAt || now,
+    updatedAt: now,
+  };
+  const updated = projects.map((project) => project.id === projectId ? {
+    ...project,
+    instructionCandidates: [candidate, ...(project.instructionCandidates || []).filter((item) => item.id !== candidate.id)],
+    updatedAt: now,
+  } : project);
+  await saveChatProjects(updated);
+  return candidate;
+}
+
 function autoMemoryCandidate(message) {
   const text = String(message || "").trim();
   if (!text || text.length < 6 || text.length > 1200) return null;
@@ -5584,8 +6245,8 @@ function autoMemoryCandidate(message) {
     .trim()
     .slice(0, 42);
   return {
-    scope: "project",
-    title: titleBase ? `자동 기억 - ${titleBase}` : "자동 기억",
+    scope: explicit ? "project_instruction_candidate" : "project",
+    title: explicit ? (titleBase ? `지침 후보 - ${titleBase}` : "지침 승격 후보") : (titleBase ? `자동 기억 - ${titleBase}` : "자동 기억"),
     content: text,
   };
 }
@@ -5604,6 +6265,17 @@ async function autoRememberFromMessage(projectId, message) {
   }
   const projects = await listChatProjects();
   const project = projects.find((item) => item.id === projectId) || projects[0];
+  if (candidate.scope === "project_instruction_candidate") {
+    const duplicate = (project?.instructionCandidates || []).some((item) => item.content === candidate.content);
+    if (duplicate || !project) return null;
+    const instructionCandidate = await upsertInstructionCandidate(project.id, {
+      title: candidate.title,
+      content: candidate.content,
+      source: "auto_from_chat",
+      confidence: "candidate_unconfirmed",
+    });
+    return { scope: "project_instruction_candidate", projectId: project.id, instructionCandidate };
+  }
   const duplicate = (project?.memories || []).some((memory) => memory.content === candidate.content);
   if (duplicate || !project) return null;
   const memory = await upsertChatMemory(project.id, {
@@ -5624,6 +6296,40 @@ async function deleteChatMemory(projectId, memoryId) {
   } : project);
   await saveChatProjects(updated);
   return { deleted: true, projectId, memoryId };
+}
+
+async function deleteInstructionCandidate(projectId, candidateId) {
+  const projects = await listChatProjects();
+  const updated = projects.map((project) => project.id === projectId ? {
+    ...project,
+    instructionCandidates: (project.instructionCandidates || []).filter((candidate) => candidate.id !== candidateId),
+    updatedAt: new Date().toISOString(),
+  } : project);
+  await saveChatProjects(updated);
+  return { deleted: true, projectId, candidateId };
+}
+
+async function promoteInstructionCandidate(projectId, candidateId) {
+  const projects = await listChatProjects();
+  const now = new Date().toISOString();
+  let nextProject = null;
+  const updated = projects.map((project) => {
+    if (project.id !== projectId) return project;
+    const candidate = (project.instructionCandidates || []).find((item) => item.id === candidateId);
+    if (!candidate) return project;
+    const alreadyIncluded = String(project.instructions || "").includes(candidate.content);
+    nextProject = {
+      ...project,
+      instructions: alreadyIncluded
+        ? String(project.instructions || "")
+        : [String(project.instructions || "").trim(), candidate.content].filter(Boolean).join("\n"),
+      instructionCandidates: (project.instructionCandidates || []).filter((item) => item.id !== candidateId),
+      updatedAt: now,
+    };
+    return nextProject;
+  });
+  await saveChatProjects(updated);
+  return nextProject || updated.find((project) => project.id === projectId) || null;
 }
 
 async function appendChatProjectMessage(projectId, message) {
@@ -5666,6 +6372,90 @@ async function deleteChatProjectMessage(projectId, messageId) {
     auditLogPath: retraction?.auditLogPath || "",
     manualReviewRequired: retraction?.manualReviewRequired || false,
   };
+}
+
+async function moveChatProjectMessages(sourceProjectId, targetProjectId) {
+  const projects = await listChatProjects();
+  const now = new Date().toISOString();
+  const sourceProject = projects.find((project) => project.id === sourceProjectId);
+  const targetProject = projects.find((project) => project.id === targetProjectId);
+  if (!sourceProject) throw new Error("Source chat project not found.");
+  if (!targetProject) throw new Error("Target chat project not found.");
+  if (sourceProject.id === targetProject.id) throw new Error("Target chat project must be different.");
+  if ((sourceProject.workspace || "work") !== (targetProject.workspace || "work")) {
+    throw new Error("Chat conversation can only move inside the same workspace.");
+  }
+
+  const sourceMessages = sourceProject.messages || [];
+  const targetMessageIds = new Set((targetProject.messages || []).map((message) => message.id).filter(Boolean));
+  const movedMessageIdMap = new Map();
+  const movedMessages = sourceMessages.map((message, index) => ({
+    ...message,
+    id: (() => {
+      const currentId = message.id || "";
+      const nextId = currentId && !targetMessageIds.has(currentId)
+        ? currentId
+        : `moved-${Date.now()}-${index}-${Math.random().toString(36).slice(2, 8)}`;
+      targetMessageIds.add(nextId);
+      if (currentId) movedMessageIdMap.set(currentId, nextId);
+      return nextId;
+    })(),
+    movedFromProjectId: sourceProject.id,
+    movedAt: now,
+  }));
+  const updatedProjects = projects.map((project) => {
+    if (project.id === sourceProject.id) {
+      return { ...project, messages: [], updatedAt: now };
+    }
+    if (project.id === targetProject.id) {
+      return {
+        ...project,
+        messages: [...(project.messages || []), ...movedMessages].slice(-100),
+        updatedAt: now,
+      };
+    }
+    return project;
+  });
+
+  await saveChatProjects(updatedProjects);
+  const promotionRefsMoved = await moveChatMessagePromotionRefs(sourceProject.id, targetProject.id, movedMessageIdMap, now);
+  const nextSourceProject = updatedProjects.find((project) => project.id === sourceProject.id);
+  const nextTargetProject = updatedProjects.find((project) => project.id === targetProject.id);
+  return {
+    moved: movedMessages.length,
+    promotionRefsMoved,
+    sourceProject: nextSourceProject,
+    targetProject: nextTargetProject,
+  };
+}
+
+async function moveChatMessagePromotionRefs(sourceProjectId, targetProjectId, messageIdMap, movedAt) {
+  if (!messageIdMap.size) return 0;
+  const promotions = await readJsonFile(knowledgePromotionPath, []);
+  let changedCount = 0;
+  const updated = [];
+  for (const entry of promotions) {
+    const nextMessageId = messageIdMap.get(entry.sourceMessageId);
+    if (entry.sourceProjectId !== sourceProjectId || !nextMessageId) {
+      updated.push(entry);
+      continue;
+    }
+    const nextEntry = {
+      ...entry,
+      sourceProjectId: targetProjectId,
+      sourceMessageId: nextMessageId,
+      movedFromProjectId: sourceProjectId,
+      movedAt,
+    };
+    nextEntry.markdown = promotionMarkdown(nextEntry);
+    if (nextEntry.path) {
+      await writeFile(writableWikiPath(nextEntry.path), nextEntry.markdown, "utf-8").catch(() => {});
+    }
+    updated.push(nextEntry);
+    changedCount += 1;
+  }
+  if (changedCount) await writeJsonFile(knowledgePromotionPath, updated);
+  return changedCount;
 }
 
 async function retractChatMessageEvidence(projectId, messageId) {
@@ -5719,6 +6509,21 @@ function compactProjectMemories(memories = [], mode = "standard") {
     .slice(0, budget.maxMemoryItems);
 }
 
+function compactInstructionCandidates(candidates = [], mode = "standard") {
+  const budget = contextBudget(mode);
+  return candidates
+    .map((candidate) => ({
+      id: candidate.id,
+      title: candidate.title,
+      source: candidate.source || "manual",
+      confidence: candidate.confidence || "candidate_unconfirmed",
+      updatedAt: candidate.updatedAt || candidate.createdAt || "",
+      content: compactLine(candidate.content || "", budget.maxLineChars * 2),
+    }))
+    .sort((a, b) => String(b.updatedAt).localeCompare(String(a.updatedAt)))
+    .slice(0, Math.max(4, Math.floor(budget.maxMemoryItems / 2)));
+}
+
 function compactRecentMessages(messages = [], mode = "standard") {
   const budget = contextBudget(mode);
   return messages.slice(-budget.recentTurns).map((message) => ({
@@ -5770,10 +6575,11 @@ async function glmChat(message, projectId = "default", options = {}) {
               "목표는 사용자의 실제 프로젝트 업무를 관리하는 것이다: 현재 상태, 막힌 점, 다음 액션, 담당/증거/리스크를 정리한다.",
               `전역 운영 지침: ${globalSettings.instructions || "없음"}`,
               `현재 GLM 챗 프로젝트: ${project.name}`,
-              `프로젝트별 특수 지침: ${project.instructions || "없음"}`,
+              `프로젝트 고정 지침: ${project.instructions || "없음"}`,
               `연결된 위키 프로젝트: ${project.linkedWikiProject?.projectLabel || project.linkedWikiProject?.projectKey || "없음"}`,
               "충분히 깊게 내부 추론하되, 최종 답변에는 추론 과정을 장황하게 노출하지 말고 검토 결과와 근거만 정리하라.",
               "프로젝트 메모리는 관리되는 보조 기억이고, 최근 대화내역은 결정/검증된 지식이 아닐 수 있는 보조 맥락이다.",
+              "지침 승격 후보는 아직 고정 지침이 아니며, 사용자 승격 전까지는 약한 운영 힌트로만 취급한다.",
               "대화 내용은 사용자가 명시적으로 결정했거나 별도 근거 Markdown으로 확인된 경우에만 확정 사실처럼 취급하라.",
               "Evidence Log, Conflict Register, hub, L1 memory를 우선 근거로 보고, 충돌이 있으면 Conflict Register 계열을 더 우선한다.",
               "금지: '제공된 위키 검색 결과', '스니펫', '메타데이터를 종합하면', '현재 위키에 색인된' 같은 메타 표현으로 시작하지 마라.",
@@ -5791,6 +6597,8 @@ async function glmChat(message, projectId = "default", options = {}) {
               global_instruction_role: "global_operating_rule",
               project_memory: compactProjectMemories(project.memories || [], mode),
               project_memory_role: "managed_auxiliary_memory",
+              instruction_candidates: compactInstructionCandidates(project.instructionCandidates || [], mode),
+              instruction_candidates_role: "promotion_candidates_not_yet_policy",
               conversation_summary: conversationSummary(project.messages || [], mode),
               recent_project_messages: compactRecentMessages(project.messages || [], mode),
               recent_project_messages_role: "auxiliary_context_not_decision",
@@ -5826,15 +6634,16 @@ function glmDecisionTriageMessages(project, globalSettings, message, context, mo
       role: "system",
       content: [
         "당신은 Decision Deck 안에서만 동작하는 위키 데이터 정합성 판정 보조자다.",
-        "범위는 실무 리스크, 다음 액션, 고객 대응이 아니라 위키 원본 간 데이터 불일치와 Conflict_Register 반영 판단이다.",
+        "범위는 위키 원본 간 데이터 불일치와 반영 경로 판단이다. 불필요한 Conflict_Register 남발은 피한다.",
         "thinking 또는 추론 과정은 출력하지 않는다. 짧고 실행 가능한 검토 결과만 한국어로 낸다.",
-        "출력 형식은 반드시 1) 판정 2) 충돌 요약 3) 권장 처리 4) Conflict_Register 반영 문구 5) 확인할 근거 path 순서로 한다.",
+        "명시적 상충값/상충주장이 없으면 Conflict_Register보다 Action_Items, Decisions, Risks, Status, hub 중 어디를 고치면 좋은지 먼저 제안한다.",
+        "출력 형식은 반드시 1) 판정 2) 충돌 또는 문제 요약 3) 권장 처리 4) 권장 위키 수정 문서 5) 확인할 근거 path 순서로 한다.",
         "판정은 approve, hold, investigate 중 하나로 시작한다.",
         "근거가 부족하면 승인하지 말고 hold 또는 investigate를 제안한다.",
-        "실무 일정, 마감, 담당자 같은 업무 질문은 Decision Deck 대상이 아니라고 표시한다.",
+        "실무 일정, 마감, 담당자 같은 업무 질문은 단순 conflict로 보내지 말고 어느 위키 문서를 검토/수정하면 좋은지 제안한다.",
         `전역 운영 지침: ${globalSettings.instructions || "없음"}`,
         `현재 프로젝트: ${project.name}`,
-        `프로젝트별 특수 지침: ${project.instructions || "없음"}`,
+        `프로젝트 고정 지침: ${project.instructions || "없음"}`,
         `연결된 위키 프로젝트: ${project.linkedWikiProject?.projectLabel || project.linkedWikiProject?.projectKey || "없음"}`,
       ].join(" "),
     },
@@ -5862,7 +6671,7 @@ function glmChatMessages(project, globalSettings, message, context, mode = "stan
         "목표는 사용자의 실제 프로젝트 업무를 관리하는 것이다: 현재 상태, 막힌 점, 다음 액션, 담당/증거/리스크를 정리한다.",
         `전역 운영 지침: ${globalSettings.instructions || "없음"}`,
         `현재 GLM 챗 프로젝트: ${project.name}`,
-        `프로젝트별 특수 지침: ${project.instructions || "없음"}`,
+        `프로젝트 고정 지침: ${project.instructions || "없음"}`,
         `연결된 위키 프로젝트: ${project.linkedWikiProject?.projectLabel || project.linkedWikiProject?.projectKey || "없음"}`,
         "충분히 깊게 내부 추론하되, 최종 답변에는 추론 과정을 장황하게 노출하지 말고 검토 결과와 근거만 정리하라.",
         "프로젝트 메모리는 관리되는 보조 기억이고, 최근 대화내역은 결정/검증된 지식이 아닐 수 있는 보조 맥락이다.",
@@ -5883,6 +6692,8 @@ function glmChatMessages(project, globalSettings, message, context, mode = "stan
         global_instruction_role: "global_operating_rule",
         project_memory: compactProjectMemories(project.memories || [], mode),
         project_memory_role: "managed_auxiliary_memory",
+        instruction_candidates: compactInstructionCandidates(project.instructionCandidates || [], mode),
+        instruction_candidates_role: "promotion_candidates_not_yet_policy",
         conversation_summary: conversationSummary(project.messages || [], mode),
         recent_project_messages: compactRecentMessages(project.messages || [], mode),
         recent_project_messages_role: "auxiliary_context_not_decision",
@@ -6873,6 +7684,88 @@ function inspectBrowserPathBlock(text) {
   };
 }
 
+function normalizeBrowserHintName(value = "") {
+  return String(value || "")
+    .trim()
+    .replace(/^[-*]\s+/, "")
+    .replace(/^["'`]+|["'`]+$/g, "")
+    .replace(/^[★☆•\s]+/, "")
+    .replace(/\s+/g, " ");
+}
+
+const RESOLVED_BROWSER_FILE_BLOCK_START = "[자동해결 파일경로]";
+const RESOLVED_BROWSER_FILE_BLOCK_END = "[/자동해결 파일경로]";
+
+function stripResolvedBrowserFileBlock(text = "") {
+  return String(text || "")
+    .replace(new RegExp(`\\n?${RESOLVED_BROWSER_FILE_BLOCK_START.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\$&")}[\\s\\S]*?${RESOLVED_BROWSER_FILE_BLOCK_END.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\$&")}\\n?`, "g"), "\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
+
+async function resolveBrowserHintEntries(text, extensions = [], options = {}) {
+  const browserBlock = inspectBrowserPathBlock(text);
+  if (!browserBlock.hasBlock || !browserBlock.fileHints.length) return [];
+  const allowedExts = new Set((extensions || []).map((item) => `.${String(item).toLowerCase().replace(/^\./, "")}`));
+  const candidateRoots = [
+    chatUploadMirrorRoot,
+    resolveRepoPath("automation/drive_wikify/runtime/mirror"),
+    repoRoot,
+  ];
+  const maxResults = Math.max(4, Number(options.maxHintMatches || 12));
+  const exactHints = browserBlock.fileHints
+    .map((item) => normalizeBrowserHintName(item))
+    .filter(Boolean);
+  const matches = [];
+  const seen = new Set();
+
+  for (const hint of exactHints) {
+    for (const rootPath of candidateRoots) {
+      if (matches.length >= maxResults) break;
+      const info = await stat(rootPath).catch(() => null);
+      if (!info?.isDirectory?.()) continue;
+      const files = await walkFiles(rootPath).catch(() => []);
+      for (const filePath of files) {
+        if (matches.length >= maxResults) break;
+        const fileName = filePath.split("/").at(-1) || "";
+        const normalizedFileName = normalizeBrowserHintName(fileName);
+        const fileExt = extname(filePath).toLowerCase();
+        if (allowedExts.size && !allowedExts.has(fileExt)) continue;
+        if (normalizedFileName !== hint) continue;
+        if (!localPathAllowedForAutoSkill(filePath)) continue;
+        const key = resolve(filePath);
+        if (seen.has(`${hint}::${key}`)) continue;
+        seen.add(`${hint}::${key}`);
+        matches.push({ hint, path: key });
+      }
+    }
+  }
+  return matches;
+}
+
+async function resolveBrowserHintFiles(text, extensions = [], options = {}) {
+  const entries = await resolveBrowserHintEntries(text, extensions, options);
+  return [...new Set(entries.map((entry) => entry.path))];
+}
+
+async function enrichMessageWithResolvedBrowserFiles(message = "") {
+  const baseText = stripResolvedBrowserFileBlock(message);
+  const browserBlock = inspectBrowserPathBlock(baseText);
+  if (!browserBlock.hasBlock || !browserBlock.fileHints.length) return baseText;
+  const resolvedEntries = await resolveBrowserHintEntries(baseText, [], { maxHintMatches: 16 });
+  if (!resolvedEntries.length) return baseText;
+  const lines = [
+    RESOLVED_BROWSER_FILE_BLOCK_START,
+    "- source: browser_hint_resolver",
+    ...resolvedEntries.map((entry) => [
+      `- file: ${relative(repoRoot, entry.path)}`,
+      `  original_hint: ${entry.hint}`,
+    ].join("\n")),
+    RESOLVED_BROWSER_FILE_BLOCK_END,
+  ];
+  return [baseText, lines.join("\n")].filter(Boolean).join("\n\n").trim();
+}
+
 function inspectUploadContextBlock(text) {
   const raw = String(text || "");
   const contextMatch = raw.match(/\[파일 해석 컨텍스트\]([\s\S]*?)\[\/파일 해석 컨텍스트\]/);
@@ -6946,9 +7839,10 @@ async function collectFilesFromDirectory(rootPath, allowedExtensions = [], optio
 async function resolvePaperclipInputTargets(text, extensions = [], options = {}) {
   const filePaths = extractLocalPaths(text, extensions);
   const directoryPaths = extractDirectoryLikePaths(text);
+  const browserHintPaths = await resolveBrowserHintFiles(text, extensions, options);
   const targets = [];
   const blocked = [];
-  for (const fullPath of [...new Set(filePaths.concat(directoryPaths))]) {
+  for (const fullPath of [...new Set(filePaths.concat(directoryPaths, browserHintPaths))]) {
     const allowed = localPathAllowedForAutoSkill(fullPath);
     if (!allowed) {
       blocked.push(fullPath);
@@ -7711,6 +8605,30 @@ const server = createServer(async (req, res) => {
       const { values: env } = await readEnvFile();
       return sendJson(res, 200, await collectionStatusSnapshot(env));
     }
+    if (pathname === "/api/mirror/status" && req.method === "GET") {
+      const { values: env } = await readEnvFile();
+      return sendJson(res, 200, await mirrorStatusSnapshot(env));
+    }
+    if (pathname === "/api/mirror/cleanup" && req.method === "POST") {
+      const { values: env } = await readEnvFile();
+      const body = await readBody(req);
+      return sendJson(res, 200, await cleanupMirrorData({
+        env,
+        scope: body.scope === "all" ? "all" : "uploads",
+        olderThanDays: Number(body.olderThanDays || 0),
+        dryRun: body.dryRun !== false,
+        deleteAll: Boolean(body.deleteAll),
+      }));
+    }
+    if (pathname === "/api/mirror/retention" && req.method === "GET") {
+      const { values: env } = await readEnvFile();
+      return sendJson(res, 200, await mirrorStatusSnapshot(env));
+    }
+    if (pathname === "/api/mirror/retention" && req.method === "POST") {
+      const { values: env } = await readEnvFile();
+      const body = await readBody(req);
+      return sendJson(res, 200, await saveMirrorRetentionPolicy(body, env));
+    }
     if (pathname === "/api/skills/catalog" && req.method === "GET") {
       return sendJson(res, 200, { skills: skillCatalog() });
     }
@@ -7766,6 +8684,19 @@ const server = createServer(async (req, res) => {
       const projectId = decodeURIComponent(pathname.split("/")[4]);
       const body = await readBody(req);
       return sendJson(res, 200, { memory: await upsertChatMemory(projectId, body) });
+    }
+    if (pathname.match(/^\/api\/chat\/projects\/[^/]+\/messages\/move$/) && req.method === "POST") {
+      const parts = pathname.split("/");
+      const body = await readBody(req);
+      return sendJson(res, 200, await moveChatProjectMessages(decodeURIComponent(parts[4]), body.targetProjectId || ""));
+    }
+    if (pathname.match(/^\/api\/chat\/projects\/[^/]+\/instruction-candidates\/[^/]+\/promote$/) && req.method === "POST") {
+      const parts = pathname.split("/");
+      return sendJson(res, 200, { project: await promoteInstructionCandidate(decodeURIComponent(parts[4]), decodeURIComponent(parts[6])) });
+    }
+    if (pathname.match(/^\/api\/chat\/projects\/[^/]+\/instruction-candidates\/[^/]+$/) && req.method === "DELETE") {
+      const parts = pathname.split("/");
+      return sendJson(res, 200, await deleteInstructionCandidate(decodeURIComponent(parts[4]), decodeURIComponent(parts[6])));
     }
     if (pathname.match(/^\/api\/chat\/projects\/[^/]+\/memories\/[^/]+$/) && req.method === "DELETE") {
       const parts = pathname.split("/");
@@ -7844,6 +8775,19 @@ const server = createServer(async (req, res) => {
       const body = await readBody(req);
       return sendJson(res, 200, await writeWikiPage(body));
     }
+    if (pathname === "/api/wiki/page/delete" && req.method === "POST") {
+      const body = await readBody(req);
+      return sendJson(res, 200, await deleteWikiPage(body));
+    }
+    if (pathname === "/api/wiki/deletion-candidates" && req.method === "GET") {
+      const workspace = url.searchParams.get("workspace") || "rtm";
+      const limit = Number(url.searchParams.get("limit") || "24");
+      return sendJson(res, 200, await wikiDeletionCandidates(workspace, limit));
+    }
+    if (pathname === "/api/wiki/deletion-candidates/enqueue" && req.method === "POST") {
+      const body = await readBody(req);
+      return sendJson(res, 200, await enqueueWikiDeletionCandidates(body));
+    }
     if (pathname === "/api/ingest" && req.method === "POST") {
       const body = await readBody(req);
       return sendJson(res, 200, { digest: await glmDigest(body.text || "", body.projectHint || "") });
@@ -7862,6 +8806,7 @@ const server = createServer(async (req, res) => {
     if (pathname === "/api/chat/glm/stream" && req.method === "POST") {
       const body = await readBody(req);
       const projectId = body.projectId || "default";
+      const effectiveMessage = await enrichMessageWithResolvedBrowserFiles(body.message || "");
       const busy = chatBusyPayload(projectId);
       if (busy) return sendJson(res, 409, busy);
       res.writeHead(200, {
@@ -7882,12 +8827,12 @@ const server = createServer(async (req, res) => {
       try {
         const transient = body.transient === true || body.profile === "decision_triage";
         const userMessage = transient
-          ? { id: "", role: "user", content: body.message || "", transient: true }
-          : await appendChatProjectMessage(projectId, { role: "user", content: body.message || "" });
+          ? { id: "", role: "user", content: effectiveMessage, transient: true }
+          : await appendChatProjectMessage(projectId, { role: "user", content: effectiveMessage });
         if (!transient) sseWrite(res, "user_saved", { message: userMessage });
-        const remembered = transient ? null : await autoRememberFromMessage(projectId, body.message || "");
+        const remembered = transient ? null : await autoRememberFromMessage(projectId, effectiveMessage);
         if (remembered) sseWrite(res, "memory", { remembered });
-        const result = await streamGlmChat(body.message || "", projectId, res, {
+        const result = await streamGlmChat(effectiveMessage, projectId, res, {
           signal: controller.signal,
           contextMode: body.contextMode || body.mode,
           workspace: body.workspace || "rtm",
@@ -7926,6 +8871,7 @@ const server = createServer(async (req, res) => {
     if (pathname === "/api/chat/glm" && req.method === "POST") {
       const body = await readBody(req);
       const projectId = body.projectId || "default";
+      const effectiveMessage = await enrichMessageWithResolvedBrowserFiles(body.message || "");
       const busy = chatBusyPayload(projectId);
       if (busy) return sendJson(res, 409, busy);
       const controller = new AbortController();
@@ -7938,9 +8884,9 @@ const server = createServer(async (req, res) => {
       activeChatRequests.set(projectId, active);
       activeChatControllers.set(projectId, controller);
       try {
-        const userMessage = await appendChatProjectMessage(projectId, { role: "user", content: body.message || "" });
-        const remembered = await autoRememberFromMessage(projectId, body.message || "");
-        const result = await glmChat(body.message || "", projectId, {
+        const userMessage = await appendChatProjectMessage(projectId, { role: "user", content: effectiveMessage });
+        const remembered = await autoRememberFromMessage(projectId, effectiveMessage);
+        const result = await glmChat(effectiveMessage, projectId, {
           signal: controller.signal,
           contextMode: body.contextMode || body.mode,
           workspace: body.workspace || "rtm",

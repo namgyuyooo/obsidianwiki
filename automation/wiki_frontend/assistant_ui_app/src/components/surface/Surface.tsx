@@ -43,7 +43,7 @@ type StatusLineProps = {
 
 export function WorkspaceSurface({ variant = "chat", children }: WorkspaceSurfaceProps) {
   const variantClassName = variant === "chat" ? "" : `aui-${variant}-shell`;
-  return <main className={`aui-shell ${variantClassName}`.trim()}>{children}</main>;
+  return <main className={`aui-shell aui-work-surface ${variantClassName}`.trim()}>{children}</main>;
 }
 
 export function BrandCard({ eyebrow, title, description }: BrandCardProps) {

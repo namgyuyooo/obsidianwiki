@@ -204,12 +204,18 @@ export function IngestWorkbench({ chatContext }: IngestWorkbenchProps) {
   const promotionMarkdown = promotionResult?.markdown || promotionResult?.promotion?.markdown || selectedPromotion?.markdown || "";
 
   return (
-    <main className="aui-ingest-surface">
-      <section className="aui-ingest-hero">
+    <main className="aui-ingest-surface aui-work-surface">
+      <section className="aui-ingest-hero aui-work-titlebar">
         <div>
-          <span className="aui-kicker">wiki related / ingest workbench</span>
-          <h1>지식 주입 작업대</h1>
-          <p>회의 메모, 파일 경로, Drive mirror 내용, 채팅 발췌를 위키 승격 후보로 만들기 전에 한국어 digest와 근거 후보를 검토합니다.</p>
+          <span className="aui-kicker">wiki related / intake mailbox</span>
+          <h1>지식 접수함</h1>
+          <p>회의 메모, 파일 경로, Drive mirror 내용, 채팅 발췌를 위키 승격 후보로 만들기 전에 접수, 요약, 검토, 저장합니다.</p>
+          <div className="aui-work-metrics">
+            <span>{projects.length} projects</span>
+            <span>{promotions.length} candidates</span>
+            <span>{phase}</span>
+            <span>{selectedPromotion ? "record selected" : "no selection"}</span>
+          </div>
         </div>
         <aside className={`aui-ingest-live ${phase}`}>
           <strong>{phase}</strong>
@@ -221,7 +227,7 @@ export function IngestWorkbench({ chatContext }: IngestWorkbenchProps) {
       <section className="aui-ingest-layout">
         <form className="aui-ingest-card aui-ingest-composer" onSubmit={runDigest}>
           <div className="aui-ingest-card-head">
-            <span>Capture</span>
+            <span>Incoming record</span>
             <strong>{chatContext.workspace.toUpperCase()} workspace</strong>
           </div>
           <label>
@@ -254,7 +260,7 @@ export function IngestWorkbench({ chatContext }: IngestWorkbenchProps) {
 
         <aside className="aui-ingest-card aui-ingest-promotions">
           <div className="aui-ingest-card-head">
-            <span>Promotion Candidates</span>
+            <span>Candidate mailbox</span>
             <strong>{promotions.length} saved</strong>
           </div>
           <div className="aui-ingest-promotion-list">
@@ -276,7 +282,7 @@ export function IngestWorkbench({ chatContext }: IngestWorkbenchProps) {
 
       <section className="aui-ingest-card aui-ingest-result">
         <div className="aui-ingest-card-head">
-          <span>Generated Markdown</span>
+          <span>Generated record</span>
           <strong>{promotionPath || selectedPromotion?.path || "승격 후보를 선택하세요"}</strong>
         </div>
         <div className="aui-ingest-result-actions">

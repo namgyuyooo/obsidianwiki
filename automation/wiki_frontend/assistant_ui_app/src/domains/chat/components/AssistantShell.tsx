@@ -63,6 +63,7 @@ export function AssistantShell({ chatContext, workspace, orchestration, children
   const [projectName, setProjectName] = useState("");
   const [projectInstructions, setProjectInstructions] = useState("");
   const [linkedProjectKey, setLinkedProjectKey] = useState("");
+  const [moveTargetProjectId, setMoveTargetProjectId] = useState("");
   const [globalInstructions, setGlobalInstructions] = useState("");
   const [autoMemoryEnabled, setAutoMemoryEnabled] = useState(true);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -86,17 +87,35 @@ export function AssistantShell({ chatContext, workspace, orchestration, children
     setAutoMemoryEnabled(workspace.global.autoMemory !== false);
   }, [workspace.global.instructions, workspace.global.autoMemory]);
 
+  useEffect(() => {
+    setMoveTargetProjectId((current) => {
+      const targets = workspace.projects.filter((project) => project.id !== workspace.activeProjectId);
+      if (current && targets.some((project) => project.id === current)) return current;
+      return targets[0]?.id || "";
+    });
+  }, [workspace.activeProjectId, workspace.projects]);
+
   const projects = workspace.projects.slice(0, RECENT_PROJECT_LIMIT);
+  const moveTargetProjects = workspace.projects.filter((project) => project.id !== workspace.activeProjectId);
   const wikiProjectOptions = linkedProjectOptions(
     workspace.wikiProjectOptions,
     workspace.activeProject?.linkedWikiProject,
   );
   const linkedProject = linkedProjectFromKey(wikiProjectOptions, linkedProjectKey);
   const activeLinkedProject = workspace.activeProject?.linkedWikiProject || null;
+  const activeConversationCount = workspace.activeProject?.messages?.length || 0;
+  const selectedMoveProject = moveTargetProjects.find((project) => project.id === moveTargetProjectId) || null;
+  const canMoveConversation = activeConversationCount > 0 && Boolean(selectedMoveProject);
   const runLabel = runStatusLabel(orchestration);
   const runTone = runStatusTone(orchestration);
   const modelLabel = "GLM";
   const skillCountLabel = `@${workspace.selectedSkillTags.length}`;
+  const mailboxStats = [
+    { label: "Project inbox", value: String(workspace.projects.length) },
+    { label: "Linked wiki", value: activeLinkedProject ? "1" : "0" },
+    { label: "Skill tags", value: String(workspace.selectedSkillTags.length) },
+    { label: "Run events", value: String((orchestration.events || []).length || 0) },
+  ];
   const shellClassName = [
     "aui-chat-product-shell",
     !sidebarOpen || focusMode ? "sidebar-collapsed" : "",
@@ -129,6 +148,16 @@ export function AssistantShell({ chatContext, workspace, orchestration, children
     await saveGlobalDraft();
   };
 
+  const moveConversation = async () => {
+    if (!selectedMoveProject) return;
+    const confirmed = window.confirm(
+      `현재 프로젝트의 대화 메시지 ${activeConversationCount}개를 "${selectedMoveProject.name || "GLM 프로젝트"}"로 이동할까요?`,
+    );
+    if (!confirmed) return;
+    await workspace.moveActiveConversation(selectedMoveProject.id);
+    setSettingsOpen(false);
+  };
+
   return (
     <main className={shellClassName}>
       <aside className="aui-project-sidebar" aria-label="GLM chat projects">
@@ -149,6 +178,15 @@ export function AssistantShell({ chatContext, workspace, orchestration, children
           <strong>{activeLinkedProject?.projectLabel || "프로젝트 연결 없음"}</strong>
           <span>{activeLinkedProject?.path || "프로젝트 연결/지침 설정"}</span>
         </button>
+
+        <section className="aui-mailbox-nav" aria-label="업무 메일함 요약">
+          {mailboxStats.map((item) => (
+            <div className="aui-mailbox-row" key={item.label}>
+              <span>{item.label}</span>
+              <strong>{item.value}</strong>
+            </div>
+          ))}
+        </section>
 
         <section className="aui-sidebar-section" aria-label="프로젝트 목록">
           <div className="aui-sidebar-heading">
@@ -179,6 +217,7 @@ export function AssistantShell({ chatContext, workspace, orchestration, children
       <section className="aui-chat-main" aria-label="GLM chat thread">
         <div className="aui-chat-main-utility">
           <div className="aui-chat-main-utility-copy">
+            <span className="aui-mail-thread-kicker">Operational thread</span>
             <div className="aui-chat-main-utility-title">
               <strong title={activeLinkedProject?.path || workspace.activeProject?.name || "현재 챗 프로젝트"}>
                 {activeLinkedProject?.projectLabel || workspace.activeProject?.name || "현재 챗 프로젝트"}
@@ -279,8 +318,45 @@ export function AssistantShell({ chatContext, workspace, orchestration, children
 
               <section className="aui-settings-section">
                 <div className="aui-settings-section-head">
-                  <strong>프로젝트 지침</strong>
-                  <span>이 챗에만 적용</span>
+                  <strong>대화 이동</strong>
+                  <span>{activeConversationCount}개 메시지</span>
+                </div>
+                <label>
+                  <span>이동 대상 프로젝트</span>
+                  <select
+                    value={moveTargetProjectId}
+                    onChange={(event) => setMoveTargetProjectId(event.target.value)}
+                    disabled={!moveTargetProjects.length}
+                  >
+                    {!moveTargetProjects.length ? <option value="">이동 가능한 프로젝트 없음</option> : null}
+                    {moveTargetProjects.map((project) => (
+                      <option key={project.id} value={project.id}>
+                        {project.name || "GLM 프로젝트"}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <div className="aui-link-preview">
+                  <span>이동 방식</span>
+                  <strong>{selectedMoveProject?.name || "대상 프로젝트 선택 필요"}</strong>
+                  <small>
+                    현재 프로젝트의 대화 메시지만 대상 프로젝트로 병합합니다. 프로젝트 이름, 위키 연결, 고정 지침은 옮기지 않습니다.
+                  </small>
+                </div>
+                <button
+                  className="aui-secondary-action aui-conversation-move-action"
+                  disabled={!canMoveConversation}
+                  onClick={moveConversation}
+                  type="button"
+                >
+                  현재 대화를 선택 프로젝트로 이동
+                </button>
+              </section>
+
+              <section className="aui-settings-section">
+                <div className="aui-settings-section-head">
+                  <strong>고정 지침</strong>
+                  <span>승격된 규칙만 유지</span>
                 </div>
                 <label>
                   <span>고객/범위/산출물/금지 표현</span>
@@ -290,6 +366,48 @@ export function AssistantShell({ chatContext, workspace, orchestration, children
                     onChange={(event) => setProjectInstructions(event.target.value)}
                   />
                 </label>
+              </section>
+
+              <section className="aui-settings-section">
+                <div className="aui-settings-section-head">
+                  <strong>자동 축적 메모리</strong>
+                  <span>{workspace.activeProject?.memories?.length || 0}건</span>
+                </div>
+                <div className="aui-settings-note-list">
+                  {(workspace.activeProject?.memories || []).slice(0, 8).map((memory) => (
+                    <article key={memory.id} className="aui-settings-note-card">
+                      <strong>{memory.title || "메모리"}</strong>
+                      <small>{memory.updatedAt || memory.createdAt || ""}</small>
+                      <p>{memory.content}</p>
+                    </article>
+                  ))}
+                  {!(workspace.activeProject?.memories || []).length ? (
+                    <p className="aui-settings-empty">최근 대화에서 누적된 작업 메모가 아직 없습니다.</p>
+                  ) : null}
+                </div>
+              </section>
+
+              <section className="aui-settings-section">
+                <div className="aui-settings-section-head">
+                  <strong>지침 승격 후보</strong>
+                  <span>{workspace.activeProject?.instructionCandidates?.length || 0}건</span>
+                </div>
+                <div className="aui-settings-note-list">
+                  {(workspace.activeProject?.instructionCandidates || []).slice(0, 8).map((candidate) => (
+                    <article key={candidate.id} className="aui-settings-note-card candidate">
+                      <strong>{candidate.title || "후보"}</strong>
+                      <small>{candidate.updatedAt || candidate.createdAt || ""}</small>
+                      <p>{candidate.content}</p>
+                      <div className="aui-settings-note-actions">
+                        <button className="aui-secondary-action" onClick={() => workspace.promoteInstructionCandidate(candidate.id)} type="button">지침으로 승격</button>
+                        <button onClick={() => workspace.deleteInstructionCandidate(candidate.id)} type="button">후보 삭제</button>
+                      </div>
+                    </article>
+                  ))}
+                  {!(workspace.activeProject?.instructionCandidates || []).length ? (
+                    <p className="aui-settings-empty">대화 중 확인된 원칙/선호/금지 표현은 여기서 검토 후 고정 지침으로 승격합니다.</p>
+                  ) : null}
+                </div>
               </section>
 
               <section className="aui-settings-section aui-settings-global">

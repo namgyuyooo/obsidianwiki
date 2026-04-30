@@ -1,19 +1,24 @@
-import type { FormEvent, KeyboardEvent } from "react";
-import { useEffect, useMemo, useState } from "react";
+import type { FormEvent, KeyboardEvent, PointerEvent, WheelEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type MouseEvent } from "react";
 import type { ChatContext } from "../../chat/constants";
 import { continueAfterCollection, runTargetedRclone } from "../../mission/api/controlPlaneApi";
 import {
+  deleteWikiPage as deleteWikiPageApi,
   applyWikiManagementCommand,
   browseFilesystem,
   browseRemoteDrive,
   fetchCollectionStatus,
+  fetchWikiDeletionCandidates,
   fetchWikiGraph,
   fetchWikiManagementCommands,
   refreshWikiGraph,
   runWikiManagementCommand,
+  enqueueWikiDeletionCandidates as enqueueWikiDeletionCandidatesApi,
   type CollectionStatusPayload,
   type FilesystemBrowsePayload,
   type RemoteBrowserPayload,
+  type WikiDeletionCandidate,
+  type WikiDeletionCandidatesPayload,
   type WikiGraphNode,
   type WikiGraphPayload,
   type WikiManagementApplyResult,
@@ -45,6 +50,7 @@ type WikiFolderGroup = {
 type WikiResultItem = WikiPageIndexItem | WikiSearchResult;
 type WikiSortKey = "relevance" | "updated" | "title" | "kind" | "status" | "size";
 type WikiSortDirection = "asc" | "desc";
+type WikiDocumentMode = "preview" | "edit";
 type CollectionQueueItem = {
   path: string;
   source: "manual" | "mirror";
@@ -113,6 +119,16 @@ const EMPTY_COLLECTION_STATUS: CollectionStatusPayload = {
   manifestFiles: [],
   processedFolders: [],
   processedFiles: [],
+};
+const EMPTY_DELETION_CANDIDATES: WikiDeletionCandidatesPayload = {
+  generatedAt: "",
+  workspace: "rtm",
+  candidates: [],
+  summary: {
+    total: 0,
+    high: 0,
+    orphan: 0,
+  },
 };
 const COLLECTION_QUEUE_STORAGE_KEY = "assistant-ui.collection-queue-snapshots";
 const COLLECTION_PRESETS: CollectionPreset[] = [
@@ -266,9 +282,53 @@ function inlineMarkdown(value: string) {
   return escapeHtml(value)
     .replace(/`([^`]+)`/g, "<code>$1</code>")
     .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
-    .replace(/\[\[([^\]|]+)\|([^\]]+)\]\]/g, '<span class="aui-wiki-link" title="$1">$2</span>')
-    .replace(/\[\[([^\]]+)\]\]/g, '<span class="aui-wiki-link">$1</span>')
-    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>');
+    .replace(/\[\[([^\]|]+)\|([^\]]+)\]\]/g, '<span class="aui-wiki-link" data-wiki-link="$1" title="$1">$2</span>')
+    .replace(/\[\[([^\]]+)\]\]/g, '<span class="aui-wiki-link" data-wiki-link="$1">$1</span>')
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" data-preview-link="$2">$1</a>');
+}
+
+function normalizeWikiLinkValue(value = "") {
+  return value.trim().replace(/\\/g, "/");
+}
+
+function basenameWithoutExtension(value = "") {
+  const normalized = normalizeWikiLinkValue(value);
+  const leaf = normalized.split("/").pop() || normalized;
+  return leaf.replace(/\.[^.]+$/, "");
+}
+
+function resolveWikiLinkTarget(target: string, activePath: string, pages: WikiPageIndexItem[]) {
+  const normalizedTarget = normalizeWikiLinkValue(target).replace(/^\/+/, "");
+  if (!normalizedTarget) return "";
+  const lowerTarget = normalizedTarget.toLowerCase();
+  const currentDir = normalizeWikiLinkValue(activePath).split("/").slice(0, -1).join("/");
+  const candidates = new Set<string>();
+  const pushCandidate = (value = "") => {
+    const cleaned = normalizeWikiLinkValue(value).replace(/^\/+/, "");
+    if (!cleaned) return;
+    candidates.add(cleaned);
+    if (!cleaned.toLowerCase().endsWith(".md")) candidates.add(`${cleaned}.md`);
+  };
+
+  pushCandidate(normalizedTarget);
+  if (currentDir) pushCandidate(`${currentDir}/${normalizedTarget}`);
+
+  for (const page of pages) {
+    const pagePath = normalizeWikiLinkValue(page.path).replace(/^\/+/, "");
+    const lowerPath = pagePath.toLowerCase();
+    for (const candidate of candidates) {
+      const lowerCandidate = candidate.toLowerCase();
+      if (lowerPath === lowerCandidate || lowerPath.endsWith(`/${lowerCandidate}`)) return page.path;
+    }
+  }
+
+  const normalizedTitle = basenameWithoutExtension(normalizedTarget).toLowerCase();
+  const titleMatch = pages.find((page) => {
+    const byTitle = String(page.title || "").trim().toLowerCase() === normalizedTitle;
+    const byBasename = basenameWithoutExtension(page.path).toLowerCase() === normalizedTitle;
+    return byTitle || byBasename;
+  });
+  return titleMatch?.path || "";
 }
 
 function isTableDivider(value = "") {
@@ -649,6 +709,7 @@ function WikiGraphPanel({
   activePath,
   graph,
   message,
+  onExpand,
   onOpenPage,
   onRefreshGraph,
   phase,
@@ -656,6 +717,7 @@ function WikiGraphPanel({
   activePath: string;
   graph: WikiGraphPayload;
   message: string;
+  onExpand?: () => void;
   onOpenPage: (path: string) => void;
   onRefreshGraph: () => void;
   phase: string;
@@ -665,6 +727,61 @@ function WikiGraphPanel({
   const edges = graph.edges.filter((edge) => nodeIds.has(edge.source) && nodeIds.has(edge.target)).slice(0, GRAPH_EDGE_LIMIT);
   const placed = graphLayout(nodes);
   const nodeById = new Map(placed.map((node) => [node.id, node]));
+  const [viewport, setViewport] = useState({ x: 0, y: 0, scale: onExpand ? 1 : 0.9 });
+  const [isDragging, setIsDragging] = useState(false);
+  const dragRef = useRef<{ pointerId: number | null; startX: number; startY: number; originX: number; originY: number }>({
+    pointerId: null,
+    startX: 0,
+    startY: 0,
+    originX: 0,
+    originY: 0,
+  });
+  const clampScale = (value: number) => Math.max(0.55, Math.min(2.4, Number(value.toFixed(3))));
+  const handleGraphPointerDown = (event: PointerEvent<HTMLDivElement>) => {
+    if (event.target instanceof Element && event.target.closest("button")) return;
+    dragRef.current = {
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      startY: event.clientY,
+      originX: viewport.x,
+      originY: viewport.y,
+    };
+    setIsDragging(true);
+    event.currentTarget.setPointerCapture(event.pointerId);
+  };
+  const handleGraphPointerMove = (event: PointerEvent<HTMLDivElement>) => {
+    if (dragRef.current.pointerId !== event.pointerId) return;
+    const dx = event.clientX - dragRef.current.startX;
+    const dy = event.clientY - dragRef.current.startY;
+    setViewport((current) => ({ ...current, x: dragRef.current.originX + dx, y: dragRef.current.originY + dy }));
+  };
+  const endGraphDrag = (event: PointerEvent<HTMLDivElement>) => {
+    if (dragRef.current.pointerId !== event.pointerId) return;
+    dragRef.current.pointerId = null;
+    setIsDragging(false);
+    event.currentTarget.releasePointerCapture(event.pointerId);
+  };
+  const handleGraphWheel = (event: WheelEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    const rect = event.currentTarget.getBoundingClientRect();
+    const pointerX = event.clientX - rect.left;
+    const pointerY = event.clientY - rect.top;
+    setViewport((current) => {
+      const nextScale = clampScale(current.scale * (event.deltaY > 0 ? 0.92 : 1.08));
+      const ratio = nextScale / current.scale;
+      return {
+        scale: nextScale,
+        x: pointerX - (pointerX - current.x) * ratio,
+        y: pointerY - (pointerY - current.y) * ratio,
+      };
+    });
+  };
+  const zoomGraph = (factor: number) => {
+    setViewport((current) => ({ ...current, scale: clampScale(current.scale * factor) }));
+  };
+  const resetGraphViewport = () => {
+    setViewport({ x: 0, y: 0, scale: onExpand ? 1 : 0.9 });
+  };
 
   return (
     <section className="aui-wiki-card aui-wiki-graph-card">
@@ -672,41 +789,64 @@ function WikiGraphPanel({
         <span>Graph Map</span>
         <strong>{nodes.length} nodes · {edges.length} links</strong>
       </div>
-      <div className="aui-wiki-graph-canvas" aria-label="wiki graph map">
-        <svg viewBox={`0 0 ${GRAPH_WIDTH} ${GRAPH_HEIGHT}`} role="img">
-          <title>Wiki graph links</title>
-          {edges.map((edge) => {
-            const source = nodeById.get(edge.source);
-            const target = nodeById.get(edge.target);
-            if (!source || !target) return null;
-            return (
-              <line
-                key={`${edge.source}-${edge.target}-${edge.label || ""}`}
-                x1={source.x}
-                x2={target.x}
-                y1={source.y}
-                y2={target.y}
-              />
-            );
-          })}
-        </svg>
-        {placed.map((node) => (
-          <button
-            className={node.id === activePath ? "active" : ""}
-            key={node.id}
-            onClick={() => onOpenPage(node.id)}
-            style={{
-              height: `${node.r * 2}px`,
-              left: `${(node.x / GRAPH_WIDTH) * 100}%`,
-              top: `${(node.y / GRAPH_HEIGHT) * 100}%`,
-              width: `${node.r * 2}px`,
-            }}
-            title={`${node.title} · degree ${node.degree || 0}`}
-            type="button"
-          >
-            <span>{node.title}</span>
-          </button>
-        ))}
+      <div className="aui-wiki-graph-toolbar">
+        <button onClick={() => zoomGraph(1.12)} type="button">확대 +</button>
+        <button onClick={() => zoomGraph(0.9)} type="button">축소 -</button>
+        <button onClick={resetGraphViewport} type="button">리셋</button>
+        <span>{Math.round(viewport.scale * 100)}%</span>
+      </div>
+      <div
+        aria-label="wiki graph map"
+        className="aui-wiki-graph-canvas"
+        onPointerCancel={endGraphDrag}
+        onPointerDown={handleGraphPointerDown}
+        onPointerMove={handleGraphPointerMove}
+        onPointerUp={endGraphDrag}
+        onWheel={handleGraphWheel}
+      >
+        <div
+          className={`aui-wiki-graph-stage ${isDragging ? "dragging" : ""}`}
+          style={{
+            height: `${GRAPH_HEIGHT}px`,
+            transform: `translate(${viewport.x}px, ${viewport.y}px) scale(${viewport.scale})`,
+            width: `${GRAPH_WIDTH}px`,
+          }}
+        >
+          <svg viewBox={`0 0 ${GRAPH_WIDTH} ${GRAPH_HEIGHT}`} role="img">
+            <title>Wiki graph links</title>
+            {edges.map((edge) => {
+              const source = nodeById.get(edge.source);
+              const target = nodeById.get(edge.target);
+              if (!source || !target) return null;
+              return (
+                <line
+                  key={`${edge.source}-${edge.target}-${edge.label || ""}`}
+                  x1={source.x}
+                  x2={target.x}
+                  y1={source.y}
+                  y2={target.y}
+                />
+              );
+            })}
+          </svg>
+          {placed.map((node) => (
+            <button
+              className={node.id === activePath ? "active" : ""}
+              key={node.id}
+              onClick={() => onOpenPage(node.id)}
+              style={{
+                height: `${node.r * 2}px`,
+                left: `${node.x}px`,
+                top: `${node.y}px`,
+                width: `${node.r * 2}px`,
+              }}
+              title={`${node.title} · degree ${node.degree || 0}`}
+              type="button"
+            >
+              <span>{node.title}</span>
+            </button>
+          ))}
+        </div>
       </div>
       <div className="aui-wiki-graph-list">
         {nodes.slice(0, 5).map((node) => (
@@ -718,6 +858,7 @@ function WikiGraphPanel({
         {!nodes.length ? <p className="aui-wiki-muted">그래프 스냅샷을 불러오면 연결 문서가 표시됩니다.</p> : null}
       </div>
       <div className="aui-wiki-toolbar-actions">
+        {onExpand ? <button onClick={onExpand} type="button">확대</button> : null}
         <button onClick={onRefreshGraph} type="button">그래프맵 업데이트</button>
       </div>
       <p className={`aui-wiki-inline-state ${phase}`}>{message}</p>
@@ -883,6 +1024,7 @@ function WikiManagementConsole({
 export function WikiWorkspace({ chatContext }: WikiWorkspaceProps) {
   const wiki = useWikiEvidenceConsole(chatContext.workspace);
   const [activeFolderKey, setActiveFolderKey] = useState(ALL_FOLDER_KEY);
+  const [documentMode, setDocumentMode] = useState<WikiDocumentMode>("preview");
   const [statusFilter, setStatusFilter] = useState(ALL_FILTER_VALUE);
   const [kindFilter, setKindFilter] = useState(ALL_FILTER_VALUE);
   const [sortKey, setSortKey] = useState<WikiSortKey>("updated");
@@ -910,8 +1052,87 @@ export function WikiWorkspace({ chatContext }: WikiWorkspaceProps) {
   const [wikiGraph, setWikiGraph] = useState<WikiGraphPayload>(EMPTY_GRAPH);
   const [graphPhase, setGraphPhase] = useState<"loading" | "idle" | "running" | "error">("loading");
   const [graphMessage, setGraphMessage] = useState("위키 그래프맵을 불러오는 중입니다.");
+  const [deletionCandidates, setDeletionCandidates] = useState<WikiDeletionCandidatesPayload>(EMPTY_DELETION_CANDIDATES);
+  const [deletionPhase, setDeletionPhase] = useState<"idle" | "loading" | "running" | "error">("idle");
+  const [deletionMessage, setDeletionMessage] = useState("삭제 추천을 분석해 디시전 큐 또는 직접 삭제로 보낼 수 있습니다.");
+  const [deletionReason, setDeletionReason] = useState("위키 정리: 불필요 자료 삭제");
+  const [graphModalOpen, setGraphModalOpen] = useState(false);
+  const [pageHistory, setPageHistory] = useState<string[]>([]);
+  const [pageFuture, setPageFuture] = useState<string[]>([]);
+  const navModeRef = useRef<"idle" | "push" | "back" | "forward">("idle");
+  const historyRef = useRef<string[]>([]);
+  const futureRef = useRef<string[]>([]);
   const selectedTitle = wiki.activePage?.title || wiki.activeIndexItem?.title || "문서를 선택하세요";
   const previewHtml = markdownPreview(wiki.markdownDraft || "");
+  useEffect(() => {
+    historyRef.current = pageHistory;
+  }, [pageHistory]);
+  useEffect(() => {
+    futureRef.current = pageFuture;
+  }, [pageFuture]);
+  useEffect(() => {
+    if (!wiki.activePath) return;
+    if (navModeRef.current === "back" || navModeRef.current === "forward") {
+      navModeRef.current = "idle";
+      return;
+    }
+    setPageHistory((current) => current[current.length - 1] === wiki.activePath ? current : [...current, wiki.activePath]);
+    if (navModeRef.current === "push") setPageFuture([]);
+    navModeRef.current = "idle";
+  }, [wiki.activePath]);
+  const openWikiPage = (path: string) => {
+    if (!path || path === wiki.activePath) return;
+    navModeRef.current = "push";
+    void wiki.openPage(path);
+  };
+  const goBackPage = () => {
+    const currentHistory = historyRef.current;
+    if (currentHistory.length < 2) return;
+    const currentPath = currentHistory[currentHistory.length - 1];
+    const previousPath = currentHistory[currentHistory.length - 2];
+    setPageHistory(currentHistory.slice(0, -1));
+    setPageFuture([currentPath, ...futureRef.current]);
+    navModeRef.current = "back";
+    void wiki.openPage(previousPath);
+  };
+  const goForwardPage = () => {
+    const [nextPath, ...rest] = futureRef.current;
+    if (!nextPath) return;
+    setPageFuture(rest);
+    setPageHistory([...historyRef.current, nextPath]);
+    navModeRef.current = "forward";
+    void wiki.openPage(nextPath);
+  };
+  const handlePreviewClick = (event: MouseEvent<HTMLDivElement>) => {
+    const target = event.target instanceof Element ? event.target : null;
+    if (!target) return;
+
+    const wikiLink = target.closest<HTMLElement>("[data-wiki-link]");
+    if (wikiLink) {
+      event.preventDefault();
+      const nextPath = resolveWikiLinkTarget(wikiLink.dataset.wikiLink || wikiLink.textContent || "", wiki.activePath, wiki.pages);
+      if (nextPath) openWikiPage(nextPath);
+      return;
+    }
+
+    const anchor = target.closest<HTMLAnchorElement>("a[data-preview-link]");
+    if (!anchor) return;
+    const href = anchor.getAttribute("href") || anchor.dataset.previewLink || "";
+    if (!href) return;
+    const normalizedHref = href.trim();
+    if (/^(https?:|mailto:|tel:)/i.test(normalizedHref)) {
+      anchor.setAttribute("target", "_blank");
+      anchor.setAttribute("rel", "noreferrer noopener");
+      return;
+    }
+    event.preventDefault();
+    const nextPath = resolveWikiLinkTarget(normalizedHref, wiki.activePath, wiki.pages);
+    if (nextPath) {
+      openWikiPage(nextPath);
+      return;
+    }
+    window.open(normalizedHref, "_blank", "noopener,noreferrer");
+  };
   const folderGroups = useMemo(() => buildFolderGroups(wiki.pages), [wiki.pages]);
   const activeFolder = folderGroups.find((folder) => folder.key === activeFolderKey) || null;
   const pageIndexByPath = useMemo(() => new Map(wiki.pages.map((page) => [page.path, page])), [wiki.pages]);
@@ -1048,7 +1269,7 @@ export function WikiWorkspace({ chatContext }: WikiWorkspaceProps) {
   const selectFolder = (folder: WikiFolderGroup | null) => {
     wiki.clearSearch();
     setActiveFolderKey(folder?.key || ALL_FOLDER_KEY);
-    if (folder?.pages[0]?.path) wiki.openPage(folder.pages[0].path);
+    if (folder?.pages[0]?.path) openWikiPage(folder.pages[0].path);
   };
 
   const handleEditorKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
@@ -1292,13 +1513,69 @@ export function WikiWorkspace({ chatContext }: WikiWorkspaceProps) {
     }
   };
 
+  const refreshDeletionCandidates = async () => {
+    setDeletionPhase("loading");
+    try {
+      const payload = await fetchWikiDeletionCandidates(chatContext.workspace, 24);
+      setDeletionCandidates(payload);
+      setDeletionPhase("idle");
+      setDeletionMessage(
+        payload.candidates.length
+          ? `${payload.candidates.length}건의 삭제 추천 후보를 계산했습니다.`
+          : "현재 규칙 기준으로 삭제 추천 후보가 없습니다.",
+      );
+    } catch (error) {
+      setDeletionPhase("error");
+      setDeletionMessage(error instanceof Error ? error.message : "삭제 추천 분석 실패");
+    }
+  };
+
+  const runDeletePage = async (path: string, title?: string) => {
+    if (!path) return;
+    setDeletionPhase("running");
+    try {
+      const result = await deleteWikiPageApi(path, deletionReason, chatContext.workspace);
+      await Promise.all([wiki.reloadIndex(), loadGraph()]);
+      setDeletionCandidates((current) => ({
+        ...current,
+        candidates: current.candidates.filter((candidate) => candidate.path !== path),
+      }));
+      setDeletionPhase("idle");
+      setDeletionMessage(`삭제 완료 · ${title || result.title || path}`);
+      appendReasonLog(`Delete · ${title || result.title || path}`, [path, deletionReason].filter(Boolean).join("\n"));
+    } catch (error) {
+      setDeletionPhase("error");
+      setDeletionMessage(error instanceof Error ? error.message : "문서 삭제 실패");
+    }
+  };
+
+  const enqueueDeletionRecommendations = async (paths?: string[]) => {
+    setDeletionPhase("running");
+    try {
+      const result = await enqueueWikiDeletionCandidatesApi({
+        workspace: chatContext.workspace,
+        paths,
+        limit: 24,
+      });
+      setDeletionPhase("idle");
+      setDeletionMessage(`삭제 추천 ${result.count}건을 디시전 큐로 보냈습니다.`);
+      appendReasonLog(
+        `Deletion decisions queued · ${result.count}건`,
+        (paths && paths.length ? paths : deletionCandidates.candidates.map((candidate) => candidate.path)).slice(0, 6).join("\n"),
+      );
+    } catch (error) {
+      setDeletionPhase("error");
+      setDeletionMessage(error instanceof Error ? error.message : "삭제 추천 큐 등록 실패");
+    }
+  };
+
   return (
-    <main className="aui-wiki-console">
+    <main className="aui-wiki-console aui-work-surface">
       <aside className="aui-wiki-sidebar" aria-label="wiki search and documents">
         <div className="aui-wiki-brand">
-          <span className="aui-kicker">wiki related / evidence ide</span>
-          <h1>Wiki</h1>
-          <p>검색, 조회, Markdown 수정, 상태 관리를 새 프론트에서 바로 수행합니다.</p>
+          <span className="aui-kicker">위키 문서</span>
+          <h1>문서함</h1>
+          <p>프로젝트와 상태 기준으로 문서를 찾아볼 수 있습니다.</p>
         </div>
 
         <form className="aui-wiki-search" onSubmit={handleSubmit}>
@@ -1389,7 +1666,7 @@ export function WikiWorkspace({ chatContext }: WikiWorkspaceProps) {
               <button
                 className={wiki.isActiveResult(item.path) ? "active" : ""}
                 key={item.path}
-                onClick={() => wiki.openPage(item.path)}
+                onClick={() => openWikiPage(item.path)}
                 type="button"
               >
                 <strong>{resultTitle(item)}</strong>
@@ -1404,7 +1681,7 @@ export function WikiWorkspace({ chatContext }: WikiWorkspaceProps) {
 
       <section className="aui-wiki-main" aria-label="wiki document editor">
         <div className="aui-wiki-cover">
-          <span>Evidence Console</span>
+          <span>Record body</span>
           <strong>{chatContext.workspace.toUpperCase()} workspace</strong>
         </div>
         <header className="aui-wiki-toolbar">
@@ -1417,6 +1694,8 @@ export function WikiWorkspace({ chatContext }: WikiWorkspaceProps) {
             <code>{wiki.activePage?.path || wiki.activePath || "path 없음"}</code>
           </div>
           <div className="aui-wiki-toolbar-actions">
+            <button disabled={pageHistory.length < 2} onClick={goBackPage} type="button">뒤로</button>
+            <button disabled={!pageFuture.length} onClick={goForwardPage} type="button">앞으로</button>
             <span className={`aui-wiki-save-state ${wiki.dirty ? "dirty" : "saved"}`}>
               {wiki.dirty ? "수정됨" : "저장됨"}
             </span>
@@ -1434,316 +1713,49 @@ export function WikiWorkspace({ chatContext }: WikiWorkspaceProps) {
           <div><span>Updated</span><strong>{shortDate(wiki.activeIndexItem?.updatedAt)}</strong></div>
         </div>
 
-        <section className="aui-wiki-pipeline-shell" aria-label="collection workbench">
-          <div className="aui-wiki-pipeline-summary">
-            <article>
-              <span>local browse</span>
-              <strong>{visibleCollectionEntries.length}</strong>
-              <small>{collectionPath}</small>
-            </article>
-            <article>
-              <span>remote browse</span>
-              <strong>{visibleRemoteItems.length}</strong>
-              <small>{remoteBrowser.currentPath || "root"}</small>
-            </article>
-            <article>
-              <span>queue eligible</span>
-              <strong>{eligibleQueueCount}</strong>
-              <small>{collectionQueue.length} total targets</small>
-            </article>
-            <article>
-              <span>pipeline state</span>
-              <strong>{collectionPhase}</strong>
-              <small>{collectionMessage}</small>
-            </article>
-          </div>
-
-          <div className="aui-wiki-pipeline-grid">
-            <form className="aui-wiki-collection-card" onSubmit={runCollectionBrowse}>
-              <div className="aui-wiki-collection-head">
-                <strong>Collection Browser</strong>
-                <span>{collectionPhase}</span>
+        <div className="aui-wiki-editor-grid">
+          <section className={`aui-wiki-document-pane ${documentMode}`} aria-label="wiki document body">
+            <div className="aui-wiki-document-head">
+              <div>
+                <span>{documentMode === "preview" ? "조회 모드" : "수정 모드"}</span>
+                <strong>문서 본문</strong>
               </div>
-              <label>
-                <span>로컬 / mirror 경로</span>
-                <input
-                  value={collectionPath}
-                  onChange={(event) => setCollectionPath(event.target.value)}
-                  placeholder="automation/drive_wikify/runtime/mirror"
-                />
-              </label>
-              <label>
-                <span>추가 힌트</span>
-                <input
-                  value={collectionNote}
-                  onChange={(event) => setCollectionNote(event.target.value)}
-                  placeholder="프로젝트명, 파일확장자, 조사 메모"
-                />
-              </label>
-              <div className="aui-wiki-collection-actions">
-                <button type="submit">경로 탐색</button>
+              <div className="aui-wiki-mode-toggle" role="group" aria-label="문서 조회 수정 모드">
                 <button
-                  onClick={() => {
-                    setCollectionResult(EMPTY_BROWSE);
-                    setCollectionMessage("Collection Browser를 초기화했습니다.");
-                  }}
+                  className={documentMode === "preview" ? "active" : ""}
+                  onClick={() => setDocumentMode("preview")}
                   type="button"
                 >
-                  초기화
+                  조회
+                </button>
+                <button
+                  className={documentMode === "edit" ? "active" : ""}
+                  onClick={() => setDocumentMode("edit")}
+                  type="button"
+                >
+                  수정
                 </button>
               </div>
-              <div className="aui-wiki-filter-grid">
-                <label>
-                  <span>브라우저 타입</span>
-                  <select
-                    value={collectionTypeFilter}
-                    onChange={(event) => {
-                      setCollectionPresetId("all");
-                      setCollectionTypeFilter(event.target.value as BrowseTypeFilter);
-                    }}
-                  >
-                    <option value="all">전체</option>
-                    <option value="directory">폴더</option>
-                    <option value="file">파일</option>
-                  </select>
-                </label>
-                <label>
-                  <span>확장자</span>
-                  <select
-                    value={collectionExtFilter}
-                    onChange={(event) => {
-                      setCollectionPresetId("all");
-                      setCollectionExtFilter(event.target.value);
-                    }}
-                  >
-                    <option value="all">전체 확장자</option>
-                    {collectionExtOptions.map((ext) => (
-                      <option key={ext} value={ext}>{ext}</option>
-                    ))}
-                  </select>
-                </label>
-                <label className="aui-wiki-filter-span-2">
-                  <span>경로 검색</span>
-                  <input
-                    value={collectionPathQuery}
-                    onChange={(event) => setCollectionPathQuery(event.target.value)}
-                    placeholder="경로명, 고객명, 파일명"
-                  />
-                </label>
-              </div>
-              <div className="aui-wiki-preset-row">
-                {COLLECTION_PRESETS.map((preset) => (
-                  <button
-                    className={collectionPresetId === preset.id ? "active" : ""}
-                    key={preset.id}
-                    onClick={() => applyCollectionPreset(preset)}
-                    type="button"
-                  >
-                    {preset.label}
-                  </button>
-                ))}
-              </div>
-              {collectionResult.blocked.length ? (
-                <div className="aui-wiki-collection-blocked">
-                  <strong>Blocked</strong>
-                  {collectionResult.blocked.slice(0, 5).map((path) => <small key={path}>{path}</small>)}
-                </div>
-              ) : null}
-              <div className="aui-wiki-collection-list">
-                {visibleCollectionEntries.slice(0, 8).map((entry) => {
-                  const remoteCandidate = entry.path.startsWith(MIRROR_PREFIX) ? remotePathFromMirror(entry.path) : "";
-                  const targetType = entry.type === "file" ? "file" : "directory";
-                  const routeHint = remoteCandidate ? projectRouteHint(remoteCandidate, wiki.pages) : null;
-                  const queueStatus = remoteCandidate ? queueStatusForPath(remoteCandidate, collectionStatus, targetType) : "";
-                  return (
-                    <article
-                      className="aui-wiki-collection-entry"
-                      key={`${entry.path}-${entry.type}`}
-                      title={remoteCandidate ? collectionStatusDetail(remoteCandidate, collectionStatus, targetType) : entry.path}
-                    >
-                      <div>
-                        <strong>{treeLabel(entry.path)}</strong>
-                        <span>{entry.type} · {entry.path}</span>
-                        {entry.updatedAt ? <small>{entry.updatedAt}</small> : null}
-                        {entry.type === "directory" ? <small>{entry.fileCount || 0} files · {entry.directoryCount || 0} dirs</small> : null}
-                        {routeHint ? <small>route hint · {routeHint.projectLabel} · score {routeHint.score}</small> : null}
-                        {remoteCandidate ? <small>status · {queueStatus}</small> : null}
-                      </div>
-                      {remoteCandidate ? (
-                        <div className="aui-wiki-collection-entry-actions">
-                          <button onClick={() => pushQueue(remoteCandidate, "mirror", targetType)} type="button">
-                            {targetType === "file" ? "파일 큐" : "큐에 추가"}
-                          </button>
-                        </div>
-                      ) : null}
-                    </article>
-                  );
-                })}
-              </div>
-            </form>
-
-            <section className="aui-wiki-collection-card" aria-label="remote drive browser">
-              <div className="aui-wiki-collection-head">
-                <strong>Remote Browser</strong>
-                <span>{remoteBrowser.remote ? `${remoteBrowser.remote}:${remoteBrowser.root || ""}` : "rclone"}</span>
-              </div>
-              <label>
-                <span>remote path</span>
-                <input
-                  value={remoteBrowsePath}
-                  onChange={(event) => setRemoteBrowsePath(event.target.value)}
-                  placeholder="예: 고객사/프로젝트A"
-                />
-              </label>
-              <div className="aui-wiki-collection-actions">
-                <button onClick={() => runRemoteBrowse(remoteBrowsePath)} type="button">remote 탐색</button>
-                <button onClick={() => runRemoteBrowse(remoteBrowser.parentPath || "")} type="button">상위로</button>
-                <button onClick={() => runRemoteBrowse("")} type="button">root</button>
-              </div>
-              {remoteBrowser.error ? <p className="aui-wiki-muted">{remoteBrowser.error}</p> : null}
-              <div className="aui-wiki-collection-list">
-                {visibleRemoteItems.slice(0, 12).map((item) => {
-                  const routeHint = projectRouteHint(item.remotePath, wiki.pages);
-                  const queueStatus = queueStatusForPath(item.remotePath, collectionStatus, item.type);
-                  return (
-                    <article
-                      className="aui-wiki-collection-entry"
-                      key={`${item.remotePath}-${item.type}`}
-                      title={collectionStatusDetail(item.remotePath, collectionStatus, item.type)}
-                    >
-                      <div>
-                        <strong>{item.name}</strong>
-                        <span>{item.type} · {item.remotePath}</span>
-                        <small>{item.updatedAt || "-"}</small>
-                        {routeHint ? <small>route hint · {routeHint.projectLabel} · score {routeHint.score}</small> : null}
-                        <small>status · {queueStatus}</small>
-                      </div>
-                      <div className="aui-wiki-collection-entry-actions">
-                        {item.type === "directory" ? (
-                          <button onClick={() => runRemoteBrowse(item.remotePath)} type="button">열기</button>
-                        ) : null}
-                        <button onClick={() => pushQueue(item.remotePath, "manual", item.type)} type="button">
-                          {item.type === "file" ? "파일 큐" : "큐에 추가"}
-                        </button>
-                      </div>
-                    </article>
-                  );
-                })}
-                {!remoteBrowser.items.length ? <p className="aui-wiki-muted">remote path를 열어 rclone 대상 폴더를 탐색하세요.</p> : null}
-              </div>
-            </section>
-
-            <section className="aui-wiki-collection-card">
-              <div className="aui-wiki-collection-head">
-                <strong>Collection Queue</strong>
-                <span>{eligibleQueueCount} eligible</span>
-              </div>
-              <label className="aui-wiki-status-form">
-                <span>queue snapshot</span>
-                <input
-                  value={queueSnapshotName}
-                  onChange={(event) => setQueueSnapshotName(event.target.value)}
-                  placeholder="예: sawnics-office-set"
-                />
-              </label>
-              <div className="aui-wiki-toolbar-actions">
-                <button disabled={!collectionQueue.length} onClick={saveCurrentQueueSnapshot} type="button">큐 저장</button>
-                <select value={selectedQueueSnapshotId} onChange={(event) => setSelectedQueueSnapshotId(event.target.value)}>
-                  <option value="">저장된 큐 선택</option>
-                  {savedQueues.map((snapshot) => (
-                    <option key={snapshot.id} value={snapshot.id}>{snapshot.name} · {snapshot.items.length}</option>
-                  ))}
-                </select>
-                <button disabled={!selectedQueueSnapshotId} onClick={loadQueueSnapshot} type="button">불러오기</button>
-                <button disabled={!selectedQueueSnapshotId} onClick={deleteQueueSnapshot} type="button">삭제</button>
-              </div>
-              <label className="aui-wiki-status-form">
-                <span>remote path 추가</span>
-                <input
-                  value={remotePathDraft}
-                  onChange={(event) => setRemotePathDraft(event.target.value)}
-                  placeholder="예: 고객사/프로젝트A 또는 folder/subfolder"
-                />
-              </label>
-              <div className="aui-wiki-toolbar-actions">
-                <button onClick={addManualQueuePath} type="button">큐에 추가</button>
-                <button disabled={!collectionQueue.length || collectionPhase === "running"} onClick={() => runCollectionQueue(true)} type="button">batch dry-run</button>
-                <button disabled={!collectionQueue.length || collectionPhase === "running"} onClick={() => runCollectionQueue(false)} type="button">batch run</button>
-                <button disabled={queueRunMode !== "run" && collectionPhase !== "idle"} onClick={runQueueContinue} type="button">수집 후 계속</button>
-              </div>
-              <div className="aui-wiki-queue-list">
-                {collectionQueue.map((item) => {
-                  const routeHint = projectRouteHint(item.path, wiki.pages);
-                  const queueStatus = queueStatusForPath(item.path, collectionStatus, item.targetType);
-                  const isRunning = collectionPhase === "running" && queueActionPath === item.path;
-                  return (
-                    <article
-                      className="aui-wiki-queue-item"
-                      key={item.path}
-                      title={collectionStatusDetail(item.path, collectionStatus, item.targetType)}
-                    >
-                      <strong>{item.path}</strong>
-                      <span>{item.source === "mirror" ? "mirror derived" : "manual remote path"} · {item.targetType} · {queueStatus}</span>
-                      {routeHint ? (
-                        <small>
-                          expected wiki · {routeHint.projectLabel} · score {routeHint.score}
-                        </small>
-                      ) : null}
-                      <small>{collectionImpactPreview(item.path, item.targetType, queueStatus, routeHint)}</small>
-                      <small>
-                        flags · {item.onHold ? "hold" : "active"} · {item.approved === false ? "approval pending" : "approved"} · last {item.lastAction || "idle"}
-                        {item.lastError ? ` · error ${item.lastError}` : ""}
-                      </small>
-                      <div className="aui-wiki-queue-actions">
-                        <button disabled={collectionPhase === "running"} onClick={() => runSingleQueueItem(item, true)} type="button">
-                          {isRunning ? "실행중" : item.lastAction === "failed" ? "retry dry-run" : "dry-run"}
-                        </button>
-                        <button disabled={collectionPhase === "running"} onClick={() => runSingleQueueItem(item, false)} type="button">
-                          {item.lastAction === "failed" ? "retry run" : "run"}
-                        </button>
-                        <button
-                          disabled={collectionPhase === "running"}
-                          onClick={() => updateQueueItem(item.path, (current) => ({ ...current, onHold: !current.onHold }))}
-                          type="button"
-                        >
-                          {item.onHold ? "hold 해제" : "hold"}
-                        </button>
-                        <button
-                          disabled={collectionPhase === "running"}
-                          onClick={() => updateQueueItem(item.path, (current) => ({ ...current, approved: current.approved === false }))}
-                          type="button"
-                        >
-                          {item.approved === false ? "approve" : "승인해제"}
-                        </button>
-                        <button disabled={collectionPhase === "running"} onClick={() => removeQueuePath(item.path)} type="button">제거</button>
-                      </div>
-                    </article>
-                  );
-                })}
-                {!collectionQueue.length ? <p className="aui-wiki-muted">mirror 브라우징 결과나 수동 입력으로 수집 대상을 큐에 담으세요.</p> : null}
-              </div>
-            </section>
-          </div>
-        </section>
-
-        <div className="aui-wiki-editor-grid">
-          <section className="aui-wiki-preview" aria-label="live markdown preview">
-            <div className="aui-wiki-preview-head">
-              <span>Live preview</span>
-              <strong>Notion-style 읽기 화면</strong>
             </div>
-            <div className="aui-wiki-preview-body" dangerouslySetInnerHTML={{ __html: previewHtml || "<p>미리보기 내용 없음</p>" }} />
+            {documentMode === "preview" ? (
+              <div
+                className="aui-wiki-preview-body"
+                dangerouslySetInnerHTML={{ __html: previewHtml || "<p>미리보기 내용 없음</p>" }}
+                onClick={handlePreviewClick}
+              />
+            ) : (
+              <label className="aui-wiki-editor">
+                <span>Markdown 원문</span>
+                <textarea
+                  disabled={!wiki.activePage}
+                  onChange={(event) => wiki.setMarkdownDraft(event.target.value)}
+                  onKeyDown={handleEditorKeyDown}
+                  placeholder="문서를 선택하면 Markdown 원문을 수정할 수 있습니다."
+                  value={wiki.markdownDraft}
+                />
+              </label>
+            )}
           </section>
-          <label className="aui-wiki-editor">
-            <span>Markdown 편집</span>
-            <textarea
-              disabled={!wiki.activePage}
-              onChange={(event) => wiki.setMarkdownDraft(event.target.value)}
-              onKeyDown={handleEditorKeyDown}
-              placeholder="문서를 선택하면 Markdown 원문을 수정할 수 있습니다."
-              value={wiki.markdownDraft}
-            />
-          </label>
         </div>
       </section>
 
@@ -1770,16 +1782,62 @@ export function WikiWorkspace({ chatContext }: WikiWorkspaceProps) {
           <StatusEditor page={wiki.activeIndexItem} catalog={wiki.statusCatalog} onSave={wiki.saveActiveStatus} />
         </section>
 
+        <section className="aui-wiki-card">
+          <span>삭제 정리</span>
+          <strong>{deletionCandidates.summary?.total || 0} candidate pages</strong>
+          <p>{deletionMessage}</p>
+          <label className="aui-field">
+            <span>삭제 사유</span>
+            <textarea rows={3} value={deletionReason} onChange={(event) => setDeletionReason(event.target.value)} />
+          </label>
+          <div className="aui-decision-compare-actions">
+            <button className="aui-wide-action" disabled={deletionPhase === "loading" || deletionPhase === "running"} onClick={refreshDeletionCandidates} type="button">삭제 추천 분석</button>
+            <button
+              className="aui-wide-action"
+              disabled={deletionPhase === "loading" || deletionPhase === "running" || !deletionCandidates.candidates.length}
+              onClick={() => enqueueDeletionRecommendations()}
+              type="button"
+            >
+              추천을 디시전으로
+            </button>
+          </div>
+          <div className="aui-wiki-queue-list">
+            {wiki.activeIndexItem?.path ? (
+              <button
+                className="aui-wide-action danger"
+                disabled={deletionPhase === "running" || wiki.activeIndexItem.statusManaged === false}
+                onClick={() => runDeletePage(wiki.activeIndexItem?.path || "", wiki.activeIndexItem?.title)}
+                type="button"
+              >
+                현재 문서 바로 삭제
+              </button>
+            ) : null}
+            {deletionCandidates.candidates.slice(0, 6).map((candidate: WikiDeletionCandidate) => (
+              <div className="aui-wiki-thinking" key={candidate.path}>
+                <strong>{candidate.title}</strong>
+                <pre>{[`score ${candidate.score}`, candidate.path, ...candidate.reasons.slice(0, 3)].join("\n")}</pre>
+                <div className="aui-decision-compare-actions">
+                  <button className="aui-wide-action" onClick={() => openWikiPage(candidate.path)} type="button">열기</button>
+                  <button className="aui-wide-action" onClick={() => enqueueDeletionRecommendations([candidate.path])} type="button">디시전 등록</button>
+                  <button className="aui-wide-action danger" onClick={() => runDeletePage(candidate.path, candidate.title)} type="button">바로 삭제</button>
+                </div>
+              </div>
+            ))}
+            {!deletionCandidates.candidates.length ? <p className="aui-wiki-muted">삭제 추천 분석을 실행하면 고아/임시/보관 문서 후보를 보여줍니다.</p> : null}
+          </div>
+        </section>
+
         <WikiGraphPanel
           activePath={wiki.activePath}
           graph={wikiGraph}
           message={graphMessage}
-          onOpenPage={wiki.openPage}
+          onExpand={() => setGraphModalOpen(true)}
+          onOpenPage={openWikiPage}
           onRefreshGraph={runGraphRefresh}
           phase={graphPhase}
         />
 
-        <WikiManagementConsole onOpenPage={wiki.openPage} onReloadIndex={wiki.reloadIndex} />
+        <WikiManagementConsole onOpenPage={openWikiPage} onReloadIndex={wiki.reloadIndex} />
 
         <section className="aui-wiki-card">
           <span>Thinking Log</span>
@@ -1795,6 +1853,31 @@ export function WikiWorkspace({ chatContext }: WikiWorkspaceProps) {
           </div>
         </section>
       </aside>
+      {graphModalOpen ? (
+        <div className="aui-settings-overlay" role="dialog" aria-label="그래프맵 확대 보기" aria-modal="true">
+          <button className="aui-settings-scrim" onClick={() => setGraphModalOpen(false)} type="button" aria-label="그래프맵 닫기" />
+          <section className="aui-wiki-graph-modal">
+            <header className="aui-wiki-graph-modal-head">
+              <div>
+                <span>Graph Map</span>
+                <strong>{wikiGraph.nodes.length} nodes · {wikiGraph.edges.length} links</strong>
+              </div>
+              <div className="aui-wiki-toolbar-actions">
+                <button onClick={runGraphRefresh} type="button">그래프맵 업데이트</button>
+                <button onClick={() => setGraphModalOpen(false)} type="button">닫기</button>
+              </div>
+            </header>
+            <WikiGraphPanel
+              activePath={wiki.activePath}
+              graph={wikiGraph}
+              message={graphMessage}
+              onOpenPage={openWikiPage}
+              onRefreshGraph={runGraphRefresh}
+              phase={graphPhase}
+            />
+          </section>
+        </div>
+      ) : null}
     </main>
   );
 }

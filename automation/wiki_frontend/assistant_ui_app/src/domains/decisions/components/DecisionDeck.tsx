@@ -55,12 +55,12 @@ export function DecisionDeck({ chatContext }: DecisionDeckProps) {
     <WorkspaceSurface variant="decision">
       <section className="aui-brand-panel" aria-label="decision queue rail">
         <BrandCard
-          eyebrow="decision os"
-          title="Decision Deck"
-          description="충돌, 미확정 사실, 버전 차이를 카드 단위로 검수하고 GLM 보조 판정을 바로 실행합니다."
+          eyebrow="decision mailbox"
+          title="판정 작업함"
+          description="충돌, 미확정 사실, 버전 차이를 업무 큐로 접수하고 GLM 보조 판정, 병합, 승인 로그까지 처리합니다."
         />
         <StatGrid stats={stats} />
-        <PanelCard eyebrow="Queue Rail" title={`${deck.pendingItems.length}건`}>
+        <PanelCard eyebrow="Pending queue" title={`${deck.pendingItems.length}건`}>
           <div className="aui-project-list">
             {deck.pendingItems.map((queueItem) => (
               <RailButton
@@ -76,7 +76,7 @@ export function DecisionDeck({ chatContext }: DecisionDeckProps) {
           <button className="aui-wide-action" onClick={() => deck.reload()} type="button">큐 새로고침</button>
         </PanelCard>
 
-        <PanelCard eyebrow="Audit Trail" title={`${deck.resolvedItems.length}건`}>
+        <PanelCard eyebrow="Audit trail" title={`${deck.resolvedItems.length}건`}>
           <div className="aui-decision-history">
             {deck.resolvedItems.slice(0, 8).map((historyItem) => (
               <article key={historyItem.id}>
@@ -92,7 +92,7 @@ export function DecisionDeck({ chatContext }: DecisionDeckProps) {
 
       <section className="aui-chat-stage aui-decision-stage" aria-label="decision card">
         <StageHeader
-          eyebrow="data conflict triage"
+          eyebrow="decision record body"
           meta={currentPosition}
           title={item?.projectLabel || item?.projectKey || "판정할 카드 없음"}
         />
@@ -108,7 +108,7 @@ export function DecisionDeck({ chatContext }: DecisionDeckProps) {
               <h2>{item.title || "Conflict Register"}</h2>
               <div className="aui-decision-card-grid">
                 <section>
-                  <span>판단 내용</span>
+                  <span>접수된 판단 내용</span>
                   {deck.activeContentItems.length ? (
                     <ul>
                       {deck.activeContentItems.map((line) => <li key={line}>{line}</li>)}
@@ -118,9 +118,13 @@ export function DecisionDeck({ chatContext }: DecisionDeckProps) {
                   )}
                 </section>
                 <section>
-                  <span>반영 대상</span>
-                  <strong>Conflict_Register.md</strong>
-                  <p>승인 시 이 프로젝트의 충돌/정합성 기록에 감사 메모와 함께 반영됩니다.</p>
+                  <span>업무 반영 대상</span>
+                  <strong>{deck.activeIsDeletion ? "문서 삭제 + deletion audit" : "Conflict_Register.md"}</strong>
+                  <p>
+                    {deck.activeIsDeletion
+                      ? "승인 시 보호 규칙을 다시 확인한 뒤 실제 문서를 삭제하고 감사 로그를 남깁니다."
+                      : "승인 시 이 프로젝트의 충돌/정합성 기록에 감사 메모와 함께 반영됩니다."}
+                  </p>
                 </section>
               </div>
               <div className="aui-decision-path-stack">
@@ -157,7 +161,7 @@ export function DecisionDeck({ chatContext }: DecisionDeckProps) {
       </section>
 
       <aside className="aui-context-panel" aria-label="decision assistant">
-        <PanelCard eyebrow="LLM Directive" title="덱 안에서 판정">
+        <PanelCard eyebrow="LLM directive" title="작업함 안에서 판정">
           <label className="aui-field">
             <span>처리 지시</span>
             <textarea

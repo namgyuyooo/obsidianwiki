@@ -29,7 +29,7 @@ function shortList(items: string[] | undefined) {
 export function SpotliteBoard({ chatContext }: SpotliteBoardProps) {
   const [scope, setScope] = useState<"work" | "personal">("work");
   const [phase, setPhase] = useState("loading");
-  const [message, setMessage] = useState("Spotlite를 불러오는 중입니다.");
+  const [message, setMessage] = useState("요약 화면을 불러오는 중입니다.");
   const [spotlite, setSpotlite] = useState<SpotlitePayload>(EMPTY_SPOTLITE);
   const [templates, setTemplates] = useState<SpotliteTemplatesPayload>({ templates: [] });
 
@@ -43,10 +43,10 @@ export function SpotliteBoard({ chatContext }: SpotliteBoardProps) {
       setSpotlite(summary);
       setTemplates(nextTemplates);
       setPhase("ready");
-      setMessage("Spotlite 동기화 완료.");
+      setMessage("요약 화면 동기화 완료.");
     } catch (error) {
       setPhase("error");
-      setMessage(error instanceof Error ? error.message : "Spotlite 로드 실패");
+      setMessage(error instanceof Error ? error.message : "요약 화면 로드 실패");
     }
   };
 
@@ -60,10 +60,10 @@ export function SpotliteBoard({ chatContext }: SpotliteBoardProps) {
       const result = await refreshSpotlite(scope);
       setSpotlite(result);
       setPhase("ready");
-      setMessage("Spotlite GLM refresh 완료.");
+      setMessage("요약 갱신 완료.");
     } catch (error) {
       setPhase("error");
-      setMessage(error instanceof Error ? error.message : "Spotlite refresh 실패");
+      setMessage(error instanceof Error ? error.message : "요약 갱신 실패");
     }
   };
 
@@ -71,9 +71,9 @@ export function SpotliteBoard({ chatContext }: SpotliteBoardProps) {
     <main className="aui-ops-surface">
       <section className="aui-ops-hero">
         <div>
-          <span className="aui-kicker">mission / work personal focus board</span>
-          <h1>Spotlite</h1>
-          <p>{chatContext.workspace.toUpperCase()} 기준 진행 중 프로젝트 신호를 오늘, 이번주, 리스크 중심으로 압축해서 보여줍니다.</p>
+          <span className="aui-kicker">요약</span>
+          <h1>요약</h1>
+          <p>{chatContext.workspace.toUpperCase()} 기준 진행 중 프로젝트 신호를 오늘, 이번주, 리스크 중심으로 보여줍니다.</p>
         </div>
         <aside className={`aui-ops-live ${phase}`}>
           <strong>{phase}</strong>
@@ -81,7 +81,7 @@ export function SpotliteBoard({ chatContext }: SpotliteBoardProps) {
           <div className="aui-ops-actions">
             <button className={scope === "work" ? "active" : ""} onClick={() => setScope("work")} type="button">work</button>
             <button className={scope === "personal" ? "active" : ""} onClick={() => setScope("personal")} type="button">personal</button>
-            <button onClick={refreshDigest} type="button">GLM refresh</button>
+            <button onClick={refreshDigest} type="button">요약 갱신</button>
           </div>
         </aside>
       </section>

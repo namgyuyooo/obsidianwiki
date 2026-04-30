@@ -178,6 +178,36 @@ export type CollectionStatusPayload = {
   updatedAt?: string;
 };
 
+export type WikiDeletionCandidate = {
+  title: string;
+  path: string;
+  projectKey?: string;
+  projectLabel?: string;
+  division?: string;
+  docKind?: string;
+  workflowStatus?: string;
+  workflowStatusLabel?: string;
+  updatedAt?: string;
+  size?: number;
+  deletable: boolean;
+  protected: boolean;
+  score: number;
+  reasons: string[];
+  ageDays?: number | null;
+  linkDegree?: number;
+};
+
+export type WikiDeletionCandidatesPayload = {
+  generatedAt: string;
+  workspace: string;
+  candidates: WikiDeletionCandidate[];
+  summary?: {
+    total?: number;
+    high?: number;
+    orphan?: number;
+  };
+};
+
 async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(path, {
     ...init,
@@ -213,6 +243,13 @@ export async function saveWikiPage(path: string, markdown: string) {
   return requestJson<{ status: string; path: string; title: string; updatedAt: string; projectKeyAutofixed?: boolean }>("/api/wiki/page", {
     method: "PUT",
     body: JSON.stringify({ path, markdown }),
+  });
+}
+
+export async function deleteWikiPage(path: string, reason: string, workspace: string) {
+  return requestJson<{ status: string; path: string; title: string; reason?: string; workspace: string; timestamp: string }>("/api/wiki/page/delete", {
+    method: "POST",
+    body: JSON.stringify({ path, reason, workspace }),
   });
 }
 
@@ -288,4 +325,19 @@ export async function browseRemoteDrive(path = "") {
 
 export async function fetchCollectionStatus() {
   return requestJson<CollectionStatusPayload>("/api/collection/status");
+}
+
+export async function fetchWikiDeletionCandidates(workspace: string, limit = 24) {
+  return requestJson<WikiDeletionCandidatesPayload>(`/api/wiki/deletion-candidates?workspace=${encodeURIComponent(workspace)}&limit=${encodeURIComponent(String(limit))}`);
+}
+
+export async function enqueueWikiDeletionCandidates(input: {
+  workspace: string;
+  paths?: string[];
+  limit?: number;
+}) {
+  return requestJson<{ status: string; workspace: string; count: number }>("/api/wiki/deletion-candidates/enqueue", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
 }

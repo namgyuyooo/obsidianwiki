@@ -20,6 +20,8 @@ source: ""
 - [[Wiki/log]]: 위키 운영의 시간 순 로그
 - [[Wiki/Common/Wiki_Reference_Operating_Model]]: 링크 우선 참조 레지스터 운영 모델
 - [[Wiki/Common/Reference_Link_Restoration_Queue]]: URL이 비어 있는 참조 항목의 복원 큐
+- [[Wiki/Common/Decisions]]: Common 운영 판단과 디시전큐 확정 결과
+- [[Wiki/Common/Action_Items]]: Common 운영 후속 실행 큐
 - [[Wiki/Common/Evidence_Candidate_Map]]: 공개 Slack 증적을 프로젝트 후보와 첨부파일 기준으로 시각화한 후보맵
 - [[Wiki/Common/Collection_Coverage_Assessment]]: 현재까지 만든 프로젝트 문서의 수집량 평가와 남은 공개 채널 탐색 결과
 - [[Wiki/Common/Project_Deepening_TODO]]: 생성된 프로젝트 폴더를 실제 위키 지식으로 심화하기 위한 남은 작업 목록
@@ -41,6 +43,8 @@ source: ""
 - [[Wiki/Common/MOCVD_Recipe]]: 여러 프로젝트에서 재사용하는 공정 개념
 - [[Wiki/Common/Wiki_Reference_Operating_Model]]: 요약은 남기되 원문 위치와 링크를 추적하는 참조 중심 운영 기준
 - [[Wiki/Common/Reference_Link_Restoration_Queue]]: URL 미복원 참조를 Slack/Drive/Local 기준으로 추적하는 복원 작업 큐
+- [[Wiki/Common/Decisions]]: Common 운영 판단과 디시전큐 확정 결과
+- [[Wiki/Common/Action_Items]]: Common 운영 후속 실행 큐
 - [[Wiki/Common/Wiki_Ingest_Operating_Model]]: 구조 관리와 실제 내용 보존을 함께 다루는 운영 원칙
 - [[Wiki/Common/Wiki_Ingest_Templates]]: Reference Register, Status, Evidence Log, Action/Decision 템플릿
 - [[Wiki/Common/Wiki_Ingest_Prompt_Set]]: 상황별 인제스트 프롬프트 모음
@@ -69,6 +73,8 @@ source: ""
 - [[Wiki/Common/MOCVD_Recipe]]: 여러 프로젝트에서 재사용하는 공정 개념
 - [[Wiki/Common/Wiki_Reference_Operating_Model]]: 링크 우선 참조 레지스터 운영 모델
 - [[Wiki/Common/Reference_Link_Restoration_Queue]]: URL 미복원 참조 복원 큐
+- [[Wiki/Common/Decisions]]: Common 운영 판단과 디시전큐 확정 결과
+- [[Wiki/Common/Action_Items]]: Common 운영 후속 실행 큐
 - [[Wiki/Common/Wiki_Ingest_Operating_Model]]: 구조 관리와 실제 내용 보존을 함께 다루는 운영 원칙
 - [[Wiki/Common/Wiki_Ingest_Templates]]: Reference Register, Status, Evidence Log, Action/Decision 템플릿
 - [[Wiki/Common/Wiki_Ingest_Prompt_Set]]: 상황별 인제스트 프롬프트 모음
