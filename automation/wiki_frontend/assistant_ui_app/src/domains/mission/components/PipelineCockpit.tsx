@@ -239,6 +239,12 @@ export function PipelineCockpit({ chatContext }: PipelineCockpitProps) {
     const key = commandKey(run.command);
     if (key && !latestRunsByCommand.has(key)) latestRunsByCommand.set(key, run);
   });
+  const hasCompletedSlackDryRun = automation.runs.some((run) => (
+    run.command === "slack-collect --dry-run"
+    && run.status === "completed"
+    && selectedChannels.every((channel) => (run.stdout || "").includes(`#${channel}`) || (run.stdout || "").includes(channel))
+  ));
+  const slackTestReady = Boolean(selectedChannels.length && (tested.slack || hasCompletedSlackDryRun));
 
   const refreshCollectionState = async () => {
     const [nextSlackStatus, analysisPayload, automationPayload, schedulePayload] = await Promise.all([
@@ -468,7 +474,11 @@ export function PipelineCockpit({ chatContext }: PipelineCockpitProps) {
         limitPerChannel,
         dryRun: testOnly,
       });
-      if (testOnly) setTested((current) => ({ ...current, slack: true }));
+      if (testOnly) {
+        const nextTested = { ...tested, slack: true };
+        setTested(nextTested);
+        await savePipelineState({ tested: nextTested });
+      }
     },
     testOnly ? "Slack 테스트를 실행했습니다." : "Slack 실제 수집을 실행했습니다.",
     testOnly ? "Slack 테스트" : "Slack 실제 수집",
@@ -476,6 +486,10 @@ export function PipelineCockpit({ chatContext }: PipelineCockpitProps) {
 
   const runPostCollection = async () => {
     if (continueAfterCollect) await continueAfterCollection();
+    if (refreshAfterCollect) await triggerAutomation("refresh-global");
+  };
+
+  const runSlackPostCollection = async () => {
     if (refreshAfterCollect) await triggerAutomation("refresh-global");
   };
 
@@ -508,9 +522,13 @@ export function PipelineCockpit({ chatContext }: PipelineCockpitProps) {
       limitPerChannel,
       dryRun: testOnly,
     });
-    if (testOnly) setTested((current) => ({ ...current, slack: true }));
-    if (!testOnly) await runPostCollection();
-  }, testOnly ? "Slack 테스트를 실행했습니다." : "Slack 실제 수집과 후속 자동화를 실행했습니다.", testOnly ? "Slack 테스트" : "Slack 실제 수집");
+    if (testOnly) {
+      const nextTested = { ...tested, slack: true };
+      setTested(nextTested);
+      await savePipelineState({ tested: nextTested });
+    }
+    if (!testOnly) await runSlackPostCollection();
+  }, testOnly ? "Slack 테스트를 실행했습니다." : "Slack 실제 수집과 검색/그래프 반영을 실행했습니다.", testOnly ? "Slack 테스트" : "Slack 실제 수집");
 
   const runDrivePlanner = () => runAction(async () => {
     const result = await analyzeDriveInstruction(objective.trim());
@@ -540,7 +558,7 @@ export function PipelineCockpit({ chatContext }: PipelineCockpitProps) {
       notify("error", "Slack 실제 수집 보류", "채널을 먼저 선택해야 실제 수집을 시작할 수 있습니다.");
       return;
     }
-    if (!tested.slack) {
+    if (!slackTestReady) {
       setPhase("error");
       setMessage("Slack 실제 수집 전 `Slack 테스트`를 먼저 눌러 범위와 권한을 확인하세요.");
       notify("error", "Slack 실제 수집 보류", "먼저 Slack 테스트를 눌러 범위와 권한을 확인하세요.");
@@ -832,7 +850,7 @@ export function PipelineCockpit({ chatContext }: PipelineCockpitProps) {
           <div className="aui-pipeline-automation-options">
             <label>
               <input checked={continueAfterCollect} onChange={(event) => setContinueAfterCollect(event.target.checked)} type="checkbox" />
-              <span>수집 후 위키 초안까지 반영</span>
+              <span>Drive/파일 수집 후 위키 초안까지 반영</span>
             </label>
             <label>
               <input checked={refreshAfterCollect} onChange={(event) => setRefreshAfterCollect(event.target.checked)} type="checkbox" />
@@ -947,8 +965,8 @@ export function PipelineCockpit({ chatContext }: PipelineCockpitProps) {
           </p>
           <div className="aui-pipeline-readiness">
             {sources.slack ? (
-              <span className={selectedChannels.length && tested.slack ? "ready" : "hold"}>
-                Slack: {selectedChannels.length ? tested.slack ? "실제 수집 가능" : "테스트 필요" : "채널 선택 필요"}
+              <span className={slackTestReady ? "ready" : "hold"}>
+                Slack: {selectedChannels.length ? slackTestReady ? "실제 수집 가능" : "테스트 필요" : "채널 선택 필요"}
               </span>
             ) : null}
             {sources.drive ? (

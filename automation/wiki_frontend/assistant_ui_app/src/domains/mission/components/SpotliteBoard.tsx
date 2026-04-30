@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import type { ChatContext } from "../../chat/constants";
+import { useToastCenter } from "../../../components/surface/ToastCenter";
 import {
   fetchSpotlite,
   fetchSpotliteTemplates,
@@ -27,6 +28,7 @@ function shortList(items: string[] | undefined) {
 }
 
 export function SpotliteBoard({ chatContext }: SpotliteBoardProps) {
+  const { notify } = useToastCenter();
   const [scope, setScope] = useState<"work" | "personal">("work");
   const [phase, setPhase] = useState("loading");
   const [message, setMessage] = useState("요약 화면을 불러오는 중입니다.");
@@ -56,14 +58,17 @@ export function SpotliteBoard({ chatContext }: SpotliteBoardProps) {
 
   const refreshDigest = async () => {
     setPhase("running");
+    notify("running", "요약 갱신 시작", scope, { durationMs: 2200 });
     try {
       const result = await refreshSpotlite(scope);
       setSpotlite(result);
       setPhase("ready");
       setMessage("요약 갱신 완료.");
+      notify("success", "요약 갱신 완료", scope);
     } catch (error) {
       setPhase("error");
       setMessage(error instanceof Error ? error.message : "요약 갱신 실패");
+      notify("error", "요약 갱신 실패", error instanceof Error ? error.message : "요약 갱신 실패");
     }
   };
 

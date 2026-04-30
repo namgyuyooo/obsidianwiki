@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import type { ChatContext } from "../../chat/constants";
+import { useToastCenter } from "../../../components/surface/ToastCenter";
 import { promoteKnowledge } from "../../knowledge/api/knowledgeApi";
 import type { PaperclipTask } from "../api/paperclipApi";
 import { usePaperclipStudio } from "../hooks/usePaperclipStudio";
@@ -78,6 +79,7 @@ function templateDefaultMode(dryRun?: boolean) {
 }
 
 export function PaperclipStudio({ chatContext }: PaperclipStudioProps) {
+  const { notify } = useToastCenter();
   const studio = usePaperclipStudio();
   const [activeResultId, setActiveResultId] = useState("");
   const [resultAction, setResultAction] = useState<ResultActionState>({
@@ -109,10 +111,12 @@ export function PaperclipStudio({ chatContext }: PaperclipStudioProps) {
     const content = taskResultText(task);
     if (!content.trim()) {
       setResultAction({ phase: "error", message: "승격할 Paperclip 결과 본문이 없습니다." });
+      notify("error", "Paperclip 결과 승격 실패", "승격할 Paperclip 결과 본문이 없습니다.");
       return;
     }
 
     setResultAction({ phase: "promoting", message: "Paperclip 결과를 지식 승격 후보로 변환하는 중입니다." });
+    notify("running", "Paperclip 결과 승격 시작", task.title || task.id, { durationMs: 2200 });
     try {
       const result = await promoteKnowledge({
         content,
@@ -123,11 +127,13 @@ export function PaperclipStudio({ chatContext }: PaperclipStudioProps) {
       });
       const path = result.path || result.promotion?.path || "path 없음";
       setResultAction({ phase: "success", message: `지식 승격 후보 생성 완료: ${path}` });
+      notify("success", "Paperclip 결과 승격 완료", path);
     } catch (error) {
       setResultAction({
         phase: "error",
         message: error instanceof Error ? error.message : "Paperclip 결과 승격 실패",
       });
+      notify("error", "Paperclip 결과 승격 실패", error instanceof Error ? error.message : "Paperclip 결과 승격 실패");
     }
   };
 

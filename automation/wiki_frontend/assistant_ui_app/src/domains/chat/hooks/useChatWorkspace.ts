@@ -168,75 +168,110 @@ export function useChatWorkspace(initialContext: ChatContext): ChatWorkspaceStat
   const createProject = async () => {
     setStatus({ phase: "saving", message: "새 assistant-ui 프로젝트를 생성 중입니다." });
     notify("running", "프로젝트 생성 시작", workspace === "personal" ? "새 개인 챗" : "새 업무 챗", { durationMs: 2200 });
-    const project = await saveChatProject({
-      name: workspace === "personal" ? "새 개인 챗" : "새 업무 챗",
-      instructions: workspace === "personal"
-        ? "개인용 위키와 개인 메모리 범위에서만 답한다."
-        : "업무용 RTM 위키와 고객 프로젝트 운영 범위에서 답한다.",
-      workspace,
-    });
-    await reload(project.id);
-    notify("success", "프로젝트 생성 완료", project.name || project.id);
+    try {
+      const project = await saveChatProject({
+        name: workspace === "personal" ? "새 개인 챗" : "새 업무 챗",
+        instructions: workspace === "personal"
+          ? "개인용 위키와 개인 메모리 범위에서만 답한다."
+          : "업무용 RTM 위키와 고객 프로젝트 운영 범위에서 답한다.",
+        workspace,
+      });
+      await reload(project.id);
+      notify("success", "프로젝트 생성 완료", project.name || project.id);
+    } catch (error) {
+      notify("error", "프로젝트 생성 실패", String((error as Error)?.message || error));
+      throw error;
+    }
   };
 
   const saveActiveProject = async (input: { name: string; instructions: string; linkedWikiProject: LinkedWikiProject | null }) => {
     if (!activeProject) return;
     setStatus({ phase: "saving", message: "프로젝트 지침과 위키 연결을 저장 중입니다." });
     notify("running", "프로젝트 저장 시작", input.name || activeProject.name || activeProject.id, { durationMs: 2200 });
-    const project = await saveChatProject({
-      id: activeProject.id,
-      name: input.name,
-      instructions: input.instructions,
-      workspace,
-      linkedWikiProject: input.linkedWikiProject,
-    });
-    await reload(project.id);
-    notify("success", "프로젝트 저장 완료", project.name || project.id);
+    try {
+      const project = await saveChatProject({
+        id: activeProject.id,
+        name: input.name,
+        instructions: input.instructions,
+        workspace,
+        linkedWikiProject: input.linkedWikiProject,
+      });
+      await reload(project.id);
+      notify("success", "프로젝트 저장 완료", project.name || project.id);
+    } catch (error) {
+      notify("error", "프로젝트 저장 실패", String((error as Error)?.message || error));
+      throw error;
+    }
   };
 
   const deleteActiveProject = async () => {
     if (!activeProject) return;
     setStatus({ phase: "saving", message: "프로젝트를 삭제 중입니다." });
     notify("running", "프로젝트 삭제 시작", activeProject.name || activeProject.id, { durationMs: 2200 });
-    await deleteChatProject(activeProject.id);
-    await reload("");
-    notify("success", "프로젝트 삭제 완료", activeProject.name || activeProject.id);
+    try {
+      await deleteChatProject(activeProject.id);
+      await reload("");
+      notify("success", "프로젝트 삭제 완료", activeProject.name || activeProject.id);
+    } catch (error) {
+      notify("error", "프로젝트 삭제 실패", String((error as Error)?.message || error));
+      throw error;
+    }
   };
 
   const moveActiveConversation = async (targetProjectId: string) => {
     if (!activeProject || !targetProjectId || targetProjectId === activeProject.id) return;
     setStatus({ phase: "saving", message: "현재 대화를 다른 프로젝트로 이동 중입니다." });
     notify("running", "대화 이동 시작", `${activeProject.name || activeProject.id} -> ${targetProjectId}`, { durationMs: 2200 });
-    const result = await moveChatProjectMessages(activeProject.id, targetProjectId);
-    await reload(result.targetProject?.id || targetProjectId);
-    notify("success", "대화 이동 완료", result.targetProject?.name || targetProjectId);
+    try {
+      const result = await moveChatProjectMessages(activeProject.id, targetProjectId);
+      await reload(result.targetProject?.id || targetProjectId);
+      notify("success", "대화 이동 완료", result.targetProject?.name || targetProjectId);
+    } catch (error) {
+      notify("error", "대화 이동 실패", String((error as Error)?.message || error));
+      throw error;
+    }
   };
 
   const saveGlobal = async (nextGlobal: ChatGlobalSettings) => {
     setStatus({ phase: "saving", message: "전역 지침을 저장 중입니다." });
     notify("running", "전역 지침 저장 시작", "assistant-ui global settings", { durationMs: 2200 });
-    const saved = await saveChatGlobalSettings(nextGlobal);
-    setGlobal(saved);
-    setStatus({ phase: "ready", message: "전역 지침을 저장했습니다." });
-    notify("success", "전역 지침 저장 완료", "assistant-ui global settings");
+    try {
+      const saved = await saveChatGlobalSettings(nextGlobal);
+      setGlobal(saved);
+      setStatus({ phase: "ready", message: "전역 지침을 저장했습니다." });
+      notify("success", "전역 지침 저장 완료", "assistant-ui global settings");
+    } catch (error) {
+      notify("error", "전역 지침 저장 실패", String((error as Error)?.message || error));
+      throw error;
+    }
   };
 
   const promoteInstructionCandidate = async (candidateId: string) => {
     if (!activeProject) return;
     setStatus({ phase: "saving", message: "지침 승격 후보를 반영 중입니다." });
     notify("running", "지침 승격 후보 반영 시작", activeProject.name || activeProject.id, { durationMs: 2200 });
-    const project = await promoteInstructionCandidateApi(activeProject.id, candidateId);
-    await reload(project.id);
-    notify("success", "지침 승격 후보 반영 완료", activeProject.name || activeProject.id);
+    try {
+      const project = await promoteInstructionCandidateApi(activeProject.id, candidateId);
+      await reload(project.id);
+      notify("success", "지침 승격 후보 반영 완료", activeProject.name || activeProject.id);
+    } catch (error) {
+      notify("error", "지침 승격 후보 반영 실패", String((error as Error)?.message || error));
+      throw error;
+    }
   };
 
   const deleteInstructionCandidate = async (candidateId: string) => {
     if (!activeProject) return;
     setStatus({ phase: "saving", message: "지침 승격 후보를 정리 중입니다." });
     notify("running", "지침 승격 후보 삭제 시작", activeProject.name || activeProject.id, { durationMs: 2200 });
-    await deleteInstructionCandidateApi(activeProject.id, candidateId);
-    await reload(activeProject.id);
-    notify("success", "지침 승격 후보 삭제 완료", activeProject.name || activeProject.id);
+    try {
+      await deleteInstructionCandidateApi(activeProject.id, candidateId);
+      await reload(activeProject.id);
+      notify("success", "지침 승격 후보 삭제 완료", activeProject.name || activeProject.id);
+    } catch (error) {
+      notify("error", "지침 승격 후보 삭제 실패", String((error as Error)?.message || error));
+      throw error;
+    }
   };
 
   const toggleSkillTag = (skillId: string) => {

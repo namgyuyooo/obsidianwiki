@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useToastCenter } from "../../../components/surface/ToastCenter";
 import {
   createPaperclipTask,
   fetchPaperclipSnapshot,
@@ -29,6 +30,7 @@ function parsePayloadText(value: string): Record<string, unknown> {
 }
 
 export function usePaperclipStudio() {
+  const { notify } = useToastCenter();
   const [snapshot, setSnapshot] = useState<PaperclipSnapshot>(EMPTY_SNAPSHOT);
   const [activeTemplateId, setActiveTemplateId] = useState("");
   const [title, setTitle] = useState("");
@@ -65,18 +67,21 @@ export function usePaperclipStudio() {
     operation: (template: PaperclipTemplate, payload: Record<string, unknown>) => Promise<unknown>,
     nextPhase: PaperclipPhase,
     successMessage: string,
-  ) => {
+    ) => {
     if (!activeTemplate) return;
     setPhase(nextPhase);
+    notify("running", successMessage.includes("실행") ? "Paperclip 실행 시작" : "Paperclip 큐 저장 시작", title || activeTemplate.title, { durationMs: 2200 });
     try {
       const payload = parsePayloadText(payloadText);
       await operation(activeTemplate, payload);
       setMessage(successMessage);
       setPayloadText("");
       await reload();
+      notify("success", "Paperclip 작업 완료", successMessage);
     } catch (error) {
       setPhase("error");
       setMessage(error instanceof Error ? error.message : "Paperclip 작업 실패");
+      notify("error", "Paperclip 작업 실패", error instanceof Error ? error.message : "Paperclip 작업 실패");
     }
   };
 
@@ -96,13 +101,16 @@ export function usePaperclipStudio() {
 
   const triggerTask = async (task: PaperclipTask) => {
     setPhase("triggering");
+    notify("running", "Paperclip task 실행 시작", task.title || task.id, { durationMs: 2200 });
     try {
       await triggerExistingPaperclipTask(task.id);
       setMessage(`${task.title || task.id} 실행을 요청했습니다.`);
       await reload();
+      notify("success", "Paperclip task 실행 요청 완료", task.title || task.id);
     } catch (error) {
       setPhase("error");
       setMessage(error instanceof Error ? error.message : "Paperclip task 실행 실패");
+      notify("error", "Paperclip task 실행 실패", error instanceof Error ? error.message : "Paperclip task 실행 실패");
     }
   };
 

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import type { ChatContext } from "../../chat/constants";
+import { useToastCenter } from "../../../components/surface/ToastCenter";
 import { triggerAutomation } from "../api/missionApi";
 import {
   createSchedule,
@@ -63,6 +64,7 @@ function shortDate(value = "") {
 }
 
 export function OperationsControlPlane({ chatContext }: OperationsControlPlaneProps) {
+  const { notify } = useToastCenter();
   const [phase, setPhase] = useState("loading");
   const [message, setMessage] = useState("운영 콘솔을 불러오는 중입니다.");
   const [systemStatus, setSystemStatus] = useState<SystemStatusPayload>({ status: {} });
@@ -133,14 +135,17 @@ export function OperationsControlPlane({ chatContext }: OperationsControlPlanePr
 
   const runAction = async (action: () => Promise<unknown>, success: string) => {
     setPhase("saving");
+    notify("running", "운영 작업 시작", success, { durationMs: 2200 });
     try {
       await action();
       setPhase("ready");
       setMessage(success);
       await reload();
+      notify("success", "운영 작업 완료", success);
     } catch (error) {
       setPhase("error");
       setMessage(error instanceof Error ? error.message : "운영 작업 실패");
+      notify("error", "운영 작업 실패", error instanceof Error ? error.message : "운영 작업 실패");
     }
   };
 

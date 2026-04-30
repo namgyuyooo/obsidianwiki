@@ -6,6 +6,7 @@ import {
   useThreadRuntime,
 } from "@assistant-ui/react";
 import { useState } from "react";
+import { useToastCenter } from "../../../components/surface/ToastCenter";
 import { CHAT_API_ENDPOINTS } from "../constants";
 import { deleteChatProjectMessage, type ChatProject } from "../api/chatWorkspaceApi";
 
@@ -66,6 +67,7 @@ function UserMessage({
   activeProject: ChatProject | null;
   onReloadProject: (nextActiveProjectId?: string) => Promise<void>;
 }) {
+  const { notify } = useToastCenter();
   const messageId = useMessage((state: any) => state.id || "");
   const content = useMessage((state: any) => state.content);
   const runtime = useThreadRuntime();
@@ -76,23 +78,28 @@ function UserMessage({
   const handleEdit = () => {
     runtime.composer.setText(text);
     setStatus({ status: "success", message: "입력창에 기존 질문을 불러왔습니다." });
+    notify("success", "질문 불러오기 완료", "입력창에 기존 질문을 가져왔습니다.");
   };
 
   const handleReplay = () => {
     runtime.composer.setText(text);
     runtime.composer.send();
     setStatus({ status: "success", message: "같은 질문으로 다시 실행했습니다." });
+    notify("success", "질문 재실행 시작", "같은 질문으로 다시 실행했습니다.");
   };
 
   const handleDelete = async () => {
     if (!activeProject?.id || !messageId) return;
     setStatus({ status: "saving", message: "메시지를 삭제하는 중입니다." });
+    notify("running", "메시지 삭제 시작", messageId, { durationMs: 2200 });
     try {
       await deleteChatProjectMessage(activeProject.id, messageId);
       await onReloadProject(activeProject.id);
       setStatus({ status: "success", message: "메시지를 삭제했습니다." });
+      notify("success", "메시지 삭제 완료", messageId);
     } catch (error) {
       setStatus({ status: "error", message: `삭제 실패: ${String((error as Error)?.message || error)}` });
+      notify("error", "메시지 삭제 실패", String((error as Error)?.message || error));
     }
   };
 
@@ -125,6 +132,7 @@ function AssistantMessage({
   activeProject: ChatProject | null;
   onReloadProject: (nextActiveProjectId?: string) => Promise<void>;
 }) {
+  const { notify } = useToastCenter();
   const messageId = useMessage((state: any) => state.id || "");
   const content = useMessage((state: any) => state.content);
   const runtime = useThreadRuntime();
@@ -138,9 +146,11 @@ function AssistantMessage({
     const text = textFromContent(content);
     if (!text) {
       setPromotionState({ status: "error", message: "승격할 텍스트를 찾지 못했습니다." });
+      notify("error", "지식승격 실패", "승격할 텍스트를 찾지 못했습니다.");
       return;
     }
     setPromotionState({ status: "saving", message: "지식승격 후보를 생성하는 중입니다." });
+    notify("running", "지식승격 시작", messageId || "assistant message", { durationMs: 2200 });
     try {
       const result = await promoteAssistantKnowledge({
         content: text,
@@ -152,11 +162,13 @@ function AssistantMessage({
         status: "success",
         message: result.path ? `지식승격 후보 생성 완료: ${result.path}` : "지식승격 후보 생성 완료",
       });
+      notify("success", "지식승격 완료", result.path ? `후보 생성: ${result.path}` : "지식승격 후보 생성 완료");
     } catch (error) {
       setPromotionState({
         status: "error",
         message: `지식승격 실패: ${String((error as Error)?.message || error)}`,
       });
+      notify("error", "지식승격 실패", String((error as Error)?.message || error));
     }
   };
 
@@ -164,24 +176,29 @@ function AssistantMessage({
     const text = textFromContent(content);
     if (!text) {
       setPromotionState({ status: "error", message: "재실행할 응답 텍스트를 찾지 못했습니다." });
+      notify("error", "응답 재사용 실패", "재실행할 응답 텍스트를 찾지 못했습니다.");
       return;
     }
     runtime.composer.setText(text);
     setPromotionState({ status: "success", message: "응답 텍스트를 입력창으로 보냈습니다." });
+    notify("success", "응답 재사용 준비 완료", "응답 텍스트를 입력창으로 보냈습니다.");
   };
 
   const deleteMessage = async () => {
     if (!activeProject?.id || !messageId) return;
     setPromotionState({ status: "saving", message: "응답을 삭제하는 중입니다." });
+    notify("running", "응답 삭제 시작", messageId, { durationMs: 2200 });
     try {
       await deleteChatProjectMessage(activeProject.id, messageId);
       await onReloadProject(activeProject.id);
       setPromotionState({ status: "success", message: "응답을 삭제했습니다." });
+      notify("success", "응답 삭제 완료", messageId);
     } catch (error) {
       setPromotionState({
         status: "error",
         message: `삭제 실패: ${String((error as Error)?.message || error)}`,
       });
+      notify("error", "응답 삭제 실패", String((error as Error)?.message || error));
     }
   };
 

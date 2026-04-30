@@ -287,6 +287,21 @@ export async function saveWikiStatus(input: {
   });
 }
 
+export async function saveWikiStatusBulk(items: Array<{
+  scope: "page" | "project";
+  path?: string;
+  projectKey?: string;
+  status: string;
+  tags?: string;
+  highlight?: string;
+  note?: string;
+}>) {
+  return requestJson<{ status: string; mode?: string; count?: number }>("/api/wiki/status", {
+    method: "POST",
+    body: JSON.stringify({ items }),
+  });
+}
+
 export async function fetchWikiGraph() {
   return requestJson<WikiGraphPayload>("/api/wiki/graph");
 }
