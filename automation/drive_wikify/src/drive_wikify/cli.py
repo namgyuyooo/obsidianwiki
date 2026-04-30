@@ -58,6 +58,8 @@ def build_parser() -> argparse.ArgumentParser:
     slack_collect_parser = subparsers.add_parser("slack-collect", help="Collect Slack channel history into local raw exports.")
     slack_collect_parser.add_argument("--channel", action="append", dest="channels", help="Slack channel name or ID. Repeat to collect multiple channels.")
     slack_collect_parser.add_argument("--oldest-days", type=int, help="Lookback window in days when no incremental state exists.")
+    slack_collect_parser.add_argument("--since-date", help="Collect messages from this KST date, formatted YYYY-MM-DD.")
+    slack_collect_parser.add_argument("--until-date", help="Collect messages through this KST date, formatted YYYY-MM-DD.")
     slack_collect_parser.add_argument("--limit-per-channel", type=int, help="Maximum number of messages to fetch per channel.")
     slack_collect_parser.add_argument("--no-threads", action="store_true", help="Skip thread reply expansion.")
     slack_collect_parser.add_argument("--no-files", action="store_true", help="Skip Slack file metadata capture.")
@@ -181,6 +183,8 @@ def main() -> int:
             config,
             channel_selectors=args.channels,
             oldest_days=args.oldest_days,
+            since_date=args.since_date,
+            until_date=args.until_date,
             limit_per_channel=args.limit_per_channel,
             include_threads=not args.no_threads,
             include_files=not args.no_files,
