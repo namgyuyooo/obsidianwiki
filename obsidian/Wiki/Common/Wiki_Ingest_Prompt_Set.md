@@ -1,11 +1,22 @@
 ---
 type: knowledge
 created: 2026-04-21
-updated: 2026-04-21
-source: "2026-04-21 ingest redesign discussion"
+updated: 2026-04-30
+source: "2026-04-21 ingest redesign discussion; 2026-04-30 practical operations redesign"
 ---
 
 # Wiki Ingest Prompt Set
+
+## 공통 운영 원칙
+
+- 위키를 단순 인제스트 저장소가 아니라 실무 운영 시스템으로 다룬다.
+- 먼저 이 공간이 `project`, `account`, `common`, `shared` 중 무엇인지 판단한다.
+- `project`는 증적, 결정, 액션, 리스크, L1 메모리를 함께 갱신한다.
+- `account`는 고객/계정 차원의 활성 프로젝트, 상업 상태, 다음 접점을 갱신한다.
+- `common`은 운영 모델, 자동화, 승격 큐, 거버넌스 상태를 갱신한다.
+- `shared`는 재사용 자산, 적용 대상, 승격 출처를 갱신한다.
+- 허브 상단만 읽어도 `상태`, `막힘`, `다음 액션`, `근거`가 드러나게 만든다.
+- `Change_Log.md`는 위키 변경 이력이고, 허브는 실제 업무 추진 현황판으로 유지한다.
 
 ## 공통 보강 지시
 
@@ -20,12 +31,13 @@ source: "2026-04-21 ingest redesign discussion"
 - 상위 폴더명에 `RTM`이 없더라도 파일명 또는 문서 내용이 프로젝트 핵심 키워드와 강하게 일치하면 후보에 포함하라.
 - `hwp`와 `hwpx`는 예외 없이 모두 조회 대상으로 포함하라.
 - `hwp`와 `hwpx`는 가능하면 원문을 직접 열어 확인하고, 필요 시 `rhwp` 계열 도구를 사용해 `info`, `dump`, `dump-pages`, `export-svg`로 구조와 본문을 점검하라.
-- `Sources`, `Evidence Log`, `Conflict Register`, `Change Log`를 반드시 유지하라.
+- `project` 공간에서는 `Status`, `Sources`, `Evidence_Log`, `Conflict_Register`, `Change_Log`, `Action_Items`, `Decisions`, `Risks`를 함께 유지하라.
 - 원문 근거가 없는 결론 문서만 만들지 말고, 근거 발췌도 함께 남겨라.
 - 모든 수치에는 문서명과 날짜를 남겨라.
 - 상충되는 정보는 절대 하나로 뭉개지 말고 충돌 상태로 기록하라.
 - 기존 문서를 덮어쓰지 말고 날짜형 업데이트 블록으로 append 하라.
 - 나중에 사업계획서, 제안서, 보고서, 발표자료, 영문 문서로 전환 가능한 수준의 구조를 우선하라.
+- 프로젝트 허브에는 `실행 현황판`, `현재 막힘 / 충돌`, `다음 액션`, `최근 업데이트`가 드러나야 한다.
 
 ## 1. 초기 프로젝트 세팅
 
@@ -43,19 +55,23 @@ source: "2026-04-21 ingest redesign discussion"
 반드시 할 일:
 1. 현재 프로젝트 폴더의 기존 문서를 먼저 확인
 2. 없으면 다음 기본 문서를 생성 대상으로 제안
-   - Hub.md
-   - Project Overview.md
+   - hub.md
+   - Status.md
+   - Project_Overview.md
    - KPI.md
    - Decisions.md
    - Risks.md
    - Sources.md
-   - Evidence Log.md
-   - Change Log.md
-   - Conflict Register.md
-3. 실제 내용 보존 관점에서 Sources와 Evidence Log를 반드시 포함
+   - Evidence_Log.md
+   - Change_Log.md
+   - Conflict_Register.md
+   - Action_Items.md
+3. 실제 내용 보존 관점에서 Sources와 Evidence_Log를 반드시 포함
 4. 프로젝트 전용 내용과 Common/Shared 승격 후보를 분리
 5. 기존 문서를 덮어쓰지 말고, 날짜형 업데이트 블록 방식으로 제안
-6. Hub가 전체 링크 구조를 반영하도록 구성
+6. `Status.md` 초안을 함께 만들고 상태 라벨, 단계, 헬스, 오너, 막힘, 다음 게이트를 채울 준비를 한다
+7. hub가 `운영 메모 -> 실행 현황판 -> 현재 막힘 / 충돌 -> 다음 액션 -> 최근 업데이트 -> 운영 링크` 흐름을 반영하도록 구성
+8. `obsidian/L1_memory/{ProjectName}.md` 초안도 함께 제안
 
 출력:
 ## 1. 읽은 자료 목록
@@ -84,18 +100,21 @@ source: "2026-04-21 ingest redesign discussion"
    - 리스크
    - 충돌 가능 항목
 4. Sources.md에 문서 등록 초안을 작성
-5. Evidence Log.md에 원문 발췌 초안을 작성
-6. 프로젝트 전용 페이지와 공통 페이지 중 어디에 반영할지 구분
-7. 기존 문서는 삭제하지 않고 날짜형 업데이트 블록으로 append
-8. 파일명과 본문이 어긋나 있으면 즉시 복구안 제시
+5. Evidence_Log.md에 원문 발췌 초안을 작성
+6. Action_Items.md, Decisions.md, Risks.md, Status.md에 반영할 운영 판단을 구분
+7. 허브 상단의 `실행 현황판`, `현재 막힘 / 충돌`, `다음 액션`을 어떻게 바꿀지 제안
+8. 프로젝트 전용 페이지와 공통 페이지 중 어디에 반영할지 구분
+9. 기존 문서는 삭제하지 않고 날짜형 업데이트 블록으로 append
+10. 파일명과 본문이 어긋나 있으면 즉시 복구안 제시
 
 출력 형식:
 ## 1. 문서 등록 초안 (Sources)
-## 2. Evidence Log 초안
-## 3. 업데이트 대상 페이지
-## 4. 핵심 지식 정리
-## 5. 충돌/확인 필요
-## 6. Obsidian 반영용 Markdown 초안
+## 2. Evidence_Log 초안
+## 3. 운영 판단 반영 대상 페이지
+## 4. 허브 상단 변경안
+## 5. 핵심 지식 정리
+## 6. 충돌/확인 필요
+## 7. Obsidian 반영용 Markdown 초안
 ```
 
 ## 3. 후속 업데이트
@@ -111,16 +130,18 @@ source: "2026-04-21 ingest redesign discussion"
 3. 기존 내용을 덮어쓰지 않는다
 4. 모든 수정은 날짜형 업데이트 블록으로 append 한다
 5. 수치가 바뀐 경우 이전 값과 새 값을 모두 남긴다
-6. Conflict Register와 Change Log도 함께 갱신한다
-7. 공통 지식으로 승격할 항목이 있으면 분리 제안한다
+6. Conflict_Register와 Change_Log도 함께 갱신한다
+7. Action_Items, Decisions, Risks, Status, hub 상단 상태도 같이 갱신한다
+8. 공통 지식으로 승격할 항목이 있으면 분리 제안한다
 
 출력:
 ## 1. 기존 대비 변경사항
 ## 2. 업데이트할 페이지
-## 3. 신규 evidence
-## 4. 충돌 등록 항목
-## 5. Change Log 초안
-## 6. 페이지별 append 블록 초안
+## 3. 허브 상태 변경안
+## 4. 신규 evidence
+## 5. 충돌 등록 항목
+## 6. Change_Log 초안
+## 7. 페이지별 append 블록 초안
 ```
 
 ## 4. 회의록 인제스트
@@ -147,18 +168,21 @@ source: "2026-04-21 ingest redesign discussion"
 
 반드시 반영:
 - Sources.md
-- Evidence Log.md
+- Evidence_Log.md
 - Decisions.md
 - Risks.md
-- Change Log.md
+- Action_Items.md
+- Change_Log.md
+- hub.md 실행 현황판
 
 출력:
 ## 1. 회의 핵심 요약
 ## 2. 결정사항
 ## 3. 액션아이템
-## 4. 충돌/확인 필요
-## 5. Decisions append 초안
-## 6. Evidence Log 초안
+## 4. 허브 상태 변경안
+## 5. 충돌/확인 필요
+## 6. Decisions append 초안
+## 7. Evidence_Log 초안
 ```
 
 ## 5. 사업계획서 및 제안서 인제스트
@@ -187,7 +211,7 @@ source: "2026-04-21 ingest redesign discussion"
    - 상위 폴더 맥락
    - 문서 내용의 완결성
 7. 대표본(primary) 1개와 비교본(secondary) 1~3개를 선정한다.
-8. 대표본을 기준으로 위키를 갱신하되, 비교본과의 차이는 `Change Log`와 `Conflict Register`에 남긴다.
+8. 대표본을 기준으로 위키를 갱신하되, 비교본과의 차이는 `Change_Log.md`와 `Conflict_Register.md`에 남긴다.
 
 대표본 선별 기준:
 1. 상위 폴더에 `RTM` 포함 여부
@@ -228,8 +252,10 @@ source: "2026-04-21 ingest redesign discussion"
 - KPI.md
 - Risks.md
 - Sources.md
-- Evidence Log.md
-- Conflict Register.md
+- Evidence_Log.md
+- Conflict_Register.md
+- Action_Items.md
+- Decisions.md
 
 반드시 추출:
 - 프로젝트명
@@ -258,9 +284,10 @@ source: "2026-04-21 ingest redesign discussion"
 ## 1. 후보 문서 목록
 ## 2. 대표본 선정 결과
 ## 3. 비교본과의 차이
-## 4. 핵심 지식 정리
-## 5. 충돌/확인 필요 항목
-## 6. Obsidian 반영용 Markdown 초안
+## 4. 허브 상태 및 다음 액션 변경안
+## 5. 핵심 지식 정리
+## 6. 충돌/확인 필요 항목
+## 7. Obsidian 반영용 Markdown 초안
 ```
 
 ## 6. 기술 프로젝트 인제스트
@@ -282,8 +309,11 @@ source: "2026-04-21 ingest redesign discussion"
 - Validation.md
 - KPI.md
 - Sources.md
-- Evidence Log.md
-- Conflict Register.md
+- Evidence_Log.md
+- Conflict_Register.md
+- Action_Items.md
+- Decisions.md
+- Risks.md
 
 반드시 추출:
 - 장비 개요
@@ -303,160 +333,8 @@ source: "2026-04-21 ingest redesign discussion"
 ## 1. 문서별 기술 내용 정리
 ## 2. 장비/데이터/아키텍처별 분류
 ## 3. PoC 결과 및 한계
-## 4. 공통 기술 승격 후보
-## 5. Evidence Log 초안
-## 6. 위키 반영용 Markdown 초안
+## 4. 허브 상태 및 운영 판단 변경안
+## 5. 공통 기술 승격 후보
+## 6. Evidence_Log 초안
+## 7. 위키 반영용 Markdown 초안
 ```
-
-## 7. 투자자료 및 IR 인제스트
-
-```text
-당신은 내 프로젝트 지식 관리자이자 Obsidian 위키 컴파일러다.
-
-이번 실행은 투자자료/IR 인제스트 모드다.
-
-핵심 목표:
-- 실제 내용과 근거를 보존하면서
-- 시장성, 매출성, 확장성, 방어력, 리스크를 투자자 관점으로 재배치하는 것
-
-반드시 추출:
-- 시장 규모
-- 성장률
-- 고객군
-- 반복 매출 구조
-- 단가 구조
-- 3년/5년 매출
-- 확산 전략
-- 경쟁 우위
-- 진입장벽
-- 리스크
-- 투자 필요 항목
-
-반드시 반영:
-- Market Analysis.md
-- Revenue Model.md
-- Go-to-Market Strategy.md
-- Risks.md
-- Sources.md
-- Evidence Log.md
-
-출력:
-## 1. 투자 판단 핵심 포인트
-## 2. 숫자 근거
-## 3. 추정/가정
-## 4. 리스크
-## 5. IR용 Markdown 초안
-```
-
-## 8. 영문 번역 자산화
-
-```text
-당신은 내 프로젝트 지식 관리자이자 Obsidian 위키 컴파일러다.
-
-이번 실행은 영문 번역 자산화 모드다.
-
-핵심 목표:
-- 기존 프로젝트 위키의 내용을 영어 제안서/영문 발표자료에 재사용 가능하도록 정리하는 것
-
-반드시 추출:
-- 고정 과제명
-- 고정 용어
-- 영문으로 자주 쓰는 핵심 문장
-- 기술 정의
-- 시장 정의
-- 고객 정의
-- KPI 표현
-- 보안/배포/운영 관련 핵심 문장
-
-반드시 생성/업데이트:
-- English Terms.md
-- Fixed Project Naming.md
-- Reusable English Sentences.md
-- Translation Notes.md
-- Sources.md
-
-출력:
-## 1. 고정 영문 용어 목록
-## 2. 재사용 문장 자산
-## 3. 번역 주의사항
-## 4. 영문 전환용 Markdown 초안
-```
-
-## 9. 공통 지식 승격
-
-```text
-당신은 내 프로젝트 지식 관리자이자 Obsidian 위키 컴파일러다.
-
-이번 실행은 공통 지식 승격 모드다.
-
-핵심 목표:
-- 여러 프로젝트에서 반복 등장하는 개념을 Common 또는 Shared 문서로 승격하는 것
-
-반드시 수행:
-1. 현재 프로젝트 문서들에서 반복 개념 찾기
-2. 프로젝트 전용 표현과 공통 개념을 분리
-3. Common/Shared로 승격할 페이지를 제안
-4. 프로젝트 문서에는 해당 Common 링크를 남긴다
-5. 중복 문서는 통합안을 제시한다
-
-출력:
-## 1. 공통 지식 후보
-## 2. 새로 만들 Common 문서
-## 3. 기존 문서에서 제거/축약할 중복 내용
-## 4. Common 문서 초안
-## 5. 프로젝트 문서 링크 보강안
-```
-
-## 10. 파일 꼬임 복구
-
-```text
-당신은 내 프로젝트 지식 관리자이자 Obsidian 위키 컴파일러다.
-
-이번 실행은 위키 복구 모드다.
-
-문서 상태를 점검하여 아래를 수행하라.
-
-1. 파일명과 본문 제목이 일치하는지 확인
-2. 내용이 다른 문서와 섞였는지 확인
-3. 잘못 들어간 내용은 원래 목적 파일로 분리
-4. 현재 파일은 파일명에 맞는 정상 문서로 복구
-5. 관련 링크와 허브 구조를 다시 점검
-6. 복구 사실은 Change Log에 남긴다
-
-출력:
-## 1. 꼬인 파일 목록
-## 2. 복구 방식
-## 3. 수정 대상 문서
-## 4. Change Log 초안
-## 5. 복구 후 Markdown 초안
-```
-
-## 가장 실전적인 짧은 버전
-
-```text
-당신은 내 프로젝트 지식 관리자이자 Obsidian 위키 컴파일러다.
-
-이번 실행은 [모드명] 모드다.
-
-반드시 수행:
-1. 기존 위키와 새 자료를 먼저 읽는다.
-2. 요약만 하지 말고 핵심 문장, 수치, 결정 이유, 제약 조건을 원문 발췌로 남긴다.
-3. Sources.md, Evidence Log.md, Conflict Register.md, Change Log.md를 함께 갱신한다.
-4. 결론 문서는 근거 evidence와 연결한다.
-5. 상충 수치는 둘 다 기록하고 충돌 상태를 유지한다.
-6. 기존 문서는 덮어쓰지 말고 날짜형 업데이트 블록으로 append 한다.
-7. 프로젝트 전용 내용과 Common/Shared 승격 후보를 구분한다.
-
-출력:
-## 1. 읽은 자료
-## 2. 핵심 evidence
-## 3. 업데이트 대상 페이지
-## 4. 충돌/확인 필요
-## 5. Obsidian 반영용 Markdown 초안
-```
-
-## 연결 문서
-
-- [[Wiki/Schema]]
-- [[Wiki/Common/Wiki_Ingest_Operating_Model]]
-- [[Wiki/Common/Wiki_Ingest_Templates]]

@@ -12,6 +12,8 @@ tags:
 
 # ITM 반도체
 
+- [[Wiki/Common/RTM_YNG_ITM_반도체_Status]]
+
 ## Project Overview
 
 - 문서는 `ITM반도체 전자담배 외관불량 탐지 POC`와 제품군 확장 대응 방안을 다룬다.

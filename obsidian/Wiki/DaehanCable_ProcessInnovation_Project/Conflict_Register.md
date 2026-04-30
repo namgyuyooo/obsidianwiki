@@ -1,12 +1,23 @@
 ---
 type: log
 created: 2026-04-21
-updated: 2026-04-21
+updated: 2026-04-30
 source: "public Slack evidence sweep (2024-04-21 to 2026-04-21)"
 ---
 
 # Conflict Register
 
+## Open Conflicts
+- 상충 수치, 버전 불일치, 고객/내부 판단 불일치, 범위 미확정을 이 문서에 등록합니다.
+- 해소 전까지 허브 상단 `현재 막힘 / 충돌`과 연동해 가시화합니다.
+
+## 처리 원칙
+- 충돌이 상태에 영향을 주면 [[Wiki/DaehanCable_ProcessInnovation_Project/Status]]의 blocker와 history에도 반영
+- 확정되면 [[Wiki/DaehanCable_ProcessInnovation_Project/Decisions]]로 승격
+- 실행이 필요하면 [[Wiki/DaehanCable_ProcessInnovation_Project/Action_Items]]로 연결
+- 리스크가 커지면 [[Wiki/DaehanCable_ProcessInnovation_Project/Risks]]로 승격
+
+## 기존 정리 메모
 ## 2026-04-21
 
 ### 항목: frequency 단위 해석
@@ -31,3 +42,38 @@ source: "public Slack evidence sweep (2024-04-21 to 2026-04-21)"
 - 연결 페이지:
   - [[Project_Overview]]
 
+
+## Decision Queue Approval - 2026-04-30T05:29:50.403Z
+- 원천: wiki_signal
+- 제목: Conflict Register
+- 처리: approve
+- 내용: - 데이터 정합성 확인 전 비교/상관관계 해석은 보수적으로 다루는 편이 맞음
+- 근거 경로: obsidian/Wiki/DaehanCable_ProcessInnovation_Project/Conflict_Register.md
+
+## Decision Queue Approval - 2026-04-30T05:29:56.044Z
+- 원천: wiki_signal
+- 제목: Conflict Register
+- 처리: approve
+- 내용: - 내용: - 데이터 정합성 확인 전 비교/상관관계 해석은 보수적으로 다루는 편이 맞음
+- 근거 경로: obsidian/Wiki/DaehanCable_ProcessInnovation_Project/Conflict_Register.md
+
+## Decision Queue Approval - 2026-04-30T05:29:59.909Z
+- 원천: wiki_signal
+- 제목: Conflict Register
+- 처리: approve
+- 내용: - 내용: - 내용: - 데이터 정합성 확인 전 비교/상관관계 해석은 보수적으로 다루는 편이 맞음
+- 근거 경로: obsidian/Wiki/DaehanCable_ProcessInnovation_Project/Conflict_Register.md
+
+## Decision Queue Approval - 2026-04-30T05:30:33.807Z
+- 원천: wiki_signal
+- 제목: Conflict Register
+- 처리: approve
+- 내용: - 내용: - 내용: - 내용: - 데이터 정합성 확인 전 비교/상관관계 해석은 보수적으로 다루는 편이 맞음
+- 근거 경로: obsidian/Wiki/DaehanCable_ProcessInnovation_Project/Conflict_Register.md
+
+## Decision Queue Approval - 2026-04-30T05:30:41.349Z
+- 원천: wiki_signal
+- 제목: Conflict Register
+- 처리: approve
+- 내용: - 내용: - 내용: - 내용: - 내용: - 데이터 정합성 확인 전 비교/상관관계 해석은 보수적으로 다루는 편이 맞음
+- 근거 경로: obsidian/Wiki/DaehanCable_ProcessInnovation_Project/Conflict_Register.md

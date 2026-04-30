@@ -79,6 +79,8 @@ const editableSettings = new Set([
   "GLM_LIGHT_MAX_TOKENS",
   "GLM_DECISION_MODEL",
   "GLM_DECISION_MAX_TOKENS",
+  "GLM_DECISION_FINAL_MODEL",
+  "GLM_DECISION_FINAL_MAX_TOKENS",
   "GLM_CONFLICT_MODEL",
   "GLM_CONFLICT_MAX_TOKENS",
   "GLM_FILE_ANALYSIS_MODEL",
@@ -472,13 +474,13 @@ function llmPolicyCatalog(env = {}, usage = []) {
       id: "decision_triage",
       title: "Decision Deck 경량 판정",
       surface: "위키 정합성 대기",
-      purpose: "위키 원본 간 데이터 불일치, 충돌, Conflict_Register 반영 여부만 판정한다.",
-      modelClass: "light",
-      recommendedModel: "glm-4.5-air",
+      purpose: "위키 원본 간 데이터 불일치, 충돌, Conflict_Register 반영 여부를 빠르게 1차 판정한다.",
+      modelClass: "hybrid",
+      recommendedModel: "1차 glm-4.5-air, 최종 반영 glm-5.1",
       maxTokens: Number(current("GLM_DECISION_MAX_TOKENS", 900)),
-      thinking: "disabled",
-      envKeys: ["GLM_DECISION_MODEL", "GLM_DECISION_MAX_TOKENS"],
-      currentModel: current("GLM_DECISION_MODEL", "glm-4.5-air"),
+      thinking: "triage disabled, final enabled",
+      envKeys: ["GLM_DECISION_MODEL", "GLM_DECISION_MAX_TOKENS", "GLM_DECISION_FINAL_MODEL", "GLM_DECISION_FINAL_MAX_TOKENS"],
+      currentModel: `${current("GLM_DECISION_MODEL", "glm-4.5-air")} -> ${current("GLM_DECISION_FINAL_MODEL", current("GLM_MODEL", "glm-5.1"))}`,
       prompt: [
         "당신은 Decision Deck 안에서만 동작하는 위키 데이터 정합성 판정 보조자다.",
         "범위는 실무 리스크, 다음 액션, 고객 대응이 아니라 위키 원본 간 데이터 불일치와 Conflict_Register 반영 판단이다.",
@@ -486,7 +488,27 @@ function llmPolicyCatalog(env = {}, usage = []) {
         "출력은 1) 판정 approve|hold|investigate 2) 충돌 요약 3) 권장 처리 4) Conflict_Register 반영 문구 5) 확인할 근거 path 순서로 한다.",
       ].join("\n"),
       usageCount: countFeature([/decision_triage/]),
-      applySettings: { GLM_DECISION_MODEL: "glm-4.5-air", GLM_DECISION_MAX_TOKENS: "900" },
+      applySettings: { GLM_DECISION_MODEL: "glm-4.5-air", GLM_DECISION_MAX_TOKENS: "900", GLM_DECISION_FINAL_MODEL: "glm-5.1", GLM_DECISION_FINAL_MAX_TOKENS: "1400" },
+    },
+    {
+      id: "decision_final_approval",
+      title: "Decision Deck 최종 승인 검증",
+      surface: "위키 정합성 대기 승인/반영",
+      purpose: "사용자가 승인/반영을 누른 직후, 위키 파일에 append하기 전 최상위 모델로 데이터 정합성 위험을 최종 점검한다.",
+      modelClass: "top",
+      recommendedModel: "glm-5.1",
+      maxTokens: Number(current("GLM_DECISION_FINAL_MAX_TOKENS", 1400)),
+      thinking: "enabled",
+      envKeys: ["GLM_DECISION_FINAL_MODEL", "GLM_DECISION_FINAL_MAX_TOKENS", "GLM_MODEL"],
+      currentModel: current("GLM_DECISION_FINAL_MODEL", current("GLM_MODEL", "glm-5.1")),
+      prompt: [
+        "당신은 위키 반영 직전 최종 승인 검증자다.",
+        "Decision Deck 항목은 업무 리스크가 아니라 위키 데이터 정합성/충돌 관리 대상이다.",
+        "사용자 승인 의도와 GLM 1차 판정 메모를 비교하되, 근거 path, projectKey, targetFile이 불명확하면 approve하지 않는다.",
+        "JSON만 반환한다: decision, reason, blockingIssues, safeAppendNote.",
+      ].join("\n"),
+      usageCount: countFeature([/decision_final_approval/]),
+      applySettings: { GLM_DECISION_FINAL_MODEL: "glm-5.1", GLM_DECISION_FINAL_MAX_TOKENS: "1400" },
     },
     {
       id: "conflict_merge",
@@ -2622,7 +2644,7 @@ async function decisionQueue(workspaceId = "rtm") {
 
 async function resolveDecisionQueueItem(id, body = {}) {
   if (!id) throw new Error("decision id is required");
-  const action = String(body.action || "hold").trim();
+  let action = String(body.action || "hold").trim();
   const allowed = new Set(["approve", "edit_approve", "hold", "reject", "investigate"]);
   if (!allowed.has(action)) throw new Error("Unsupported decision action");
   const workspaceId = body.workspace || "rtm";
@@ -2631,6 +2653,13 @@ async function resolveDecisionQueueItem(id, body = {}) {
   const now = new Date().toISOString();
   const store = await readJsonFile(decisionQueuePath, { version: 1, items: {} });
   const context = projectContextFromDecision({ ...item, ...body }, workspaceId);
+  const target = decisionTargetPathFromContext({ ...item, ...body, projectKey: body.projectKey || item.projectKey || context.projectKey || "" }, workspaceId);
+  const finalVerification = (action === "approve" || action === "edit_approve")
+    ? await verifyDecisionFinalApproval({ ...item, ...body, projectKey: body.projectKey || item.projectKey || context.projectKey || "" }, body, target, workspaceId)
+    : null;
+  if (finalVerification && finalVerification.decision !== "approve") {
+    action = finalVerification.decision === "hold" ? "hold" : "investigate";
+  }
   const status = action === "approve" || action === "edit_approve" ? "approved" : action === "reject" ? "rejected" : action === "investigate" ? "needs_investigation" : "hold";
   const resolved = {
     ...item,
@@ -2641,12 +2670,12 @@ async function resolveDecisionQueueItem(id, body = {}) {
     content: body.content || item.content || "",
     projectKey: body.projectKey || item.projectKey || context.projectKey || "",
     projectLabel: body.projectLabel || item.projectLabel || context.projectLabel || "",
+    finalVerification,
   };
   store.items[id] = resolved;
   await writeJsonFile(decisionQueuePath, store);
 
   let appliedPath = "";
-  const target = decisionTargetPathFromContext(resolved, workspaceId);
   const targetFile = target.targetFile;
   let note = "";
   if (target.projectKey && !resolved.projectKey) {
@@ -2670,9 +2699,12 @@ async function resolveDecisionQueueItem(id, body = {}) {
       `- 원천: ${resolved.sourceType || "decision_queue"}`,
       `- 제목: ${resolved.title || id}`,
       `- 처리: ${action}`,
+      finalVerification ? `- 최종 검증: ${finalVerification.provider || "local"} / ${finalVerification.model || "rule"} / ${finalVerification.decision}` : "",
+      finalVerification?.reason ? `- 최종 검증 사유: ${finalVerification.reason}` : "",
       `- 내용: ${String(resolved.content || "").replace(/\n/g, "\n  ")}`,
       resolved.path ? `- 근거 경로: ${resolved.path}` : "",
       resolved.note ? `- 메모: ${resolved.note}` : "",
+      finalVerification?.safeAppendNote ? `- 최종 검증 메모: ${finalVerification.safeAppendNote}` : "",
     ].filter(Boolean).join("\n");
     await writeFile(targetPath, `${current}${block}\n`, "utf-8");
     appliedPath = relative(repoRoot, targetPath);
@@ -2690,9 +2722,10 @@ async function resolveDecisionQueueItem(id, body = {}) {
     item: resolved,
     appliedPath,
     targetFile,
+    finalVerification,
     note,
   });
-  return { status: "resolved", action, item: resolved, appliedPath, targetFile, note };
+  return { status: "resolved", action, item: resolved, appliedPath, targetFile, finalVerification, note };
 }
 
 async function enqueueDecisionQueueItem(item = {}) {
@@ -3220,6 +3253,9 @@ async function wikiManagementCommand(command) {
         max_tokens: 1800,
         thinking: glmThinkingOptions(env),
         response_format: { type: "json_object" },
+      }, {
+        feature: "wiki_management_plan",
+        reason: "safe preview plan for wiki management command",
       });
       endpoint = response.endpoint;
       const content = glmMessageContent(response.payload);
@@ -4260,6 +4296,26 @@ function glmDecisionTriageOptions(env = {}) {
   };
 }
 
+function glmDecisionFinalOptions(env = {}) {
+  const maxTokens = Number(process.env.GLM_DECISION_FINAL_MAX_TOKENS || env.GLM_DECISION_FINAL_MAX_TOKENS || 1400);
+  return {
+    model: process.env.GLM_DECISION_FINAL_MODEL || env.GLM_DECISION_FINAL_MODEL || process.env.GLM_MODEL || env.GLM_MODEL || "glm-5.1",
+    maxTokens: Number.isFinite(maxTokens) && maxTokens > 0 ? Math.min(maxTokens, 2400) : 1400,
+    thinking: glmThinkingOptions(env),
+    temperature: 0.05,
+  };
+}
+
+function glmConflictMergeOptions(env = {}) {
+  const maxTokens = Number(process.env.GLM_CONFLICT_MAX_TOKENS || env.GLM_CONFLICT_MAX_TOKENS || 2800);
+  return {
+    model: process.env.GLM_CONFLICT_MODEL || env.GLM_CONFLICT_MODEL || process.env.GLM_MODEL || env.GLM_MODEL || "glm-4.5",
+    maxTokens: Number.isFinite(maxTokens) && maxTokens > 0 ? Math.min(maxTokens, 5000) : 2800,
+    thinking: glmThinkingOptions(env),
+    temperature: 0.1,
+  };
+}
+
 function glmContextMode(env = {}, requested = "") {
   const mode = requested || process.env.GLM_CONTEXT_MODE || env.GLM_CONTEXT_MODE || "standard";
   return ["economy", "standard", "deep"].includes(mode) ? mode : "standard";
@@ -4428,11 +4484,97 @@ function localConflictMergeSuggestion(body = {}) {
   };
 }
 
+async function verifyDecisionFinalApproval(item = {}, body = {}, target = {}, workspaceId = "rtm") {
+  const { values: env } = await readEnvFile();
+  const apiKey = process.env.GLM_API_KEY || env.GLM_API_KEY;
+  const apiUrl = process.env.GLM_API_URL || env.GLM_API_URL;
+  const options = glmDecisionFinalOptions(env);
+  const local = {
+    provider: "local-rule",
+    model: "",
+    decision: target.targetPath && (item.projectKey || target.projectKey) ? "approve" : "investigate",
+    reason: target.targetPath ? "projectKey와 반영 경로가 계산되어 사용자 승인을 로컬 규칙으로 통과시켰습니다." : "반영 경로 또는 projectKey가 불명확합니다.",
+    blockingIssues: target.targetPath ? [] : ["missing_target_path_or_project_key"],
+    safeAppendNote: "",
+  };
+  if (!apiKey || !apiUrl) return local;
+  const payload = {
+    workspaceId,
+    userAction: body.action || "approve",
+    item: {
+      id: item.id,
+      title: item.title,
+      kind: item.kind,
+      sourceType: item.sourceType,
+      projectKey: item.projectKey || target.projectKey || "",
+      projectLabel: item.projectLabel || target.projectLabel || "",
+      content: item.content,
+      sourcePath: item.path || "",
+      note: body.note || "",
+    },
+    target: {
+      targetFile: target.targetFile || "",
+      targetPath: target.targetPath ? relative(repoRoot, target.targetPath) : "",
+      mode: target.mode || "",
+    },
+    policy: {
+      scope: "wiki_data_consistency_only",
+      block_if_missing_project_or_target: true,
+      output_json_only: true,
+    },
+  };
+  try {
+    const { payload: completion, endpoint } = await requestGlmChatCompletion(apiUrl, apiKey, {
+      model: options.model,
+      messages: [
+        {
+          role: "system",
+          content: [
+            "당신은 Obsidian 위키 반영 직전 최종 승인 검증자다.",
+            "Decision Deck 항목은 업무 리스크가 아니라 위키 데이터 정합성/충돌 관리 대상이다.",
+            "사용자의 승인 의도가 있어도 projectKey, targetPath, 근거 path, Conflict_Register/Decisions 반영 적합성이 불명확하면 approve하지 않는다.",
+            "반드시 JSON 객체만 반환한다: decision, reason, blockingIssues, safeAppendNote.",
+            "decision은 approve, hold, investigate 중 하나다.",
+          ].join(" "),
+        },
+        { role: "user", content: JSON.stringify(payload) },
+      ],
+      temperature: options.temperature,
+      max_tokens: options.maxTokens,
+      thinking: options.thinking,
+      response_format: { type: "json_object" },
+    }, {
+      feature: "decision_final_approval",
+      reason: "top model gate before writing approved decision to wiki",
+      fallback: "local_decision_final_rule",
+    });
+    const parsed = JSON.parse(glmMessageContent(completion) || "{}");
+    const decision = ["approve", "hold", "investigate"].includes(parsed.decision) ? parsed.decision : "investigate";
+    return {
+      provider: "glm",
+      model: options.model,
+      endpoint,
+      decision,
+      reason: String(parsed.reason || "").trim(),
+      blockingIssues: Array.isArray(parsed.blockingIssues) ? parsed.blockingIssues.map((issue) => String(issue)).filter(Boolean) : [],
+      safeAppendNote: String(parsed.safeAppendNote || "").trim(),
+    };
+  } catch (error) {
+    return {
+      ...local,
+      provider: "local-rule",
+      upstreamStatus: error.message,
+      reason: `${local.reason} GLM 최종 검증 실패: ${error.message}`,
+    };
+  }
+}
+
 async function suggestConflictMerge(body = {}) {
   const { values: env } = await readEnvFile();
   const apiKey = process.env.GLM_API_KEY || env.GLM_API_KEY;
   const apiUrl = process.env.GLM_API_URL || env.GLM_API_URL;
-  const model = process.env.GLM_MODEL || env.GLM_MODEL || "glm-4.5";
+  const conflictOptions = glmConflictMergeOptions(env);
+  const model = conflictOptions.model;
   if (!apiKey || !apiUrl) return localConflictMergeSuggestion(body);
   try {
     const payload = {
@@ -4467,9 +4609,9 @@ async function suggestConflictMerge(body = {}) {
           content: JSON.stringify(payload),
         },
       ],
-      temperature: 0.1,
-      max_tokens: 2800,
-      thinking: glmThinkingOptions(env),
+      temperature: conflictOptions.temperature,
+      max_tokens: conflictOptions.maxTokens,
+      thinking: conflictOptions.thinking,
       response_format: { type: "json_object" },
     }, {
       feature: "conflict_merge_suggestion",
@@ -4501,6 +4643,8 @@ function routeChatSkills(message, evidence = [], paperclip = null, options = {})
   const text = String(message || "");
   const lower = text.toLowerCase();
   const localPaths = extractLocalPaths(text, ["hwp", "hwpx", "pdf", "docx", "pptx", "xlsx", "xls", "csv", "html", "htm"]);
+  const needsFileBrowsing = /os 파일|파일 브라우징|파일 브라우저|폴더 조회|디렉터리 조회|directory|folder|browse|tree|ls\b|find\b|manifest|경로 분석|파일 구조/i.test(text);
+  const needsFilesystemWikiIntake = /(rclone|로컬 파일시스템|내부 파일시스템|local filesystem).*(위키화|반영|ingest|수집)|((위키화|반영|ingest).*(폴더|디렉터리|파일시스템|filesystem))/i.test(text);
   const needsHwp = localPaths.some((path) => [".hwp", ".hwpx"].includes(extname(path).toLowerCase())) || /\.(hwp|hwpx)\b/i.test(text);
   const needsSpreadsheet = localPaths.some((path) => [".xlsx", ".xls", ".csv"].includes(extname(path).toLowerCase())) || /\.(xlsx|xls|csv)\b/i.test(text);
   const needsGrantRfp = /공고|rfp|사업계획서|연구개발계획서|작성양식|평가방안|심사표|평가기준|지원 가능|지원가능|support gate|kpi|성과지표|연차계획|예산 전략|국책과제|바우처/i.test(text);
@@ -4515,6 +4659,8 @@ function routeChatSkills(message, evidence = [], paperclip = null, options = {})
     if (/위키화|반영|ingest|run\b|동기화/i.test(lower)) suggestedTemplateIds.push("wiki-ingest-operator");
     blockedWriteActions.push("wiki_or_drive_write_requested");
   }
+  if (needsFileBrowsing) suggestedTemplateIds.push("os-file-browser");
+  if (needsFilesystemWikiIntake) suggestedTemplateIds.push("filesystem-wiki-intake");
   if (needsGrantRfp) suggestedTemplateIds.push("grant-rfp-strategy");
   if (needsHwp) suggestedTemplateIds.push("rhwp-hwp-reader");
   if (needsSpreadsheet) suggestedTemplateIds.push("spreadsheet-stat-analyzer");
@@ -4524,12 +4670,14 @@ function routeChatSkills(message, evidence = [], paperclip = null, options = {})
     .filter((id) => availableTemplates.size ? availableTemplates.has(id) : true);
   suggestedTemplateIds.push(...forcedTemplateIds);
   return {
-    needs_reading_skill: needsHwp || needsSpreadsheet || needsGrantRfp || forcedTemplateIds.some((id) => ["rhwp-hwp-reader", "spreadsheet-stat-analyzer", "grant-rfp-strategy"].includes(id)),
+    needs_reading_skill: needsFileBrowsing || needsFilesystemWikiIntake || needsHwp || needsSpreadsheet || needsGrantRfp || forcedTemplateIds.some((id) => ["os-file-browser", "filesystem-wiki-intake", "rhwp-hwp-reader", "spreadsheet-stat-analyzer", "grant-rfp-strategy"].includes(id)),
     needs_validation_skill: needsValidation || forcedTemplateIds.includes("validator"),
     suggested_template_ids: [...new Set(suggestedTemplateIds)].filter((id) => availableTemplates.size ? availableTemplates.has(id) : true),
     blocked_write_actions: [...new Set(blockedWriteActions)],
     reason: [
       forcedTemplateIds.length ? `사용자 태그 요청: ${forcedTemplateIds.join(", ")}` : "",
+      needsFileBrowsing ? "OS 파일/폴더 구조 조회 필요" : "",
+      needsFilesystemWikiIntake ? "로컬 파일시스템 위키화 intake 필요" : "",
       needsGrantRfp ? "공고/RFP/사업계획서 전략 분석 필요" : "",
       needsHwp ? "hwp/hwpx 문서 해석 필요" : "",
       needsSpreadsheet ? "xlsx/csv 통계 해석 필요" : "",
@@ -4537,6 +4685,7 @@ function routeChatSkills(message, evidence = [], paperclip = null, options = {})
       blockedWriteActions.length ? "write/run 계열은 추천만 허용" : "",
     ].filter(Boolean).join(" / "),
     user_selected_template_ids: forcedTemplateIds,
+    raw_message: text,
     local_paths: localPaths.map((path) => ({
       path,
       allowed: localPathAllowedForAutoSkill(path),
@@ -4569,6 +4718,32 @@ async function autoRunAllowedSkills(route, options = {}) {
       });
       continue;
     }
+    if (templateId === "os-file-browser") {
+      const browse = await inspectFilesystemTargets(route.raw_message || "", {
+        extensions: [],
+        includeDirectories: true,
+        maxDepth: 4,
+        maxFiles: 80,
+        maxEntriesPerDirectory: 60,
+      });
+      if (!browse.targets.length) {
+        recommendedTasks.push({
+          templateId,
+          approval: "required",
+          reason: "조회 가능한 로컬 파일/폴더 경로가 없어서 추천만 생성",
+        });
+      } else {
+        autoRuns.push({
+          templateId,
+          status: "completed",
+          mode: "filesystem_browse_summary",
+          provenance: browse.targets.map((item) => relative(repoRoot, item.path)),
+          result: browse,
+        });
+        blockedActions.push(...browse.blocked.map((item) => `path_outside_allowed_root:${item}`));
+      }
+      continue;
+    }
     const allowedPaths = (route.local_paths || []).filter((item) => item.allowed);
     const blockedPaths = (route.local_paths || []).filter((item) => !item.allowed);
     if (blockedPaths.length) {
@@ -4576,6 +4751,7 @@ async function autoRunAllowedSkills(route, options = {}) {
     }
     const matchingPaths = allowedPaths
       .filter((item) => {
+        if (templateId === "filesystem-wiki-intake") return [".hwp", ".hwpx", ".pdf", ".docx", ".pptx", ".xlsx", ".xls", ".csv", ".html", ".htm", ".md", ".txt", ".json"].includes(item.ext);
         if (templateId === "rhwp-hwp-reader") return [".hwp", ".hwpx", ".pdf", ".docx", ".pptx", ".html", ".htm"].includes(item.ext);
         if (templateId === "grant-rfp-strategy") return [".hwp", ".hwpx", ".pdf", ".docx", ".pptx", ".xlsx", ".xls", ".csv", ".html", ".htm"].includes(item.ext);
         return [".xlsx", ".xls", ".csv"].includes(item.ext);
@@ -5523,6 +5699,10 @@ async function streamGlmChat(message, projectId, res, options = {}) {
   const apiUrl = process.env.GLM_API_URL || env.GLM_API_URL;
   const decisionOptions = decisionMode ? glmDecisionTriageOptions(env) : null;
   const model = decisionOptions?.model || process.env.GLM_MODEL || env.GLM_MODEL || "glm-4.5";
+  sseWrite(res, "project_binding", { projectBinding: context.projectBinding || null });
+  sseWrite(res, "retrieval", { retrieval: context.retrieval || null });
+  sseWrite(res, "validation", { validation: context.validation || null });
+  sseWrite(res, "paperclip", { paperclip: context.paperclip || null });
   if (!apiKey || !apiUrl) {
     const fallback = "GLM_API_URL과 GLM_API_KEY를 운영 설정에 넣으면 위키 기반 업무 운영 챗이 연결됩니다.";
     sseWrite(res, "delta", { content: fallback });
@@ -5826,6 +6006,26 @@ function skillCatalog() {
       output: "obsidian/raw/exports/slack/*.json + automation/wiki_api/runtime/slack_collection_state.json",
     },
     {
+      id: "os-file-browser",
+      name: "OS 파일 브라우저",
+      type: "paperclip-glm-skill",
+      status: "available",
+      safety: "allowlist_local_read_only",
+      description: "로컬 repo/mirror/chat upload 범위에서 폴더 트리, 후보 파일, 확장자 분포를 조회하고 후속 Paperclip 스킬 연결용 입력 후보를 만든다.",
+      bestFor: ["폴더 구조 파악", "후속 분석 대상 선정", "파일 기반 스킬 라우팅"],
+      output: "automation/wiki_api/runtime/skill_outputs/*.md",
+    },
+    {
+      id: "filesystem-wiki-intake",
+      name: "로컬 파일시스템 위키화 Intake",
+      type: "paperclip-glm-skill",
+      status: "available",
+      safety: "allowlist_local_read_only",
+      description: "로컬 파일/폴더를 rclone 보조 입력으로 읽어 문서 분류, 후보 사실, 위키 승격 계획, 승인 전 다음 액션을 정리한다.",
+      bestFor: ["rclone 미러 보조 분석", "로컬 폴더 위키화 준비", "내부 파일시스템 기반 증적 intake"],
+      output: "automation/wiki_api/runtime/skill_outputs/*.md",
+    },
+    {
       id: "meeting-minutes-writer",
       name: "회의록/미팅정리 작성",
       type: "paperclip-glm-skill",
@@ -5894,6 +6094,16 @@ function skillCatalog() {
       description: "PowerPoint 작성, 수정, 렌더 검증에 적합하다.",
       bestFor: ["고객 발표자료", "PoC 결과 발표", "프로젝트 킥오프"],
       output: ".pptx",
+    },
+    {
+      id: "os-file-browser-mcp",
+      name: "OS File Browser MCP",
+      type: "applied-mcp-bridge",
+      status: "available",
+      safety: "strict_allowlist_required",
+      description: "읽기 전용 allowlist 범위에서 파일/폴더 탐색 결과를 Paperclip 스킬 입력으로 연결하는 로컬 MCP 브리지다.",
+      bestFor: ["OS 파일 브라우징", "폴더 내 분석 대상 선별", "Paperclip 스킬 협업"],
+      installHint: "현재 wiki_api 내부 브리지로 제공되며 repo/mirror/chat upload 범위만 허용",
     },
     {
       id: "github-mcp",
@@ -6056,6 +6266,28 @@ async function createSkillDraft(body) {
 
 function paperclipTemplates() {
   return [
+    {
+      id: "os-file-browser",
+      agent: "OS File Browser",
+      title: "OS 파일 브라우징",
+      description: "로컬 파일/폴더 경로를 읽기 전용으로 탐색해 구조 요약, 후보 파일, 후속 Paperclip 스킬 연결 포인트를 만든다.",
+      command: "glm-skill",
+      dryRun: false,
+      safety: "allowlist_local_read_only",
+      inputHint: "폴더 또는 파일 경로와 찾고 싶은 관점(예: RFP 후보, HWP 문서, 관리표, HTML 리포트)을 적으세요.",
+      output: "automation/wiki_api/runtime/skill_outputs/*.md",
+    },
+    {
+      id: "filesystem-wiki-intake",
+      agent: "Filesystem Wiki Intake",
+      title: "로컬 파일시스템 위키화 Intake",
+      description: "로컬 파일/폴더를 읽기 전용으로 조사해 위키 승격 후보, 프로젝트 라우팅, 근거 문서 분류, 다음 액션을 만든다.",
+      command: "glm-skill",
+      dryRun: false,
+      safety: "allowlist_local_read_only",
+      inputHint: "로컬 폴더/파일 경로와 위키화 목적(예: Common intake, 특정 프로젝트 반영, rclone 보조 정리)을 적으세요.",
+      output: "automation/wiki_api/runtime/skill_outputs/*.md",
+    },
     {
       id: "meeting-minutes-writer",
       agent: "PM Minutes Writer",
@@ -6287,6 +6519,29 @@ function paperclipSkillSystemPrompt(templateId) {
       "SECTION 2. 경영진 보고용 요약 (Key Summary): 5~6줄 내외의 개조식 글머리 기호로 날짜/차수, 목적/배경, 고객 현황/Pain Point, 주요 논의/반응, 합의/향후 일정을 담으십시오.",
     ].join("\n");
   }
+  if (templateId === "os-file-browser") {
+    return [
+      "당신은 RTM의 OS 파일 브라우징 분석 담당자입니다.",
+      "입력된 파일/폴더 구조를 읽기 전용으로 검토하고, 다른 Paperclip 스킬이 후속 작업에 바로 사용할 수 있도록 정리합니다.",
+      "반드시 다음 순서로 답하십시오: 1) 대상 경로 요약 2) 폴더 구조/확장자 분포 3) 업무적으로 유의미한 후보 파일 4) 추천 후속 스킬과 그 이유 5) 확인 필요/권한 제한.",
+      "파일 내용을 보지 못한 경우 구조 기반 추정이라고 명시하고, 확인 가능한 파일 경로는 상대경로로 나열하십시오.",
+      "실행/수정/삭제를 제안하더라도 자동 수행된 것처럼 쓰지 마십시오.",
+    ].join("\n");
+  }
+  if (templateId === "filesystem-wiki-intake") {
+    return [
+      "당신은 RTM의 로컬 파일시스템 위키화 intake 담당자입니다.",
+      "목표는 로컬 파일/폴더를 읽기 전용으로 조사하여, rclone 수집의 보조 또는 대체 입력으로 위키 반영 후보를 만드는 것입니다.",
+      "반드시 다음 순서로 답하십시오.",
+      "1) Intake 범위 요약: 어떤 폴더/파일이 들어왔는지, 경로 범위와 구조 특징",
+      "2) Source inventory: 문서 유형별 분류(HWP/HWPX/PDF/DOCX/PPTX/XLSX/CSV/HTML/MD/TXT/JSON 등), 대표 파일, 추출 한계",
+      "3) Wiki promotion plan: Sources.md, Evidence_Log.md, Conflict_Register.md, Change_Log.md에 각각 무엇이 들어가야 하는지",
+      "4) Project routing: 어느 프로젝트 hub 또는 Common intake로 가야 하는지와 이유",
+      "5) Candidate facts: 핵심 수치, 결정, 일정, 조직/참석자, 리스크, 충돌 후보",
+      "6) Next actions: 읽기+검수 자동으로 끝낼 일과 승인 후 write/run 해야 할 일을 분리",
+      "문서 내용이 실제로 추출된 부분과 구조만 보고 추정한 부분을 구분하고, 위키에 이미 쓴 것처럼 표현하지 마십시오.",
+    ].join("\n");
+  }
   if (templateId === "rhwp-hwp-reader") {
     return "당신은 RTM의 문서 해석 담당자입니다. 제공된 한글문서 추출문을 왜곡 없이 분석해 핵심 내용, 수치, 조직/참석자, 결정/요청, 리스크, 확인 필요 항목을 한국어 Markdown으로 정리하십시오. 추출 품질 경고가 있으면 한계로 명시하십시오.";
   }
@@ -6337,7 +6592,7 @@ function paperclipSkillSystemPrompt(templateId) {
 
 function extractLocalPaths(text, extensions = []) {
   const allowed = new Set(extensions.map((item) => item.toLowerCase()));
-  const extensionPattern = "hwp|hwpx|pdf|docx|pptx|xlsx|xls|csv|html|htm";
+  const extensionPattern = "hwp|hwpx|pdf|docx|pptx|xlsx|xls|csv|html|htm|md|txt|json";
   const matches = [];
   for (const line of String(text || "").split(/\r?\n/)) {
     const absolutePath = line.match(new RegExp(`(/.*?\\.(${extensionPattern}))(?=$|[\\s'"\\]>},;])`, "i"))?.[1];
@@ -6348,6 +6603,165 @@ function extractLocalPaths(text, extensions = []) {
     .map((item) => item.trim().replace(/[),.;]+$/g, ""))
     .filter((item) => !allowed.size || allowed.has(extname(item).toLowerCase().replace(".", "")))
     .map((item) => resolve(repoRoot, item));
+}
+
+function extractDirectoryLikePaths(text) {
+  const matches = [];
+  for (const rawLine of String(text || "").split(/\r?\n/)) {
+    const line = rawLine.trim();
+    if (!line) continue;
+    const cleaned = line
+      .replace(/^[-*]\s+/, "")
+      .replace(/^`|`$/g, "")
+      .replace(/^["']|["']$/g, "")
+      .replace(/[),.;]+$/g, "");
+    if (/^(\/|\.{1,2}\/|obsidian\/|automation\/)/.test(cleaned)) matches.push(cleaned);
+  }
+  matches.push(...(String(text || "").match(/(?:\/[^\n"'<>]+|\.{1,2}\/[^\n"'<>]+|(?:obsidian|automation)\/[^\n"'<>]+)/g) || []));
+  return [...new Set(matches)]
+    .map((item) => item.trim().replace(/[),.;]+$/g, ""))
+    .map((item) => resolve(repoRoot, item))
+    .filter((item) => existsSync(item));
+}
+
+async function collectFilesFromDirectory(rootPath, allowedExtensions = [], options = {}) {
+  const maxDepth = Number(options.maxDepth || 4);
+  const maxFiles = Number(options.maxFiles || 80);
+  const maxEntriesPerDirectory = Number(options.maxEntriesPerDirectory || 60);
+  const allowed = new Set((allowedExtensions || []).map((item) => `.${String(item).toLowerCase().replace(/^\./, "")}`));
+  const files = [];
+  const directories = [];
+
+  async function walk(currentPath, depth) {
+    if (depth > maxDepth || files.length >= maxFiles) return;
+    let entries = [];
+    try {
+      entries = await readdir(currentPath, { withFileTypes: true });
+    } catch {
+      return;
+    }
+    for (const entry of entries.sort((a, b) => a.name.localeCompare(b.name)).slice(0, maxEntriesPerDirectory)) {
+      if (files.length >= maxFiles) break;
+      const fullPath = join(currentPath, entry.name);
+      if (entry.isDirectory()) {
+        directories.push(fullPath);
+        await walk(fullPath, depth + 1);
+        continue;
+      }
+      if (!entry.isFile()) continue;
+      if (allowed.size && !allowed.has(extname(entry.name).toLowerCase())) continue;
+      files.push(fullPath);
+    }
+  }
+
+  directories.push(rootPath);
+  await walk(rootPath, 0);
+  return { files, directories: [...new Set(directories)] };
+}
+
+async function resolvePaperclipInputTargets(text, extensions = [], options = {}) {
+  const filePaths = extractLocalPaths(text, extensions);
+  const directoryPaths = extractDirectoryLikePaths(text);
+  const targets = [];
+  const blocked = [];
+  for (const fullPath of [...new Set(filePaths.concat(directoryPaths))]) {
+    const allowed = localPathAllowedForAutoSkill(fullPath);
+    if (!allowed) {
+      blocked.push(fullPath);
+      continue;
+    }
+    const info = await stat(fullPath).catch(() => null);
+    if (!info) continue;
+    if (info.isDirectory()) {
+      const collected = await collectFilesFromDirectory(fullPath, extensions, options);
+      targets.push({ path: fullPath, type: "directory", fileCount: collected.files.length, directoryCount: collected.directories.length });
+      for (const filePath of collected.files) {
+        targets.push({ path: filePath, type: "file" });
+      }
+      continue;
+    }
+    if (info.isFile()) {
+      if (extensions.length && !extensions.map((item) => `.${item.toLowerCase().replace(/^\./, "")}`).includes(extname(fullPath).toLowerCase())) continue;
+      targets.push({ path: fullPath, type: "file" });
+    }
+  }
+  const files = [...new Set(targets.filter((item) => item.type === "file").map((item) => item.path))];
+  const directories = [...new Set(targets.filter((item) => item.type === "directory").map((item) => item.path))];
+  return {
+    files,
+    directories,
+    targets,
+    blocked,
+  };
+}
+
+async function inspectFilesystemTargets(text, options = {}) {
+  const resolved = await resolvePaperclipInputTargets(text, options.extensions || [], options);
+  const entries = [];
+  for (const target of resolved.targets.filter((item) => item.type === "directory")) {
+    const tree = [];
+    const maxDepth = Number(options.maxDepth || 4);
+    const maxEntriesPerDirectory = Number(options.maxEntriesPerDirectory || 40);
+    async function walk(currentPath, depth) {
+      if (depth > maxDepth) return;
+      let children = [];
+      try {
+        children = await readdir(currentPath, { withFileTypes: true });
+      } catch {
+        return;
+      }
+      for (const child of children.sort((a, b) => a.name.localeCompare(b.name)).slice(0, maxEntriesPerDirectory)) {
+        const fullPath = join(currentPath, child.name);
+        tree.push({
+          depth,
+          type: child.isDirectory() ? "directory" : child.isFile() ? "file" : "other",
+          path: relative(repoRoot, fullPath),
+        });
+        if (child.isDirectory()) await walk(fullPath, depth + 1);
+      }
+    }
+    await walk(target.path, 0);
+    entries.push({
+      path: relative(repoRoot, target.path),
+      type: "directory",
+      fileCount: target.fileCount || 0,
+      directoryCount: target.directoryCount || 0,
+      tree: tree.slice(0, Number(options.maxTreeEntries || 200)),
+    });
+  }
+  for (const filePath of resolved.files.slice(0, Number(options.maxFiles || 80))) {
+    const info = await stat(filePath).catch(() => null);
+    if (!info?.isFile?.()) continue;
+    entries.push({
+      path: relative(repoRoot, filePath),
+      type: "file",
+      ext: extname(filePath).toLowerCase(),
+      size: info.size,
+      updatedAt: new Date(info.mtimeMs).toISOString(),
+    });
+  }
+  return {
+    targets: resolved.targets,
+    files: resolved.files.map((item) => relative(repoRoot, item)),
+    directories: resolved.directories.map((item) => relative(repoRoot, item)),
+    blocked: resolved.blocked.map((item) => relative(repoRoot, item)),
+    entries,
+  };
+}
+
+async function extractTextLike(paths) {
+  const sections = [];
+  for (const filePath of paths.slice(0, 24)) {
+    const ext = extname(filePath).toLowerCase();
+    if (![".md", ".txt", ".json", ".csv", ".html", ".htm"].includes(ext)) continue;
+    const content = await readFile(filePath, "utf-8").catch(() => "");
+    if (!content) continue;
+    sections.push([
+      `## ${relative(repoRoot, filePath)}`,
+      content.slice(0, 6000),
+    ].join("\n"));
+  }
+  return sections.join("\n\n");
 }
 
 function parseMultipartForm(buffer, contentType = "") {
@@ -6472,7 +6886,7 @@ async function summarizeAttachmentWithGlm({ templateId, fileName, extracted, ima
   const apiUrl = process.env.GLM_API_URL || env.GLM_API_URL;
   const model = imageDataUrl
     ? (process.env.GLM_VLM_MODEL || env.GLM_VLM_MODEL || process.env.GLM_MODEL || env.GLM_MODEL || "glm-5.1")
-    : (process.env.GLM_MODEL || env.GLM_MODEL || "glm-5.1");
+    : (process.env.GLM_FILE_ANALYSIS_MODEL || env.GLM_FILE_ANALYSIS_MODEL || process.env.GLM_MODEL || env.GLM_MODEL || "glm-5.1");
   if (!apiKey || !apiUrl) {
     return [
       `# 파일 분석 대기 - ${fileName}`,
@@ -6506,6 +6920,9 @@ async function summarizeAttachmentWithGlm({ templateId, fileName, extracted, ima
     temperature: 0.2,
     max_tokens: Math.min(glmChatMaxTokens(env), 6000),
     thinking: glmThinkingOptions(env),
+  }, {
+    feature: imageDataUrl ? "chat_file_vlm_analysis" : "chat_file_analysis",
+    reason: imageDataUrl ? "visual file analysis from chat upload" : "document file analysis from chat upload",
   });
   return glmMessageContent(completion.payload) || "GLM 파일 분석 응답이 비어 있습니다.";
 }
@@ -6582,17 +6999,82 @@ async function handleChatFileUpload(req) {
 
 async function paperclipSkillExtraction(task) {
   const note = task.payload?.note || "";
+  if (task.templateId === "os-file-browser") {
+    const inspected = await inspectFilesystemTargets(note, {
+      extensions: [],
+      includeDirectories: true,
+      maxDepth: 4,
+      maxFiles: 80,
+      maxEntriesPerDirectory: 60,
+      maxTreeEntries: 200,
+    });
+    return {
+      paths: inspected.files.map((path) => resolve(repoRoot, path)),
+      extracted: JSON.stringify(inspected, null, 2),
+    };
+  }
+  if (task.templateId === "filesystem-wiki-intake") {
+    const targets = await resolvePaperclipInputTargets(note, ["hwp", "hwpx", "pdf", "docx", "pptx", "xlsx", "xls", "csv", "html", "htm", "md", "txt", "json"], { maxDepth: 5, maxFiles: 100, maxEntriesPerDirectory: 80 });
+    const inspected = await inspectFilesystemTargets(note, {
+      extensions: [],
+      includeDirectories: true,
+      maxDepth: 5,
+      maxFiles: 100,
+      maxEntriesPerDirectory: 80,
+      maxTreeEntries: 240,
+    });
+    const documentPaths = targets.files.filter((path) => [".hwp", ".hwpx", ".pdf", ".docx", ".pptx", ".html", ".htm"].includes(extname(path).toLowerCase()));
+    const sheetPaths = targets.files.filter((path) => [".xlsx", ".xls", ".csv"].includes(extname(path).toLowerCase()));
+    const textPaths = targets.files.filter((path) => [".md", ".txt", ".json"].includes(extname(path).toLowerCase()));
+    return {
+      paths: targets.files,
+      extracted: [
+        "# Filesystem inspection",
+        JSON.stringify(inspected, null, 2),
+        targets.directories.length ? `# Expanded directories\n${targets.directories.map((path) => `- ${relative(repoRoot, path)}`).join("\n")}` : "",
+        documentPaths.length ? "## Document extraction" : "",
+        documentPaths.length ? await extractHwpLike(documentPaths) : "",
+        sheetPaths.length ? "## Spreadsheet extraction" : "",
+        sheetPaths.length ? await extractSpreadsheetLike(sheetPaths) : "",
+        textPaths.length ? "## Text-like previews" : "",
+        textPaths.length ? await extractTextLike(textPaths) : "",
+      ].filter(Boolean).join("\n\n"),
+    };
+  }
   if (task.templateId === "rhwp-hwp-reader") {
-    const paths = extractLocalPaths(note, ["hwp", "hwpx", "pdf", "docx", "pptx", "html", "htm"]);
-    return { paths, extracted: await extractHwpLike(paths) };
+    const targets = await resolvePaperclipInputTargets(note, ["hwp", "hwpx", "pdf", "docx", "pptx", "html", "htm"], { maxDepth: 4, maxFiles: 60 });
+    return {
+      paths: targets.files,
+      extracted: [
+        targets.directories.length ? `# Expanded directories\n${targets.directories.map((path) => `- ${relative(repoRoot, path)}`).join("\n")}` : "",
+        await extractHwpLike(targets.files),
+      ].filter(Boolean).join("\n\n"),
+    };
   }
   if (task.templateId === "grant-rfp-strategy") {
-    const paths = extractLocalPaths(note, ["hwp", "hwpx", "pdf", "docx", "pptx", "xlsx", "xls", "csv", "html", "htm"]);
-    return { paths, extracted: await extractHwpLike(paths) };
+    const targets = await resolvePaperclipInputTargets(note, ["hwp", "hwpx", "pdf", "docx", "pptx", "xlsx", "xls", "csv", "html", "htm"], { maxDepth: 4, maxFiles: 80 });
+    const documentPaths = targets.files.filter((path) => [".hwp", ".hwpx", ".pdf", ".docx", ".pptx", ".html", ".htm"].includes(extname(path).toLowerCase()));
+    const sheetPaths = targets.files.filter((path) => [".xlsx", ".xls", ".csv"].includes(extname(path).toLowerCase()));
+    return {
+      paths: targets.files,
+      extracted: [
+        targets.directories.length ? `# Expanded directories\n${targets.directories.map((path) => `- ${relative(repoRoot, path)}`).join("\n")}` : "",
+        documentPaths.length ? "## Document extraction" : "",
+        documentPaths.length ? await extractHwpLike(documentPaths) : "",
+        sheetPaths.length ? "## Spreadsheet extraction" : "",
+        sheetPaths.length ? await extractSpreadsheetLike(sheetPaths) : "",
+      ].filter(Boolean).join("\n\n"),
+    };
   }
   if (task.templateId === "spreadsheet-stat-analyzer") {
-    const paths = extractLocalPaths(note, ["xlsx", "xls", "csv"]);
-    return { paths, extracted: await extractSpreadsheetLike(paths) };
+    const targets = await resolvePaperclipInputTargets(note, ["xlsx", "xls", "csv"], { maxDepth: 4, maxFiles: 60 });
+    return {
+      paths: targets.files,
+      extracted: [
+        targets.directories.length ? `# Expanded directories\n${targets.directories.map((path) => `- ${relative(repoRoot, path)}`).join("\n")}` : "",
+        await extractSpreadsheetLike(targets.files),
+      ].filter(Boolean).join("\n\n"),
+    };
   }
   return { paths: [], extracted: "" };
 }
@@ -6601,7 +7083,7 @@ async function runPaperclipGlmSkill(task) {
   const { values: env } = await readEnvFile();
   const apiKey = process.env.GLM_API_KEY || env.GLM_API_KEY;
   const apiUrl = process.env.GLM_API_URL || env.GLM_API_URL;
-  const model = process.env.GLM_MODEL || env.GLM_MODEL || "glm-5.1";
+  const model = process.env.GLM_PAPERCLIP_MODEL || env.GLM_PAPERCLIP_MODEL || process.env.GLM_MODEL || env.GLM_MODEL || "glm-5.1";
   if (!apiKey || !apiUrl) throw new Error("GLM_API_URL and GLM_API_KEY are required for Paperclip GLM skills");
   const extraction = await paperclipSkillExtraction(task);
   const input = [
@@ -6624,6 +7106,9 @@ async function runPaperclipGlmSkill(task) {
     temperature: 0.2,
     max_tokens: glmChatMaxTokens(env),
     thinking: glmThinkingOptions(env),
+  }, {
+    feature: `paperclip_skill:${task.templateId || "unknown"}`,
+    reason: "approved Paperclip GLM skill execution",
   });
   const markdown = glmMessageContent(completion.payload) || "GLM 응답이 비어 있습니다.";
   await mkdir(skillOutputsRoot, { recursive: true });
@@ -6729,6 +7214,11 @@ const server = createServer(async (req, res) => {
     }
     if (pathname === "/api/ops/llm-usage" && req.method === "GET") {
       return sendJson(res, 200, { usage: await readJsonFile(llmUsagePath, []) });
+    }
+    if (pathname === "/api/ops/llm-policy" && req.method === "GET") {
+      const { values } = await readEnvFile();
+      const usage = await readJsonFile(llmUsagePath, []);
+      return sendJson(res, 200, { policies: llmPolicyCatalog(values, usage), usage });
     }
     if (pathname === "/api/decision-queue" && req.method === "GET") {
       const workspace = url.searchParams.get("workspace") || "rtm";
@@ -6838,6 +7328,18 @@ const server = createServer(async (req, res) => {
     if (pathname === "/api/skills/draft" && req.method === "POST") {
       const body = await readBody(req);
       return sendJson(res, 200, await createSkillDraft(body));
+    }
+    if (pathname === "/api/filesystem/browse" && req.method === "POST") {
+      const body = await readBody(req);
+      const result = await inspectFilesystemTargets([body.path || "", body.note || ""].filter(Boolean).join("\n"), {
+        extensions: Array.isArray(body.extensions) ? body.extensions : [],
+        includeDirectories: true,
+        maxDepth: body.maxDepth || 4,
+        maxFiles: body.maxFiles || 80,
+        maxEntriesPerDirectory: body.maxEntriesPerDirectory || 60,
+        maxTreeEntries: body.maxTreeEntries || 200,
+      });
+      return sendJson(res, 200, result);
     }
     if (pathname === "/api/chat/projects" && req.method === "GET") {
       return sendJson(res, 200, { projects: await listChatProjects(), global: await getGlobalChatSettings() });

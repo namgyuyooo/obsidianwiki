@@ -727,9 +727,94 @@ select {
 
 .mission-bottom-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 18px;
   margin-top: 18px;
+}
+
+.llm-policy-panel {
+  grid-column: span 2;
+}
+
+.llm-policy-list {
+  display: grid;
+  gap: 12px;
+  max-height: 620px;
+  overflow: auto;
+  padding-right: 4px;
+}
+
+.llm-policy-card {
+  border: 1px solid rgba(24, 32, 29, 0.12);
+  border-radius: 18px;
+  background: linear-gradient(180deg, #fffdf8, #f6f0e5);
+  padding: 14px;
+}
+
+.llm-policy-card.light {
+  border-color: rgba(69, 130, 86, 0.24);
+  background: linear-gradient(180deg, #fbfff7, #eef8ec);
+}
+
+.llm-policy-card.hybrid {
+  border-color: rgba(181, 128, 42, 0.28);
+  background: linear-gradient(180deg, #fffaf0, #f6efdf);
+}
+
+.llm-policy-head,
+.llm-policy-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.llm-policy-head strong,
+.llm-policy-head small,
+.llm-policy-actions small {
+  display: block;
+}
+
+.llm-policy-head span {
+  flex: 0 0 auto;
+  border-radius: 999px;
+  background: rgba(24, 32, 29, 0.08);
+  color: #24352c;
+  font-size: 12px;
+  font-weight: 800;
+  padding: 6px 10px;
+}
+
+.llm-policy-head small,
+.llm-policy-actions small,
+.llm-policy-meta {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.llm-policy-card p {
+  margin: 10px 0;
+  color: #2c342f;
+  line-height: 1.55;
+}
+
+.llm-policy-card details {
+  margin: 10px 0;
+}
+
+.llm-policy-card summary {
+  cursor: pointer;
+  color: var(--green);
+  font-weight: 800;
+}
+
+.llm-policy-card pre {
+  white-space: pre-wrap;
+  max-height: 180px;
+  overflow: auto;
+  border-radius: 12px;
+  background: rgba(24, 32, 29, 0.06);
+  padding: 12px;
 }
 
 .mission-project-list {
@@ -3734,8 +3819,42 @@ pre {
   padding: 0;
 }
 
+.chat-workbench:has(.chat-main-panel.assistantui-migrated) {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.chat-workbench:has(.chat-main-panel.assistantui-migrated) > .chat-project-rail {
+  display: none !important;
+}
+
 .chat-main-panel.assistantui-migrated > :not(.chat-assistantui-shell) {
   display: none !important;
+}
+
+#decisions:has(.decision-assistantui-shell) > :not(.decision-assistantui-shell) {
+  display: none !important;
+}
+
+#mission:has(.mission-assistantui-shell) > :not(.mission-assistantui-shell) {
+  display: none !important;
+}
+
+.decision-assistantui-shell,
+.mission-assistantui-shell {
+  border: 0;
+  border-radius: 32px;
+  height: calc(100vh - 132px);
+  min-height: 760px;
+  overflow: hidden;
+  width: 100%;
+}
+
+.decision-assistantui-shell iframe,
+.mission-assistantui-shell iframe {
+  border: 0;
+  display: block;
+  height: 100%;
+  width: 100%;
 }
 
 .chat-assistantui-shell {
@@ -4428,6 +4547,10 @@ pre {
 	  .settings-grid {
 	    grid-template-columns: 1fr;
 	  }
+
+  .llm-policy-panel {
+    grid-column: auto;
+  }
 
   .decision-compare-workspace {
     grid-template-columns: 1fr;

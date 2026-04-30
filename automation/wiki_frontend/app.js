@@ -37,6 +37,7 @@ const state = {
   coreDocuments: [],
   decisionQueue: [],
   llmUsage: [],
+  llmPolicies: [],
   automationSnapshot: null,
   activeMissionProjectKey: "",
   activeDecisionId: "",
@@ -151,6 +152,15 @@ const settingLabels = {
   GLM_LIGHT_MAX_TOKENS: "경량 LLM 최대 토큰",
   GLM_DECISION_MODEL: "Decision Deck 경량 모델",
   GLM_DECISION_MAX_TOKENS: "Decision Deck 최대 토큰",
+  GLM_DECISION_FINAL_MODEL: "Decision Deck 최종 검증 모델",
+  GLM_DECISION_FINAL_MAX_TOKENS: "Decision Deck 최종 검증 토큰",
+  GLM_CONFLICT_MODEL: "충돌 병합 모델",
+  GLM_CONFLICT_MAX_TOKENS: "충돌 병합 최대 토큰",
+  GLM_FILE_ANALYSIS_MODEL: "파일 분석 모델",
+  GLM_VLM_MODEL: "이미지/VLM 모델",
+  GLM_PAPERCLIP_MODEL: "Paperclip 스킬 모델",
+  GLM_SLACK_FILTER_MODEL: "Slack 필터 경량 모델",
+  GLM_SLACK_FILTER_MAX_TOKENS: "Slack 필터 최대 토큰",
   GLM_AVAILABLE_MODELS: "GLM 선택 가능 모델",
   GLM_THINKING_TYPE: "GLM thinking",
   GLM_THINKING_BUDGET_TOKENS: "GLM thinking budget",
@@ -182,6 +192,19 @@ const settingLabels = {
   SLACK_COMPANY_WIKI_ROOT: "Slack 회사소식 위키 루트",
 };
 
+const ASSISTANT_UI_CHAT_BUILD = "20260430-project-settings";
+const ASSISTANT_UI_TOP_LEVEL_VIEWS = {
+  chat: "chat",
+  decisions: "decisions",
+  paperclip: "paperclip",
+  wiki: "wiki",
+  mission: "mission",
+  pipeline: "pipeline",
+  spotlite: "spotlite",
+  operations: "operations",
+  ingest: "ingest",
+};
+
 function personalSpotlitePin() {
   return localStorage.getItem("spotlite_personal_pin") || "0953";
 }
@@ -190,12 +213,25 @@ function wikiWorkspaceParam() {
   return state.activeSpace === "personal" ? "personal" : "rtm";
 }
 
+function assistantUiProjectIdParam() {
+  return state.activeChatProjectId || "default";
+}
+
+function assistantUiTopLevelUrl(surface = "chat") {
+  const workspace = wikiWorkspaceParam();
+  const projectId = assistantUiProjectIdParam();
+  const url = new URL("/assistant-ui/index.html", window.location.origin);
+  url.searchParams.set("workspace", workspace);
+  url.searchParams.set("projectId", projectId);
+  url.searchParams.set("ui", ASSISTANT_UI_CHAT_BUILD);
+  if (surface !== "chat") url.searchParams.set("surface", surface);
+  return `${url.pathname}${url.search}`;
+}
+
 function syncAssistantUiFrame() {
   const frame = $("#chat-assistantui-frame");
   if (!frame) return;
-  const workspace = wikiWorkspaceParam();
-  const projectId = state.activeChatProjectId || "assistant-ui";
-  const next = `/assistant-ui/index.html?workspace=${encodeURIComponent(workspace)}&projectId=${encodeURIComponent(projectId)}`;
+  const next = assistantUiTopLevelUrl("chat");
   if (frame.getAttribute("src") !== next) frame.setAttribute("src", next);
 }
 
@@ -840,6 +876,7 @@ function renderMissionControl() {
     status: `${item.status} · ${item.model || item.provider || "glm"}`,
     detail: `${item.reason || ""} · ${item.durationMs || 0}ms${item.error ? ` · ${item.error}` : ""}`,
   })) : [{ command: "GLM 호출 없음", status: "local-first", detail: "로컬 규칙으로 가능한 기능은 GLM 없이 동작합니다." }]);
+  renderLlmPolicyPanel();
   renderProjectGovernancePanel();
 
   document.querySelectorAll("[data-mission-open]").forEach((button) => {
@@ -870,6 +907,61 @@ function renderMissionControl() {
   document.querySelectorAll("[data-doc-status]").forEach((button) => {
     button.addEventListener("click", () => updateDocumentStatus(button.dataset.docStatus, button.dataset.status));
   });
+  document.querySelectorAll("[data-llm-policy-apply]").forEach((button) => {
+    button.addEventListener("click", () => applyLlmPolicy(button.dataset.llmPolicyApply));
+  });
+}
+
+function renderLlmPolicyPanel() {
+  const policies = state.llmPolicies || [];
+  const count = $("#mission-llm-policy-count");
+  const list = $("#mission-llm-policy-list");
+  if (count) count.textContent = `${policies.length}개`;
+  if (!list) return;
+  if (!policies.length) {
+    list.innerHTML = `<div class="spotlite-empty">LLM 정책 API 연결 대기 중입니다.</div>`;
+    return;
+  }
+  list.innerHTML = policies.map((policy) => {
+    const classLabel = policy.modelClass === "light" ? "경량" : policy.modelClass === "hybrid" ? "혼합" : "일반";
+    const env = (policy.envKeys || []).join(", ");
+    const prompt = String(policy.prompt || "").slice(0, 900);
+    return [
+      `<article class="llm-policy-card ${escapeHtml(policy.modelClass || "general")}">`,
+      `<div class="llm-policy-head">`,
+      `<div><strong>${escapeHtml(policy.title || policy.id)}</strong><small>${escapeHtml(policy.surface || "")} · ${escapeHtml(classLabel)} · 최근 ${escapeHtml(String(policy.usageCount || 0))}회</small></div>`,
+      `<span>${escapeHtml(policy.currentModel || "-")}</span>`,
+      `</div>`,
+      `<p>${escapeHtml(policy.purpose || "")}</p>`,
+      `<div class="llm-policy-meta">추천 ${escapeHtml(policy.recommendedModel || "-")} · tokens ${escapeHtml(String(policy.maxTokens || "-"))} · thinking ${escapeHtml(policy.thinking || "-")}</div>`,
+      `<details>`,
+      `<summary>전용 프롬프트 보기</summary>`,
+      `<pre>${escapeHtml(prompt)}</pre>`,
+      `</details>`,
+      `<div class="llm-policy-actions">`,
+      `<small>${escapeHtml(env)}</small>`,
+      `<button class="inline-delete" data-llm-policy-apply="${escapeHtml(policy.id)}">추천 설정 저장</button>`,
+      `</div>`,
+      `</article>`,
+    ].join("");
+  }).join("");
+}
+
+async function applyLlmPolicy(policyId) {
+  const policy = (state.llmPolicies || []).find((item) => item.id === policyId);
+  if (!policy?.applySettings) return;
+  const result = await api("/api/settings", {
+    method: "POST",
+    body: JSON.stringify({ settings: policy.applySettings }),
+  });
+  if (result.error) {
+    $("#settings-status").textContent = `LLM 정책 저장 실패: ${result.error}`;
+    return;
+  }
+  $("#settings-status").textContent = `LLM 정책 저장 완료: ${policy.title}`;
+  await loadSettings();
+  await loadLlmPolicies();
+  renderMissionControl();
 }
 
 function pendingDecisionItems() {
@@ -1569,11 +1661,12 @@ function renderMissionPipelineFlow(coverage = {}, latestRun = null) {
 
 async function loadMissionControl() {
   const workspace = wikiWorkspaceParam();
-  const [mission, docs, queue, llm, coverage, automation, governance] = await Promise.all([
+  const [mission, docs, queue, llm, policy, coverage, automation, governance] = await Promise.all([
     api(`/api/projects/command-center?workspace=${encodeURIComponent(workspace)}`),
     api(`/api/documents/core?workspace=${encodeURIComponent(workspace)}`),
     api(`/api/decision-queue?workspace=${encodeURIComponent(workspace)}`),
     api("/api/ops/llm-usage"),
+    api("/api/ops/llm-policy"),
     api("/api/coverage"),
     api("/api/automation/status"),
     api(`/api/wiki/project-governance?workspace=${encodeURIComponent(workspace)}`),
@@ -1582,11 +1675,20 @@ async function loadMissionControl() {
   if (!docs.mock && !docs.error) state.coreDocuments = docs.documents || [];
   if (!queue.mock && !queue.error) state.decisionQueue = queue.items || [];
   if (!llm.mock && !llm.error) state.llmUsage = llm.usage || [];
+  if (!policy.mock && !policy.error) state.llmPolicies = policy.policies || [];
   if (!coverage.mock && !coverage.error) state.coverage = coverage;
   if (!automation.mock && !automation.error) state.automationSnapshot = automation;
   if (!governance.mock && !governance.error) state.projectGovernance = governance;
   renderMissionControl();
   renderDecisionWorkbench();
+}
+
+async function loadLlmPolicies() {
+  const policy = await api("/api/ops/llm-policy");
+  if (!policy.mock && !policy.error) {
+    state.llmPolicies = policy.policies || [];
+    state.llmUsage = policy.usage || state.llmUsage;
+  }
 }
 
 function missionCommandText() {
@@ -1630,10 +1732,14 @@ async function resolveDecision(id, action, options = {}) {
     id,
     projectKey: result.item?.projectKey || "",
     ok: Boolean(result.appliedPath),
-    title: result.appliedPath ? "승인 반영 완료" : "승인은 기록됐지만 위키 반영은 미완료",
+    title: result.appliedPath
+      ? "승인 반영 완료"
+      : result.finalVerification && result.finalVerification.decision !== "approve"
+        ? "최상위 모델 검증으로 반영 보류"
+        : "승인은 기록됐지만 위키 반영은 미완료",
     detail: result.appliedPath
       ? `${result.appliedPath} (${result.targetFile || "문서"})`
-      : (result.note || "반영 경로나 projectKey를 확인해야 합니다."),
+      : (result.finalVerification?.reason || result.note || "반영 경로나 projectKey를 확인해야 합니다."),
   };
   if (!options.skipReload) await loadMissionControl();
   return result;
@@ -2576,14 +2682,22 @@ function setChatPhase(phase, detail = "") {
     failed: "실패",
   };
   const status = $("#chat-status");
-  status.className = `chat-status ${phase}`;
-  status.textContent = labels[phase] || phase;
-  $("#chat-status-detail").textContent = detail || "GLM 응답 대기 중에는 다음 메시지를 잠급니다.";
-  $("#chat-send").disabled = state.chatSending;
-  $("#chat-stop").disabled = !["sending", "thinking"].includes(phase);
-  $("#chat-file-button").disabled = state.chatSending;
-  $("#chat-input").disabled = state.chatSending;
-  $("#chat-project-select").disabled = state.chatSending;
+  const statusDetail = $("#chat-status-detail");
+  const sendButton = $("#chat-send");
+  const stopButton = $("#chat-stop");
+  const fileButton = $("#chat-file-button") || $("#chat-plus-attach") || $("#chat-plus-button");
+  const chatInput = $("#chat-input");
+  const projectSelect = $("#chat-project-select");
+  if (status) {
+    status.className = `chat-status ${phase}`;
+    status.textContent = labels[phase] || phase;
+  }
+  if (statusDetail) statusDetail.textContent = detail || "GLM 응답 대기 중에는 다음 메시지를 잠급니다.";
+  if (sendButton) sendButton.disabled = state.chatSending;
+  if (stopButton) stopButton.disabled = !["sending", "thinking"].includes(phase);
+  if (fileButton) fileButton.disabled = state.chatSending;
+  if (chatInput) chatInput.disabled = state.chatSending;
+  if (projectSelect) projectSelect.disabled = state.chatSending;
 }
 
 function formatChatFileSize(bytes = 0) {
@@ -3583,6 +3697,12 @@ function activateWorkspace(space) {
 function activateView(viewId) {
   const logicalId = logicalViewId(viewId);
   const actualViewId = resolveViewId(logicalId);
+  const assistantUiSurface = ASSISTANT_UI_TOP_LEVEL_VIEWS[actualViewId] || ASSISTANT_UI_TOP_LEVEL_VIEWS[logicalId];
+  const legacyMode = new URLSearchParams(window.location.search).get("legacy") === "1";
+  if (assistantUiSurface && !legacyMode) {
+    window.location.replace(assistantUiTopLevelUrl(assistantUiSurface));
+    return;
+  }
   document.querySelectorAll(".nav-item").forEach((item) => item.classList.toggle("active", item.dataset.view === logicalId));
   document.querySelectorAll(".view").forEach((view) => view.classList.toggle("active", view.id === actualViewId));
   $("#view-title").textContent = logicalId === "spotlite"

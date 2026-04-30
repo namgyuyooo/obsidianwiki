@@ -376,13 +376,14 @@ def _glm_request(config: RuntimeConfig, system_prompt: str, user_payload: dict[s
     if not config.glm_api_url or not config.glm_api_key:
         return None, "missing_glm_credentials"
     body = {
-        "model": config.glm_model or "glm-5.1",
+        "model": config.glm_slack_filter_model or config.glm_model or "glm-4.5-air",
         "messages": [
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": json.dumps(user_payload, ensure_ascii=False)},
         ],
         "temperature": 0.1,
-        "max_tokens": 1500,
+        "max_tokens": config.glm_slack_filter_max_tokens or 1200,
+        "thinking": {"type": "disabled"},
         "response_format": {"type": "json_object"},
     }
     request = Request(

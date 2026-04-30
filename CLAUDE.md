@@ -22,13 +22,26 @@ The repository operates in 4 canonical layers:
 - **한줄 요약**: One-sentence project summary (status + type + key fact)
 - **프로젝트 유형**: Project type and current stage
 - **현재 상태**: What is actively happening right now
+- **이번 주 실무 포인트**: Immediate working-owner focus
 - **핵심 결정사항**: Key decisions already made (no need to re-debate)
 - **핵심 수치 / 파일**: Important numbers, file names, document references
 - **미해결 이슈**: Open questions and things that still need resolution
+- **다음 액션 / 미팅 전 확인**: What needs to happen next
 - **주의사항 (Gotchas)**: Context traps, naming issues, common mistakes to avoid
 - **드릴다운**: Wikilinks to the hub and 2–3 most relevant sub-pages
 
 Update L1 memory files after major ingest runs, key decisions, milestones, or issue resolutions.
+
+## Space Types
+
+Treat top-level spaces in `obsidian/Wiki/` as one of four types:
+
+1. `project`: execution unit with evidence, actions, decisions, risks, and L1 memory
+2. `account`: customer umbrella across multiple projects and relationship threads
+3. `common`: operating rules, automation, governance, and reusable system docs
+4. `shared`: reusable assets promoted from projects for broader reuse
+
+Do not force account/common/shared spaces into project-style evidence scaffolding unless clearly needed.
 
 ## Global Navigation Files
 
@@ -58,6 +71,14 @@ When a new work event appears, promote it through the wiki in this order:
 7. Refresh the relevant `obsidian/L1_memory/{ProjectName}.md`
 
 Do not jump straight from a new event to a cleaned-up conclusion if source facts, conflicts, or version changes need to remain visible.
+
+### Practical Operating Bias
+For meaningful updates, bias toward:
+1. What changed
+2. What is confirmed
+3. What is still conflicting
+4. What action belongs to whom next
+5. Which evidence supports that action
 
 ### Ingest Workflow
 When new source material arrives:
@@ -89,6 +110,9 @@ Periodically check for:
 - Contradictions not in `Conflict_Register.md`
 - Claims without evidence pages
 - Project spaces missing core documents
+- Project hubs missing visible current status, blockers, next actions, and evidence links
+- Account hubs missing active project and next-touchpoint context
+- Common/shared hubs missing promotion or reuse status
 - **Stale L1 memory files** (not updated after major ingest/decision)
 - **Projects in `obsidian/Wiki/` without corresponding `L1_memory/` files**
 
@@ -97,13 +121,23 @@ Document fixes in `obsidian/Wiki/log.md`.
 ## Project Space Minimum Structure
 
 Most project folders should maintain:
-- `hub.md`, `Project_Overview.md`
+- `hub.md`, `Status.md`, `Project_Overview.md`
 - `Sources.md`, `Evidence_Log.md`
 - `Change_Log.md`, `Conflict_Register.md`
-- `Decisions.md`, `Risks.md`
+- `Action_Items.md`, `Decisions.md`, `Risks.md`
 - Optional specialized pages: `KPI.md`, `Equipment.md`, `Architecture.md`
 
 And a corresponding `obsidian/L1_memory/{ProjectName}.md` must exist.
+
+Project hubs should act as execution briefs, not flat indexes. Keep visible:
+- `운영 메모`
+- `실행 현황판`
+- `현재 막힘 / 충돌`
+- `다음 액션`
+- `최근 업데이트`
+- `운영 링크`
+
+`Status.md` should be the canonical project status register for label, stage, health, owner, blockers, next gate, and status history.
 
 ## Canonical Project Evidence Files
 

@@ -1,12 +1,39 @@
 ---
 type: overview
 created: 2026-04-21
-updated: 2026-04-21
+updated: 2026-04-30
 source: "public Slack evidence sweep (2024-04-21 to 2026-04-21)"
 ---
 
 # Project Overview
 
+## 운영 요약
+- 현재 상태: 최신 실행 상태는 [[Wiki/Daeduck_AFVI_Project/hub]]의 `실행 현황판`과 `현재 막힘 / 충돌` 기준으로 우선 확인합니다.
+- 실무 포인트: 이 문서는 프로젝트 목적, 범위, 현재 단계, 주요 판단을 빠르게 파악하는 기준 문서입니다.
+- 상태 기준: [[Wiki/Daeduck_AFVI_Project/Status]]
+- 다음 반영: [[Wiki/Daeduck_AFVI_Project/Action_Items]], [[Wiki/Daeduck_AFVI_Project/Decisions]], [[Wiki/Daeduck_AFVI_Project/Risks]]와 정합성을 맞추며 갱신합니다.
+
+## 현재 상태
+- 상태 요약: 허브 및 L1_memory 기준으로 현행화 필요
+- 단계: 제안 / 수행 / 검수 / 운영 중 해당 단계 명확화 필요
+- 마지막 의미 있는 변화: 2026-04-30 운영형 문서 구조 반영
+
+## 프로젝트 범위
+- 고객/대상: 확인된 고객사와 운영 범위를 유지
+- 핵심 산출물: 실제 보고서, 제안서, 납품물, 검수물 기준으로 정리
+- 연결 근거: [[Wiki/Daeduck_AFVI_Project/Sources]], [[Wiki/Daeduck_AFVI_Project/Evidence_Log]]
+
+## 핵심 판단
+- 현재 확정 판단: [[Wiki/Daeduck_AFVI_Project/Decisions]] 기준으로 정리
+- 남은 판단 포인트: [[Wiki/Daeduck_AFVI_Project/Conflict_Register]]와 [[Wiki/Daeduck_AFVI_Project/Risks]] 기준으로 추적
+
+## 다음 액션 연결
+- 상태 레지스터: [[Wiki/Daeduck_AFVI_Project/Status]]
+- 실행 항목: [[Wiki/Daeduck_AFVI_Project/Action_Items]]
+- 리스크 점검: [[Wiki/Daeduck_AFVI_Project/Risks]]
+- 변경 이력: [[Wiki/Daeduck_AFVI_Project/Change_Log]]
+
+## 기존 정리 메모
 대덕전자 AFVI 프로젝트는 공개 Slack 기준으로 PCB/패키지 검사 영역에서 AFVI 제안과 기술 검토를 고도화해 온 프로젝트다. 이 채널에는 2023년 말부터 2025년 중반까지 제안서 버전, ODB 데이터, 인터페이스 논의, 크레셈 연동 검토, 진행 불안과 리스크 진단이 이어져 있어 단순 영업 후보가 아니라 실제 과제화 직전 또는 과제 수행 초입 단계의 프로젝트로 보인다.
 
 특히 `AFVI 제안서`가 여러 버전으로 존재하고, 고객/협력사 측 요구에 따라 `ODB 데이터 소유권`, `I/O 정의`, `데이터 전송 방식`, `사용 Language`, `SDK 개발 담당`까지 논의된 점이 핵심이다. 이는 제안서 수준에서 이미 상세 업무와 기술 연동 방식을 구체화하려 했음을 의미한다.
@@ -78,4 +105,3 @@ source: "public Slack evidence sweep (2024-04-21 to 2026-04-21)"
 - AFVI 1차 제안과 이후 ODB 추가 버전이 하나의 과제 연속선인지
 - 크레셈 연동 요구가 실제 수주 범위에 포함됐는지
 - 내부 리스크 진단 이후 고객 보고 방식이나 일정이 어떻게 조정됐는지
-

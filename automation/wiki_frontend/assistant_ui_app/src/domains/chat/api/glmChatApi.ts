@@ -11,6 +11,20 @@ type AssistantMessage = {
   content?: readonly AssistantMessagePart[];
 };
 
+export type ChatStreamEvent =
+  | { type: "run-start"; message: string }
+  | { type: "status"; payload: Record<string, unknown> }
+  | { type: "retrieval"; payload: Record<string, unknown> | null }
+  | { type: "validation"; payload: Record<string, unknown> | null }
+  | { type: "paperclip"; payload: Record<string, unknown> | null }
+  | { type: "project_binding"; payload: Record<string, unknown> | null }
+  | { type: "done"; payload: Record<string, unknown> }
+  | { type: "error"; payload: Record<string, unknown> };
+
+type StreamObserver = {
+  onEvent?: (event: ChatStreamEvent) => void;
+};
+
 function textFromParts(parts: readonly AssistantMessagePart[] = []) {
   return parts
     .filter((part) => part?.type === "text")
@@ -28,8 +42,10 @@ function lastUserPayload(messages: readonly AssistantMessage[] = []) {
 async function* streamGlmChat(
   message: string,
   chatContext: ChatContext,
+  observer?: StreamObserver,
   signal?: AbortSignal,
 ): AsyncGenerator<ChatModelRunResult, void> {
+  observer?.onEvent?.({ type: "run-start", message });
   const response = await fetch(CHAT_API_ENDPOINTS.stream, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -37,6 +53,7 @@ async function* streamGlmChat(
       message,
       projectId: chatContext.projectId,
       workspace: chatContext.workspace,
+      skillTags: chatContext.skillTags,
     }),
     signal,
   });
@@ -67,12 +84,34 @@ async function* streamGlmChat(
         yield { content: [{ type: "text" as const, text: accumulatedText }] };
       }
 
+      if (streamEvent.event === "status") {
+        observer?.onEvent?.({ type: "status", payload: streamEvent.payload });
+      }
+
+      if (streamEvent.event === "retrieval") {
+        observer?.onEvent?.({ type: "retrieval", payload: streamEvent.payload.retrieval || null });
+      }
+
+      if (streamEvent.event === "validation") {
+        observer?.onEvent?.({ type: "validation", payload: streamEvent.payload.validation || null });
+      }
+
+      if (streamEvent.event === "paperclip") {
+        observer?.onEvent?.({ type: "paperclip", payload: streamEvent.payload.paperclip || null });
+      }
+
+      if (streamEvent.event === "project_binding") {
+        observer?.onEvent?.({ type: "project_binding", payload: streamEvent.payload.projectBinding || null });
+      }
+
       if (streamEvent.event === "done") {
+        observer?.onEvent?.({ type: "done", payload: streamEvent.payload });
         const finalText = streamEvent.payload.messages?.assistant?.content || accumulatedText || streamEvent.payload.message || "";
         yield { content: [{ type: "text" as const, text: finalText }] };
       }
 
       if (streamEvent.event === "error") {
+        observer?.onEvent?.({ type: "error", payload: streamEvent.payload });
         throw new Error(streamEvent.payload.error || "GLM 스트리밍 실패");
       }
     }
@@ -97,11 +136,11 @@ function parseServerSentEvent(chunk: string) {
   };
 }
 
-export function createGlmChatModelAdapter(chatContext: ChatContext): ChatModelAdapter {
+export function createGlmChatModelAdapter(chatContext: ChatContext, observer?: StreamObserver): ChatModelAdapter {
   return {
     async *run({ messages, abortSignal }) {
       const message = lastUserPayload(messages as unknown as readonly AssistantMessage[]);
-      for await (const update of streamGlmChat(message, chatContext, abortSignal)) {
+      for await (const update of streamGlmChat(message, chatContext, observer, abortSignal)) {
         yield update;
       }
     },

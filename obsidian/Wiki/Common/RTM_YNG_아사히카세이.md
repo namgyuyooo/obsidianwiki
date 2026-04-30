@@ -12,6 +12,8 @@ tags:
 
 # 아사히카세히
 
+- [[Wiki/Common/RTM_YNG_아사히카세이_Status]]
+
 ## Project Overview
 
 - 프로젝트는 `차세대 전지 분리막 최종 외관검사 POC`로 정리된다.

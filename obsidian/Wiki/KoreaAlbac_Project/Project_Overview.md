@@ -1,12 +1,39 @@
 ---
 type: overview
 created: 2026-04-21
-updated: 2026-04-21
+updated: 2026-04-30
 source: "public Slack evidence sweep (2024-04-21 to 2026-04-21)"
 ---
 
 # Project Overview
 
+## 운영 요약
+- 현재 상태: 최신 실행 상태는 [[Wiki/KoreaAlbac_Project/hub]]의 `실행 현황판`과 `현재 막힘 / 충돌` 기준으로 우선 확인합니다.
+- 실무 포인트: 이 문서는 프로젝트 목적, 범위, 현재 단계, 주요 판단을 빠르게 파악하는 기준 문서입니다.
+- 상태 기준: [[Wiki/KoreaAlbac_Project/Status]]
+- 다음 반영: [[Wiki/KoreaAlbac_Project/Action_Items]], [[Wiki/KoreaAlbac_Project/Decisions]], [[Wiki/KoreaAlbac_Project/Risks]]와 정합성을 맞추며 갱신합니다.
+
+## 현재 상태
+- 상태 요약: 허브 및 L1_memory 기준으로 현행화 필요
+- 단계: 제안 / 수행 / 검수 / 운영 중 해당 단계 명확화 필요
+- 마지막 의미 있는 변화: 2026-04-30 운영형 문서 구조 반영
+
+## 프로젝트 범위
+- 고객/대상: 확인된 고객사와 운영 범위를 유지
+- 핵심 산출물: 실제 보고서, 제안서, 납품물, 검수물 기준으로 정리
+- 연결 근거: [[Wiki/KoreaAlbac_Project/Sources]], [[Wiki/KoreaAlbac_Project/Evidence_Log]]
+
+## 핵심 판단
+- 현재 확정 판단: [[Wiki/KoreaAlbac_Project/Decisions]] 기준으로 정리
+- 남은 판단 포인트: [[Wiki/KoreaAlbac_Project/Conflict_Register]]와 [[Wiki/KoreaAlbac_Project/Risks]] 기준으로 추적
+
+## 다음 액션 연결
+- 상태 레지스터: [[Wiki/KoreaAlbac_Project/Status]]
+- 실행 항목: [[Wiki/KoreaAlbac_Project/Action_Items]]
+- 리스크 점검: [[Wiki/KoreaAlbac_Project/Risks]]
+- 변경 이력: [[Wiki/KoreaAlbac_Project/Change_Log]]
+
+## 기존 정리 메모
 한국알박 프로젝트는 ULVAC Sputtering 설비를 대상으로 한 예지보전·공정제어 PoC 제안 프로젝트로 보인다. 공개 Slack 기준으로 `EHM 데모 추진계획 -> 최종 리뷰 -> 사업제안서 구성 작업 -> 견적서 -> PoC 제안서 v2` 흐름이 확인된다.
 
 ## 한 줄 요약

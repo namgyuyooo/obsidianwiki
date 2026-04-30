@@ -1,12 +1,39 @@
 ---
 type: overview
 created: 2026-04-21
-updated: 2026-04-21
+updated: 2026-04-30
 source: "public Slack evidence sweep (2024-04-21 to 2026-04-21)"
 ---
 
 # Project Overview
 
+## 운영 요약
+- 현재 상태: 최신 실행 상태는 [[Wiki/AdvancedElectricKorea_Project/hub]]의 `실행 현황판`과 `현재 막힘 / 충돌` 기준으로 우선 확인합니다.
+- 실무 포인트: 이 문서는 프로젝트 목적, 범위, 현재 단계, 주요 판단을 빠르게 파악하는 기준 문서입니다.
+- 상태 기준: [[Wiki/AdvancedElectricKorea_Project/Status]]
+- 다음 반영: [[Wiki/AdvancedElectricKorea_Project/Action_Items]], [[Wiki/AdvancedElectricKorea_Project/Decisions]], [[Wiki/AdvancedElectricKorea_Project/Risks]]와 정합성을 맞추며 갱신합니다.
+
+## 현재 상태
+- 상태 요약: 허브 및 L1_memory 기준으로 현행화 필요
+- 단계: 제안 / 수행 / 검수 / 운영 중 해당 단계 명확화 필요
+- 마지막 의미 있는 변화: 2026-04-30 운영형 문서 구조 반영
+
+## 프로젝트 범위
+- 고객/대상: 확인된 고객사와 운영 범위를 유지
+- 핵심 산출물: 실제 보고서, 제안서, 납품물, 검수물 기준으로 정리
+- 연결 근거: [[Wiki/AdvancedElectricKorea_Project/Sources]], [[Wiki/AdvancedElectricKorea_Project/Evidence_Log]]
+
+## 핵심 판단
+- 현재 확정 판단: [[Wiki/AdvancedElectricKorea_Project/Decisions]] 기준으로 정리
+- 남은 판단 포인트: [[Wiki/AdvancedElectricKorea_Project/Conflict_Register]]와 [[Wiki/AdvancedElectricKorea_Project/Risks]] 기준으로 추적
+
+## 다음 액션 연결
+- 상태 레지스터: [[Wiki/AdvancedElectricKorea_Project/Status]]
+- 실행 항목: [[Wiki/AdvancedElectricKorea_Project/Action_Items]]
+- 리스크 점검: [[Wiki/AdvancedElectricKorea_Project/Risks]]
+- 변경 이력: [[Wiki/AdvancedElectricKorea_Project/Change_Log]]
+
+## 기존 정리 메모
 어드벤스일렉트릭코리아 프로젝트는 공개 Slack 기준으로 AI 제품검사 시스템을 구축·수정한 뒤, 고객 피드백을 반영하면서 완료 처리와 서류 마감을 진행하는 납품형 프로젝트다. 기술 채널처럼 보이지만 실제로는 `개선요청사항`, `recipes.zip`, `세금계산서`, `하자이행보증증권`이 함께 확인되어 납품/운영 완료 구간까지 이어진 흔적이 선명하다.
 
 2026년 4월 9일 회의에서는 AI 검사 시스템 오류 수정 현황과 추가 요청 사항을 논의했고, 같은 달 말에는 과제 완료 처리, 납입완료서 발행일자, 하자보증 보험 기간, 세금계산서 날짜까지 구체적으로 조율한다. 따라서 이 프로젝트는 단순 데모가 아니라 완료 정산 단계까지 진입한 납품형 프로젝트로 정리하는 편이 맞다.
@@ -81,4 +108,3 @@ source: "public Slack evidence sweep (2024-04-21 to 2026-04-21)"
 - 2026년 4월 9일 액션 아이템이 실제로 모두 반영됐는지
 - 2025년 11월 세금계산서 선발행 이슈와 2026년 4월 완료 처리 사이에 계약 구조 변경이 있었는지
 - 이 프로젝트의 최종 고객 검수 표현이 `완료`, `납입완료`, `하자보증 시작` 중 무엇으로 정리되는지
-

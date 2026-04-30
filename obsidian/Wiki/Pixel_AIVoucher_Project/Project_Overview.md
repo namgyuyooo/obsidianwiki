@@ -1,12 +1,39 @@
 ---
 type: overview
 created: 2026-04-21
-updated: 2026-04-21
+updated: 2026-04-30
 source: "public Slack evidence sweep (2024-04-21 to 2026-04-21)"
 ---
 
 # Project Overview
 
+## 운영 요약
+- 현재 상태: 최신 실행 상태는 [[Wiki/Pixel_AIVoucher_Project/hub]]의 `실행 현황판`과 `현재 막힘 / 충돌` 기준으로 우선 확인합니다.
+- 실무 포인트: 이 문서는 프로젝트 목적, 범위, 현재 단계, 주요 판단을 빠르게 파악하는 기준 문서입니다.
+- 상태 기준: [[Wiki/Pixel_AIVoucher_Project/Status]]
+- 다음 반영: [[Wiki/Pixel_AIVoucher_Project/Action_Items]], [[Wiki/Pixel_AIVoucher_Project/Decisions]], [[Wiki/Pixel_AIVoucher_Project/Risks]]와 정합성을 맞추며 갱신합니다.
+
+## 현재 상태
+- 상태 요약: 허브 및 L1_memory 기준으로 현행화 필요
+- 단계: 제안 / 수행 / 검수 / 운영 중 해당 단계 명확화 필요
+- 마지막 의미 있는 변화: 2026-04-30 운영형 문서 구조 반영
+
+## 프로젝트 범위
+- 고객/대상: 확인된 고객사와 운영 범위를 유지
+- 핵심 산출물: 실제 보고서, 제안서, 납품물, 검수물 기준으로 정리
+- 연결 근거: [[Wiki/Pixel_AIVoucher_Project/Sources]], [[Wiki/Pixel_AIVoucher_Project/Evidence_Log]]
+
+## 핵심 판단
+- 현재 확정 판단: [[Wiki/Pixel_AIVoucher_Project/Decisions]] 기준으로 정리
+- 남은 판단 포인트: [[Wiki/Pixel_AIVoucher_Project/Conflict_Register]]와 [[Wiki/Pixel_AIVoucher_Project/Risks]] 기준으로 추적
+
+## 다음 액션 연결
+- 상태 레지스터: [[Wiki/Pixel_AIVoucher_Project/Status]]
+- 실행 항목: [[Wiki/Pixel_AIVoucher_Project/Action_Items]]
+- 리스크 점검: [[Wiki/Pixel_AIVoucher_Project/Risks]]
+- 변경 이력: [[Wiki/Pixel_AIVoucher_Project/Change_Log]]
+
+## 기존 정리 메모
 픽셀 AI바우처 프로젝트는 공개 Slack 기준으로 패키지/이미지 검사 영역의 AI바우처를 수행한 뒤, 이후 PIXEL과 DMT를 어떤 구조로 협력할지 재정의하는 프로젝트다. 재탐색 결과 `중간보고`, `비즈니스 협력 모델안`, `픽셀 v2 자료`, 중간보고 회의록이 확인되어 이제는 독립 프로젝트로 분리해두는 편이 타당하다.
 
 핵심은 다양한 패키지 도메인(`FCBOC`, `FCCSP`, `SIP`, `CSP`, `FCBGA`)을 어떤 분류 체계로 정리할지, 그리고 실제 라인 투입 시 결과를 `XML`과 `NAS` 중심으로 반영할지에 있다. 따라서 이 프로젝트는 단순 모델 학습보다 `도메인 정의 + 운영 반영 구조 + 후속 협력 모델`의 결합 프로젝트로 보는 편이 맞다.

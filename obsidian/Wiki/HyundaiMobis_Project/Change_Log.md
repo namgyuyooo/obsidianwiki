@@ -1,15 +1,23 @@
 ---
 type: log
 created: 2026-04-21
-updated: 2026-04-21
+updated: 2026-04-30
 source: "public Slack evidence sweep (2024-04-21 to 2026-04-21)"
 ---
 
 # Change Log
 
+## 운영 원칙
+- 상태 레지스터 변경은 [[Wiki/HyundaiMobis_Project/Status]]와 함께 추적합니다.
+- 이 문서는 위키 구조/내용 변경 이력입니다.
+- 실무 판단 자체는 [[Wiki/HyundaiMobis_Project/Decisions]]에, 실행 큐는 [[Wiki/HyundaiMobis_Project/Action_Items]]에 남기고 이 문서는 변경 사실을 기록합니다.
+
+## 2026-04-30
+- 핵심 운영 문서를 실무형 표준 섹션으로 재정비
+
+## 기존 정리 메모
 ## 2026-04-21
 
 - 현대모비스 공개 Slack 증적 정리 시작
 - 요구사항 확인 문서, 제작사양서, 견적서 등록
 - 4월 14일 견적서 수정 및 납기 조정 논의 등록
-

@@ -12,6 +12,8 @@ tags:
 
 # 탈레스 Trust my Tech
 
+- [[Wiki/Common/RTM_YNG_탈레스_Trust_my_Tech_Status]]
+
 ## Project Overview
 
 - 대표본 기준 신청 주체는 `고려대 세종산학협력단`이다.

@@ -12,6 +12,8 @@ tags:
 
 # HPP
 
+- [[Wiki/Common/RTM_YNG_HPP_Status]]
+
 ## Project Overview
 
 - HPPK 4대 AI 도입을 통한 생산성 개선 프로젝트 추진 계획 및 기술 판단 보고서 성격을 갖는다.

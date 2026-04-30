@@ -1,7 +1,7 @@
 ---
 type: index
 created: 2026-04-21
-updated: 2026-04-29
+updated: 2026-04-30
 source: "Global wiki index initialized from existing project hubs"
 ---
 
@@ -111,6 +111,10 @@ Drive 소스 기반으로 구축된 RTM_YNG 계열 프로젝트 페이지 (L1_me
 
 ## Usage Notes
 
+- top-level 공간은 `project`, `account`, `common`, `shared` 역할로 구분해 운영합니다.
+- `project` 허브는 상태, 막힘, 다음 액션, 근거가 상단에 보여야 합니다.
+- 각 `project` 공간의 `Status.md`를 상태 라벨, 단계, 헬스, 담당, 막힘, 다음 게이트의 기준 레지스터로 사용합니다.
+- `account` 허브는 활성 프로젝트와 다음 고객 접점을, `common/shared` 허브는 운영 자산과 승격 큐를 우선 보여줍니다.
 - 새 프로젝트 허브를 만들면 이 파일에도 추가합니다.
 - 새 프로젝트를 추가하면 `obsidian/L1_memory/`에도 스냅샷 파일을 함께 생성합니다.
 - 의미 있는 질의 결과가 위키 자산이 되면 관련 허브 또는 공통 지식 섹션에 연결합니다.

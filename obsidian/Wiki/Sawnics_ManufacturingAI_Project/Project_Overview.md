@@ -1,12 +1,39 @@
 ---
 type: overview
 created: 2026-04-29
-updated: 2026-04-29
+updated: 2026-04-30
 source: "2026-04-27 #sales_team thread + /Users/rtm/Documents/GitHub/commonWork/1.POC/쏘닉스/sawnics_poc_report_config.json"
 ---
 
 # Project Overview
 
+## 운영 요약
+- 현재 상태: 최신 실행 상태는 [[Wiki/Sawnics_ManufacturingAI_Project/hub]]의 `실행 현황판`과 `현재 막힘 / 충돌` 기준으로 우선 확인합니다.
+- 실무 포인트: 이 문서는 프로젝트 목적, 범위, 현재 단계, 주요 판단을 빠르게 파악하는 기준 문서입니다.
+- 상태 기준: [[Wiki/Sawnics_ManufacturingAI_Project/Status]]
+- 다음 반영: [[Wiki/Sawnics_ManufacturingAI_Project/Action_Items]], [[Wiki/Sawnics_ManufacturingAI_Project/Decisions]], [[Wiki/Sawnics_ManufacturingAI_Project/Risks]]와 정합성을 맞추며 갱신합니다.
+
+## 현재 상태
+- 상태 요약: 허브 및 L1_memory 기준으로 현행화 필요
+- 단계: 제안 / 수행 / 검수 / 운영 중 해당 단계 명확화 필요
+- 마지막 의미 있는 변화: 2026-04-30 운영형 문서 구조 반영
+
+## 프로젝트 범위
+- 고객/대상: 확인된 고객사와 운영 범위를 유지
+- 핵심 산출물: 실제 보고서, 제안서, 납품물, 검수물 기준으로 정리
+- 연결 근거: [[Wiki/Sawnics_ManufacturingAI_Project/Sources]], [[Wiki/Sawnics_ManufacturingAI_Project/Evidence_Log]]
+
+## 핵심 판단
+- 현재 확정 판단: [[Wiki/Sawnics_ManufacturingAI_Project/Decisions]] 기준으로 정리
+- 남은 판단 포인트: [[Wiki/Sawnics_ManufacturingAI_Project/Conflict_Register]]와 [[Wiki/Sawnics_ManufacturingAI_Project/Risks]] 기준으로 추적
+
+## 다음 액션 연결
+- 상태 레지스터: [[Wiki/Sawnics_ManufacturingAI_Project/Status]]
+- 실행 항목: [[Wiki/Sawnics_ManufacturingAI_Project/Action_Items]]
+- 리스크 점검: [[Wiki/Sawnics_ManufacturingAI_Project/Risks]]
+- 변경 이력: [[Wiki/Sawnics_ManufacturingAI_Project/Change_Log]]
+
+## 기존 정리 메모
 쏘닉스 건은 `IDT 소자 품질 검사 PoC`의 기술 검증 결과를 바탕으로, `제조AI특화 스마트공장 구축사업` 제출 가능성을 함께 검토하는 신규 영업/제안형 프로젝트로 보는 편이 맞다. 2026-04-27 `#sales_team` 스레드에서는 내부 담당 호출, 지원사업 자료 공유, PoC 보고서 공유, 방문 미팅 주체 지정이 하루 안에 이어졌기 때문에, 현재 상태는 단순 기술 리뷰가 아니라 `PoC -> 지원사업형 제안 -> 현장 미팅`으로 이어지는 전환 구간이다.
 
 PoC 보고서 기준 대상 데이터는 총 50장 이미지이며, 정상 30장과 불량 20장으로 구성됐다. 검사 영역은 `IDT`, `Metal`, `Non Metal` 3개로 나뉘며, 현재 파이프라인은 `원본 이미지 -> ROI 크롭 -> 영역 분할 -> SAM3 Text Prompting -> 후처리` 구조다. 성과는 `IDT 13/13`, `Metal 4/5`, `Non Metal 4/5`로 요약되며, 미탐 케이스는 `D_3310`, `D_2324`다. 따라서 기술 메시지는 “특정 영역에서는 강한 가능성을 입증했지만, 양산형 확정안이라기보다 추가 개선과 현장 정의가 필요한 PoC”로 정리하는 편이 안전하다.

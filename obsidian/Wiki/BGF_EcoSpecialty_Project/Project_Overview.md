@@ -1,12 +1,39 @@
 ---
 type: overview
 created: 2026-04-21
-updated: 2026-04-21
+updated: 2026-04-30
 source: "public Slack evidence sweep (2024-04-21 to 2026-04-21)"
 ---
 
 # Project Overview
 
+## 운영 요약
+- 현재 상태: 최신 실행 상태는 [[Wiki/BGF_EcoSpecialty_Project/hub]]의 `실행 현황판`과 `현재 막힘 / 충돌` 기준으로 우선 확인합니다.
+- 실무 포인트: 이 문서는 프로젝트 목적, 범위, 현재 단계, 주요 판단을 빠르게 파악하는 기준 문서입니다.
+- 상태 기준: [[Wiki/BGF_EcoSpecialty_Project/Status]]
+- 다음 반영: [[Wiki/BGF_EcoSpecialty_Project/Action_Items]], [[Wiki/BGF_EcoSpecialty_Project/Decisions]], [[Wiki/BGF_EcoSpecialty_Project/Risks]]와 정합성을 맞추며 갱신합니다.
+
+## 현재 상태
+- 상태 요약: 허브 및 L1_memory 기준으로 현행화 필요
+- 단계: 제안 / 수행 / 검수 / 운영 중 해당 단계 명확화 필요
+- 마지막 의미 있는 변화: 2026-04-30 운영형 문서 구조 반영
+
+## 프로젝트 범위
+- 고객/대상: 확인된 고객사와 운영 범위를 유지
+- 핵심 산출물: 실제 보고서, 제안서, 납품물, 검수물 기준으로 정리
+- 연결 근거: [[Wiki/BGF_EcoSpecialty_Project/Sources]], [[Wiki/BGF_EcoSpecialty_Project/Evidence_Log]]
+
+## 핵심 판단
+- 현재 확정 판단: [[Wiki/BGF_EcoSpecialty_Project/Decisions]] 기준으로 정리
+- 남은 판단 포인트: [[Wiki/BGF_EcoSpecialty_Project/Conflict_Register]]와 [[Wiki/BGF_EcoSpecialty_Project/Risks]] 기준으로 추적
+
+## 다음 액션 연결
+- 상태 레지스터: [[Wiki/BGF_EcoSpecialty_Project/Status]]
+- 실행 항목: [[Wiki/BGF_EcoSpecialty_Project/Action_Items]]
+- 리스크 점검: [[Wiki/BGF_EcoSpecialty_Project/Risks]]
+- 변경 이력: [[Wiki/BGF_EcoSpecialty_Project/Change_Log]]
+
+## 기존 정리 메모
 BGF에코스페셜티(구 FLK) 프로젝트는 공개 Slack 기준으로 이미 운영 단계에 들어간 품질검사/이상탐지 프로젝트다. 이 채널의 중심은 제안서보다 `운영 리뷰`, `후속 업무 보고`, `원격 배포`, `로그 관리`, `라벨링 이슈`, `운영 성능 안정화`에 있다. 따라서 신규 구축형 프로젝트라기보다 “운영 중인 시스템을 지속 개선하고 보고하는 장기 운영형 프로젝트”로 보는 편이 적절하다.
 
 특히 2026년 4월 운영 리뷰에서는 `CGA679`, `CGA728`, `DIN8`, `JISR22` 밸브 제품군에 대해 `F1 score 97~98%`, 제품별 `95% 이상` 성능 유지가 명시되고, 1월 이후 변색 항목 제외 후 지표가 안정화됐다는 내용이 나온다. 같은 시기 메시지에는 `v1.6.0 배포`, 추론 프로그램 배포, 로그 추출, 로그 보관 경로, 1.5TB 중 0.5TB 정리 같은 운영 실무 흔적이 함께 남아 있다.
@@ -84,4 +111,3 @@ BGF에코스페셜티(구 FLK) 프로젝트는 공개 Slack 기준으로 이미 
 - 변색 항목 제외 결정이 영구 운영 기준인지, 임시 안정화 조치인지
 - `후속 업무 보고`와 `운영 리뷰`의 역할 분담이 어떻게 되는지
 - 2026년 4월 이후 추가 배포나 성능 저하/복구 기록이 더 있는지
-

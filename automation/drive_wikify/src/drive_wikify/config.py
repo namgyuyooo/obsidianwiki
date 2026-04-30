@@ -201,6 +201,8 @@ class RuntimeConfig:
     glm_api_url: str | None = None
     glm_api_key: str | None = None
     glm_model: str | None = None
+    glm_slack_filter_model: str | None = None
+    glm_slack_filter_max_tokens: int = 1200
 
     @staticmethod
     def repo_root() -> Path:
@@ -294,6 +296,8 @@ class RuntimeConfig:
             glm_api_url=payload.get("GLM_API_URL"),
             glm_api_key=payload.get("GLM_API_KEY"),
             glm_model=payload.get("GLM_MODEL", "glm-5.1"),
+            glm_slack_filter_model=payload.get("GLM_SLACK_FILTER_MODEL") or payload.get("GLM_LIGHT_MODEL"),
+            glm_slack_filter_max_tokens=_as_int(payload.get("GLM_SLACK_FILTER_MAX_TOKENS"), 1200),
         )
 
     @classmethod

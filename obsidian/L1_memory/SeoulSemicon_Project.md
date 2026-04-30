@@ -1,7 +1,7 @@
 ---
 type: l1_memory
 project: SeoulSemicon_Project
-updated: 2026-04-21
+updated: 2026-04-30
 ---
 
 # 서울세미콘/SSC Vina — L1 Memory Snapshot
@@ -12,7 +12,12 @@ Xray Repair 해외 납품 프로젝트. Quotation → NDA → 계약 → PO → 
 ## 프로젝트 유형
 납품형 / 실행·검수 완료 + 추가 PC 건 확장 가능성
 
-## 현재 상태 (What's happening now)
+## 현재 상태
+- 2026-03-26: 4대 모두 정상 가동 중 확인
+- Acceptance Report 존재 → 검수 완료 단계
+- 추가 PC 건 별도 계약/서류 공유 메시지 존재 → 차수 확장 가능성
+
+## 이번 주 실무 포인트
 - 2026-03-26: 4대 모두 정상 가동 중 확인
 - Acceptance Report 존재 → 검수 완료 단계
 - 추가 PC 건 별도 계약/서류 공유 메시지 존재 → 차수 확장 가능성
@@ -28,9 +33,14 @@ Xray Repair 해외 납품 프로젝트. Quotation → NDA → 계약 → PO → 
 - 문서: Quotation, NDA, 계약서, PO, Commercial Invoice, Acceptance Report
 - 출장 채널: `#tf_seoulsemicon-vina` (출장 일지, 운영/속도 이슈 보고)
 
-## 미해결 이슈 / 확인 필요
+## 미해결 이슈
 - 2025년과 2026년 문서군이 동일 scope 연속 차수인지 여부
 - 추가 PC 계약이 동일 마스터 프로젝트 확장인지 신규 건인지
+
+## 다음 액션 / 미팅 전 확인
+- 2025년과 2026년 문서군이 동일 scope 연속 차수인지 여부
+- 추가 PC 계약이 동일 마스터 프로젝트 확장인지 신규 건인지
+- 허브 실행 현황판과 `Action_Items.md`를 함께 갱신
 
 ## 주의사항 (Gotchas)
 - 해외 납품이므로 Commercial Invoice, Acceptance Report 형식 중요 (영문 문서 관리)
@@ -38,6 +48,7 @@ Xray Repair 해외 납품 프로젝트. Quotation → NDA → 계약 → PO → 
 - 납품형 프로젝트 사례 기준으로 재사용 가치가 가장 높은 프로젝트 중 하나
 
 ## 드릴다운
+- [[Wiki/SeoulSemicon_Project/Status]]
 - [[Wiki/SeoulSemicon_Project/hub]]
 - [[Wiki/SeoulSemicon_Project/Evidence_Log]]
 - [[Wiki/SeoulSemicon_Project/Decisions]]

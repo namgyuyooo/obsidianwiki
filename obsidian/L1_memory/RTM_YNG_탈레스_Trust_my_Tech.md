@@ -1,8 +1,10 @@
 ---
 type: l1_memory
 project: RTM_YNG_탈레스_Trust_my_Tech
-updated: 2026-04-21
+updated: 2026-04-30
 ---
+
+# RTM_YNG_탈레스_Trust_my_Tech — L1 Memory Snapshot
 
 ## 한줄 요약
 Trust my Tech 프로그램 사업계획서 vf 제출 완료, 인건비 제외본과 과제번호·예산 충돌 미해결.
@@ -11,6 +13,11 @@ Trust my Tech 프로그램 사업계획서 vf 제출 완료, 인건비 제외본
 사업계획서 / Trust my Tech 프로그램 / 제출 완료 (충돌 등록 상태)
 
 ## 현재 상태
+- vf PDF 읽기 완료, 인건비 제외본 PDF 읽기 완료
+- 과제번호와 예산이 두 버전 간 충돌 — Conflict Register 등록됨
+- HWP 원본은 다운로드 시 9.7M 초과로 직접 파싱 미완료
+
+## 이번 주 실무 포인트
 - vf PDF 읽기 완료, 인건비 제외본 PDF 읽기 완료
 - 과제번호와 예산이 두 버전 간 충돌 — Conflict Register 등록됨
 - HWP 원본은 다운로드 시 9.7M 초과로 직접 파싱 미완료
@@ -35,12 +42,19 @@ Trust my Tech 프로그램 사업계획서 vf 제출 완료, 인건비 제외본
 - 과제번호 차이 원인 (공모 변경 vs 과제 분기)
 - KPI와 사업화 항목이 어느 버전에서 최종 확정됐는가
 
+## 다음 액션 / 미팅 전 확인
+- vf와 인건비 제외본이 같은 공모의 비용 조정본인가, 아니면 다른 트랙인가
+- 과제번호 차이 원인 (공모 변경 vs 과제 분기)
+- KPI와 사업화 항목이 어느 버전에서 최종 확정됐는가
+- 허브 실행 현황판과 `Action_Items.md`를 함께 갱신
+
 ## 주의사항 (Gotchas)
 - 과제번호 20446514(vf) ≠ 20286906(인건비 제외본) — 동일 과제 아닐 수 있음
 - 예산 규모도 143백만원 vs 275백만원으로 크게 다름 — 충돌 등록 상태
 - `TS Agent`와 `Hubble` 보안형 서술이 갈라져 있음 — 다른 제안 트랙 가능성
 
 ## 드릴다운
+- [[Wiki/Common/RTM_YNG_탈레스_Trust_my_Tech_Status]]
 - [[RTM_YNG_탈레스_Trust_my_Tech]]
 - [[RTM_YNG_Conflict_Register_2026-04-21]]
 - [[RTM_YNG_Evidence_Log_2026-04-21]]

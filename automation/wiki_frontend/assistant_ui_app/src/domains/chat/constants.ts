@@ -1,9 +1,14 @@
 export const DEFAULT_WORKSPACE = "rtm";
-export const DEFAULT_PROJECT_ID = "assistant-ui";
+export const DEFAULT_PROJECT_ID = "default";
 
 export const CHAT_API_ENDPOINTS = {
   stream: "/api/chat/glm/stream",
+  stop: "/api/chat/stop",
   files: "/api/chat/files",
+  projects: "/api/chat/projects",
+  global: "/api/chat/global",
+  skills: "/api/skills/catalog",
+  evidence: "/api/chat/evidence",
 } as const;
 
 export const ACCEPTED_ATTACHMENT_TYPES = [
@@ -49,6 +54,7 @@ export const STARTER_PROMPTS = [
 export type ChatContext = {
   workspace: string;
   projectId: string;
+  skillTags: readonly string[];
 };
 
 function queryParam(name: string, fallback: string) {
@@ -60,5 +66,6 @@ export function readChatContextFromUrl(): ChatContext {
   return {
     workspace: queryParam("workspace", DEFAULT_WORKSPACE),
     projectId: queryParam("projectId", DEFAULT_PROJECT_ID),
+    skillTags: [],
   };
 }

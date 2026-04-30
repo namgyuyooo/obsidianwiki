@@ -4,6 +4,38 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>위키 운영 콘솔</title>
+    <script>
+      (() => {
+        const ASSISTANT_UI_BUILD_ID = "20260430-project-settings";
+        const params = new URLSearchParams(window.location.search);
+        if (params.get("legacy") === "1") return;
+        const assistantUiSurfaceByHash = {
+          "": "mission",
+          "#mission": "mission",
+          "#chat": "chat",
+          "#decisions": "decisions",
+          "#paperclip": "paperclip",
+          "#wiki": "wiki",
+          "#pipeline": "pipeline",
+          "#spotlite": "spotlite",
+          "#spotlite-work": "spotlite",
+          "#spotlite-personal": "spotlite",
+          "#operations": "operations",
+          "#ingest": "ingest",
+        };
+        const surface = assistantUiSurfaceByHash[window.location.hash];
+        if (!surface) return;
+
+        const savedSpace = localStorage.getItem("wiki_ops_active_space");
+        params.set("workspace", savedSpace === "personal" ? "personal" : "rtm");
+        params.set("projectId", params.get("projectId") || "default");
+        params.set("ui", ASSISTANT_UI_BUILD_ID);
+        if (surface === "chat") params.delete("surface");
+        else params.set("surface", surface);
+
+        window.location.replace(`/assistant-ui/index.html?${params.toString()}`);
+      })();
+    </script>
     <link rel="stylesheet" href="./styles.css?v=20260429-mission-control-v2" />
   </head>
   <body>
@@ -79,6 +111,13 @@
         </nav>
 
         <section id="mission" class="view active">
+          <div class="mission-assistantui-shell">
+            <iframe
+              id="mission-assistantui-frame"
+              title="assistant-ui mission control"
+              src="/assistant-ui/index.html?surface=mission&workspace=rtm&projectId=mission-control"
+            ></iframe>
+          </div>
           <div class="mission-hero" data-anchor="지휘실">
             <div>
               <span class="eyebrow">Work Mission Control</span>
@@ -219,6 +258,14 @@
               </div>
               <div id="mission-llm-usage" class="event-list"></div>
             </section>
+            <section class="panel llm-policy-panel">
+              <div class="panel-heading">
+                <h3>LLM 프롬프트/모델 정책</h3>
+                <span id="mission-llm-policy-count">0개</span>
+              </div>
+              <p class="pipeline-note">서비스별 최적 프롬프트, 경량/일반 모델, 적용 env를 한 곳에서 확인하고 추천값을 저장합니다.</p>
+              <div id="mission-llm-policy-list" class="llm-policy-list"></div>
+            </section>
             <section class="panel">
               <div class="panel-heading">
                 <h3>위키 정합성 주의</h3>
@@ -230,6 +277,13 @@
         </section>
 
         <section id="decisions" class="view">
+          <div class="decision-assistantui-shell">
+            <iframe
+              id="decision-assistantui-frame"
+              title="assistant-ui decision deck"
+              src="/assistant-ui/index.html?surface=decisions&workspace=rtm&projectId=decision-deck"
+            ></iframe>
+          </div>
           <div class="decision-hero" data-anchor="빠른 판정">
             <div>
               <span class="eyebrow">Data Conflict Triage</span>
@@ -588,6 +642,50 @@
               <label>
                 <span>경량 LLM 최대 토큰</span>
                 <input name="GLM_LIGHT_MAX_TOKENS" placeholder="1000" />
+              </label>
+              <label>
+                <span>Decision Deck 경량 모델</span>
+                <input name="GLM_DECISION_MODEL" placeholder="glm-4.5-air" />
+              </label>
+              <label>
+                <span>Decision Deck 최대 토큰</span>
+                <input name="GLM_DECISION_MAX_TOKENS" placeholder="900" />
+              </label>
+              <label>
+                <span>Decision Deck 최종 검증 모델</span>
+                <input name="GLM_DECISION_FINAL_MODEL" placeholder="glm-5.1" />
+              </label>
+              <label>
+                <span>Decision Deck 최종 검증 토큰</span>
+                <input name="GLM_DECISION_FINAL_MAX_TOKENS" placeholder="1400" />
+              </label>
+              <label>
+                <span>충돌 병합 모델</span>
+                <input name="GLM_CONFLICT_MODEL" placeholder="glm-4.5" />
+              </label>
+              <label>
+                <span>충돌 병합 최대 토큰</span>
+                <input name="GLM_CONFLICT_MAX_TOKENS" placeholder="2800" />
+              </label>
+              <label>
+                <span>파일 분석 모델</span>
+                <input name="GLM_FILE_ANALYSIS_MODEL" placeholder="glm-4.5" />
+              </label>
+              <label>
+                <span>이미지/VLM 모델</span>
+                <input name="GLM_VLM_MODEL" placeholder="glm-4.5v" />
+              </label>
+              <label>
+                <span>Paperclip 스킬 모델</span>
+                <input name="GLM_PAPERCLIP_MODEL" placeholder="glm-4.5" />
+              </label>
+              <label>
+                <span>Slack 필터 경량 모델</span>
+                <input name="GLM_SLACK_FILTER_MODEL" placeholder="glm-4.5-air" />
+              </label>
+              <label>
+                <span>Slack 필터 최대 토큰</span>
+                <input name="GLM_SLACK_FILTER_MAX_TOKENS" placeholder="1200" />
               </label>
               <label>
                 <span>GLM 선택 가능 모델</span>
@@ -1168,10 +1266,10 @@
             <section class="chat-main-panel assistantui-migrated" data-anchor="GLM 챗">
               <div class="chat-assistantui-shell">
                 <iframe
-                  id="chat-assistantui-frame"
-                  title="assistant-ui workspace chat"
-                  src="/assistant-ui/index.html?workspace=rtm&projectId=assistant-ui"
-                ></iframe>
+	                  id="chat-assistantui-frame"
+	                  title="assistant-ui workspace chat"
+	                  src="/assistant-ui/index.html?workspace=rtm&projectId=default&ui=20260430-project-settings"
+	                ></iframe>
               </div>
               <div class="chat-main-header">
                 <div>
@@ -1530,6 +1628,6 @@
         window.location.replace(target);
       })();
     </script>
-    <script src="./app.js?v=20260430-decisions-live"></script>
+    <script src="./app.js?v=20260430-top-level-shell"></script>
   </body>
 </html>

@@ -12,6 +12,8 @@ tags:
 
 # DMT_POC
 
+- [[Wiki/Common/RTM_YNG_DMT_POC_Status]]
+
 ## Project Overview
 
 - `DMT POC 결과보고서`는 불량 코드와 이미지 데이터를 바탕으로 외관 불량 탐지 모델을 구축하고, 데이터 정제와 필터링 로직까지 검토한 프로젝트다.

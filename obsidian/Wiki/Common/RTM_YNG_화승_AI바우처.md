@@ -13,6 +13,8 @@ tags:
 
 # 화승 AI바우처
 
+- [[Wiki/Common/RTM_YNG_화승_AI바우처_Status]]
+
 ## Project Overview
 
 - 과제명은 `믹싱 데이터 기반 자동차용 복합형상 웨더스트립 연속 제조공정 최적화 및 물성 예측 솔루션`이다.

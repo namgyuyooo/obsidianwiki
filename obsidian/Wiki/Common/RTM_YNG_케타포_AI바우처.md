@@ -12,6 +12,8 @@ tags:
 
 # 케타포 AI바우처
 
+- [[Wiki/Common/RTM_YNG_케타포_AI바우처_Status]]
+
 ## Project Overview
 
 - 주관기관은 `㈜케이타운포유`, 참여기관은 `㈜알티엠`이다.

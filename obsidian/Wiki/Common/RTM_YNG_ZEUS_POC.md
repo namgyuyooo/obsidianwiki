@@ -12,6 +12,8 @@ tags:
 
 # ZEUS_POC / BD 이물탐지
 
+- [[Wiki/Common/RTM_YNG_ZEUS_POC_Status]]
+
 ## Project Overview
 
 - 대표본은 `ZEUS_POC 결과보고서`이며, `CT(Coater)`와 `BD(Bonder)` NVR 영상에서 편심과 이물 감지 가능성을 검토한 PoC 결과 문서다.

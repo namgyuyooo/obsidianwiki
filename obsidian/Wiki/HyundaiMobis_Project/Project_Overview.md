@@ -1,12 +1,39 @@
 ---
 type: overview
 created: 2026-04-21
-updated: 2026-04-21
+updated: 2026-04-30
 source: "public Slack evidence sweep (2024-04-21 to 2026-04-21)"
 ---
 
 # Project Overview
 
+## 운영 요약
+- 현재 상태: 최신 실행 상태는 [[Wiki/HyundaiMobis_Project/hub]]의 `실행 현황판`과 `현재 막힘 / 충돌` 기준으로 우선 확인합니다.
+- 실무 포인트: 이 문서는 프로젝트 목적, 범위, 현재 단계, 주요 판단을 빠르게 파악하는 기준 문서입니다.
+- 상태 기준: [[Wiki/HyundaiMobis_Project/Status]]
+- 다음 반영: [[Wiki/HyundaiMobis_Project/Action_Items]], [[Wiki/HyundaiMobis_Project/Decisions]], [[Wiki/HyundaiMobis_Project/Risks]]와 정합성을 맞추며 갱신합니다.
+
+## 현재 상태
+- 상태 요약: 허브 및 L1_memory 기준으로 현행화 필요
+- 단계: 제안 / 수행 / 검수 / 운영 중 해당 단계 명확화 필요
+- 마지막 의미 있는 변화: 2026-04-30 운영형 문서 구조 반영
+
+## 프로젝트 범위
+- 고객/대상: 확인된 고객사와 운영 범위를 유지
+- 핵심 산출물: 실제 보고서, 제안서, 납품물, 검수물 기준으로 정리
+- 연결 근거: [[Wiki/HyundaiMobis_Project/Sources]], [[Wiki/HyundaiMobis_Project/Evidence_Log]]
+
+## 핵심 판단
+- 현재 확정 판단: [[Wiki/HyundaiMobis_Project/Decisions]] 기준으로 정리
+- 남은 판단 포인트: [[Wiki/HyundaiMobis_Project/Conflict_Register]]와 [[Wiki/HyundaiMobis_Project/Risks]] 기준으로 추적
+
+## 다음 액션 연결
+- 상태 레지스터: [[Wiki/HyundaiMobis_Project/Status]]
+- 실행 항목: [[Wiki/HyundaiMobis_Project/Action_Items]]
+- 리스크 점검: [[Wiki/HyundaiMobis_Project/Risks]]
+- 변경 이력: [[Wiki/HyundaiMobis_Project/Change_Log]]
+
+## 기존 정리 메모
 현대모비스 프로젝트는 공개 Slack 기준으로 요구사항 문서, 제작사양서, 견적서가 연결된 제안-전환형 프로젝트다. 2026년 3월 말 요구사항 확인 문서가 생성되고, 4월에는 견적서 수정 요청과 납기/계약 일정 논의가 이어진다.
 
 현재 핵심 구조는 `요구사항 확인 -> 제작사양 정리 -> 견적서 제출/수정 -> 계약 일정 협의` 흐름으로 보인다. 특히 메시지에서는 실무적으로 필요한 개발 기간과 계약서상 납기 요구 사이의 간극이 드러나므로, 일정 리스크 관리가 중요한 후보로 판단된다.

@@ -1,12 +1,23 @@
 ---
 type: conflict
 created: 2026-04-29
-updated: 2026-04-29
+updated: 2026-04-30
 source: "wiki management command"
 ---
 
 # 아사히카세히 Conflict Register
 
+## Open Conflicts
+- 상충 수치, 버전 불일치, 고객/내부 판단 불일치, 범위 미확정을 이 문서에 등록합니다.
+- 해소 전까지 허브 상단 `현재 막힘 / 충돌`과 연동해 가시화합니다.
+
+## 처리 원칙
+- 충돌이 상태에 영향을 주면 [[Wiki/아사히카세히_Project/Status]]의 blocker와 history에도 반영
+- 확정되면 [[Wiki/아사히카세히_Project/Decisions]]로 승격
+- 실행이 필요하면 [[Wiki/아사히카세히_Project/Action_Items]]로 연결
+- 리스크가 커지면 [[Wiki/아사히카세히_Project/Risks]]로 승격
+
+## 기존 정리 메모
 충돌/불일치 후보를 관리합니다.
 
 ## Wiki Management Promotion 2026-04-29T06:26:09.341Z
@@ -24,4 +35,3 @@ source: "wiki management command"
 - [[Wiki/Common/RTM_YNG_Wiki_Build_Plan_2026-04-21]]: RTM_YNG Wiki Build Plan
 - [[Wiki/Common/RTM_YNG_아사히카세이_보고자료_2026-04-22]]: 아사히카세이 보고자료 2026-04-22
 - [[Wiki/Common/RTM_YNG_아사히카세이]]: 아사히카세이
-

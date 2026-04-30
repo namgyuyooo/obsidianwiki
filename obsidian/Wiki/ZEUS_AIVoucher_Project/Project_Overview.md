@@ -1,12 +1,39 @@
 ---
 type: overview
 created: 2026-04-21
-updated: 2026-04-21
+updated: 2026-04-30
 source: "public Slack evidence sweep (2024-04-21 to 2026-04-21)"
 ---
 
 # Project Overview
 
+## 운영 요약
+- 현재 상태: 최신 실행 상태는 [[Wiki/ZEUS_AIVoucher_Project/hub]]의 `실행 현황판`과 `현재 막힘 / 충돌` 기준으로 우선 확인합니다.
+- 실무 포인트: 이 문서는 프로젝트 목적, 범위, 현재 단계, 주요 판단을 빠르게 파악하는 기준 문서입니다.
+- 상태 기준: [[Wiki/ZEUS_AIVoucher_Project/Status]]
+- 다음 반영: [[Wiki/ZEUS_AIVoucher_Project/Action_Items]], [[Wiki/ZEUS_AIVoucher_Project/Decisions]], [[Wiki/ZEUS_AIVoucher_Project/Risks]]와 정합성을 맞추며 갱신합니다.
+
+## 현재 상태
+- 상태 요약: 허브 및 L1_memory 기준으로 현행화 필요
+- 단계: 제안 / 수행 / 검수 / 운영 중 해당 단계 명확화 필요
+- 마지막 의미 있는 변화: 2026-04-30 운영형 문서 구조 반영
+
+## 프로젝트 범위
+- 고객/대상: 확인된 고객사와 운영 범위를 유지
+- 핵심 산출물: 실제 보고서, 제안서, 납품물, 검수물 기준으로 정리
+- 연결 근거: [[Wiki/ZEUS_AIVoucher_Project/Sources]], [[Wiki/ZEUS_AIVoucher_Project/Evidence_Log]]
+
+## 핵심 판단
+- 현재 확정 판단: [[Wiki/ZEUS_AIVoucher_Project/Decisions]] 기준으로 정리
+- 남은 판단 포인트: [[Wiki/ZEUS_AIVoucher_Project/Conflict_Register]]와 [[Wiki/ZEUS_AIVoucher_Project/Risks]] 기준으로 추적
+
+## 다음 액션 연결
+- 상태 레지스터: [[Wiki/ZEUS_AIVoucher_Project/Status]]
+- 실행 항목: [[Wiki/ZEUS_AIVoucher_Project/Action_Items]]
+- 리스크 점검: [[Wiki/ZEUS_AIVoucher_Project/Risks]]
+- 변경 이력: [[Wiki/ZEUS_AIVoucher_Project/Change_Log]]
+
+## 기존 정리 메모
 ZEUS AI바우처 프로젝트는 공개 Slack 기준으로 EHM과 이미지 기반 솔루션을 함께 고려한 AI바우처형 프로젝트다. 이번 재탐색에서 `사업계획서`, `중간보고`, `최종 결과보고서`, `협업 제안` 파일과 중간보고 회의 메모가 확인되어, 초기 탐색 후보가 아니라 실제 독립 프로젝트로 보는 편이 맞아졌다.
 
 핵심은 `EHM`과 이미지 과제를 하나의 하드웨어/워크스테이션으로 묶을지, 별도 서버 또는 워크스테이션으로 분리할지에 대한 인프라 설계다. 즉 이 프로젝트는 AI바우처 사업 수행과 함께, 복수 솔루션을 어떤 구조로 고객에게 제시할지 검토한 사례다.

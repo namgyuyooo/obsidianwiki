@@ -12,9 +12,9 @@ export function Welcome() {
   return (
     <div className="aui-welcome">
       <div className="aui-welcome-copy">
-        <span className="aui-kicker">assistant-ui native surface</span>
-        <h1>무엇을 판단할까요?</h1>
-        <p>프로젝트 질문, 위키 정합성, 첨부 분석, Decision Deck 지시를 한 흐름으로 다룹니다.</p>
+        <span className="aui-kicker">Project-aware LLM chat</span>
+        <h1>무엇을 도와드릴까요?</h1>
+        <p>프로젝트 문맥, 위키 근거, 첨부 파일, Decision Deck 지시를 같은 대화 안에서 다룹니다.</p>
       </div>
       <div className="aui-suggestions">
         {STARTER_PROMPTS.map((starterPrompt) => (

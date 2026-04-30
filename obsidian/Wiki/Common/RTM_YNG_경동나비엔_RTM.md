@@ -12,6 +12,8 @@ tags:
 
 # 경동나비엔 RTM
 
+- [[Wiki/Common/RTM_YNG_경동나비엔_RTM_Status]]
+
 ## Project Overview
 
 - 대표본은 경동나비엔 대상 AI 솔루션 제안서이며, 볼트 및 클립 누락 검사 과제를 핵심 범위로 다룬다.

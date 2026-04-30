@@ -36,6 +36,25 @@ L1 memory snapshots are compact context loaders for new sessions — not source 
 
 When starting wiki work, read `obsidian/Wiki/index.md` first, then drill into relevant pages.
 
+## Space Types
+
+Treat each top-level workspace in `obsidian/Wiki/` as one of four operating space types.
+Do not force all spaces into one template.
+
+1. `project`
+   - Delivery, proposal, PoC, R&D, or execution unit
+   - Owns evidence, actions, decisions, risks, and an L1 memory file
+2. `account`
+   - Customer/account umbrella over multiple projects
+   - Focuses on active projects, relationship-level blockers, and next touchpoints
+3. `common`
+   - Operating rules, automation, indexes, governance, and cross-project control docs
+4. `shared`
+   - Reusable assets promoted from projects for wider reuse
+
+When editing or creating a hub, make the space type obvious through structure and links.
+Do not create project-style evidence scaffolding inside `account`, `common`, or `shared` unless there is a clear reason.
+
 ## Personal vs Work Separation
 
 - Keep personal records out of the RTM work wiki by default.
@@ -56,9 +75,11 @@ Each L1 memory file must contain:
 - **한줄 요약**: One-sentence project summary (status + type + key fact)
 - **프로젝트 유형**: Project type and current stage
 - **현재 상태**: What is actively happening right now
+- **이번 주 실무 포인트**: The 1-3 working-owner priorities right now
 - **핵심 결정사항**: Key decisions already made (no need to re-debate)
 - **핵심 수치 / 파일**: Important numbers, file names, document references
 - **미해결 이슈**: Open questions and things that still need resolution
+- **다음 액션 / 미팅 전 확인**: What must happen next
 - **주의사항 (Gotchas)**: Context traps, naming issues, common mistakes to avoid
 - **드릴다운**: Wikilinks to the hub and 2–3 most relevant sub-pages
 
@@ -121,6 +142,19 @@ When a new work event appears, promote it through the wiki in this order:
 
 Do not jump straight from a new event to a cleaned-up conclusion if source facts, conflicts, or version changes need to remain visible.
 
+## Practical Operating Logic
+
+The wiki should help run work, not only explain work.
+Bias every meaningful update toward these questions:
+
+1. What changed?
+2. What is confirmed?
+3. What is still unconfirmed or conflicting?
+4. What action now belongs to whom?
+5. What evidence supports that action?
+
+If an update does not improve at least one of those five, it is probably too cosmetic.
+
 ## Query Workflow
 
 When answering a question using the wiki:
@@ -141,6 +175,9 @@ Periodically check for:
 - contradictions not registered in `Conflict_Register.md`
 - claims without evidence pages
 - project spaces missing core documents
+- project hubs that do not expose current status, blockers, next actions, and evidence links near the top
+- account hubs that do not expose active projects and relationship-level next steps
+- common/shared hubs that do not expose promotion queues or reuse targets
 - **L1 memory files that are stale** (not updated after a major ingest or decision)
 - **projects in `obsidian/Wiki/` that have no corresponding `L1_memory/` file**
 
@@ -161,16 +198,63 @@ Document notable fixes in `obsidian/Wiki/log.md`.
 Most project folders should keep these pages available:
 
 - `hub.md`
+- `Status.md`
 - `Project_Overview.md`
 - `Sources.md`
 - `Evidence_Log.md`
 - `Change_Log.md`
 - `Conflict_Register.md`
+- `Action_Items.md`
 - `Decisions.md`
 - `Risks.md`
 - optional specialized pages such as `KPI.md`, `Equipment.md`, `Architecture.md`
 
 And a corresponding `obsidian/L1_memory/{ProjectName}.md` must exist.
+
+Project hubs should expose these sections near the top:
+
+- `## 운영 메모`
+- `## 실행 현황판`
+- `## 현재 막힘 / 충돌`
+- `## 다음 액션`
+- `## 최근 업데이트`
+- `## 운영 링크`
+
+The hub is not a mere contents page. It is the first execution brief for the project.
+
+`Status.md` is the canonical project status register.
+Use it to track:
+
+- current status label
+- current stage
+- health
+- current owner/contact
+- blockers
+- next gate or milestone
+- status history
+
+## Account/Common/Shared Hub Minimum
+
+Account hubs should expose:
+
+- active linked projects
+- current commercial or relationship status
+- account-wide blockers or escalation points
+- next touchpoints
+- links to underlying project hubs
+
+Common hubs should expose:
+
+- active operating models
+- promotion queues
+- automation or governance entrypoints
+- cross-project assets currently in use
+
+Shared hubs should expose:
+
+- reusable assets
+- which project or common pages should consume them
+- promotion provenance from the originating project
 
 ## Canonical Project Evidence Files
 

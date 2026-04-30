@@ -1,12 +1,39 @@
 ---
 type: overview
 created: 2026-04-21
-updated: 2026-04-21
+updated: 2026-04-30
 source: "public Slack evidence sweep (2024-04-21 to 2026-04-21)"
 ---
 
 # Project Overview
 
+## 운영 요약
+- 현재 상태: 최신 실행 상태는 [[Wiki/LGEnergy_ImageAnalysis_Project/hub]]의 `실행 현황판`과 `현재 막힘 / 충돌` 기준으로 우선 확인합니다.
+- 실무 포인트: 이 문서는 프로젝트 목적, 범위, 현재 단계, 주요 판단을 빠르게 파악하는 기준 문서입니다.
+- 상태 기준: [[Wiki/LGEnergy_ImageAnalysis_Project/Status]]
+- 다음 반영: [[Wiki/LGEnergy_ImageAnalysis_Project/Action_Items]], [[Wiki/LGEnergy_ImageAnalysis_Project/Decisions]], [[Wiki/LGEnergy_ImageAnalysis_Project/Risks]]와 정합성을 맞추며 갱신합니다.
+
+## 현재 상태
+- 상태 요약: 허브 및 L1_memory 기준으로 현행화 필요
+- 단계: 제안 / 수행 / 검수 / 운영 중 해당 단계 명확화 필요
+- 마지막 의미 있는 변화: 2026-04-30 운영형 문서 구조 반영
+
+## 프로젝트 범위
+- 고객/대상: 확인된 고객사와 운영 범위를 유지
+- 핵심 산출물: 실제 보고서, 제안서, 납품물, 검수물 기준으로 정리
+- 연결 근거: [[Wiki/LGEnergy_ImageAnalysis_Project/Sources]], [[Wiki/LGEnergy_ImageAnalysis_Project/Evidence_Log]]
+
+## 핵심 판단
+- 현재 확정 판단: [[Wiki/LGEnergy_ImageAnalysis_Project/Decisions]] 기준으로 정리
+- 남은 판단 포인트: [[Wiki/LGEnergy_ImageAnalysis_Project/Conflict_Register]]와 [[Wiki/LGEnergy_ImageAnalysis_Project/Risks]] 기준으로 추적
+
+## 다음 액션 연결
+- 상태 레지스터: [[Wiki/LGEnergy_ImageAnalysis_Project/Status]]
+- 실행 항목: [[Wiki/LGEnergy_ImageAnalysis_Project/Action_Items]]
+- 리스크 점검: [[Wiki/LGEnergy_ImageAnalysis_Project/Risks]]
+- 변경 이력: [[Wiki/LGEnergy_ImageAnalysis_Project/Change_Log]]
+
+## 기존 정리 메모
 LG엔솔 이미지분석 프로젝트는 Li 석출 정량화와 XRM 분석 과제를 함께 다루는 분석형 프로젝트로 보인다. 공개 Slack 메시지에서는 샘플 이미지 경로, 측정/분석 시작 요청, 기능 범위, 배포 및 인프라 요구사항이 비교적 구체적으로 정리되어 있다.
 
 ## 한 줄 요약

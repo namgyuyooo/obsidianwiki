@@ -1,12 +1,23 @@
 ---
 type: log
 created: 2026-04-29
-updated: 2026-04-29
+updated: 2026-04-30
 source: "2026-04-29 wiki structure improvement pass"
 ---
 
 # Conflict Register
 
+## Open Conflicts
+- 상충 수치, 버전 불일치, 고객/내부 판단 불일치, 범위 미확정을 이 문서에 등록합니다.
+- 해소 전까지 허브 상단 `현재 막힘 / 충돌`과 연동해 가시화합니다.
+
+## 처리 원칙
+- 충돌이 상태에 영향을 주면 [[Wiki/EPI_Project/Status]]의 blocker와 history에도 반영
+- 확정되면 [[Wiki/EPI_Project/Decisions]]로 승격
+- 실행이 필요하면 [[Wiki/EPI_Project/Action_Items]]로 연결
+- 리스크가 커지면 [[Wiki/EPI_Project/Risks]]로 승격
+
+## 기존 정리 메모
 ## Current Status
 
 - 상태: 초기화됨
@@ -16,4 +27,3 @@ source: "2026-04-29 wiki structure improvement pass"
 
 - 장비 조건, 레시피, 공정 수치, 고객 요구사항이 서로 다르면 이곳에 충돌로 등록합니다.
 - 해결 전까지 기존 값과 신규 값을 모두 보존합니다.
-

@@ -1,42 +1,44 @@
 ---
-type: hub
+type: project
 created: 2026-04-29
-updated: 2026-04-29
+updated: 2026-04-30
 source: "2026-04-27 #sales_team thread + /Users/rtm/Documents/GitHub/commonWork/1.POC/쏘닉스/sawnics_poc_report_config.json"
 ---
 
 # Sawnics ManufacturingAI Project Hub
 
-쏘닉스 PoC 보고서와 `제조AI특화 스마트공장 구축사업` 제출 준비 맥락을 함께 관리하는 허브입니다.
-
-- [[Wiki/Sawnics_ManufacturingAI_Project/Project_Overview]]
-- [[Wiki/Sawnics_ManufacturingAI_Project/Sources]]
-- [[Wiki/Sawnics_ManufacturingAI_Project/Evidence_Log]]
-- [[Wiki/Sawnics_ManufacturingAI_Project/KPI]]
-- [[Wiki/Sawnics_ManufacturingAI_Project/Risks]]
-- [[Wiki/Sawnics_ManufacturingAI_Project/Action_Items]]
-- [[Wiki/Sawnics_ManufacturingAI_Project/Next_Meeting_Prep]]
-- [[Wiki/Sawnics_ManufacturingAI_Project/Conflict_Register]]
-- [[Wiki/Sawnics_ManufacturingAI_Project/Change_Log]]
+- [[Wiki/index]]
 
 ## 운영 메모
-- 한줄 요약: 쏘닉스 IDT 검사 PoC 성과를 `제조AI특화 스마트공장 구축사업` 제안/미팅 준비로 승격 중인 신규 프로젝트 초안이다.
-- 진행 맥락: 2026-04-27 `#sales_team` 스레드에서 허정이 유남규와 조서연을 태그하며 `쏘닉스 담당자`를 호출했고, 이후 지원사업 자료와 PoC 보고서를 공유했으며, 같은 날 유남규가 쏘닉스 미팅 참석 주체를 직접 맡기로 정리했다.
-- 실무 판단: 현재 단계는 PoC 성과를 제출용 사업기회로 연결할 수 있는지 검토하는 탐색/제안 준비 단계이며, 제출안내문 본문과 고객 요구 범위를 미팅 전 확정해야 한다.
-- 다음 확인: 고객 담당자 실명/역할, 지원사업 신청 주체, 제출 일정, 현장 문제 정의, 추가 데이터 제공 가능 범위를 미팅에서 확인한다.
+- 한줄 요약: 현재 상태, 막힘, 다음 액션을 허브 상단에서 바로 파악할 수 있도록 운영하는 프로젝트 허브입니다.
+- 진행 맥락: 증적 보존과 문서 정리뿐 아니라 실제 실행 판단과 후속 행동까지 연결해야 합니다.
+- 실무 판단: `Sources`, `Evidence_Log`, `Conflict_Register`, `Action_Items`, `Decisions`, `Risks`를 함께 보고 현재 판단을 갱신합니다.
+- 다음 확인: 최신 고객 상태, 내부 오너, 미해결 충돌, 다음 미팅 전 확인 질문을 보강합니다.
 
-## 운영 현황판
-- 현재 상태: 신규 프로젝트 초안 생성 및 미팅 준비 중
-- 최근 추진: Slack 스레드 기준 담당자 호출, 자료 공유, 미팅 참석자 지정까지 확인
-- 다음 액션: [[Wiki/Sawnics_ManufacturingAI_Project/Next_Meeting_Prep]] 질문 리스트 기준으로 미팅 전 확인 포인트 정리
+## 실행 현황판
+- 현재 상태: [[Wiki/Sawnics_ManufacturingAI_Project/Status]] 기준으로 현행화
+- 현재 단계: [[Wiki/Sawnics_ManufacturingAI_Project/Status]]의 단계 기준으로 관리
+- 마지막 의미 있는 갱신: 2026-04-30 구조 정비
+- 현재 오너/대상: [[Wiki/Sawnics_ManufacturingAI_Project/Status]]의 오너 기준으로 관리
+- 다음 액션: `Action_Items.md`와 `Conflict_Register.md`를 기준으로 실행 우선순위 재정렬
 
-## 일시별 추진내용
+## 현재 막힘 / 충돌
+- 확인 필요: 최신 고객 요청, 일정, 산출물 기준본 확인 필요
+- 충돌 수치/주장: `Conflict_Register.md`에서 미해소 항목 우선 점검
+- 대기 중인 외부 입력: 고객 회신, 내부 승인, 최신 문서본 여부 확인 필요
+
+## 다음 액션
+- [ ] `Action_Items.md`에 실제 담당/기한 기준 액션 재기입
+- [ ] `Evidence_Log.md`와 `Conflict_Register.md` 기준으로 최신 판단 업데이트
+- [ ] 다음 미팅 전 꼭 확인할 질문을 허브와 `Action_Items.md`에 명시
+
+## 최근 업데이트
 | 일시 | 추진내용 | 실무 의미 | 연결 증적 | 다음 액션 |
 | --- | --- | --- | --- | --- |
-| 2026-04-27 10:58 | 허정이 `#sales_team`에서 유남규, 조서연 태그 후 `쏘닉스 담당자` 스레드 시작 | 쏘닉스 건이 영업/대응 트랙으로 공식 호출됨 | [[Evidence_Log#Evidence 01]] | 고객 담당자/내부 오너 역할 분리 확인 |
-| 2026-04-27 12:42 | 지원사업 자료, `SAWNICS_PoC_Report.pdf`, `sawnics_poc_report.html`, 제출안내문, 제출서류 양식 공유 | PoC 단건이 아니라 과제 제출형 영업기회로 전환 중임을 시사 | [[Evidence_Log#Evidence 02]] | 제출 대상 사업과 문서 요구사항 분해 |
-| 2026-04-27 15:32 | 유남규가 `쏘닉스건 미팅은 제가 다녀오기로` 정리하고 방문미팅 후 이욱 이사와 논의 제안 | 대면 미팅 주체와 내부 후속 의사결정 루프가 설정됨 | [[Evidence_Log#Evidence 04]] | 미팅 질문지와 보고 포맷 사전 준비 |
-| 2026-04-29 | 위키 초안 생성, PoC 수치/리스크/질문 목록 구조화 | 이후 미팅 메모와 제출자료 검토 내용을 append 가능한 기준선 확보 | [[Change_Log]] | 미팅 후 Update 블록 추가 |
+| 2026-04-30 | 허브를 실무 운영형 구조로 재정비 | 상단에서 상태, 막힘, 다음 액션, 근거를 바로 확인할 수 있게 전환 | [[Wiki/Sawnics_ManufacturingAI_Project/Change_Log]], [[Wiki/Sawnics_ManufacturingAI_Project/Sources]], [[Wiki/Sawnics_ManufacturingAI_Project/Evidence_Log]] | 실제 진행 상황으로 현행화 |
+
+## 상태 기준 링크
+- [[Wiki/Sawnics_ManufacturingAI_Project/Status]]
 
 ## 증적/근거 링크
 - [[Wiki/Sawnics_ManufacturingAI_Project/Sources]]
@@ -44,7 +46,26 @@ source: "2026-04-27 #sales_team thread + /Users/rtm/Documents/GitHub/commonWork/
 - [[Wiki/Sawnics_ManufacturingAI_Project/Conflict_Register]]
 
 ## 운영 링크
+- [[Wiki/Sawnics_ManufacturingAI_Project/Status]]
 - [[Wiki/Sawnics_ManufacturingAI_Project/Project_Overview]]
+- [[Wiki/Sawnics_ManufacturingAI_Project/Sources]]
+- [[Wiki/Sawnics_ManufacturingAI_Project/Evidence_Log]]
+- [[Wiki/Sawnics_ManufacturingAI_Project/Action_Items]]
+- [[Wiki/Sawnics_ManufacturingAI_Project/Risks]]
+- [[Wiki/Sawnics_ManufacturingAI_Project/Decisions]]
+- [[Wiki/Sawnics_ManufacturingAI_Project/Conflict_Register]]
+- [[Wiki/Sawnics_ManufacturingAI_Project/Change_Log]]
+
+## 추가 연결 문서
+- [[Wiki/Sawnics_ManufacturingAI_Project/KPI]]
+- [[Wiki/Sawnics_ManufacturingAI_Project/Next_Meeting_Prep]]
+
+## 기존 연결 메모
+쏘닉스 PoC 보고서와 `제조AI특화 스마트공장 구축사업` 제출 준비 맥락을 함께 관리하는 허브입니다.
+
+- [[Wiki/Sawnics_ManufacturingAI_Project/Project_Overview]]
+- [[Wiki/Sawnics_ManufacturingAI_Project/Sources]]
+- [[Wiki/Sawnics_ManufacturingAI_Project/Evidence_Log]]
 - [[Wiki/Sawnics_ManufacturingAI_Project/KPI]]
 - [[Wiki/Sawnics_ManufacturingAI_Project/Risks]]
 - [[Wiki/Sawnics_ManufacturingAI_Project/Action_Items]]

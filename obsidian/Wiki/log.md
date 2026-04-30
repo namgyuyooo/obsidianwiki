@@ -1,13 +1,31 @@
 ---
 type: log
 created: 2026-04-21
-updated: 2026-04-29
+updated: 2026-04-30
 source: "Global wiki operations log"
 ---
 
 # Wiki Log
 
 이 파일은 위키 운영의 append-only 로그입니다.
+
+## 2026-04-30
+- `AGENTS.md`, `CLAUDE.md`, `Wiki/Schema.md`: 위키 공간을 `project/account/common/shared`로 구분하고, 허브를 실무 실행 현황판으로 다루는 기준 추가
+- `Wiki/Common/Wiki_Ingest_Operating_Model.md`: 기존 3층 인제스트 모델을 실무 운영형으로 재정의하고 `실행 현황 계층`, 허브 운영 기준, 공간 유형별 운영 원칙 추가
+- `Wiki/Common/Wiki_Ingest_Templates.md`: `project/account/common/shared` 허브 템플릿과 `Action_Items.md`, `Decisions.md`, `Risks.md` 템플릿 추가
+- `Wiki/Common/Wiki_Ingest_Prompt_Set.md`: LLM 프롬프트를 실무 운영형으로 개편하고 허브 상단 상태/막힘/다음 액션 갱신 규칙 반영
+- `Wiki/*/Status.md`: 전 프로젝트에 상태 레지스터 문서를 추가하고 상태 라벨, 단계, 헬스, 오너, blocker, 다음 게이트, 상태 이력 관리 구조 도입
+- `Wiki/Common/RTM_YNG*_Status.md`: Common 단일 페이지 기반 RTM_YNG 프로젝트 14건에도 상태 레지스터를 추가하고 L1 드릴다운과 공통 본문 페이지에서 상태를 추적하도록 연결
+- `Wiki/*/hub.md`: top-level 허브를 공간 유형별 구조로 일괄 재정비하고, 프로젝트 허브에 `실행 현황판`, `현재 막힘 / 충돌`, `다음 액션`, `최근 업데이트` 섹션을 반영
+- `Wiki/*/Project_Overview.md`, `Action_Items.md`, `Decisions.md`, `Risks.md`, `Sources.md`, `Evidence_Log.md`, `Conflict_Register.md`, `Change_Log.md`: `Status.md`를 기준으로 상태 변경이 다른 운영 문서와 함께 반영되도록 링크 및 운영 원칙 보강
+- `L1_memory/*.md`: 모든 프로젝트 L1 메모리를 `이번 주 실무 포인트`, `다음 액션 / 미팅 전 확인`을 포함한 운영형 표준 구조로 재정비
+- `L1_memory/*.md`: 프로젝트형 L1 메모리 드릴다운에 `Status.md` 링크 추가
+- `L1_memory/GLM_Global_Instructions.md`: GLM 전역 지침을 새 위키 운영 체계에 맞춰 `space type` 판단, 허브 상단 우선 참조, 충돌/액션 승격 원칙 중심으로 갱신
+- `Wiki/Business_Plan_Project/Project_Overview.md`, `Wiki/Business_Plan_Project/Decisions.md`, `Wiki/Business_Plan_Project/Action_Items.md`, `Wiki/Business_Plan_Project/Risks.md`: 실무 운영형 필수 문서 생성
+- `Wiki/EPI_Project/Project_Overview.md`, `Wiki/EPI_Project/Decisions.md`, `Wiki/EPI_Project/Action_Items.md`, `Wiki/EPI_Project/Risks.md`: 실무 운영형 필수 문서 생성
+- `Wiki/SanupAI_RnD_Project/Project_Overview.md`, `Wiki/SanupAI_RnD_Project/Decisions.md`, `Wiki/SanupAI_RnD_Project/Action_Items.md`, `Wiki/SanupAI_RnD_Project/Risks.md`: 실무 운영형 필수 문서 생성
+- `Wiki/Sawnics_ManufacturingAI_Project/Decisions.md`, `Wiki/2025_20240815545_00_1723770661746_제안요청서_Project/Action_Items.md`: 누락된 프로젝트 운영 문서 생성
+- `Wiki/index.md`: 공간 유형별 운영 원칙과 허브 역할 메모 반영
 
 ## 2026-04-29
 - `automation/wiki_api/server.mjs`: GLM 채팅을 sparse search -> graph expansion -> Evidence/L1 우선 rerank -> Paperclip read/validator auto-run 기반 retrieval-orchestrator로 확장, stream/JSON 응답에 retrieval/paperclip/validation context 추가
