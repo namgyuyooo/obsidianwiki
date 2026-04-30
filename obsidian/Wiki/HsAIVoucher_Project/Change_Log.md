@@ -29,3 +29,9 @@ source: "public Slack evidence sweep (2024-04-21 to 2026-04-21)"
 - 상태 변화 메모: 2026-04-30 00:00 운영형 위키 전환 기준으로 HsAIVoucher Project 운영 문서 구조가 생성/점검되었고 원문 보존, 상태 갱신, CEO/PM 후속 판단이 수행/대기됨
 - 생성/점검 문서: Status, Business_Flow, CEO_Brief, PM_Action_Plan, Customer_Followup, Raw_Evidence_Index
 - 원칙: 기존 원문/증적은 요약으로 대체하지 않고 보존 레이어와 운영 판단 레이어를 분리
+
+## Change - 2026-05-01 운영 문서 실내용 보강
+
+- 2026-05-01 01:53 KST 기준 [[Project_Overview]]와 [[Evidence_Log]]를 바탕으로 화승 AI바우처를 “사업 종료 후 확장 협의” 프로젝트로 재분류했다.
+- 검수/평가 종료 증적과 `기능추가개발`, `확산전개` 견적을 분리해 후속 매출 구조를 운영 판단 문서로 승격했다.
+- 설비 수량 `4대` vs `5대` 혼선과 “추가기능 견적과 별개” 메시지를 핵심 범위 리스크로 반영했다.

@@ -42,3 +42,10 @@ source: ""
 - 상태 변화 메모: 2026-04-30 00:00 운영형 위키 전환 기준으로 DaehanCable ProcessInnovation Project 기존 문서가 점검되었고 운영 판단 레이어와 원문 보존 레이어 연결이 수행/대기됨
 - 원문/긴 추출문은 Raw_Evidence_Index, Sources, Evidence_Log를 기준으로 보존
 - CEO/PM 판단은 Status, Business_Flow, CEO_Brief, PM_Action_Plan, Customer_Followup에서 관리
+
+## 운영 보강 - 2026-05-01
+
+- 상태 메모: 2026-05-01 01:40 KST 기준 [[Project_Overview]]와 [[Evidence_Log]]를 운영형 상태로 승격했으며, 대한전선 공정혁신과제는 외관검사 샘플 확보와 SCADA/Monit 분석이 병행되는 데이터 검증 중심 제안 단계로 분류한다.
+- 현재 단계: 분석 기반 제안 / 데이터 정의 정합성 확인. `대한전선 불량이미지.zip`, `압연 2_Daily.csv`, `압연 12_Daily.csv`, `ADV user guide.pdf`, `SCR공정 압연설비 #2/#12 데이터 공유`, `압연 2번 RPM / 12번 Hz` 논의가 핵심 근거다.
+- 주요 병목: 설비 데이터 단위 불일치와 상관관계 해석 기준(`r>.9`, `r>0.8`)이 고객 설명 이전에 먼저 정리돼야 하며, 외관검사 솔루션과 설비 이상 탐지의 범위 경계도 아직 흐리다.
+- 다음 판단: 고객에게 보여줄 분석 결과보다 먼저 데이터 단위/설정값 기준을 잠글지, 외관검사 제안과 이상 탐지 제안을 단일 패키지로 묶을지 결정해야 한다.

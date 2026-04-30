@@ -117,9 +117,17 @@ def _project_key_from_path(relative_path: str) -> tuple[str, str]:
     parts = Path(relative_path).parts
     if len(parts) < 3:
         return "wiki", "wiki"
-    if parts[1] in {"L1_memory", "Personal_L1_memory"}:
+    if parts[1] == "L1_memory":
         return "memory", parts[1]
     return parts[2], parts[1]
+
+
+def _relative_vault_path(path: Path, root: Path) -> str:
+    try:
+        vault_root = root.parents[1]
+        return str(path.relative_to(vault_root)).replace("\\", "/")
+    except (IndexError, ValueError):
+        return str(path).replace("\\", "/")
 
 
 def _load_pages(config: RuntimeConfig) -> list[WikiPage]:
@@ -133,7 +141,7 @@ def _load_pages(config: RuntimeConfig) -> list[WikiPage]:
             continue
         for path in _walk_markdown(root):
             markdown = path.read_text(encoding="utf-8")
-            relative_path = str(path.relative_to(config.repo_root())).replace("\\", "/")
+            relative_path = _relative_vault_path(path, root)
             project_key, _ = _project_key_from_path(relative_path)
             stat = path.stat()
             pages.append(

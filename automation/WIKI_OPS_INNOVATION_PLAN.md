@@ -72,8 +72,18 @@
   - 배포 후 보정, 납품/검수, PoC-제안 전환, 제안/기술검토, 장기 운영 안정화처럼 프로젝트별 운영 성격을 명시
   - 실패 케이스, 계약/검수 문서군, FCST 근거자료, ODB/인터페이스 조건, 성능 지표/항목 제외 기준을 원문 보존 대상으로 지정
 
-- [ ] 실제 위키 운영 문서 4차 보강 후보
-  - 근거량 기준 우선순위: `KoreaAlbac_Project`, `AdvancedElectricKorea_Project`, `DaehanCable_ProcessInnovation_Project`, `Nanotech_RnD_Project`, `HsAIVoucher_Project`, `2023_ai_pattern_Project`, `2023_main_mission_title_our_Project`, `2023_필요_불량유형의_대한_허용기준에_반영_자동라벨링_Project`, `2023_sheet1_Project`, `Business_Plan_Project`
+- [x] 실제 위키 운영 문서 4차 보강
+  - `KoreaAlbac_Project`, `AdvancedElectricKorea_Project`, `DaehanCable_ProcessInnovation_Project`, `Nanotech_RnD_Project`, `HsAIVoucher_Project`에 `2026-05-01` 기준 운영 블록 반영
+  - 수주형 PoC, 납품 후 안정화, 데이터 검증형 제안, 정부과제형 협업, 바우처 후속 확장으로 각 프로젝트 운영 성격을 명시
+  - 견적서, 검수 문서, 하자보증, 설비 수량 정정, SCADA 단위 차이, 협업 아이템 버전 체인을 원문 보존 대상으로 승격
+
+- [x] 성격별 위키 통합 후보 기능
+  - `automation/wiki_api/server.mjs`에 project/account/slack/common 공간 기준 통합 후보 스캐너와 승인 반영 로직 추가
+  - `automation/wiki_api/scripts/scan_wiki_integration_candidates.mjs` CLI 추가
+  - Decisions / Command Center / Spotlite에 통합 후보 스캔, 큐 등록, 요약 노출 반영
+
+- [ ] 실제 위키 운영 문서 5차 보강 후보
+  - 근거량 기준 우선순위: `2023_ai_pattern_Project`, `2023_main_mission_title_our_Project`, `2023_필요_불량유형의_대한_허용기준에_반영_자동라벨링_Project`, `2023_sheet1_Project`, `2023_메카로_ant_hubble2_내부공유용_Project`
   - 완료 기준: 각 프로젝트 7개 운영 문서에 날짜형 실내용 블록이 있고, `Change_Log`에 동일 일시의 변환 기록이 남아야 함
 
 ## 운영 원칙

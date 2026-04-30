@@ -50,6 +50,7 @@ export function DecisionDeck({ chatContext }: DecisionDeckProps) {
   const busy = ["loading", "saving", "thinking"].includes(deck.status.phase);
   const compareBusy = ["loading", "merging", "saving"].includes(deck.compare.phase);
   const scanBusy = ["scanning", "enqueuing"].includes(deck.mergeScan.phase);
+  const integrationBusy = ["scanning", "enqueuing"].includes(deck.integrationScan.phase);
   const recommendationReady = Boolean(deck.inference.trim());
 
   return (
@@ -82,6 +83,33 @@ export function DecisionDeck({ chatContext }: DecisionDeckProps) {
                 <small>{candidate.secondary.title || candidate.secondary.path}</small>
                 <small>{candidate.mergePlan?.changeMemo || candidate.reason?.join(", ")}</small>
                 <button className="aui-wide-action" disabled={scanBusy} onClick={() => deck.enqueueMergeCandidate(candidate)} type="button">
+                  Decision Queue 등록
+                </button>
+              </article>
+            ))}
+          </div>
+        </PanelCard>
+        <PanelCard eyebrow="Workspace grouping" title="성격별 통합 후보">
+          <p className="aui-decision-empty-note">
+            프로젝트, Account, Slack 수집형 위키를 고객/주제/문서 성격 기준으로 묶어 승인 게이트용 통합 후보를 찾습니다.
+          </p>
+          <button className="aui-wide-action" disabled={integrationBusy} onClick={deck.scanIntegrationCandidates} type="button">
+            성격별 통합 후보 스캔
+          </button>
+          <button className="aui-wide-action" disabled={integrationBusy} onClick={deck.scanAndEnqueueTopIntegrationCandidates} type="button">
+            상위 5건 큐 등록
+          </button>
+          <StatusLine phase={deck.integrationScan.phase} message={deck.integrationScan.message} />
+          <div className="aui-decision-history">
+            {(deck.integrationScan.snapshot?.candidates || []).slice(0, 6).map((candidate) => (
+              <article key={candidate.id}>
+                <strong>{candidate.groupKey}</strong>
+                <span>
+                  {candidate.recommendedStrategy} · {candidate.conflictRisk ? "충돌 게이트" : "append only"} · score {Math.round((candidate.similarityScore || 0) * 100)}
+                </span>
+                <small>{candidate.relatedWikis.map((item) => item.projectLabel || item.projectKey).join(", ")}</small>
+                <small>{candidate.changeTargets?.slice(0, 2).join(" / ") || candidate.reason?.join(", ")}</small>
+                <button className="aui-wide-action" disabled={integrationBusy} onClick={() => deck.enqueueIntegrationCandidate(candidate)} type="button">
                   Decision Queue 등록
                 </button>
               </article>
@@ -147,11 +175,13 @@ export function DecisionDeck({ chatContext }: DecisionDeckProps) {
                 </section>
                 <section>
                   <span>업무 반영 대상</span>
-                  <strong>{deck.activeIsDeletion ? "문서 삭제 + deletion audit" : "Conflict_Register.md"}</strong>
+                  <strong>{deck.activeIsDeletion ? "문서 삭제 + deletion audit" : deck.activeIsIntegration ? "다중 승인 반영 대상" : "Conflict_Register.md"}</strong>
                   <p>
                     {deck.activeIsDeletion
                       ? "승인 시 보호 규칙을 다시 확인한 뒤 실제 문서를 삭제하고 감사 로그를 남깁니다."
-                      : "승인 시 이 프로젝트의 충돌/정합성 기록에 감사 메모와 함께 반영됩니다."}
+                      : deck.activeIsIntegration
+                        ? "승인 시 추천 전략에 맞는 hub/Status/Change_Log append만 수행합니다. 자동 병합과 원문 삭제는 하지 않습니다."
+                        : "승인 시 이 프로젝트의 충돌/정합성 기록에 감사 메모와 함께 반영됩니다."}
                   </p>
                 </section>
               </div>

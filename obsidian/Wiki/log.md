@@ -1,13 +1,34 @@
 ---
 type: log
 created: 2026-04-21
-updated: 2026-04-30
+updated: 2026-05-01
 source: "Global wiki operations log"
 ---
 
 # Wiki Log
 
 이 파일은 위키 운영의 append-only 로그입니다.
+
+## 2026-05-01
+- `Wiki/KoreaAlbac_Project/*`, `Wiki/AdvancedElectricKorea_Project/*`, `Wiki/DaehanCable_ProcessInnovation_Project/*`, `Wiki/Nanotech_RnD_Project/*`, `Wiki/HsAIVoucher_Project/*`: `Status`, `Business_Flow`, `CEO_Brief`, `PM_Action_Plan`, `Customer_Followup`, `Raw_Evidence_Index`, `Change_Log`에 `2026-05-01` 운영 보강 블록 추가
+- `L1_memory/KoreaAlbac_Project.md`, `L1_memory/AdvancedElectricKorea_Project.md`, `L1_memory/DaehanCable_ProcessInnovation_Project.md`, `L1_memory/Nanotech_RnD_Project.md`, `L1_memory/HsAIVoucher_Project.md`: 4차 운영 보강 결과에 맞춰 working memory snapshot 갱신
+- `automation/wiki_api/server.mjs`, `automation/wiki_api/scripts/scan_wiki_integration_candidates.mjs`, `automation/wiki_frontend/assistant_ui_app/src/domains/{decisions,mission}/*`: 성격별 위키 통합 후보 스캔, Decision Queue 등록, append-only 승인 반영, Mission/Spotlite/Decisions 노출 기능 추가
+- `automation/WIKI_OPS_INNOVATION_PLAN.md`: 4차 완료와 5차 후보, 성격별 통합 기능 구현 완료 상태로 갱신
+
+## 2026-05-01
+- `Wiki/*/Conflict_Register.md`: 승인 로그, 위키 승격 로그, 범위/구조 메모를 제거하고 실제 충돌만 남기도록 17개 conflict register를 정리
+- `AGENTS.md`, `Wiki/Schema.md`, `Wiki/Common/Wiki_Ingest_Operating_Model.md`, `Wiki/Common/Wiki_Ingest_Templates.md`: conflict 등록 조건을 `명시적 상충값만`으로 강화하고, TODO/구조 메모/미팅 질문/운영 메타데이터를 다른 운영 문서로 라우팅하는 규칙 추가
+- `automation/wiki_api/server.mjs`: Decision Queue가 Conflict_Register에 승인 로그를 raw append하지 않도록 수정하고, Conflict_Register 자체를 다시 스캔해 wiki_signal을 만드는 루프를 차단
+- `automation/wiki_api/scripts/lint_conflict_registers.mjs`: Decision Queue approval, Wiki Management promotion, 구조 메모성 conflict를 점검하는 lint 스크립트 추가
+
+## 2026-05-01
+- `AGENTS.md`, `Wiki/Schema.md`, `Wiki/index.md`, `Wiki/Common/Wiki_Ingest_Operating_Model.md`, `Wiki/Common/hub.md`, `Wiki/Common/Twin_Vault_Separation_Model.md`: 개인과 업무를 한 저장소 내부 namespace가 아니라 별도 vault/repository/service/source로 완전 분리하고, 구조와 운영 규칙만 쌍둥이처럼 맞추는 twin-vault 운영 기준을 추가
+- 핵심 판단:
+  - 이 저장소는 계속 업무 전용 canonical wiki로 유지한다.
+  - 개인 위키가 필요하면 별도 sibling vault에서 같은 계층 구조와 운영 문서를 복제해 사용한다.
+  - 공유 대상은 콘텐츠가 아니라 스키마/템플릿/운영 로직이다.
+- `automation/wiki_core/bootstrap_twin_vaults.mjs`, `automation/wiki_core/README.md`, `wiki-core.lock.json`, `docker-compose.yml`, `automation/wiki_api/server.mjs`, `automation/wiki_api/README.md`, `automation/drive_wikify/config/drive_wikify.personal.example.env`: sibling `wiki-core`와 `obsidianwiki-personal` bootstrap, workspace allowlist, personal repo root, 분리 URL 메타데이터, personal runtime/env 분리를 실제 자동화/서버 계층에 반영
+- `/Users/yunamgyu/Documents/GitHub/wiki-core`, `/Users/yunamgyu/Documents/GitHub/obsidianwiki-personal`: bootstrap 스크립트로 별도 core 계약 저장소와 개인 vault 스캐폴드를 실제 생성하고 git init 수행
 
 ## 2026-04-30
 - `Wiki/DaehanCable_ProcessInnovation_Project/Conflict_Register.md`, `Wiki/Mecaro_Forecast_Project/Conflict_Register.md`, `Wiki/Common/Conflict_Register.md`, `Wiki/Sawnics_ManufacturingAI_Project/Action_Items.md`, `Wiki/Sawnics_ManufacturingAI_Project/Risks.md`: 자동 `Decision Queue Approval` 중복 append와 잡음성 conflict/approval 블록을 정리하고, 실무적으로 필요한 내용은 Action/Risk 문장으로 재배치

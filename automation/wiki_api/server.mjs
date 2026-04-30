@@ -4,14 +4,16 @@ import { createReadStream, existsSync } from "node:fs";
 import { spawn } from "node:child_process";
 import { basename, dirname, extname, isAbsolute, join, normalize, relative, resolve } from "node:path";
 import { createHash } from "node:crypto";
+import { fileURLToPath } from "node:url";
 
 const defaultRepoRoot = resolve(new URL("../../", import.meta.url).pathname);
 const repoRoot = resolve(process.env.WIKI_OPS_REPO_ROOT || defaultRepoRoot);
 const frontendRoot = join(repoRoot, "automation/wiki_frontend");
 const wikiRoot = join(repoRoot, "obsidian/Wiki");
 const l1Root = join(repoRoot, "obsidian/L1_memory");
-const personalWikiRoot = join(repoRoot, "obsidian/Personal_Wiki");
-const personalL1Root = join(repoRoot, "obsidian/Personal_L1_memory");
+const personalRepoRoot = resolvePathEnv("PERSONAL_WIKI_REPO_ROOT", "../obsidianwiki-personal");
+const personalWikiRoot = resolve(personalRepoRoot, "obsidian/Wiki");
+const personalL1Root = resolve(personalRepoRoot, "obsidian/L1_memory");
 const driveWikifySrc = join(repoRoot, "automation/drive_wikify/src");
 const driveWikifyEnv = resolvePathEnv("DRIVE_WIKIFY_ENV", process.env.WIKI_OPS_ENV_FILE || "automation/drive_wikify/config/.env");
 const driveRuntime = resolvePathEnv("DRIVE_WIKIFY_RUNTIME", "automation/drive_wikify/runtime");
@@ -63,6 +65,7 @@ const configuredAutoSkillRoots = String(process.env.WIKI_AUTO_SKILL_ALLOWED_ROOT
   .map((item) => resolve(item));
 const autoSkillAllowedRoots = [
   repoRoot,
+  personalRepoRoot,
   driveRuntime,
   chatUploadsRoot,
   // Local Google Drive/Dropbox-style sync folders are read-only evidence sources for Paperclip.
@@ -79,6 +82,35 @@ const autoSkillAllowedRoots = [
 
 const host = process.env.WIKI_API_HOST || "127.0.0.1";
 const port = Number(process.env.WIKI_API_PORT || 8787);
+const configuredWorkspaceIds = [...new Set(
+  String(process.env.WIKI_ALLOWED_WORKSPACES || "rtm,personal")
+    .split(",")
+    .map((item) => normalizeWorkspaceId(item))
+    .filter(Boolean),
+)];
+if (!configuredWorkspaceIds.length) configuredWorkspaceIds.push("rtm");
+const configuredDefaultWorkspaceId = normalizeWorkspaceId(process.env.WIKI_DEFAULT_WORKSPACE || configuredWorkspaceIds[0] || "rtm");
+const wikiIntegrationStrategies = new Set([
+  "link_only",
+  "account_rollup",
+  "decision_merge",
+  "evidence_index_merge",
+  "status_rollup",
+  "do_not_merge",
+]);
+const wikiIntegrationKeywordCatalog = {
+  project_hub: [/hub|프로젝트|허브/i],
+  customer_account: [/account|고객|계정|umbrella/i],
+  proposal: [/poc|제안|견적|review|사업계획|proposal|voucher/i],
+  delivery: [/납품|검수|완료|하자|세금계산서|보증|delivery/i],
+  operations: [/운영|유지보수|후속|확산|고객\s*후속|follow/i],
+  research: [/r&d|연구|정출연|기술교류|roadmap|calibration|oes|sp-oes/i],
+  slack_ingest: [/slack|channel|thread|공개\s*slack/i],
+  drive_file_ingest: [/drive|manifest|rclone|file ingest|filesystem/i],
+  evidence_raw: [/raw[_ -]?evidence|evidence|원문|원본|추출|파일명|버전/i],
+  decision_conflict: [/decision|conflict|충돌|불일치|상이|상충|정합성/i],
+  ceo_pm: [/ceo|pm|사업 영향|의사결정|실행 계획/i],
+};
 const editableSettings = new Set([
   "RCLONE_REMOTE",
   "RCLONE_REMOTE_PATH",
@@ -195,26 +227,51 @@ function resolveConfigPath(value, fallback) {
   return isAbsolute(target) ? resolve(target) : resolve(repoRoot, target);
 }
 
+function normalizeWorkspaceId(value = "") {
+  const normalized = String(value || "").trim().toLowerCase();
+  if (!normalized) return "";
+  if (normalized === "work") return "rtm";
+  return normalized;
+}
+
+function relativeToRepo(path) {
+  return relative(repoRoot, path).replace(/\\/g, "/");
+}
+
 const wikiWorkspaces = {
   rtm: {
     id: "rtm",
     label: "업무용(RTM)",
     description: "RTM 업무 프로젝트와 고객사 위키",
+    repoRoot,
     wikiRoot,
     l1Root,
-    wikiPrefix: "obsidian/Wiki",
-    l1Prefix: "obsidian/L1_memory",
+    wikiPrefix: relativeToRepo(wikiRoot),
+    l1Prefix: relativeToRepo(l1Root),
+    publicBaseUrl: process.env.WORK_WIKI_PUBLIC_BASE_URL || "",
+    visibility: process.env.WORK_WIKI_VISIBILITY || "private",
+    authMode: process.env.WORK_WIKI_AUTH_MODE || "required",
   },
   personal: {
     id: "personal",
     label: "개인용",
     description: "개인 지식과 비업무 메모를 분리 운영하는 위키",
+    repoRoot: personalRepoRoot,
     wikiRoot: personalWikiRoot,
     l1Root: personalL1Root,
-    wikiPrefix: "obsidian/Personal_Wiki",
-    l1Prefix: "obsidian/Personal_L1_memory",
+    wikiPrefix: relativeToRepo(personalWikiRoot),
+    l1Prefix: relativeToRepo(personalL1Root),
+    publicBaseUrl: process.env.PERSONAL_WIKI_PUBLIC_BASE_URL || "",
+    visibility: process.env.PERSONAL_WIKI_VISIBILITY || "public",
+    authMode: process.env.PERSONAL_WIKI_AUTH_MODE || "public",
   },
 };
+for (const workspaceId of Object.keys(wikiWorkspaces)) {
+  if (!configuredWorkspaceIds.includes(workspaceId)) delete wikiWorkspaces[workspaceId];
+}
+const defaultWorkspaceId = wikiWorkspaces[configuredDefaultWorkspaceId]
+  ? configuredDefaultWorkspaceId
+  : Object.keys(wikiWorkspaces)[0];
 
 const contentTypes = {
   ".html": "text/html; charset=utf-8",
@@ -282,7 +339,10 @@ function safeJoin(root, target) {
 }
 
 function wikiWorkspace(id = "rtm") {
-  return wikiWorkspaces[id] || wikiWorkspaces.rtm;
+  const workspaceId = normalizeWorkspaceId(id || defaultWorkspaceId) || defaultWorkspaceId;
+  const workspace = wikiWorkspaces[workspaceId];
+  if (!workspace) throw new Error(`Unsupported workspace: ${id}`);
+  return workspace;
 }
 
 function wikiWorkspaceList() {
@@ -290,14 +350,19 @@ function wikiWorkspaceList() {
     id: workspace.id,
     label: workspace.label,
     description: workspace.description,
-    wikiRoot: relative(repoRoot, workspace.wikiRoot),
-    l1Root: relative(repoRoot, workspace.l1Root),
-    default: workspace.id === "rtm",
+    repoRoot: relativeToRepo(workspace.repoRoot),
+    wikiRoot: workspace.wikiPrefix,
+    l1Root: workspace.l1Prefix,
+    publicBaseUrl: workspace.publicBaseUrl,
+    visibility: workspace.visibility,
+    authMode: workspace.authMode,
+    default: workspace.id === defaultWorkspaceId,
   }));
 }
 
 async function ensureWikiWorkspace(workspaceId = "rtm") {
   const workspace = wikiWorkspace(workspaceId);
+  await mkdir(join(workspace.repoRoot, "obsidian/raw"), { recursive: true });
   await mkdir(join(workspace.wikiRoot, "Common"), { recursive: true });
   await mkdir(workspace.l1Root, { recursive: true });
   if (workspace.id === "personal") {
@@ -2006,9 +2071,7 @@ function datePartKst(value) {
 
 function spotliteProjectFromPath(path) {
   const parts = String(path || "").split("/");
-  const section = path.startsWith("obsidian/L1_memory/") || path.startsWith("obsidian/Personal_L1_memory/")
-    ? "L1_memory"
-    : parts[2] || "Wiki";
+  const section = classifyWikiSection(path) || parts[2] || "Wiki";
   return section
     .replace(/_/g, " ")
     .replace(/\bProject\b/g, "Project")
@@ -2154,6 +2217,7 @@ async function spotliteSummary(scope = "work") {
     .sort((a, b) => (b.actions + b.risks * 2 + b.count) - (a.actions + a.risks * 2 + a.count))
     .slice(0, 10);
   const commandCenter = await projectCommandCenter(workspace.id).catch(() => ({ projects: [], summary: {} }));
+  const integrationScan = await wikiIntegrationCandidateScan(workspace.id, { limit: 12 }).catch(() => ({ candidates: [], summary: { candidates: 0 } }));
   const operations = (commandCenter.projects || [])
     .filter((project) => project.workflowStatus === "ongoing" || (project.opsActions || []).length || (project.missingOperationalDocs || []).length)
     .map((project) => ({
@@ -2169,6 +2233,14 @@ async function spotliteSummary(scope = "work") {
     }))
     .sort((a, b) => (b.decisionQueueCount - a.decisionQueueCount) || (a.coverage - b.coverage))
     .slice(0, 12);
+  const integrations = (integrationScan.candidates || []).slice(0, 8).map((candidate) => ({
+    title: candidate.groupKey,
+    path: candidate.changeTargets?.[0] || candidate.relatedWikis?.[0]?.hubPath || "",
+    project: candidate.relatedWikis?.map((item) => item.projectLabel || item.projectKey).join(", "),
+    kind: candidate.recommendedStrategy,
+    line: candidate.preview?.summary || candidate.reason?.join(", ") || "통합 후보",
+    score: Math.round((candidate.similarityScore || 0) * 100),
+  }));
   const cachedGlm = await readJsonFile(spotliteGlmPath, null).catch(() => null);
   const digest = cachedGlm?.scope === scope && cachedGlm?.digestVersion === 2 ? cachedGlm.digest : null;
   return {
@@ -2176,8 +2248,12 @@ async function spotliteSummary(scope = "work") {
     workspace: {
       id: workspace.id,
       label: workspace.label,
-      wikiRoot: relative(repoRoot, workspace.wikiRoot),
-      l1Root: relative(repoRoot, workspace.l1Root),
+      repoRoot: relativeToRepo(workspace.repoRoot),
+      wikiRoot: workspace.wikiPrefix,
+      l1Root: workspace.l1Prefix,
+      publicBaseUrl: workspace.publicBaseUrl,
+      visibility: workspace.visibility,
+      authMode: workspace.authMode,
     },
     focus: {
       mode: "ongoing-projects-only",
@@ -2196,12 +2272,14 @@ async function spotliteSummary(scope = "work") {
       ongoingProjects: focusProjectKeys.size,
       operationalReady: commandCenter.summary?.operationalReady || 0,
       operationalGaps: commandCenter.summary?.operationalGaps || 0,
+      integrationCandidates: integrationScan.summary?.candidates || 0,
     },
     analysis: [
       focusProjectKeys.size ? `진행 중 프로젝트 ${focusProjectKeys.size}개만 기준으로 봅니다.` : "진행 중으로 지정된 프로젝트가 없습니다.",
       todayUpdates.length ? `Python KST 오늘(${todayDate}) 기준 오늘 위키화/수정된 진행 프로젝트 문서 ${todayUpdates.length}건을 우선 표시합니다.` : `Python KST 오늘(${todayDate}) 기준 새로 위키화/수정된 진행 프로젝트 문서는 없습니다.`,
       week.length ? `이번주 처리 후보 ${week.length}개가 감지됐습니다.` : "진행 중 프로젝트 안에서 이번주 항목은 아직 적습니다.",
       risks.length ? `리스크/이슈 후보 ${risks.length}개를 먼저 확인하는 편이 안전합니다.` : "리스크 후보는 많지 않습니다.",
+      integrations.length ? `성격별 통합 후보 ${integrations.length}건을 승인 게이트로 검토 중입니다.` : "통합 후보는 아직 많지 않습니다.",
       memos.length ? "프로젝트 운영 메모에서 실무 맥락 후보를 찾았습니다." : "현재 문서에는 실무 액션으로 확정할 만한 메모가 부족합니다.",
     ],
     today,
@@ -2210,6 +2288,7 @@ async function spotliteSummary(scope = "work") {
     memos,
     watch,
     operations,
+    integrations,
     projects,
     digest,
   };
@@ -2370,8 +2449,22 @@ async function wikiContextCardForResult(item, query = "", mode = "standard") {
 }
 
 function wikiRootsForWorkspace(workspaceId = "rtm") {
-  const workspace = workspaceId === "personal" ? wikiWorkspace("personal") : wikiWorkspace("rtm");
+  const workspace = wikiWorkspace(workspaceId);
   return [workspace.wikiRoot, workspace.l1Root];
+}
+
+function classifyWikiSection(path = "") {
+  const normalized = String(path || "").replace(/\\/g, "/");
+  for (const workspace of Object.values(wikiWorkspaces)) {
+    if (normalized === workspace.l1Prefix || normalized.startsWith(`${workspace.l1Prefix}/`)) {
+      return "L1_memory";
+    }
+    if (normalized === workspace.wikiPrefix || normalized.startsWith(`${workspace.wikiPrefix}/`)) {
+      const suffix = normalized.slice(workspace.wikiPrefix.length).replace(/^\/+/, "");
+      return suffix.split("/")[0] || "Wiki";
+    }
+  }
+  return "";
 }
 
 function sparseTerms(text = "") {
@@ -2476,9 +2569,8 @@ async function sparseWikiSearch(query, workspaceId = "rtm", limit = 12) {
 async function expandGraphNeighbors(seedPaths = [], workspaceId = "rtm", policy = {}) {
   const payload = await readJsonFile(wikiGraphSnapshotPath, null);
   if (!payload?.nodes || !payload?.edges) return [];
-  const allowedRoots = workspaceId === "personal"
-    ? ["obsidian/Personal_Wiki/", "obsidian/Personal_L1_memory/"]
-    : ["obsidian/Wiki/", "obsidian/L1_memory/"];
+  const workspace = wikiWorkspace(workspaceId);
+  const allowedRoots = [`${workspace.wikiPrefix}/`, `${workspace.l1Prefix}/`];
   const allowedPath = (path) => allowedRoots.some((prefix) => String(path || "").startsWith(prefix));
   const byId = new Map((payload.nodes || []).map((node) => [node.id, node]));
   const adjacency = new Map();
@@ -2567,9 +2659,9 @@ async function searchWiki(query, workspaceId = "rtm") {
     const haystack = `${relative(repoRoot, file)}\n${markdown}`.toLowerCase();
     const score = terms.reduce((count, term) => count + (haystack.includes(term) ? 1 : 0), 0);
     if (!score) continue;
-    const path = relative(repoRoot, file);
+    const path = relativeToRepo(file);
     const frontmatter = parseFrontmatter(markdown);
-    const section = path.startsWith("obsidian/L1_memory/") ? "L1_memory" : path.split("/")[2] || "Wiki";
+    const section = classifyWikiSection(path) || path.split("/")[2] || "Wiki";
     const projectKeyState = projectKeyRule(path, frontmatter);
     const classified = applyWikiStatus({
       title: titleFromMarkdown(path, markdown),
@@ -2600,9 +2692,9 @@ async function wikiIndex(workspaceId = "rtm") {
   for (const file of files) {
     const markdown = await readFile(file, "utf-8");
     const fileStat = await stat(file).catch(() => null);
-    const path = relative(repoRoot, file);
+    const path = relativeToRepo(file);
     const frontmatter = parseFrontmatter(markdown);
-    const section = path.startsWith("obsidian/L1_memory/") ? "L1_memory" : path.split("/")[2] || "Wiki";
+    const section = classifyWikiSection(path) || path.split("/")[2] || "Wiki";
     const projectKeyState = projectKeyRule(path, frontmatter);
     const classification = projectKeyState.classification;
     const page = applyWikiStatus({
@@ -2627,9 +2719,7 @@ async function wikiIndex(workspaceId = "rtm") {
 
 function classifyWikiPage(path, frontmatter = {}) {
   const parts = path.split("/");
-  const section = path.startsWith("obsidian/L1_memory/") || path.startsWith("obsidian/Personal_L1_memory/")
-    ? "L1_memory"
-    : parts[2] || "Wiki";
+  const section = classifyWikiSection(path) || parts[2] || "Wiki";
   const fileName = parts.at(-1) || "";
   const baseName = fileName.replace(/\.md$/i, "");
   const lowerPath = path.toLowerCase();
@@ -2937,12 +3027,261 @@ function changeEventMemo({ timestamp = new Date().toISOString(), source = "wiki_
   return `${when} ${source} 기준으로 ${change || "상태 변화 후보"}가 ${status}되었고 ${action || "후속 검토 대기"}가 수행/대기됨`;
 }
 
+function wikiLinkFromManagedPath(path = "") {
+  return String(path || "")
+    .replace(/^obsidian\//, "")
+    .replace(/\.md$/i, "")
+    .replace(/\\/g, "/");
+}
+
+function defaultMarkdownTitle(fileName = "") {
+  return fileName.replace(/_/g, " ").replace(/\.md$/i, "");
+}
+
+function defaultTypeForMarkdownFile(fileName = "") {
+  const normalized = fileName.replace(/\.md$/i, "").toLowerCase();
+  const aliases = {
+    change_log: "log",
+    ceo_brief: "ceo_brief",
+    pm_action_plan: "pm_action_plan",
+    raw_evidence_index: "raw_evidence_index",
+    business_flow: "business_flow",
+    customer_followup: "customer_followup",
+  };
+  return aliases[normalized] || normalized;
+}
+
+async function appendMarkdownSection(path, title, lines = [], options = {}) {
+  if (!path) return "";
+  const now = options.timestamp || new Date().toISOString();
+  const source = options.source || "wiki integration";
+  const fileName = basename(path);
+  await mkdir(dirname(path), { recursive: true });
+  const current = await readFile(path, "utf-8").catch(() => "");
+  const heading = current.trim() ? "" : [
+    "---",
+    `type: ${defaultTypeForMarkdownFile(fileName)}`,
+    `created: ${now.slice(0, 10)}`,
+    `updated: ${now.slice(0, 10)}`,
+    `source: "${source}"`,
+    "---",
+    "",
+    `# ${defaultMarkdownTitle(fileName)}`,
+    "",
+  ].join("\n");
+  const content = [
+    heading,
+    `${current.trim() ? "\n" : ""}## ${title}`,
+    ...lines.filter(Boolean),
+    "",
+  ].join("\n");
+  await writeFile(path, `${current}${content}`, "utf-8");
+  return relative(repoRoot, path);
+}
+
+function normalizeIntegrationName(value = "") {
+  return String(value || "")
+    .replace(/^Slack[_ -]*/i, "")
+    .replace(/_(Project|Account)$/i, "")
+    .replace(/\b(Project|Account)\b/gi, " ")
+    .replace(/\b20\d{2}\b/g, " ")
+    .replace(/[_/.-]+/g, " ")
+    .replace(/[()[\],]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+const integrationNameStopwords = new Set([
+  "slack",
+  "project",
+  "account",
+  "wiki",
+  "rtm",
+  "common",
+  "hub",
+  "status",
+  "evidence",
+  "sources",
+  "log",
+  "change",
+  "conflict",
+  "decision",
+  "customer",
+  "followup",
+  "business",
+  "flow",
+  "ceo",
+  "brief",
+  "pm",
+  "action",
+  "plan",
+  "raw",
+  "index",
+  "sheet",
+  "scan",
+  "search",
+  "title",
+  "mission",
+  "our",
+  "demo",
+  "file",
+  "document",
+  "docs",
+  "data",
+  "po",
+  "poc",
+  "ai",
+  "aivoucher",
+  "rnd",
+  "research",
+  "development",
+  "voucher",
+  "drive",
+  "evidence",
+  "원문",
+  "문서",
+  "프로젝트",
+  "계정",
+  "과제",
+  "운영",
+  "후속",
+  "내부공유용",
+]);
+
+function isMeaningfulIntegrationToken(token = "") {
+  const value = String(token || "").trim().toLowerCase();
+  if (!value) return false;
+  if (integrationNameStopwords.has(value)) return false;
+  if (/^20\d{2}$/.test(value)) return false;
+  if (/^\d+$/.test(value)) return false;
+  if (/^[a-z]+\d+$/i.test(value) && value.length <= 6) return false;
+  if (/^[a-z0-9]+$/.test(value) && value.length < 3) return false;
+  return true;
+}
+
+function integrationNameTokenSet(value = "") {
+  const normalized = normalizeIntegrationName(value);
+  const tokens = String(normalized || "")
+    .split(/\s+/)
+    .map((item) => item.trim().toLowerCase())
+    .filter(isMeaningfulIntegrationToken);
+  return new Set([
+    ...[...wikiMergeTokenSet(normalized)].filter(isMeaningfulIntegrationToken),
+    ...tokens,
+  ]);
+}
+
+function overlapList(left = [], right = []) {
+  const set = new Set(right);
+  return [...new Set(left.filter((item) => set.has(item)))];
+}
+
+function inferredIntegrationKinds(text = "", record = {}) {
+  const kinds = new Set();
+  if (record.division === "account") kinds.add("customer_account");
+  if (record.hubPath) kinds.add("project_hub");
+  if (record.isSlack) kinds.add("slack_ingest");
+  if (record.hasRawEvidence) kinds.add("evidence_raw");
+  if (record.hasDecisionSignals || record.hasConflict) kinds.add("decision_conflict");
+  if (record.hasCeoPm) kinds.add("ceo_pm");
+  const haystack = `${record.projectKey || ""} ${record.projectLabel || ""} ${text}`.toLowerCase();
+  for (const [kind, patterns] of Object.entries(wikiIntegrationKeywordCatalog)) {
+    if (patterns.some((pattern) => pattern.test(haystack))) kinds.add(kind);
+  }
+  return [...kinds];
+}
+
+function integrationDocPath(record = {}, fileName = "", workspaceId = "rtm") {
+  if (!record?.projectKey) return "";
+  if (record.division === "common") {
+    return record.hubPath || record.pagePaths?.find((path) => path.endsWith(`/${fileName}`)) || record.pagePaths?.[0] || "";
+  }
+  return relative(repoRoot, join(projectDirForKey(record.projectKey, workspaceId), fileName));
+}
+
+function integrationChangeTargets(candidate = {}, workspaceId = "rtm") {
+  const related = Array.isArray(candidate.relatedWikis) ? candidate.relatedWikis : [];
+  const strategy = candidate.recommendedStrategy || "link_only";
+  const account = related.find((item) => item.division === "account") || null;
+  const paths = new Set();
+  if (strategy === "account_rollup" && account) {
+    paths.add(integrationDocPath(account, "hub.md", workspaceId));
+    for (const item of related.filter((entry) => entry.projectKey !== account.projectKey && entry.division === "project")) {
+      paths.add(integrationDocPath(item, "Status.md", workspaceId));
+      paths.add(integrationDocPath(item, "Change_Log.md", workspaceId));
+    }
+  } else if (strategy === "decision_merge") {
+    for (const item of related) {
+      paths.add(integrationDocPath(item, "Conflict_Register.md", workspaceId));
+      paths.add(integrationDocPath(item, "Change_Log.md", workspaceId));
+    }
+  } else if (strategy === "evidence_index_merge") {
+    const target = account || related[0];
+    if (target) {
+      paths.add(integrationDocPath(target, "Raw_Evidence_Index.md", workspaceId));
+      paths.add(integrationDocPath(target, "Change_Log.md", workspaceId));
+    }
+  } else if (strategy === "status_rollup") {
+    const target = account || related[0];
+    if (target) paths.add(integrationDocPath(target, "hub.md", workspaceId));
+    for (const item of related.filter((entry) => entry.division !== "common")) {
+      paths.add(integrationDocPath(item, "Status.md", workspaceId));
+      paths.add(integrationDocPath(item, "Change_Log.md", workspaceId));
+    }
+  } else if (strategy === "do_not_merge") {
+    for (const item of related) paths.add(integrationDocPath(item, "Change_Log.md", workspaceId));
+  } else {
+    for (const item of related) {
+      paths.add(integrationDocPath(item, "hub.md", workspaceId));
+      paths.add(integrationDocPath(item, "Change_Log.md", workspaceId));
+    }
+  }
+  return [...paths].filter(Boolean);
+}
+
+function integrationPreview(candidate = {}) {
+  const strategy = candidate.recommendedStrategy || "link_only";
+  const groupKey = candidate.groupKey || "integration";
+  const actionLabel = {
+    link_only: "상호 링크 추가 검토",
+    account_rollup: "Account rollup 검토",
+    decision_merge: "Decision Queue 검토",
+    evidence_index_merge: "Raw evidence 인덱스 연동 검토",
+    status_rollup: "상태 집계 검토",
+    do_not_merge: "병합 금지 판단 검토",
+  }[strategy] || "통합 검토";
+  const memo = changeEventMemo({
+    source: "wiki_integration_scan",
+    change: `${groupKey} 통합 후보`,
+    action: actionLabel,
+    status: "기록",
+  });
+  const steps = {
+    link_only: ["각 허브 운영 링크에 상호 링크 추가", "Change_Log에 연결 근거 기록"],
+    account_rollup: ["Account hub에 상태/다음 접점 rollup 추가", "하위 프로젝트 Status/Change_Log에 rollup 반영 메모 append"],
+    decision_merge: ["Conflict_Register에 검토 메모와 링크 추가", "실제 병합 없이 승인 게이트만 유지"],
+    evidence_index_merge: ["상위 Raw_Evidence_Index에 원문 위치 링크만 추가", "원문 파일과 기존 문서는 그대로 유지"],
+    status_rollup: ["상위 hub에 상태 집계 메모 추가", "관련 프로젝트 Status/Change_Log에 집계 흔적 append"],
+    do_not_merge: ["병합 금지 판단만 Change_Log/audit에 기록", "원문/허브 구조는 변경하지 않음"],
+  }[strategy] || ["관련 허브를 링크로 연결", "승인 이력만 남김"];
+  return {
+    summary: `${groupKey} 관련 위키 ${candidate.relatedWikis?.length || 0}개를 ${strategy} 전략으로 검토`,
+    changeMemo: memo,
+    steps,
+  };
+}
+
+function isWikiIntegrationDecisionItem(item = {}) {
+  return item.kind === "wiki_integration" || item.sourceType === "wiki_integration_scan";
+}
+
 async function appendOperationalChangeEventFromDecision(resolved = {}, target = {}, options = {}) {
   const action = options.action || resolved.resolvedAction || "";
   if (!["approve", "edit_approve"].includes(action)) return [];
   const projectKey = resolved.projectKey || target.projectKey || "";
   if (!projectKey) return [];
   const workspaceId = resolved.workspace || options.workspace || "rtm";
+  if (projectKey === "Common" || projectKey === "L1_memory") return [];
   const now = options.timestamp || new Date().toISOString();
   const projectDir = projectDirForKey(projectKey, workspaceId);
   const source = resolved.sourceType || "decision_queue";
@@ -3004,8 +3343,7 @@ async function appendOperationalChangeEventFromDecision(resolved = {}, target = 
 async function wikiMergeCandidateScan(workspaceId = "rtm", options = {}) {
   const limit = Math.min(Number(options.limit || 24), 80);
   const pages = (await wikiIndex(workspaceId))
-    .filter((page) => ["project", "account", "common"].includes(page.division || ""))
-    .filter((page) => !["changelog", "log", "memory"].includes(page.docKind || ""))
+    .filter(isWikiMergeEligiblePage)
     .slice(0, 520);
   const graph = await wikiGraph().catch(() => ({ nodes: [], edges: [] }));
   const adjacency = new Map();
@@ -3150,6 +3488,482 @@ async function enqueueMergeCandidate(candidate = {}, workspaceId = "rtm") {
   return item;
 }
 
+function isWikiIntegrationEligiblePage(page = {}) {
+  if (!page || !page.statusManaged) return false;
+  if (!["project", "account"].includes(page.division || "")) return false;
+  if (["hidden", "archived", "completed"].includes(String(page.workflowStatus || "").toLowerCase())) return false;
+  return true;
+}
+
+const canonicalOperationalDocKinds = new Set([
+  "hub",
+  "overview",
+  "sources",
+  "evidence",
+  "status",
+  "business_flow",
+  "ceo_brief",
+  "pm_action",
+  "customer_followup",
+  "raw_evidence",
+  "conflict",
+  "actions",
+  "decisions",
+  "risks",
+  "changelog",
+]);
+
+function isWikiMergeEligiblePage(page = {}) {
+  if (!isWikiIntegrationEligiblePage(page)) return false;
+  return canonicalOperationalDocKinds.has(page.docKind || "");
+}
+
+function isDecisionQueueEligibleItem(item = {}) {
+  const sourceType = String(item.sourceType || "");
+  const projectKey = String(item.projectKey || "");
+  const path = String(item.path || "");
+  if (!["similarity_graph_merge_scan", "wiki_integration_scan"].includes(sourceType)) return true;
+  if (projectKey === "Common" || projectKey === "L1_memory") return false;
+  if (/obsidian\/Wiki\/Common\/|obsidian\/L1_memory\//i.test(path)) return false;
+  return true;
+}
+
+async function wikiIntegrationSpaceRecords(workspaceId = "rtm") {
+  const workspace = await ensureWikiWorkspace(workspaceId);
+  const pages = await wikiIndex(workspaceId);
+  const records = new Map();
+  const relevantPages = pages.filter(isWikiIntegrationEligiblePage);
+  for (const page of relevantPages) {
+    const key = page.projectKey;
+    if (!records.has(key)) {
+      records.set(key, {
+        projectKey: key,
+        projectLabel: page.projectLabel,
+        division: page.division,
+        hubPath: "",
+        pagePaths: [],
+        workflowStatus: page.workflowStatus || "",
+        workflowStatusLabel: page.workflowStatusLabel || "",
+        workflowTags: new Set(page.workflowTags || []),
+      });
+    }
+    const record = records.get(key);
+    record.pagePaths.push(page.path);
+    if (page.docKind === "hub" && !record.hubPath) record.hubPath = page.path;
+    for (const tag of page.workflowTags || []) record.workflowTags.add(tag);
+  }
+
+  const result = [];
+  for (const record of records.values()) {
+    const bundle = await projectMarkdownBundle(record.projectKey, workspaceId).catch(() => ({}));
+    const combined = [
+      bundle["hub.md"] || "",
+      bundle["Project_Overview.md"] || "",
+      bundle["Evidence_Log.md"] || "",
+      bundle["Sources.md"] || "",
+      bundle["Status.md"] || "",
+      bundle["Business_Flow.md"] || "",
+      bundle["CEO_Brief.md"] || "",
+      bundle["PM_Action_Plan.md"] || "",
+      bundle["Customer_Followup.md"] || "",
+      bundle["Raw_Evidence_Index.md"] || "",
+      bundle["Conflict_Register.md"] || "",
+      bundle["Decisions.md"] || "",
+      bundle["Change_Log.md"] || "",
+    ].join("\n");
+    const keyLines = extractMeaningfulLines(combined, record.projectLabel, contextBudget("economy")).slice(0, 10);
+    const statusMemos = extractPatternLines(bundle["Status.md"] || "", /상태\s*변화|현재\s*단계|다음\s*액션|수행\/대기|운영 보강/i, 8);
+    const keywordHits = extractPatternLines(
+      combined,
+      /PoC|제안|계약|납품|검수|운영|유지보수|R&D|정출연|Slack|Drive|Evidence|원문|Conflict|Decision|후속|Account|확산|로드맵|Calibration|OES|SP-OES/i,
+      18,
+    ).slice(0, 12);
+    const hasConflict = /충돌|불일치|상이|상충|값 차이|수치 차이|일정 차이|확인 필요/i.test(combined);
+    const hasRawEvidence = Boolean(String(bundle["Raw_Evidence_Index.md"] || "").trim());
+    const hasDecisionSignals = Boolean(String(bundle["Decisions.md"] || bundle["Conflict_Register.md"] || "").trim());
+    const hasCeoPm = Boolean(String(bundle["CEO_Brief.md"] || bundle["PM_Action_Plan.md"] || "").trim());
+    const signalText = [
+      record.projectKey,
+      record.projectLabel,
+      ...record.workflowTags,
+      keyLines.join(" "),
+      keywordHits.join(" "),
+    ].join(" ");
+    const isSlack = /^Slack_/i.test(record.projectKey);
+    const normalizedName = normalizeIntegrationName(record.projectLabel || record.projectKey);
+    const nameTokens = integrationNameTokenSet(record.projectKey).size
+      ? integrationNameTokenSet(record.projectKey)
+      : integrationNameTokenSet(record.projectLabel);
+    const tokens = new Set([...nameTokens, ...wikiMergeTokenSet(signalText)]);
+    const kindSignals = inferredIntegrationKinds(signalText, {
+      ...record,
+      isSlack,
+      hasRawEvidence,
+      hasDecisionSignals,
+      hasConflict,
+      hasCeoPm,
+    });
+    result.push({
+      ...record,
+      workflowTags: [...record.workflowTags],
+      normalizedName,
+      nameTokens,
+      tokens,
+      keyLines,
+      keywordHits,
+      kindSignals,
+      isSlack,
+      hasConflict,
+      hasRawEvidence,
+      hasDecisionSignals,
+      hasCeoPm,
+      hasStatus: statusMemos.length > 0,
+      latestStatusMemo: statusMemos[0] || "",
+      summaryLine: keyLines[0] || statusMemos[0] || `${record.projectLabel} 연결 후보`,
+      rawPath: integrationDocPath(record, "Raw_Evidence_Index.md", workspaceId),
+      statusPath: integrationDocPath(record, "Status.md", workspaceId),
+    });
+  }
+  return result;
+}
+
+function pairwiseIntegrationSimilarity(left = {}, right = {}) {
+  const anchorOverlap = overlapList([...(left.nameTokens || [])], [...(right.nameTokens || [])]);
+  const nameScore = tokenOverlapRatio(left.nameTokens, right.nameTokens);
+  const tokenScore = tokenOverlapRatio(left.tokens, right.tokens);
+  const exactName = Boolean(left.normalizedName && right.normalizedName
+    && anchorOverlap.length > 0
+    && (left.normalizedName === right.normalizedName
+      || left.normalizedName.includes(right.normalizedName)
+      || right.normalizedName.includes(left.normalizedName)));
+  const accountProjectMatch = (
+    (left.division === "account" && right.division === "project")
+    || (left.division === "project" && right.division === "account")
+  ) && (anchorOverlap.length > 0 || exactName);
+  const slackBridge = (left.isSlack || right.isSlack) && (anchorOverlap.length > 0 || exactName);
+  const sharedKinds = overlapList(left.kindSignals || [], right.kindSignals || []);
+  const score = nameScore * 52
+    + tokenScore * 24
+    + sharedKinds.length * 4
+    + anchorOverlap.length * 18
+    + (exactName ? 18 : 0)
+    + (accountProjectMatch ? 14 : 0)
+    + (slackBridge ? 8 : 0);
+  const eligible = Boolean(
+    exactName
+    || accountProjectMatch
+    || slackBridge
+    || (anchorOverlap.length > 0 && (nameScore >= 0.14 || tokenScore >= 0.08 || sharedKinds.length >= 2))
+  );
+  return {
+    eligible,
+    exactName,
+    accountProjectMatch,
+    slackBridge,
+    anchorOverlap,
+    nameScore,
+    tokenScore,
+    sharedKinds,
+    score: Math.round(score),
+  };
+}
+
+function recommendedIntegrationStrategy(related = [], similarityScore = 0, conflictRisk = false) {
+  const accountCount = related.filter((item) => item.division === "account").length;
+  const projectCount = related.filter((item) => item.division === "project" && !item.isSlack).length;
+  const slackCount = related.filter((item) => item.isSlack).length;
+  const hasRaw = related.filter((item) => item.hasRawEvidence).length >= 2;
+  const hasStatus = related.filter((item) => item.hasStatus).length >= 2;
+  const hasDecisionSignals = related.some((item) => item.hasDecisionSignals);
+  if (conflictRisk && similarityScore < 0.16) return "do_not_merge";
+  if (accountCount && projectCount >= 2) return "account_rollup";
+  if (conflictRisk && hasDecisionSignals) return "decision_merge";
+  if (hasRaw && (slackCount || related.some((item) => item.division === "common"))) return "evidence_index_merge";
+  if (hasStatus && !slackCount) return "status_rollup";
+  return "link_only";
+}
+
+function buildIntegrationCandidate(related = [], pairSignals = [], workspaceId = "rtm") {
+  const sorted = [...related].sort((a, b) => a.projectKey.localeCompare(b.projectKey));
+  const account = sorted.find((item) => item.division === "account") || null;
+  const labelSource = account?.projectLabel || sorted[0]?.projectLabel || sorted[0]?.projectKey || "Integration";
+  const groupKey = normalizeIntegrationName(labelSource).replace(/\s+/g, "_") || "Integration";
+  const similarityScore = pairSignals.length
+    ? Number((pairSignals.reduce((sum, item) => sum + item.tokenScore, 0) / pairSignals.length).toFixed(3))
+    : 0;
+  const conflictRisk = sorted.some((item) => item.hasConflict) || pairSignals.some((item) => item.sharedKinds.includes("decision_conflict"));
+  const recommendedStrategy = recommendedIntegrationStrategy(sorted, similarityScore, conflictRisk);
+  const reason = [
+    account ? "Account와 연결 가능한 프로젝트 묶음" : "",
+    sorted.some((item) => item.isSlack) ? "Slack 수집형 위키 포함" : "",
+    pairSignals.some((item) => item.exactName) ? "고객/주제 이름 정규화가 직접 일치" : "",
+    pairSignals.some((item) => item.accountProjectMatch) ? "Account-Project 연결 신호가 확인됨" : "",
+    pairSignals.some((item) => item.sharedKinds.length >= 2) ? "문서 성격 신호가 2개 이상 겹침" : "",
+    conflictRisk ? "충돌/정합성 리스크가 있어 승인 게이트 필요" : "",
+  ].filter(Boolean);
+  const evidence = {
+    keywords: [...new Set(sorted.flatMap((item) => item.keywordHits || []))].slice(0, 10),
+    sourcePaths: [...new Set(sorted.flatMap((item) => item.pagePaths || []))].slice(0, 12),
+    statusMemos: [...new Set(sorted.map((item) => item.latestStatusMemo).filter(Boolean))].slice(0, 6),
+    keyLines: [...new Set(sorted.flatMap((item) => item.keyLines || []))].slice(0, 10),
+  };
+  const candidate = {
+    id: `integration-${Buffer.from(sorted.map((item) => item.projectKey).join("|")).toString("base64url").slice(0, 36)}`,
+    workspace: workspaceId,
+    groupKey,
+    relatedWikis: sorted.map((item) => ({
+      projectKey: item.projectKey,
+      projectLabel: item.projectLabel,
+      division: item.division,
+      hubPath: item.hubPath || integrationDocPath(item, "hub.md", workspaceId),
+      pagePaths: item.pagePaths.slice(0, 8),
+      summary: item.summaryLine,
+      latestStatusMemo: item.latestStatusMemo,
+      isSlack: item.isSlack,
+      kinds: item.kindSignals,
+    })),
+    workspaceKinds: [...new Set(sorted.flatMap((item) => item.kindSignals || []))],
+    evidence,
+    similarityScore,
+    conflictRisk,
+    recommendedStrategy,
+    changeTargets: [],
+    reason,
+    preview: null,
+    generatedAt: new Date().toISOString(),
+  };
+  candidate.changeTargets = integrationChangeTargets(candidate, workspaceId);
+  candidate.preview = integrationPreview(candidate);
+  return candidate;
+}
+
+async function wikiIntegrationCandidateScan(workspaceId = "rtm", options = {}) {
+  const limit = Math.min(Number(options.limit || 20), 80);
+  const records = await wikiIntegrationSpaceRecords(workspaceId);
+  const parent = new Map(records.map((record) => [record.projectKey, record.projectKey]));
+  const find = (key) => {
+    let current = parent.get(key) || key;
+    while (parent.get(current) && parent.get(current) !== current) current = parent.get(current);
+    return current;
+  };
+  const unite = (left, right) => {
+    const leftRoot = find(left);
+    const rightRoot = find(right);
+    if (leftRoot === rightRoot) return;
+    parent.set(rightRoot, leftRoot);
+  };
+  const pairMap = new Map();
+  for (const record of records) parent.set(record.projectKey, record.projectKey);
+  for (let i = 0; i < records.length; i += 1) {
+    for (let j = i + 1; j < records.length; j += 1) {
+      const left = records[i];
+      const right = records[j];
+      const similarity = pairwiseIntegrationSimilarity(left, right);
+      if (!similarity.eligible) continue;
+      unite(left.projectKey, right.projectKey);
+      pairMap.set([left.projectKey, right.projectKey].sort().join("::"), similarity);
+    }
+  }
+  const groups = new Map();
+  for (const record of records) {
+    const root = find(record.projectKey);
+    if (!groups.has(root)) groups.set(root, []);
+    groups.get(root).push(record);
+  }
+  const candidates = [];
+  for (const related of groups.values()) {
+    if (related.length < 2) continue;
+    const pairs = [];
+    for (let i = 0; i < related.length; i += 1) {
+      for (let j = i + 1; j < related.length; j += 1) {
+        const key = [related[i].projectKey, related[j].projectKey].sort().join("::");
+        if (pairMap.has(key)) pairs.push(pairMap.get(key));
+      }
+    }
+    candidates.push(buildIntegrationCandidate(related, pairs, workspaceId));
+  }
+  const deduped = [...new Map(candidates
+    .sort((a, b) => Number(b.conflictRisk) - Number(a.conflictRisk)
+      || b.relatedWikis.length - a.relatedWikis.length
+      || b.similarityScore - a.similarityScore
+      || a.groupKey.localeCompare(b.groupKey))
+    .map((candidate) => [candidate.id, candidate])).values()]
+    .slice(0, limit);
+  return {
+    generatedAt: new Date().toISOString(),
+    workspace: workspaceId,
+    strategy: "workspace_kind_grouping",
+    summary: {
+      scannedSpaces: records.length,
+      candidates: deduped.length,
+      conflictRisk: deduped.filter((item) => item.conflictRisk).length,
+      accountRollups: deduped.filter((item) => item.recommendedStrategy === "account_rollup").length,
+    },
+    candidates: deduped,
+  };
+}
+
+async function enqueueWikiIntegrationCandidate(candidate = {}, workspaceId = "rtm") {
+  if (!candidate?.id) throw new Error("candidate is required");
+  const relatedLabels = (candidate.relatedWikis || [])
+    .map((item) => item.projectLabel || item.projectKey)
+    .filter(Boolean);
+  const projectKey = candidate.relatedWikis?.find((item) => item.division === "account")?.projectKey
+    || candidate.relatedWikis?.[0]?.projectKey
+    || "";
+  const projectLabel = candidate.relatedWikis?.find((item) => item.division === "account")?.projectLabel
+    || candidate.relatedWikis?.[0]?.projectLabel
+    || projectKey;
+  return enqueueDecisionQueueItem({
+    id: `wiki-integration-${candidate.id}`,
+    workspace: workspaceId,
+    sourceType: "wiki_integration_scan",
+    kind: "wiki_integration",
+    title: `위키 통합 전략 검토: ${candidate.groupKey || "integration"}`,
+    projectKey,
+    projectLabel,
+    path: candidate.changeTargets?.[0] || candidate.relatedWikis?.[0]?.hubPath || "",
+    content: [
+      `추천 전략: ${candidate.recommendedStrategy || "link_only"}`,
+      `관련 위키: ${relatedLabels.join(", ")}`,
+      `성격 추론: ${(candidate.workspaceKinds || []).join(", ")}`,
+      `유사도: ${candidate.similarityScore ?? 0}`,
+      `충돌 가능성: ${candidate.conflictRisk ? "high" : "low"}`,
+      `변경 대상: ${(candidate.changeTargets || []).join(", ")}`,
+      `근거 키워드: ${(candidate.evidence?.keywords || []).join(", ")}`,
+      `변화 메모: ${candidate.preview?.changeMemo || ""}`,
+      "",
+      "사용자 액션 후보:",
+      "- 보류: 아직 통합하지 않음",
+      "- 추가 조사: 원문/수치/일정/범위 확인",
+      "- 승인 반영: 추천 전략에 맞는 링크/rollup/status/change_log만 append",
+    ].join("\n"),
+    original: candidate,
+  });
+}
+
+async function applyWikiIntegrationDecision(resolved = {}, workspaceId = "rtm", options = {}) {
+  const candidate = resolved.original || {};
+  const strategy = candidate.recommendedStrategy || "link_only";
+  if (!wikiIntegrationStrategies.has(strategy)) throw new Error(`Unsupported wiki integration strategy: ${strategy}`);
+  const now = options.timestamp || new Date().toISOString();
+  const related = Array.isArray(candidate.relatedWikis) ? candidate.relatedWikis : [];
+  if (!related.length) return { appliedPaths: [], note: "관련 위키가 없어 승인 반영을 생략했습니다." };
+  const changed = [];
+  const dateLabel = now.slice(0, 10);
+  const integrationMemo = candidate.preview?.changeMemo || changeEventMemo({
+    timestamp: now,
+    source: "wiki_integration_scan",
+    change: `${candidate.groupKey || "integration"} 통합 후보`,
+    action: strategy,
+  });
+  const relatedLinks = related.map((item) => ({
+    ...item,
+    hubLink: wikiLinkFromManagedPath(item.hubPath || integrationDocPath(item, "hub.md", workspaceId)),
+    statusPath: integrationDocPath(item, "Status.md", workspaceId),
+    changeLogPath: integrationDocPath(item, "Change_Log.md", workspaceId),
+    conflictPath: integrationDocPath(item, "Conflict_Register.md", workspaceId),
+    rawEvidencePath: integrationDocPath(item, "Raw_Evidence_Index.md", workspaceId),
+  }));
+  const account = relatedLinks.find((item) => item.division === "account") || null;
+  const projectRows = relatedLinks
+    .filter((item) => item.division === "project")
+    .map((item) => `- ${item.projectLabel || item.projectKey}: ${item.latestStatusMemo || item.summary || "상태/후속 확인 필요"} (${item.hubLink ? `[[${item.hubLink}]]` : item.projectKey})`);
+
+  if (strategy === "link_only") {
+    for (const item of relatedLinks) {
+      const peerLinks = relatedLinks
+        .filter((peer) => peer.projectKey !== item.projectKey)
+        .map((peer) => `- [[${peer.hubLink}]]: ${peer.summary || peer.latestStatusMemo || peer.projectLabel}`);
+      changed.push(await appendMarkdownSection(resolve(repoRoot, item.hubPath || integrationDocPath(item, "hub.md", workspaceId)), `위키 통합 링크 - ${dateLabel}`, [
+        `- 승인 전략: ${strategy}`,
+        `- 그룹: ${candidate.groupKey}`,
+        `- 변화 메모: ${integrationMemo}`,
+        ...peerLinks,
+      ], { timestamp: now, source: "wiki integration approval" }));
+      changed.push(await appendMarkdownSection(resolve(repoRoot, item.changeLogPath), `Change - ${dateLabel} 위키 통합 링크`, [
+        `- ${integrationMemo}`,
+        `- 관련 위키: ${relatedLinks.map((peer) => peer.projectLabel || peer.projectKey).join(", ")}`,
+      ], { timestamp: now, source: "wiki integration approval" }));
+    }
+  } else if (strategy === "account_rollup") {
+    if (!account) return applyWikiIntegrationDecision({ ...resolved, original: { ...candidate, recommendedStrategy: "link_only" } }, workspaceId, options);
+    changed.push(await appendMarkdownSection(resolve(repoRoot, account.hubPath || integrationDocPath(account, "hub.md", workspaceId)), `Account Rollup - ${dateLabel}`, [
+      `- 승인 전략: ${strategy}`,
+      `- 그룹: ${candidate.groupKey}`,
+      `- 변화 메모: ${integrationMemo}`,
+      ...projectRows,
+    ], { timestamp: now, source: "wiki integration approval" }));
+    changed.push(await appendMarkdownSection(resolve(repoRoot, account.changeLogPath), `Change - ${dateLabel} account rollup`, [
+      `- ${integrationMemo}`,
+      `- 연결 프로젝트: ${relatedLinks.filter((item) => item.division === "project").map((item) => item.projectLabel || item.projectKey).join(", ")}`,
+    ], { timestamp: now, source: "wiki integration approval" }));
+    for (const item of relatedLinks.filter((entry) => entry.division === "project")) {
+      changed.push(await appendMarkdownSection(resolve(repoRoot, item.statusPath), `위키 통합 Rollup - ${dateLabel}`, [
+        `- 상태 메모: ${integrationMemo}`,
+        `- 상위 Account: [[${account.hubLink}]]`,
+        `- 현재 연결 판단: Account 레벨에서 상태/다음 접점을 함께 관리`,
+      ], { timestamp: now, source: "wiki integration approval" }));
+      changed.push(await appendMarkdownSection(resolve(repoRoot, item.changeLogPath), `Change - ${dateLabel} account rollup`, [
+        `- ${integrationMemo}`,
+        `- 상위 연결: [[${account.hubLink}]]`,
+      ], { timestamp: now, source: "wiki integration approval" }));
+    }
+  } else if (strategy === "decision_merge") {
+    for (const item of relatedLinks) {
+      changed.push(await appendMarkdownSection(resolve(repoRoot, item.conflictPath), `위키 통합 검토 - ${dateLabel}`, [
+        `- 변화 메모: ${integrationMemo}`,
+        `- 추천 전략: ${strategy}`,
+        `- 관련 위키: ${relatedLinks.map((peer) => `[[${peer.hubLink}]]`).join(", ")}`,
+        `- 충돌 가능성: ${candidate.conflictRisk ? "high" : "low"}`,
+        `- 후속: 실제 병합 대신 Conflict/Register와 Decision Queue에서 검토 유지`,
+      ], { timestamp: now, source: "wiki integration approval" }));
+      changed.push(await appendMarkdownSection(resolve(repoRoot, item.changeLogPath), `Change - ${dateLabel} decision merge candidate`, [
+        `- ${integrationMemo}`,
+        `- 실제 병합은 수행하지 않고 Conflict/Register 검토 메모만 추가`,
+      ], { timestamp: now, source: "wiki integration approval" }));
+    }
+  } else if (strategy === "evidence_index_merge") {
+    const target = account || relatedLinks[0];
+    changed.push(await appendMarkdownSection(resolve(repoRoot, target.rawEvidencePath), `위키 통합 원문 링크 - ${dateLabel}`, [
+      `- 변화 메모: ${integrationMemo}`,
+      `- 관련 위키: ${relatedLinks.map((item) => `[[${item.hubLink}]]`).join(", ")}`,
+      ...relatedLinks.map((item) => `- 원문/근거 유지: [[${wikiLinkFromManagedPath(item.rawEvidencePath || item.hubPath)}]]`),
+    ], { timestamp: now, source: "wiki integration approval" }));
+    changed.push(await appendMarkdownSection(resolve(repoRoot, target.changeLogPath), `Change - ${dateLabel} raw evidence rollup`, [
+      `- ${integrationMemo}`,
+      `- 원문 삭제 없이 Raw_Evidence_Index 링크만 통합`,
+    ], { timestamp: now, source: "wiki integration approval" }));
+  } else if (strategy === "status_rollup") {
+    const target = account || relatedLinks[0];
+    changed.push(await appendMarkdownSection(resolve(repoRoot, target.hubPath || integrationDocPath(target, "hub.md", workspaceId)), `상태 Rollup - ${dateLabel}`, [
+      `- 변화 메모: ${integrationMemo}`,
+      ...projectRows,
+    ], { timestamp: now, source: "wiki integration approval" }));
+    for (const item of relatedLinks.filter((entry) => entry.division !== "common")) {
+      changed.push(await appendMarkdownSection(resolve(repoRoot, item.statusPath), `위키 통합 상태 집계 - ${dateLabel}`, [
+        `- 상태 메모: ${integrationMemo}`,
+        `- 집계 허브: [[${target.hubLink}]]`,
+      ], { timestamp: now, source: "wiki integration approval" }));
+      changed.push(await appendMarkdownSection(resolve(repoRoot, item.changeLogPath), `Change - ${dateLabel} status rollup`, [
+        `- ${integrationMemo}`,
+      ], { timestamp: now, source: "wiki integration approval" }));
+    }
+  } else if (strategy === "do_not_merge") {
+    for (const item of relatedLinks) {
+      changed.push(await appendMarkdownSection(resolve(repoRoot, item.changeLogPath), `Change - ${dateLabel} 병합 금지 판단`, [
+        `- ${integrationMemo}`,
+        `- 판단: do_not_merge`,
+        `- 사유: ${(candidate.reason || []).join(", ") || "범위/원문 충돌 가능성"}`,
+      ], { timestamp: now, source: "wiki integration approval" }));
+    }
+  }
+  return {
+    appliedPaths: changed.filter(Boolean),
+    note: `${strategy} 전략에 따라 ${changed.filter(Boolean).length}개 문서를 append했습니다.`,
+  };
+}
+
 function localSearchBrief(query, results) {
   const top = results.slice(0, 8);
   const projectHints = [...new Set(top.map((item) => item.frontmatter.project || item.frontmatter.title || "").filter(Boolean))].slice(0, 6);
@@ -3281,13 +4095,18 @@ async function searchWikiBrief(query, selectedPaths = [], mode = "standard", wor
 
 async function pageByPath(path) {
   const normalized = normalize(path);
-  const allowed = [wikiRoot, l1Root, personalWikiRoot, personalL1Root, join(repoRoot, "automation/drive_wikify/runtime"), knowledgePromotionRoot, skillOutputsRoot];
+  const allowed = [
+    ...Object.values(wikiWorkspaces).flatMap((workspace) => [workspace.wikiRoot, workspace.l1Root]),
+    join(repoRoot, "automation/drive_wikify/runtime"),
+    knowledgePromotionRoot,
+    skillOutputsRoot,
+  ];
   for (const root of allowed) {
     const fullPath = resolve(repoRoot, normalized);
     if (fullPath === root || fullPath.startsWith(`${root}/`)) {
       const markdown = await readFile(fullPath, "utf-8");
       return {
-        path: relative(repoRoot, fullPath),
+        path: relativeToRepo(fullPath),
         title: titleFromMarkdown(path, markdown),
         frontmatter: parseFrontmatter(markdown),
         markdown,
@@ -3301,7 +4120,7 @@ function writableWikiPath(path) {
   const normalized = normalize(path || "");
   if (!normalized.endsWith(".md")) throw new Error("Only Markdown wiki pages can be edited");
   const fullPath = resolve(repoRoot, normalized);
-  const allowed = [wikiRoot, l1Root, personalWikiRoot, personalL1Root, knowledgePromotionRoot];
+  const allowed = [...Object.values(wikiWorkspaces).flatMap((workspace) => [workspace.wikiRoot, workspace.l1Root]), knowledgePromotionRoot];
   if (!allowed.some((root) => fullPath === root || fullPath.startsWith(`${root}/`))) {
     throw new Error("Page path is outside writable wiki roots");
   }
@@ -3390,7 +4209,7 @@ function wikiDeletionAssessment(page = {}, degreeMap = new Map()) {
       linkDegree,
     };
   }
-  if (!path.startsWith("obsidian/Wiki/") && !path.startsWith("obsidian/Personal_Wiki/")) {
+  if (!Object.values(wikiWorkspaces).some((workspace) => path === workspace.wikiPrefix || path.startsWith(`${workspace.wikiPrefix}/`))) {
     return {
       deletable: false,
       protected: true,
@@ -4042,6 +4861,14 @@ async function projectCommandCenter(workspaceId = "rtm") {
   const pages = await wikiIndex(workspaceId);
   const core = await coreDocuments(workspaceId).catch(() => ({ documents: [], summary: {} }));
   const queue = await decisionQueue(workspaceId).catch(() => ({ items: [] }));
+  const integrationScan = await wikiIntegrationCandidateScan(workspaceId, { limit: 32 }).catch(() => ({ candidates: [], summary: { candidates: 0 } }));
+  const integrationByProject = new Map();
+  for (const candidate of integrationScan.candidates || []) {
+    for (const related of candidate.relatedWikis || []) {
+      if (!integrationByProject.has(related.projectKey)) integrationByProject.set(related.projectKey, []);
+      integrationByProject.get(related.projectKey).push(candidate);
+    }
+  }
   const operationalDocNames = [
     "Status.md",
     "Business_Flow.md",
@@ -4098,6 +4925,7 @@ async function projectCommandCenter(workspaceId = "rtm") {
       .slice(0, 4);
     const coreDocs = (core.documents || []).filter((doc) => doc.projectKey === group.projectKey).slice(0, 6);
     const decisionsWaiting = (queue.items || []).filter((item) => item.projectKey === group.projectKey && item.status === "pending");
+    const integrationCandidates = integrationByProject.get(group.projectKey) || [];
     const statusMemos = extractPatternLines(bundle["Status.md"] || "", /상태\s*변화|현재\s*단계|다음\s*액션|수행\/대기|Decision Queue|검토\s*대기/i, 16)
       .slice(0, 5);
     const businessFlow = extractPatternLines(bundle["Business_Flow.md"] || "", /단계|흐름|게이트|현재|다음|고객|공정|일정|담당|상업|검토/i, 16)
@@ -4114,8 +4942,20 @@ async function projectCommandCenter(workspaceId = "rtm") {
       missingOperationalDocs.length ? `운영 문서 누락/빈 문서: ${missingOperationalDocs.join(", ")}` : "",
       !rawEvidence.length ? "Raw_Evidence_Index 원문 보존 상태 확인 필요" : "",
       decisionsWaiting.length ? `Decision Queue ${decisionsWaiting.length}건 승인/보류 필요` : "",
+      integrationCandidates.length ? `위키 통합 후보 ${integrationCandidates.length}건` : "",
       ...(pmActions.length ? pmActions : ["PM_Action_Plan 액션 보강 필요"]),
     ].filter(Boolean).slice(0, 6);
+    const linkedWikis = [...new Set(integrationCandidates
+      .flatMap((candidate) => candidate.relatedWikis || [])
+      .filter((item) => item.projectKey !== group.projectKey)
+      .map((item) => item.projectLabel || item.projectKey))].slice(0, 8);
+    const integrationSignals = integrationCandidates
+      .map((candidate) => `${candidate.groupKey}: ${candidate.recommendedStrategy}`)
+      .slice(0, 6);
+    const accountRollupCandidates = integrationCandidates
+      .filter((candidate) => candidate.recommendedStrategy === "account_rollup")
+      .map((candidate) => candidate.groupKey)
+      .slice(0, 4);
     projects.push({
       ...group,
       oneLine: memoLines[0] || `${group.projectLabel} 운영 메모 보강 필요`,
@@ -4135,8 +4975,11 @@ async function projectCommandCenter(workspaceId = "rtm") {
       customerFollowups,
       rawEvidence,
       opsActions,
+      linkedWikis,
+      integrationSignals,
+      accountRollupCandidates,
       decisionQueueCount: decisionsWaiting.length,
-      score: (group.workflowStatus === "ongoing" ? 60 : 0) + (decisionsWaiting.length * 12) + (coreDocs.filter((doc) => doc.priority === "high").length * 8) + Math.round(operationalCoverage / 12) + (group.lastActivityAt ? 5 : 0),
+      score: (group.workflowStatus === "ongoing" ? 60 : 0) + (decisionsWaiting.length * 12) + (coreDocs.filter((doc) => doc.priority === "high").length * 8) + Math.round(operationalCoverage / 12) + (integrationCandidates.length * 4) + (group.lastActivityAt ? 5 : 0),
     });
   }
   const operationalReady = projects.filter((item) => (item.operationalCoverage || 0) >= 80).length;
@@ -4151,6 +4994,7 @@ async function projectCommandCenter(workspaceId = "rtm") {
       highPriorityDocuments: (core.documents || []).filter((item) => item.priority === "high").length,
       operationalReady,
       operationalGaps,
+      integrationCandidates: integrationScan.summary?.candidates || 0,
     },
     projects: projects.sort((a, b) => b.score - a.score || String(b.lastActivityAt).localeCompare(String(a.lastActivityAt))).slice(0, 80),
   };
@@ -4254,7 +5098,7 @@ function decisionTargetPathFromContext(item = {}, workspaceId = "rtm") {
   if (sourcePath) {
     const classification = classifyWikiPage(sourcePath, {});
     if (["project", "account"].includes(classification.division)) {
-      const sourceAbs = safeJoin(repoRoot, sourcePath);
+      const sourceAbs = writableWikiPath(sourcePath);
       const sourceDir = dirname(sourceAbs);
       if (sourceDir === workspace.wikiRoot || sourceDir.startsWith(`${workspace.wikiRoot}/`)) {
         return {
@@ -4294,6 +5138,15 @@ function isDataConflictPage(page = {}) {
   return true;
 }
 
+function isConflictSignalSourcePage(page = {}) {
+  if (!page || !page.statusManaged) return false;
+  if (!["project", "account"].includes(page.division)) return false;
+  if (["completed", "archived", "not_applicable"].includes(page.workflowStatus)) return false;
+  if (page.docKind === "conflict" || /\/Conflict_Register\.md$/i.test(page.path || "")) return false;
+  return ["overview", "status", "risks", "evidence", "hub", "actions"].includes(page.docKind)
+    || /\/(Project_Overview|Status|Risks|Evidence_Log|hub|Action_Items)\.md$/i.test(page.path || "");
+}
+
 function isOperationalWikiLine(line = "") {
   const text = String(line || "").toLowerCase();
   return [
@@ -4324,6 +5177,12 @@ function isOperationalWikiLine(line = "") {
   ].some((pattern) => pattern.test(text));
 }
 
+function isConflictRegisterRoutingLine(line = "") {
+  const text = String(line || "");
+  return /Conflict_Register|Action_Items|Decisions|Risks|Status|Project_Overview|hub|Reference_Register/i.test(text)
+    && /반영|승격|연결|우선 확인|관련 참조|실행이 필요하면|리스크가 커지면|확정되면/.test(text);
+}
+
 function hasStrongDataConflictSignal(line = "") {
   const text = String(line || "");
   return /충돌|불일치|상이|상충|서로\s*다름|다르게\s*기재|값\s*차이|버전\s*차이|서술\s*차이|정합성\s*(불일치|문제|충돌)|근거\s*불일치|수치\s*불일치|단위\s*불일치|일정\s*불일치|출처\s*(상충|불일치)|최신값\s*(불명|미확정)|미확정\s*(값|수치|일정|버전|출처|기준)/i.test(text);
@@ -4346,6 +5205,7 @@ function isDataConflictLine(line = "") {
   const text = compactLine(String(line || "").trim(), 220);
   if (!text) return false;
   if (isOperationalWikiLine(text)) return false;
+  if (isConflictRegisterRoutingLine(text)) return false;
   if (text.length < 12) return false;
   if (/^[#>\-\*\d.\s]*(충돌 내용|확인 사항|질문|메모|비고|관리합니다|정리합니다|추가합니다)\s*:?\s*$/i.test(text)) return false;
   if (/관리합니다|등록합니다|정리용|후보를 관리|현재 등록된 .*없음|없습니다\.?$/.test(text)) return false;
@@ -4354,6 +5214,30 @@ function isDataConflictLine(line = "") {
   if (isActionableWikiSuggestionLine(text) && !/불일치|상이|상충|값\s*차이|버전\s*차이|서술\s*차이|다르게\s*기재|서로\s*다름|근거\s*불일치|수치\s*불일치|단위\s*불일치|일정\s*불일치|출처\s*(상충|불일치)|정합성\s*(불일치|문제|충돌)/.test(text)) return false;
   if (isPracticalWorkLine(text) && !/불일치|상이|상충|값\s*차이|버전\s*차이|서술\s*차이|정합성\s*(불일치|문제|충돌)|다르게\s*기재|서로\s*다름|출처\s*(상충|불일치)/.test(text)) return false;
   return true;
+}
+
+function buildConflictRegisterApprovalBlock({ heading = "", item = {}, now = "", finalVerification = null } = {}) {
+  const conflictLines = String(item.content || "")
+    .split("\n")
+    .map((line) => compactLine(line.replace(/^[\s>*-]+/, "").trim(), 220))
+    .filter(Boolean)
+    .filter((line) => !isConflictRegisterRoutingLine(line))
+    .filter((line) => isDataConflictLine(line) || hasStrongDataConflictSignal(line))
+    .slice(0, 6);
+  if (!conflictLines.length) return "";
+  const judgment = compactLine(String(item.note || finalVerification?.reason || item.title || "확인 필요"), 220);
+  return [
+    heading,
+    `\n## Open Conflict - ${String(now || "").slice(0, 16).replace("T", " ")}`,
+    `- 원천: ${item.sourceType || "decision_queue"}`,
+    `- 항목: ${item.title || "미지정"}`,
+    "- 충돌 내용:",
+    ...conflictLines.map((line) => `  - ${line}`),
+    "- 현재 판단:",
+    `  - ${judgment || "확인 필요"}`,
+    item.path ? "- 관련 근거 경로:" : "",
+    item.path ? `  - ${item.path}` : "",
+  ].filter(Boolean).join("\n");
 }
 
 function isBusinessPromotionCandidate(promotion = {}, pages = []) {
@@ -4369,6 +5253,7 @@ async function decisionQueue(workspaceId = "rtm") {
   const promotions = await readJsonFile(knowledgePromotionPath, []);
   const pages = await wikiIndex(workspaceId).catch(() => []);
   const businessPages = pages.filter(isDataConflictPage);
+  const signalSourcePages = pages.filter(isConflictSignalSourcePage);
   const items = [];
   for (const promotion of promotions.slice(0, 80)) {
     if (!isBusinessPromotionCandidate(promotion, businessPages)) continue;
@@ -4396,7 +5281,7 @@ async function decisionQueue(workspaceId = "rtm") {
       original: promotion,
     });
   }
-  for (const page of businessPages.slice(0, 160)) {
+  for (const page of signalSourcePages.slice(0, 160)) {
     const markdown = await readFile(resolve(repoRoot, page.path), "utf-8").catch(() => "");
     const lines = extractPatternLines(markdown, /미확정\s*(값|수치|일정|버전|출처|기준)|충돌|불일치|상이|상충|값 차이|버전 차이|출처 상충|정합성|근거 불일치|수치 불일치|단위 불일치|일정 불일치|최신값/i, 8)
       .filter(isDataConflictLine)
@@ -4426,6 +5311,7 @@ async function decisionQueue(workspaceId = "rtm") {
   for (const [id, storedItem] of Object.entries(store.items || {})) {
     if (!storedItem || items.some((item) => item.id === id)) continue;
     if (storedItem.workspace && storedItem.workspace !== workspaceId) continue;
+    if (!isDecisionQueueEligibleItem(storedItem)) continue;
     items.push({ id, ...storedItem });
   }
   const deduped = [...new Map(items.map((item) => [item.id, item])).values()];
@@ -4477,6 +5363,7 @@ async function resolveDecisionQueueItem(id, body = {}) {
   let appliedPath = "";
   const targetFile = target.targetFile;
   let note = "";
+  let operationalChangePaths = [];
   if ((action === "approve" || action === "edit_approve") && isDeletionDecisionItem(resolved)) {
     const deleted = await deleteWikiPage({
       path: resolved.path,
@@ -4494,7 +5381,15 @@ async function resolveDecisionQueueItem(id, body = {}) {
     store.items[id] = resolved;
     await writeJsonFile(decisionQueuePath, store);
   }
-  if ((action === "approve" || action === "edit_approve") && target.targetPath && !isDeletionDecisionItem(resolved)) {
+  if ((action === "approve" || action === "edit_approve") && isWikiIntegrationDecisionItem(resolved)) {
+    const integrationResult = await applyWikiIntegrationDecision(resolved, workspaceId, { timestamp: now }).catch((error) => {
+      note = [note, `위키 통합 승인 반영 실패: ${error.message}`].filter(Boolean).join(" ");
+      return { appliedPaths: [], note: "" };
+    });
+    appliedPath = integrationResult.appliedPaths?.[0] || "";
+    operationalChangePaths = integrationResult.appliedPaths || [];
+    note = [note, integrationResult.note].filter(Boolean).join(" ");
+  } else if ((action === "approve" || action === "edit_approve") && target.targetPath && !isDeletionDecisionItem(resolved)) {
     const targetDir = dirname(target.targetPath);
     if (!existsSync(targetDir)) {
       await mkdir(targetDir, { recursive: true });
@@ -4503,36 +5398,46 @@ async function resolveDecisionQueueItem(id, body = {}) {
     await mkdir(resolve(targetPath, ".."), { recursive: true });
     const current = await readFile(targetPath, "utf-8").catch(() => "");
     const heading = current.trim() ? "" : `---\ntype: ${targetFile.replace(/\.md$/, "").toLowerCase()}\ncreated: ${now.slice(0, 10)}\nupdated: ${now.slice(0, 10)}\nsource: "decision queue"\n---\n\n# ${targetFile.replace(/_/g, " ").replace(/\.md$/, "")}\n`;
-    const block = [
-      heading,
-      `\n## Decision Queue Approval - ${now}`,
-      `- 원천: ${resolved.sourceType || "decision_queue"}`,
-      `- 제목: ${resolved.title || id}`,
-      `- 처리: ${action}`,
-      finalVerification ? `- 최종 검증: ${finalVerification.provider || "local"} / ${finalVerification.model || "rule"} / ${finalVerification.decision}` : "",
-      finalVerification?.reason ? `- 최종 검증 사유: ${finalVerification.reason}` : "",
-      `- 내용: ${String(resolved.content || "").replace(/\n/g, "\n  ")}`,
-      resolved.path ? `- 근거 경로: ${resolved.path}` : "",
-      resolved.note ? `- 메모: ${resolved.note}` : "",
-      finalVerification?.safeAppendNote ? `- 최종 검증 메모: ${finalVerification.safeAppendNote}` : "",
-    ].filter(Boolean).join("\n");
-    await writeFile(targetPath, `${current}${block}\n`, "utf-8");
-    appliedPath = relative(repoRoot, targetPath);
-    note = `${targetFile}에 승인 내용을 append했습니다.`;
+    const block = targetFile === "Conflict_Register.md"
+      ? buildConflictRegisterApprovalBlock({ heading, item: resolved, now, finalVerification })
+      : [
+          heading,
+          `\n## Decision Queue Approval - ${now}`,
+          `- 원천: ${resolved.sourceType || "decision_queue"}`,
+          `- 제목: ${resolved.title || id}`,
+          `- 처리: ${action}`,
+          finalVerification ? `- 최종 검증: ${finalVerification.provider || "local"} / ${finalVerification.model || "rule"} / ${finalVerification.decision}` : "",
+          finalVerification?.reason ? `- 최종 검증 사유: ${finalVerification.reason}` : "",
+          `- 내용: ${String(resolved.content || "").replace(/\n/g, "\n  ")}`,
+          resolved.path ? `- 근거 경로: ${resolved.path}` : "",
+          resolved.note ? `- 메모: ${resolved.note}` : "",
+          finalVerification?.safeAppendNote ? `- 최종 검증 메모: ${finalVerification.safeAppendNote}` : "",
+        ].filter(Boolean).join("\n");
+    if (block) {
+      await writeFile(targetPath, `${current}${block}\n`, "utf-8");
+      appliedPath = relative(repoRoot, targetPath);
+      note = targetFile === "Conflict_Register.md"
+        ? "Conflict_Register에 승인 내용을 충돌 요약 블록으로 append했습니다."
+        : `${targetFile}에 승인 내용을 append했습니다.`;
+    } else {
+      note = "Conflict_Register 승인 내용이 명시적 충돌이 아니라 append를 건너뛰었습니다.";
+    }
   }
-  if ((action === "approve" || action === "edit_approve") && !target.targetPath && !isDeletionDecisionItem(resolved)) {
+  if ((action === "approve" || action === "edit_approve") && !target.targetPath && !isDeletionDecisionItem(resolved) && !isWikiIntegrationDecisionItem(resolved)) {
     note = resolved.path
       ? `반영 경로를 계산하지 못했습니다. 근거 경로 ${resolved.path} 가 프로젝트/계정 위키 문서인지 확인하세요.`
       : "반영 경로를 계산하지 못했습니다. projectKey 또는 근거 path가 필요합니다.";
   }
-  const operationalChangePaths = await appendOperationalChangeEventFromDecision(resolved, target, {
-    action,
-    workspace: workspaceId,
-    timestamp: now,
-  }).catch((error) => {
-    note = [note, `운영 상태 메모 append 실패: ${error.message}`].filter(Boolean).join(" ");
-    return [];
-  });
+  if (!isWikiIntegrationDecisionItem(resolved)) {
+    operationalChangePaths = await appendOperationalChangeEventFromDecision(resolved, target, {
+      action,
+      workspace: workspaceId,
+      timestamp: now,
+    }).catch((error) => {
+      note = [note, `운영 상태 메모 append 실패: ${error.message}`].filter(Boolean).join(" ");
+      return [];
+    });
+  }
   await appendJsonl(decisionQueueAuditPath, {
     timestamp: now,
     id,
@@ -4550,6 +5455,23 @@ async function resolveDecisionQueueItem(id, body = {}) {
 async function enqueueDecisionQueueItem(item = {}) {
   const id = item.id || `decision-${Date.now()}`;
   const store = await readJsonFile(decisionQueuePath, { version: 1, items: {} });
+  if (!isDecisionQueueEligibleItem(item)) {
+    return {
+      id,
+      status: "not_applicable",
+      workspace: item.workspace || "rtm",
+      sourceType: item.sourceType || "manual",
+      kind: item.kind || "decision",
+      title: item.title || "결정 필요 항목",
+      projectKey: item.projectKey || "",
+      projectLabel: item.projectLabel || "",
+      content: item.content || "",
+      path: item.path || "",
+      createdAt: item.createdAt || new Date().toISOString(),
+      original: item.original || null,
+      note: "Common/L1/운영 지침 문서는 Decision Queue 병합 대상에서 제외됨",
+    };
+  }
   if (store.items?.[id]?.status && store.items[id].status !== "pending") {
     return store.items[id];
   }
@@ -5492,12 +6414,15 @@ async function applyProjectCustomerPromotion(entry, operation, targetPages, dryR
     ["Action_Items.md", "actions", `${names.projectName} Action Items`, "다음 액션과 확인 필요 사항을 관리합니다."],
     ["Risks.md", "risks", `${names.projectName} Risks`, "리스크와 불확실성을 관리합니다."],
     ["Decisions.md", "decisions", `${names.projectName} Decisions`, "확정된 결정만 별도 관리합니다."],
-    ["Conflict_Register.md", "conflict", `${names.projectName} Conflict Register`, "충돌/불일치 후보를 관리합니다."],
+    ["Conflict_Register.md", "conflict", `${names.projectName} Conflict Register`, "명시적 충돌만 관리합니다."],
     ["Change_Log.md", "changelog", `${names.projectName} Change Log`, "위키 구조와 주요 내용 변경 이력을 기록합니다."],
   ];
   for (const [fileName, type, title, description] of projectDocs) {
     const result = await upsertManagedMarkdown(`${projectRoot}/${fileName}`, (before) => {
       const base = before || baseHubMarkdown(type, title, description);
+      if (fileName === "Conflict_Register.md") {
+        return base;
+      }
       const lines = fileName === "hub.md"
         ? [
             "",
@@ -6461,6 +7386,33 @@ function localDigest(text, projectHint) {
   };
 }
 
+const readOnlyChatAutoTemplateIds = [
+  "os-file-browser",
+  "filesystem-wiki-intake",
+  "rhwp-hwp-reader",
+  "pdf-document-reader",
+  "pptx-slide-reader",
+  "spreadsheet-stat-analyzer",
+  "grant-rfp-strategy",
+];
+
+const approvalRequiredChatTemplateIds = [
+  "wiki-ingest-operator",
+  "drive-collector",
+  "slack-evidence-collector",
+  "manifest-builder",
+  "openclaw-cycle",
+  "wiki-ops-converter",
+];
+
+function chatPaperclipFollowupRequested(message = "") {
+  return /(계속|결과\s*확인|이어서|진행(?:\s*상태)?\s*확인|상태\s*확인|방금.*(분석|결과|진행)|partial\s*report|final\.md)/i.test(String(message || ""));
+}
+
+function extractMentionedPaperclipTaskId(message = "") {
+  return String(message || "").match(/\b\d{10,}-[a-z0-9-]+\b/i)?.[0] || "";
+}
+
 function normalizeGlmChatUrl(apiUrl) {
   const trimmed = String(apiUrl || "").replace(/\/+$/, "");
   if (!trimmed) return "";
@@ -6946,9 +7898,8 @@ function routeChatSkills(message, evidence = [], paperclip = null, options = {})
   const forcedTemplateIds = [...new Set([].concat(options.forcedTemplateIds || []).map((item) => String(item || "").trim()).filter(Boolean))]
     .filter((id) => availableTemplates.size ? availableTemplates.has(id) : true);
   suggestedTemplateIds.push(...forcedTemplateIds);
-  const readOnlySkillIds = ["os-file-browser", "filesystem-wiki-intake", "wiki-ops-converter", "rhwp-hwp-reader", "pdf-document-reader", "pptx-slide-reader", "spreadsheet-stat-analyzer", "grant-rfp-strategy"];
   return {
-    needs_reading_skill: needsFileBrowsing || needsFilesystemWikiIntake || needsWikiOpsConversion || needsHwp || needsPdf || needsPptx || needsSpreadsheet || needsGrantRfp || forcedTemplateIds.some((id) => readOnlySkillIds.includes(id)),
+    needs_reading_skill: needsFileBrowsing || needsFilesystemWikiIntake || needsWikiOpsConversion || needsHwp || needsPdf || needsPptx || needsSpreadsheet || needsGrantRfp || forcedTemplateIds.some((id) => readOnlyChatAutoTemplateIds.includes(id)),
     needs_validation_skill: needsValidation || forcedTemplateIds.includes("validator"),
     suggested_template_ids: [...new Set(suggestedTemplateIds)].filter((id) => availableTemplates.size ? availableTemplates.has(id) : true),
     blocked_write_actions: [...new Set(blockedWriteActions)],
@@ -7002,12 +7953,24 @@ function autoReadablePathsForTemplate(route = {}, templateId = "") {
     });
 }
 
+async function resolveChatAutoReadablePaths(route = {}, options = {}) {
+  const directPaths = (route.local_paths || [])
+    .filter((item) => item.allowed)
+    .map((item) => item.path);
+  const existingDirectPaths = directPaths.filter((path) => existsSync(resolveReadablePath(path)));
+  const resolvedTargets = await resolvePaperclipInputTargets(route.raw_message || "", [
+    "hwp", "hwpx", "pdf", "docx", "pptx", "xlsx", "xls", "csv", "html", "htm", "md", "txt", "json",
+  ], options).catch(() => ({ files: [] }));
+  return [...new Set(existingDirectPaths.concat((resolvedTargets.files || []).filter((path) => localPathAllowedForAutoSkill(path))))];
+}
+
 async function autoRunAllowedSkills(route, options = {}) {
   const autoRuns = [];
   const recommendedTasks = [];
   const blockedActions = [...new Set(route.blocked_write_actions || [])];
+  const resolvedReadablePaths = await resolveChatAutoReadablePaths(route, options);
   for (const templateId of route.suggested_template_ids || []) {
-    if (["wiki-ingest-operator", "drive-collector", "manifest-builder", "openclaw-cycle"].includes(templateId)) {
+    if (approvalRequiredChatTemplateIds.includes(templateId)) {
       recommendedTasks.push({
         templateId,
         approval: "required",
@@ -7026,38 +7989,15 @@ async function autoRunAllowedSkills(route, options = {}) {
       });
       continue;
     }
-    if (templateId === "os-file-browser") {
-      const browse = await inspectFilesystemTargets(route.raw_message || "", {
-        extensions: [],
-        includeDirectories: true,
-        maxDepth: 4,
-        maxFiles: 80,
-        maxEntriesPerDirectory: 60,
-      });
-      if (!browse.targets.length) {
-        recommendedTasks.push({
-          templateId,
-          approval: "required",
-          reason: "조회 가능한 로컬 파일/폴더 경로가 없어서 추천만 생성",
-        });
-      } else {
-        autoRuns.push({
-          templateId,
-          status: "completed",
-          mode: "filesystem_browse_summary",
-          provenance: browse.targets.map((item) => relative(repoRoot, item.path)),
-          result: browse,
-        });
-        blockedActions.push(...browse.blocked.map((item) => `path_outside_allowed_root:${item}`));
-      }
-      continue;
-    }
     const allowedPaths = (route.local_paths || []).filter((item) => item.allowed);
     const blockedPaths = (route.local_paths || []).filter((item) => !item.allowed);
     if (blockedPaths.length) {
       blockedActions.push(`path_outside_allowed_root:${blockedPaths.map((item) => item.path).join(",")}`);
     }
-    const matchingPaths = autoReadablePathsForTemplate(route, templateId);
+    const matchingPaths = autoReadablePathsForTemplate({
+      ...route,
+      local_paths: resolvedReadablePaths.map((path) => ({ path, allowed: true, ext: extname(path).toLowerCase() })),
+    }, templateId);
     if (!matchingPaths.length) {
       recommendedTasks.push({
         templateId,
@@ -7066,42 +8006,204 @@ async function autoRunAllowedSkills(route, options = {}) {
       });
       continue;
     }
-    const fakeTask = {
-      id: `auto-${Date.now()}-${templateId}`,
+    autoRuns.push({
       templateId,
-      title: `GLM auto ${templateId}`,
-      payload: { note: matchingPaths.join("\n") },
-    };
-    try {
-      const result = await runPaperclipGlmSkill(fakeTask);
-      let summary = "";
-      if (result.path) {
-        const markdown = await readFile(resolve(repoRoot, result.path), "utf-8").catch(() => "");
-        summary = markdown.replace(/^---[\s\S]*?---\n?/, "").slice(0, 2200);
-      }
-      autoRuns.push({
-        templateId,
-        status: result.status || "completed",
-        mode: "read_only_skill",
-        provenance: result.extractedSources || matchingPaths.map((path) => relative(repoRoot, path)),
-        outputPath: result.path,
-        summary,
-      });
-    } catch (error) {
-      autoRuns.push({
-        templateId,
-        status: "failed",
-        mode: "read_only_skill",
-        error: error.message,
-        provenance: matchingPaths.map((path) => relative(repoRoot, path)),
-      });
-    }
+      status: "planned",
+      mode: "read_only_skill_async",
+      provenance: matchingPaths.map((path) => displayPath(path)),
+      checkpoint: "routed",
+    });
   }
   return {
     autoRuns,
     recommendedTasks,
     blockedActions: [...new Set(blockedActions)],
   };
+}
+
+function paperclipCheckpointForPhase(task = {}, run = null) {
+  const phase = run?.phase || task.status || "queued";
+  if (phase === "completed") {
+    return {
+      phase,
+      label: "최종 분석 완료",
+      message: "final 결과가 준비되었습니다. 결과 확인 또는 요약 후속 질문으로 이어갈 수 있습니다.",
+      availableActions: [
+        { id: "summarize_result", label: "결과 확인", type: "prompt", prompt: "방금 분석 결과 확인해줘." },
+        { id: "open_paperclip", label: "Paperclip 열기", type: "surface", surface: "paperclip" },
+      ],
+    };
+  }
+  if (phase === "partial_completed") {
+    return {
+      phase,
+      label: "부분 분석 완료",
+      message: "partial report가 준비되었습니다. 현재 확보된 내용과 미완료 항목을 검토할 수 있습니다.",
+      availableActions: [
+        { id: "review_partial", label: "partial 확인", type: "prompt", prompt: "방금 부분 분석 결과 기준으로 확인된 내용과 미완료 항목을 정리해줘." },
+        { id: "open_paperclip", label: "Paperclip 열기", type: "surface", surface: "paperclip" },
+      ],
+    };
+  }
+  if (phase === "extraction_completed") {
+    return {
+      phase,
+      label: "본문 추출 완료",
+      message: "원문 추출은 끝났고 최종 분석은 아직 진행 전 또는 대기 중입니다.",
+      availableActions: [
+        { id: "summarize_extraction", label: "추출문만 보기", type: "prompt", prompt: "방금 추출 결과만 먼저 요약해줘." },
+        { id: "open_paperclip", label: "Paperclip 열기", type: "surface", surface: "paperclip" },
+      ],
+    };
+  }
+  if (phase === "chunk_analysis_running" || phase === "final_synthesis_running" || phase === "running") {
+    return {
+      phase,
+      label: "백그라운드 분석 진행 중",
+      message: "긴 분석이 진행 중입니다. 잠시 후 결과 확인 또는 Paperclip에서 상태 확인이 가능합니다.",
+      availableActions: [
+        { id: "check_status", label: "계속 확인", type: "prompt", prompt: "방금 분석 진행 상태 확인해줘." },
+        { id: "open_paperclip", label: "Paperclip 열기", type: "surface", surface: "paperclip" },
+      ],
+    };
+  }
+  if (phase === "failed") {
+    return {
+      phase,
+      label: "분석 실패",
+      message: "실패 원인 확인이 필요합니다. Paperclip 상세 상태를 먼저 보는 편이 안전합니다.",
+      availableActions: [
+        { id: "open_paperclip", label: "Paperclip 열기", type: "surface", surface: "paperclip" },
+      ],
+    };
+  }
+  return {
+    phase,
+    label: "읽기 요청 생성됨",
+    message: "task가 생성되었습니다. 바로 실행되거나 곧 백그라운드 실행됩니다.",
+    availableActions: [
+      { id: "check_status", label: "상태 확인", type: "prompt", prompt: "방금 생성된 분석 요청 상태 확인해줘." },
+      { id: "open_paperclip", label: "Paperclip 열기", type: "surface", surface: "paperclip" },
+    ],
+  };
+}
+
+async function summarizeChatPaperclipTask(task = {}) {
+  if (!task?.id) return null;
+  const runs = await listPaperclipRuns({ taskId: task.id }).catch(() => []);
+  const run = runs[0] || null;
+  const previewArtifactName = run?.preferredArtifactName || "";
+  const preview = run?.runId && previewArtifactName
+    ? await readPaperclipRunArtifact(run.runId, previewArtifactName).then((item) => String(item.content || "").slice(0, 1800)).catch(() => "")
+    : "";
+  return {
+    taskId: task.id,
+    templateId: task.templateId,
+    title: task.title,
+    status: task.status,
+    command: task.command,
+    createdAt: task.createdAt,
+    updatedAt: task.updatedAt,
+    finishedAt: task.finishedAt,
+    runId: run?.runId || task.result?.runId || "",
+    runPath: run?.runPath || task.result?.runPath || "",
+    outputPath: task.result?.path || "",
+    hasFinal: Boolean(run?.artifacts?.some((item) => item.name === "final.md")),
+    hasPartial: Boolean(run?.artifacts?.some((item) => item.name === "partial_report.md")),
+    phase: run?.phase || "",
+    sourcePaths: run?.sourcePaths || [],
+    previewArtifactName,
+    preview,
+    checkpoint: paperclipCheckpointForPhase(task, run),
+  };
+}
+
+async function triggerChatPaperclipAutoRuns(route, project = {}, options = {}) {
+  const triggeredTasks = [];
+  const recommendedTasks = [];
+  const blockedActions = [...new Set(route.blocked_write_actions || [])];
+  const existing = await readJsonFile(paperclipTasksPath, []);
+  const projectId = project.id || "default";
+  const resolvedReadablePaths = await resolveChatAutoReadablePaths(route, options);
+  for (const templateId of route.suggested_template_ids || []) {
+    if (approvalRequiredChatTemplateIds.includes(templateId)) {
+      recommendedTasks.push({
+        templateId,
+        approval: "required",
+        reason: "승인 필요 스킬",
+      });
+      continue;
+    }
+    if (templateId === "validator") continue;
+    const matchingPaths = autoReadablePathsForTemplate({
+      ...route,
+      local_paths: resolvedReadablePaths.map((path) => ({ path, allowed: true, ext: extname(path).toLowerCase() })),
+    }, templateId);
+    const blockedPaths = (route.local_paths || []).filter((item) => !item.allowed).map((item) => item.path);
+    if (blockedPaths.length) blockedActions.push(`path_outside_allowed_root:${blockedPaths.join(",")}`);
+    if (!matchingPaths.length) {
+      recommendedTasks.push({
+        templateId,
+        approval: "required",
+        reason: "자동 실행 가능한 입력 경로 없음",
+      });
+      continue;
+    }
+    const signature = `chat_auto:${templateId}:${projectId}:${shortHash([route.raw_message || "", ...matchingPaths].join("\n"))}`;
+    const reusable = existing.find((task) => task.payload?.chatAutoSignature === signature && ["queued", "running", "completed"].includes(task.status));
+    if (reusable) {
+      const summary = await summarizeChatPaperclipTask(reusable);
+      if (summary) triggeredTasks.push(summary);
+      continue;
+    }
+    const task = await createPaperclipTask(templateId, {
+      title: `GLM Auto · ${templateId}`,
+      payload: {
+        note: matchingPaths.join("\n"),
+        source: "glm_chat_auto_run",
+        autoRun: true,
+        sourceProjectId: projectId,
+        sourceProjectName: project.name || "",
+        sourceWorkspace: options.workspaceId || "rtm",
+        originPrompt: route.raw_message || "",
+        routeReason: route.reason || "",
+        chatAutoSignature: signature,
+      },
+    });
+    enqueuePaperclipTaskExecution(task);
+    const summary = await summarizeChatPaperclipTask(task);
+    if (summary) triggeredTasks.push(summary);
+  }
+  return {
+    triggeredTasks,
+    recommendedTasks,
+    blockedActions: [...new Set(blockedActions)],
+  };
+}
+
+async function recentProjectPaperclipTasks(projectId = "", limit = 6) {
+  if (!projectId) return [];
+  const tasks = await readJsonFile(paperclipTasksPath, []);
+  const filtered = tasks
+    .filter((task) => task.payload?.sourceProjectId === projectId && task.payload?.autoRun === true)
+    .sort((left, right) => String(right.createdAt || "").localeCompare(String(left.createdAt || "")))
+    .slice(0, limit);
+  return Promise.all(filtered.map((task) => summarizeChatPaperclipTask(task)));
+}
+
+async function latestProjectPaperclipFollowup(projectId = "", options = {}) {
+  const mentionedTaskId = String(options.taskId || "").trim();
+  if (projectId && mentionedTaskId) {
+    const tasks = await readJsonFile(paperclipTasksPath, []);
+    const exact = tasks.find((task) => task.id === mentionedTaskId && task.payload?.sourceProjectId === projectId && task.payload?.autoRun === true);
+    if (exact) return summarizeChatPaperclipTask(exact);
+  }
+  const tasks = (await recentProjectPaperclipTasks(projectId, 8)).filter(Boolean);
+  if (mentionedTaskId) {
+    const exactRecent = tasks.find((task) => task.taskId === mentionedTaskId);
+    if (exactRecent) return exactRecent;
+  }
+  return tasks.find((task) => ["completed", "running", "queued"].includes(task.status || "")) || null;
 }
 
 async function createPaperclipAgentDrafts(route, message, project = {}) {
@@ -7294,7 +8396,17 @@ async function buildGlmChatContext(message, project, workspaceId = "rtm", mode =
   const paperclip = await paperclipStatus().catch(() => null);
   const route = routeChatSkills(message, evidence, paperclip, { forcedTemplateIds: options.skillTags || [] });
   const autoSkill = await autoRunAllowedSkills(route, { workspaceId });
+  const triggeredAutoRuns = await triggerChatPaperclipAutoRuns(route, project, { workspaceId }).catch(() => ({
+    triggeredTasks: [],
+    recommendedTasks: [],
+    blockedActions: [],
+  }));
   const agentDrafts = await createPaperclipAgentDrafts(route, message, project).catch(() => []);
+  const recentProjectTasks = (await recentProjectPaperclipTasks(project?.id || "", 6)).filter(Boolean);
+  const mentionedTaskId = extractMentionedPaperclipTaskId(message);
+  const followupTask = (chatPaperclipFollowupRequested(message) || mentionedTaskId)
+    ? await latestProjectPaperclipFollowup(project?.id || "", { taskId: mentionedTaskId }).catch(() => null)
+    : null;
   const coverageWarnings = [];
   if (coverage?.statuses?.hold) coverageWarnings.push(`coverage_hold:${coverage.statuses.hold}`);
   if (coverage?.statuses?.retry) coverageWarnings.push(`coverage_retry:${coverage.statuses.retry}`);
@@ -7401,6 +8513,7 @@ async function buildGlmChatContext(message, project, workspaceId = "rtm", mode =
       route,
       userRequestedSkillTags: route.user_selected_template_ids || [],
       autoRuns: autoSkill.autoRuns,
+      triggeredTasks: triggeredAutoRuns.triggeredTasks,
       agentMode: "background_skill_router",
       agentDrafts: agentDrafts.map((task) => ({
         id: task.id,
@@ -7410,14 +8523,18 @@ async function buildGlmChatContext(message, project, workspaceId = "rtm", mode =
         status: task.status,
         safety: task.safety,
       })),
-      recommendedTasks: [...new Map(autoSkill.recommendedTasks.concat((route.suggested_template_ids || [])
-        .filter((id) => ["wiki-ingest-operator", "drive-collector", "manifest-builder", "openclaw-cycle"].includes(id))
+      recentProjectTasks,
+      followupTaskId: mentionedTaskId,
+      followupTask,
+      checkpoint: triggeredAutoRuns.triggeredTasks[0]?.checkpoint || followupTask?.checkpoint || null,
+      recommendedTasks: [...new Map(autoSkill.recommendedTasks.concat(triggeredAutoRuns.recommendedTasks).concat((route.suggested_template_ids || [])
+        .filter((id) => approvalRequiredChatTemplateIds.includes(id))
         .map((templateId) => ({
           templateId,
           approval: "required",
           reason: "자동 실행 금지 template",
         }))).map((item) => [item.templateId, item])).values()],
-      blockedActions: autoSkill.blockedActions,
+      blockedActions: [...new Set([...(autoSkill.blockedActions || []), ...(triggeredAutoRuns.blockedActions || [])])],
     },
   };
 }
@@ -8087,7 +9204,6 @@ async function glmChat(message, projectId = "default", options = {}) {
   const { values: env } = await readEnvFile();
   const mode = glmContextMode(env, options.contextMode);
   const context = await buildGlmChatContext(message, project, options.workspace || project.workspace || "rtm", mode, { skillTags: options.skillTags || [] });
-  sseWrite(res, "paperclip", { paperclip: context.paperclip });
   const apiKey = process.env.GLM_API_KEY || env.GLM_API_KEY;
   const apiUrl = process.env.GLM_API_URL || env.GLM_API_URL;
   const model = process.env.GLM_MODEL || env.GLM_MODEL || "glm-4.5";
@@ -9139,8 +10255,7 @@ async function triggerPaperclipTask(templateId, options = {}) {
   return executePaperclipTask(task);
 }
 
-async function triggerPaperclipTaskAsync(templateId, options = {}) {
-  const task = await createPaperclipTask(templateId, options);
+function enqueuePaperclipTaskExecution(task) {
   setImmediate(() => {
     executePaperclipTask(task).catch(async (error) => {
       await updatePaperclipTask(task.id, {
@@ -9163,11 +10278,23 @@ async function triggerPaperclipTaskAsync(templateId, options = {}) {
   };
 }
 
+async function triggerPaperclipTaskAsync(templateId, options = {}) {
+  const task = await createPaperclipTask(templateId, options);
+  return enqueuePaperclipTaskExecution(task);
+}
+
 async function triggerExistingPaperclipTask(taskId) {
   const tasks = await readJsonFile(paperclipTasksPath, []);
   const task = tasks.find((item) => item.id === taskId);
   if (!task) throw new Error(`Paperclip task not found: ${taskId}`);
   return executePaperclipTask(task);
+}
+
+async function triggerExistingPaperclipTaskAsync(taskId) {
+  const tasks = await readJsonFile(paperclipTasksPath, []);
+  const task = tasks.find((item) => item.id === taskId);
+  if (!task) throw new Error(`Paperclip task not found: ${taskId}`);
+  return enqueuePaperclipTaskExecution(task);
 }
 
 function paperclipSkillSystemPrompt(templateId) {
@@ -9305,15 +10432,65 @@ function extractLocalPaths(text, extensions = []) {
   const allowed = new Set(extensions.map((item) => item.toLowerCase()));
   const extensionPattern = "hwp|hwpx|pdf|docx|pptx|xlsx|xls|csv|html|htm|md|txt|json";
   const matches = [];
-  for (const line of String(text || "").split(/\r?\n/)) {
-    const absolutePath = line.match(new RegExp(`(/.*?\\.(${extensionPattern}))(?=$|[\\s'"\\]>},;])`, "i"))?.[1];
-    if (absolutePath) matches.push(absolutePath);
+  const lines = String(text || "").split(/\r?\n/);
+  const normalizePathFragment = (value = "") => String(value || "")
+    .trim()
+    .replace(/^[-*]\s+/, "")
+    .replace(/^["'`]+|["'`]+$/g, "")
+    .replace(/[),.;]+$/g, "");
+  const pathMatchPattern = new RegExp(`(/.+?\\.(${extensionPattern}))(?=$|\\s)`, "i");
+  for (let index = 0; index < lines.length; index += 1) {
+    const line = normalizePathFragment(lines[index]);
+    if (!line || !line.includes("/")) continue;
+    const quotedAbsolutePath = line.match(new RegExp(`["'](/.+\\.(${extensionPattern}))["']`, "i"))?.[1];
+    if (quotedAbsolutePath) {
+      matches.push(quotedAbsolutePath);
+      continue;
+    }
+    const wholeLineAbsolutePath = line.match(new RegExp(`(/.+\\.(${extensionPattern}))\\s*$`, "i"))?.[1];
+    if (wholeLineAbsolutePath) {
+      matches.push(wholeLineAbsolutePath);
+      continue;
+    }
+    if (!line.startsWith("/")) continue;
+    let candidate = line;
+    let matchedCandidate = candidate.match(pathMatchPattern)?.[1] || "";
+    if (!matchedCandidate) {
+      for (let nextIndex = index + 1; nextIndex < Math.min(lines.length, index + 8); nextIndex += 1) {
+        const next = normalizePathFragment(lines[nextIndex]);
+        if (!next) break;
+        if (next.startsWith("/") && next !== line) break;
+        candidate = `${candidate} ${next}`.trim();
+        matchedCandidate = candidate.match(pathMatchPattern)?.[1] || "";
+        if (matchedCandidate) {
+          matches.push(matchedCandidate);
+          index = nextIndex;
+          break;
+        }
+      }
+    }
   }
-  matches.push(...(String(text || "").match(new RegExp(`(?:/[^\n'"<>]+|[A-Za-z0-9_.\\-가-힣][^\\s'"<>]*)\\.(${extensionPattern})`, "gi")) || []));
+  matches.push(...(String(text || "").match(new RegExp(`(/[^\n"'<>]+\\.(${extensionPattern}))`, "gi")) || []));
   return [...new Set(matches)]
     .map((item) => item.trim().replace(/[),.;]+$/g, ""))
     .filter((item) => !allowed.size || allowed.has(extname(item).toLowerCase().replace(".", "")))
     .map((item) => resolve(repoRoot, item));
+}
+
+function extractPathSearchRoots(text) {
+  const roots = [];
+  for (const rawLine of String(text || "").split(/\r?\n/)) {
+    const line = String(rawLine || "")
+      .trim()
+      .replace(/^[-*]\s+/, "")
+      .replace(/^["'`]+|["'`]+$/g, "");
+    if (!line.startsWith("/") || !line.includes("/")) continue;
+    const parent = dirname(line);
+    const resolvedParent = resolveReadablePath(parent);
+    if (!existsSync(resolvedParent)) continue;
+    roots.push(resolvedParent);
+  }
+  return [...new Set(roots)];
 }
 
 function extractDirectoryLikePaths(text) {
@@ -9420,38 +10597,61 @@ function extractFilenameHints(text, extensions = []) {
 async function resolveFilenameHintFiles(text, extensions = [], options = {}) {
   const hints = extractFilenameHints(text, extensions);
   if (!hints.length) return [];
-  const roots = [
+  const extensionPattern = (extensions.length ? extensions : ["hwp", "hwpx", "pdf", "docx", "pptx", "xlsx", "xls", "csv", "html", "htm", "md", "txt", "json"]).join("|");
+  const hintedRoots = extractPathSearchRoots(text);
+  const fallbackRoots = [
     chatUploadMirrorRoot,
     chatUploadsRoot,
     resolveRepoPath("automation/drive_wikify/runtime/mirror"),
     "/Users/rtm/Library/CloudStorage",
     "/Users/rtm/Library/CloudStorage/GoogleDrive-jaykafka12@gmail.com",
     "/Users/rtm/Library/CloudStorage/GoogleDrive-jaykafka12@gmail.com/.shortcut-targets-by-id",
+    join(hostUserMountRoot, "Library/CloudStorage"),
+    join(hostUserMountRoot, "Library/CloudStorage/GoogleDrive-jaykafka12@gmail.com"),
+    join(hostUserMountRoot, "Library/CloudStorage/GoogleDrive-jaykafka12@gmail.com/.shortcut-targets-by-id"),
     repoRoot,
   ].map((item) => resolve(item));
+  const roots = [...new Set(hintedRoots.concat(fallbackRoots))];
   const maxMatches = Math.max(4, Number(options.maxHintMatches || 16));
+  const maxCollectedMatches = Math.max(maxMatches * 6, 24);
   const maxVisited = Math.max(2000, Number(options.maxHintSearchFiles || 100000));
   const allowedExts = new Set((extensions || []).map((item) => `.${String(item).toLowerCase().replace(/^\./, "")}`));
   const matches = [];
   const seen = new Set();
   let visited = 0;
+  const pathContextTokens = [...new Set(
+    String(text || "")
+      .split(/\r?\n/)
+      .filter((line) => line.includes("/") || new RegExp(`\\.(${extensionPattern})\\b`, "i").test(line))
+      .flatMap((line) => normalizeFileHintForMatch(line).match(/[0-9a-z가-힣]{2,}/giu) || []),
+  )].filter((token) => !["hwp", "hwpx", "pdf", "docx", "pptx", "xlsx", "xls", "csv", "html", "htm", "md", "txt", "json", "file", "source", "path"].includes(token));
 
-  function matchesHint(fileName, hint) {
+  function matchScore(fileName, hint) {
     const normalizedName = normalizeFileHintForMatch(fileName);
     const normalizedHint = normalizeFileHintForMatch(hint);
-    if (normalizedName === normalizedHint || normalizedName.includes(normalizedHint)) return true;
+    if (normalizedName === normalizedHint) return 1000;
+    if (normalizedName.includes(normalizedHint)) return 800;
     const tokens = fileHintTokens(hint);
-    if (!tokens.length) return false;
+    if (!tokens.length) return 0;
     const required = tokens.filter((token) => /\d{4,}/.test(token) || /[가-힣a-z]{3,}/iu.test(token));
     const score = required.filter((token) => normalizedName.includes(token)).length;
-    return score >= Math.min(required.length, Math.max(2, Math.ceil(required.length * 0.65)));
+    if (score < Math.min(required.length, Math.max(2, Math.ceil(required.length * 0.65)))) return 0;
+    return score * 100;
+  }
+
+  function rootPriority(path) {
+    if (!hintedRoots.length) return 0;
+    const resolvedPath = resolve(path);
+    const exactRootIndex = hintedRoots.findIndex((root) => resolvedPath === root || resolvedPath.startsWith(`${root}/`));
+    if (exactRootIndex === -1) return 0;
+    return (hintedRoots.length - exactRootIndex) * 1000;
   }
 
   async function walk(rootPath) {
-    if (matches.length >= maxMatches || visited >= maxVisited) return;
+    if (matches.length >= maxCollectedMatches || visited >= maxVisited) return;
     const entries = await readdir(rootPath, { withFileTypes: true }).catch(() => []);
     for (const entry of entries) {
-      if (matches.length >= maxMatches || visited >= maxVisited) return;
+      if (matches.length >= maxCollectedMatches || visited >= maxVisited) return;
       if (entry.name === "node_modules" || entry.name === ".git" || entry.name === "__pycache__") continue;
       const fullPath = join(rootPath, entry.name);
       if (entry.isDirectory()) {
@@ -9463,21 +10663,28 @@ async function resolveFilenameHintFiles(text, extensions = [], options = {}) {
       const ext = extname(entry.name).toLowerCase();
       if (allowedExts.size && !allowedExts.has(ext)) continue;
       if (!localPathAllowedForAutoSkill(fullPath)) continue;
-      if (!hints.some((hint) => matchesHint(entry.name, hint))) continue;
+      const baseScore = Math.max(...hints.map((hint) => matchScore(entry.name, hint)));
+      if (!baseScore) continue;
       const key = resolve(fullPath);
       if (seen.has(key)) continue;
       seen.add(key);
-      matches.push(key);
+      const normalizedPath = normalizeFileHintForMatch(key);
+      const pathScore = pathContextTokens.filter((token) => normalizedPath.includes(token)).length;
+      matches.push({ path: key, score: baseScore + pathScore + rootPriority(key) });
     }
   }
 
-  for (const rootPath of [...new Set(roots)]) {
+  for (const rootPath of roots) {
     const info = await stat(rootPath).catch(() => null);
     if (!info?.isDirectory?.()) continue;
     await walk(rootPath);
-    if (matches.length >= maxMatches || visited >= maxVisited) break;
+    if (hintedRoots.includes(rootPath) && matches.length) break;
+    if (matches.length >= maxCollectedMatches || visited >= maxVisited) break;
   }
-  return matches;
+  return matches
+    .sort((left, right) => right.score - left.score)
+    .slice(0, maxMatches)
+    .map((item) => item.path);
 }
 
 const RESOLVED_BROWSER_FILE_BLOCK_START = "[자동해결 파일경로]";
@@ -10350,6 +11557,122 @@ async function writePaperclipRunArtifact(runDir, fileName, content = "") {
   return path;
 }
 
+function paperclipRunArtifactKind(name = "") {
+  if (name === "state.json") return "state";
+  if (name === "final.md") return "final";
+  if (name === "partial_report.md") return "partial_report";
+  if (name === "extraction.txt") return "extraction";
+  if (/^chunk-\d+\.md$/.test(name)) return "chunk_markdown";
+  if (/^chunk-\d+\.json$/.test(name)) return "chunk_state";
+  return "artifact";
+}
+
+function paperclipRunArtifactPriority(name = "") {
+  if (name === "final.md") return 0;
+  if (name === "partial_report.md") return 1;
+  if (name === "state.json") return 2;
+  if (name === "extraction.txt") return 3;
+  if (/^chunk-\d+\.md$/.test(name)) return 4;
+  if (/^chunk-\d+\.json$/.test(name)) return 5;
+  return 10;
+}
+
+function preferredPaperclipRunArtifactName(artifacts = []) {
+  return artifacts.find((item) => item.name === "final.md")?.name
+    || artifacts.find((item) => item.name === "partial_report.md")?.name
+    || artifacts.find((item) => item.name === "state.json")?.name
+    || artifacts[0]?.name
+    || "";
+}
+
+async function listPaperclipRunArtifacts(runDir) {
+  const entries = await readdir(runDir, { withFileTypes: true }).catch(() => []);
+  const artifacts = [];
+  for (const entry of entries) {
+    if (!entry.isFile()) continue;
+    const artifactPath = join(runDir, entry.name);
+    const info = await stat(artifactPath).catch(() => null);
+    artifacts.push({
+      name: entry.name,
+      kind: paperclipRunArtifactKind(entry.name),
+      path: displayPath(artifactPath),
+      size: info?.size || 0,
+      updatedAt: info?.mtime ? new Date(info.mtime).toISOString() : "",
+    });
+  }
+  artifacts.sort((left, right) => {
+    const priority = paperclipRunArtifactPriority(left.name) - paperclipRunArtifactPriority(right.name);
+    if (priority !== 0) return priority;
+    return left.name.localeCompare(right.name);
+  });
+  return artifacts;
+}
+
+async function paperclipRunSummaryFromDir(runDir) {
+  const runId = basename(runDir);
+  const dirInfo = await stat(runDir).catch(() => null);
+  const state = await readJsonFile(join(runDir, "state.json"), null);
+  const artifacts = await listPaperclipRunArtifacts(runDir);
+  return {
+    runId,
+    runPath: displayPath(runDir),
+    taskId: state?.taskId || "",
+    templateId: state?.templateId || "",
+    title: state?.title || runId,
+    phase: state?.phase || "unknown",
+    provider: state?.provider || "",
+    updatedAt: state?.updatedAt || (dirInfo?.mtime ? new Date(dirInfo.mtime).toISOString() : ""),
+    sourcePaths: Array.isArray(state?.sourcePaths) ? state.sourcePaths : [],
+    planMode: Boolean(state?.planMode),
+    chunkCount: Number.isFinite(state?.chunkCount) ? Number(state.chunkCount) : 0,
+    artifacts,
+    preferredArtifactName: preferredPaperclipRunArtifactName(artifacts),
+  };
+}
+
+async function listPaperclipRuns(filters = {}) {
+  const entries = await readdir(paperclipRunsRoot, { withFileTypes: true }).catch(() => []);
+  const runs = [];
+  for (const entry of entries) {
+    if (!entry.isDirectory()) continue;
+    const summary = await paperclipRunSummaryFromDir(join(paperclipRunsRoot, entry.name)).catch(() => null);
+    if (!summary) continue;
+    if (filters.taskId && summary.taskId !== filters.taskId) continue;
+    runs.push(summary);
+  }
+  runs.sort((left, right) => String(right.updatedAt || "").localeCompare(String(left.updatedAt || "")));
+  return runs;
+}
+
+async function readPaperclipRun(runId) {
+  const runDir = safeJoin(paperclipRunsRoot, runId);
+  const info = await stat(runDir);
+  if (!info.isDirectory()) throw new Error(`Paperclip run not found: ${runId}`);
+  const summary = await paperclipRunSummaryFromDir(runDir);
+  return {
+    ...summary,
+    state: await readJsonFile(join(runDir, "state.json"), null),
+  };
+}
+
+async function readPaperclipRunArtifact(runId, artifactName) {
+  const runDir = safeJoin(paperclipRunsRoot, runId);
+  const artifactPath = safeJoin(runDir, artifactName);
+  const info = await stat(artifactPath);
+  if (!info.isFile()) throw new Error(`Paperclip artifact not found: ${runId}/${artifactName}`);
+  return {
+    runId,
+    artifact: {
+      name: artifactName,
+      kind: paperclipRunArtifactKind(artifactName),
+      path: displayPath(artifactPath),
+      size: info.size || 0,
+      updatedAt: info.mtime ? new Date(info.mtime).toISOString() : "",
+    },
+    content: await readFile(artifactPath, "utf-8"),
+  };
+}
+
 async function runPaperclipGlmSkill(task) {
   const { values: env } = await readEnvFile();
   const apiKey = process.env.GLM_API_KEY || env.GLM_API_KEY;
@@ -10698,9 +12021,17 @@ const server = createServer(async (req, res) => {
       return sendJson(res, 200, {
         status: "ok",
         repoRoot,
+        defaultWorkspaceId,
+        workspaces: wikiWorkspaceList(),
         driveWikifyEnv,
         driveRuntime,
         apiRuntime,
+      });
+    }
+    if (pathname === "/api/workspaces" && req.method === "GET") {
+      return sendJson(res, 200, {
+        defaultWorkspaceId,
+        workspaces: wikiWorkspaceList(),
       });
     }
     if (pathname === "/api/status" && req.method === "GET") {
@@ -10811,6 +12142,24 @@ const server = createServer(async (req, res) => {
     if (pathname === "/api/decision-queue/merge-candidates/enqueue" && req.method === "POST") {
       const body = await readBody(req);
       return sendJson(res, 200, { item: await enqueueMergeCandidate(body.candidate, body.workspace || "rtm") });
+    }
+    if (pathname === "/api/wiki/integration-candidates" && req.method === "POST") {
+      const body = await readBody(req);
+      const workspace = body.workspace || "rtm";
+      const scan = await wikiIntegrationCandidateScan(workspace, body);
+      if (body.enqueueTop) {
+        const count = Math.min(Number(body.enqueueTop || 0), scan.candidates.length);
+        const enqueued = [];
+        for (const candidate of scan.candidates.slice(0, count)) {
+          enqueued.push(await enqueueWikiIntegrationCandidate(candidate, workspace));
+        }
+        return sendJson(res, 200, { ...scan, enqueued });
+      }
+      return sendJson(res, 200, scan);
+    }
+    if (pathname === "/api/wiki/integration-candidates/enqueue" && req.method === "POST") {
+      const body = await readBody(req);
+      return sendJson(res, 200, { item: await enqueueWikiIntegrationCandidate(body.candidate, body.workspace || "rtm") });
     }
     if (pathname === "/api/spotlite" && req.method === "GET") {
       const scope = url.searchParams.get("scope") || "work";
@@ -11306,12 +12655,28 @@ const server = createServer(async (req, res) => {
         events: await readJsonFile(paperclipEventsPath, []),
       });
     }
+    if (pathname === "/api/paperclip/runs" && req.method === "GET") {
+      return sendJson(res, 200, {
+        runs: await listPaperclipRuns({ taskId: url.searchParams.get("taskId") || "" }),
+      });
+    }
+    if (pathname.match(/^\/api\/paperclip\/runs\/[^/]+$/) && req.method === "GET") {
+      const runId = decodeURIComponent(pathname.split("/")[4]);
+      return sendJson(res, 200, { run: await readPaperclipRun(runId) });
+    }
+    if (pathname.match(/^\/api\/paperclip\/runs\/[^/]+\/artifacts\/[^/]+$/) && req.method === "GET") {
+      const runId = decodeURIComponent(pathname.split("/")[4]);
+      const artifactName = decodeURIComponent(pathname.split("/")[6]);
+      return sendJson(res, 200, await readPaperclipRunArtifact(runId, artifactName));
+    }
     if (pathname === "/api/paperclip/tasks" && req.method === "POST") {
       const body = await readBody(req);
       return sendJson(res, 200, { task: await createPaperclipTask(body.templateId || "validator", body) });
     }
     if (pathname.match(/^\/api\/paperclip\/tasks\/[^/]+\/trigger$/) && req.method === "POST") {
+      const body = await readBody(req);
       const id = decodeURIComponent(pathname.split("/")[4]);
+      if (body.async === true || body.wait === false) return sendJson(res, 202, await triggerExistingPaperclipTaskAsync(id));
       return sendJson(res, 200, await triggerExistingPaperclipTask(id));
     }
     if (pathname === "/api/paperclip/trigger" && req.method === "POST") {
@@ -11330,14 +12695,23 @@ const server = createServer(async (req, res) => {
   }
 });
 
-server.listen(port, host, () => {
-  console.log(`Wiki API listening at http://${host}:${port}`);
-});
+const isMainModule = process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url);
 
-setInterval(() => {
-  tickSchedules().catch((error) => {
-    console.error(`Schedule tick failed: ${error.message}`);
+if (isMainModule) {
+  server.listen(port, host, () => {
+    console.log(`Wiki API listening at http://${host}:${port}`);
   });
-}, 30 * 1000);
 
-tickSchedules().catch(() => {});
+  setInterval(() => {
+    tickSchedules().catch((error) => {
+      console.error(`Schedule tick failed: ${error.message}`);
+    });
+  }, 30 * 1000);
+
+  tickSchedules().catch(() => {});
+}
+
+export {
+  enqueueWikiIntegrationCandidate,
+  wikiIntegrationCandidateScan,
+};

@@ -21,6 +21,7 @@ export type DecisionItem = {
     reason?: string;
     safeAppendNote?: string;
   };
+  original?: Record<string, unknown>;
 };
 
 export type DecisionQueueSnapshot = {
@@ -89,6 +90,57 @@ export type DecisionMergeCandidateScan = {
     conflictRisk: number;
   };
   candidates: DecisionMergeCandidate[];
+  enqueued?: DecisionItem[];
+};
+
+export type WikiIntegrationRelatedWiki = {
+  projectKey?: string;
+  projectLabel?: string;
+  division?: string;
+  hubPath?: string;
+  pagePaths?: string[];
+  summary?: string;
+  latestStatusMemo?: string;
+  isSlack?: boolean;
+  kinds?: string[];
+};
+
+export type WikiIntegrationCandidate = {
+  id: string;
+  workspace: string;
+  groupKey: string;
+  relatedWikis: WikiIntegrationRelatedWiki[];
+  workspaceKinds?: string[];
+  evidence?: {
+    keywords?: string[];
+    sourcePaths?: string[];
+    statusMemos?: string[];
+    keyLines?: string[];
+  };
+  similarityScore?: number;
+  conflictRisk?: boolean;
+  recommendedStrategy?: string;
+  changeTargets?: string[];
+  reason?: string[];
+  preview?: {
+    summary?: string;
+    changeMemo?: string;
+    steps?: string[];
+  };
+  generatedAt?: string;
+};
+
+export type WikiIntegrationCandidateScan = {
+  generatedAt: string;
+  workspace: string;
+  strategy: string;
+  summary: {
+    scannedSpaces?: number;
+    candidates: number;
+    conflictRisk: number;
+    accountRollups?: number;
+  };
+  candidates: WikiIntegrationCandidate[];
   enqueued?: DecisionItem[];
 };
 
@@ -170,6 +222,27 @@ export async function enqueueDecisionMergeCandidate(candidate: DecisionMergeCand
 
 export async function scanAndEnqueueDecisionMergeCandidates(workspace = "rtm", enqueueTop = 5, limit = 24) {
   return requestJson<DecisionMergeCandidateScan>("/api/decision-queue/merge-candidates", {
+    method: "POST",
+    body: JSON.stringify({ workspace, limit, enqueueTop }),
+  });
+}
+
+export async function scanWikiIntegrationCandidates(workspace = "rtm", limit = 20) {
+  return requestJson<WikiIntegrationCandidateScan>("/api/wiki/integration-candidates", {
+    method: "POST",
+    body: JSON.stringify({ workspace, limit }),
+  });
+}
+
+export async function enqueueWikiIntegrationDecisionCandidate(candidate: WikiIntegrationCandidate, workspace = "rtm") {
+  return requestJson<{ item: DecisionItem }>("/api/wiki/integration-candidates/enqueue", {
+    method: "POST",
+    body: JSON.stringify({ workspace, candidate }),
+  });
+}
+
+export async function scanAndEnqueueWikiIntegrationCandidates(workspace = "rtm", enqueueTop = 5, limit = 20) {
+  return requestJson<WikiIntegrationCandidateScan>("/api/wiki/integration-candidates", {
     method: "POST",
     body: JSON.stringify({ workspace, limit, enqueueTop }),
   });

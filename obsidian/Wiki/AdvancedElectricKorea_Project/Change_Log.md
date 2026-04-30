@@ -29,3 +29,9 @@ source: "public Slack evidence sweep (2024-04-21 to 2026-04-21)"
 - 상태 변화 메모: 2026-04-30 00:00 운영형 위키 전환 기준으로 AdvancedElectricKorea Project 운영 문서 구조가 생성/점검되었고 원문 보존, 상태 갱신, CEO/PM 후속 판단이 수행/대기됨
 - 생성/점검 문서: Status, Business_Flow, CEO_Brief, PM_Action_Plan, Customer_Followup, Raw_Evidence_Index
 - 원칙: 기존 원문/증적은 요약으로 대체하지 않고 보존 레이어와 운영 판단 레이어를 분리
+
+## Change - 2026-05-01 운영 문서 실내용 보강
+
+- 2026-05-01 01:32 KST 기준 [[Project_Overview]]와 [[Evidence_Log]]를 바탕으로 어드벤스일렉트릭코리아를 납품 완료 처리 + 하자보증 시작 전환 프로젝트로 재분류했다.
+- 4월 9일 기술 수정 액션과 4월 말 완료 서류(`세금계산서`, `납입완료서`, `하자이행보증증권`)를 하나의 운영 흐름으로 연결했다.
+- 완료 처리 표현(`완료`, `납입완료`, `하자보증 시작`)을 분리 관리해야 하는 운영 판단 포인트를 CEO/PM 문서에 반영했다.

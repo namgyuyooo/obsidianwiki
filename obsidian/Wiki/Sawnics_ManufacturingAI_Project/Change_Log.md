@@ -50,3 +50,30 @@ source: "Initial Sawnics project wiki creation"
 - 상태 변화 메모: 2026-04-30 00:00 쏘닉스 사업계획서 작성 분석 기준으로 PoC 후속 영업이 제출 준비 단계로 구체화되었고 KPI/작성 셀 분해/고객 확인 액션이 대기됨
 - 보강 문서: Status, Business_Flow, CEO_Brief, PM_Action_Plan, Customer_Followup, Raw_Evidence_Index
 - 근거: Business_Plan_Writing_Analysis_2026-04-30, RFP_Writing_Strategy_2026-04-30, Evidence_Log, Sources
+
+
+## Decision Queue 운영 변화 - 2026-04-30T16:00:32.380Z
+- 일시: 2026-04-30T16:00:32.380Z
+- 변화 메모: 2026-04-30 16:00 wiki_signal 기준으로 Conflict Register가 기록됨되었고 승인 전 근거 충돌과 보류 조건을 먼저 따져줘.가 수행/대기됨
+- 원천: wiki_signal
+- Decision ID: wiki-obsidian/Wiki/Sawnics_ManufacturingAI_Project/Conflict_Register.md-0
+- 처리: approve
+- 근거 경로: obsidian/Wiki/Sawnics_ManufacturingAI_Project/Conflict_Register.md
+
+
+## Decision Queue 운영 변화 - 2026-04-30T16:00:33.642Z
+- 일시: 2026-04-30T16:00:33.642Z
+- 변화 메모: 2026-04-30 16:00 wiki_signal 기준으로 Conflict Register가 기록됨되었고 승인 전 근거 충돌과 보류 조건을 먼저 따져줘.가 수행/대기됨
+- 원천: wiki_signal
+- Decision ID: wiki-obsidian/Wiki/Sawnics_ManufacturingAI_Project/Conflict_Register.md-1
+- 처리: approve
+- 근거 경로: obsidian/Wiki/Sawnics_ManufacturingAI_Project/Conflict_Register.md
+
+
+## Decision Queue 운영 변화 - 2026-04-30T16:00:35.356Z
+- 일시: 2026-04-30T16:00:35.356Z
+- 변화 메모: 2026-04-30 16:00 wiki_signal 기준으로 Conflict Register가 기록됨되었고 승인 전 근거 충돌과 보류 조건을 먼저 따져줘.가 수행/대기됨
+- 원천: wiki_signal
+- Decision ID: wiki-obsidian/Wiki/Sawnics_ManufacturingAI_Project/Conflict_Register.md-2
+- 처리: approve
+- 근거 경로: obsidian/Wiki/Sawnics_ManufacturingAI_Project/Conflict_Register.md

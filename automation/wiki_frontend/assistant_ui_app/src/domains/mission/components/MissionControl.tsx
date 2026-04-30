@@ -66,6 +66,7 @@ export function MissionControl({ chatContext }: MissionControlProps) {
     { label: "Priority Docs", value: mission.mission.summary.highPriorityDocuments },
     { label: "Ops Ready", value: mission.mission.summary.operationalReady || 0 },
     { label: "Ops Gaps", value: mission.mission.summary.operationalGaps || 0 },
+    { label: "Integrations", value: mission.mission.summary.integrationCandidates || 0 },
     { label: "Automation", value: mission.automation.running.length },
     { label: "Governance", value: mission.governance.summary?.projectsWithIssues || 0 },
   ];
@@ -164,6 +165,9 @@ export function MissionControl({ chatContext }: MissionControlProps) {
             <ProjectLane title="상태 변화 메모" items={active?.statusMemos} emptyText="상태 변화 메모 없음" />
             <ProjectLane title="CEO 판단" items={active?.ceoBrief} emptyText="CEO_Brief 보강 필요" />
             <ProjectLane title="PM 실행" items={active?.pmActions} emptyText="PM_Action_Plan 보강 필요" />
+            <ProjectLane title="연결 가능 위키" items={active?.linkedWikis} emptyText="연결 후보 없음" />
+            <ProjectLane title="통합 신호" items={active?.integrationSignals} emptyText="통합 신호 없음" />
+            <ProjectLane title="Account Rollup 후보" items={active?.accountRollupCandidates} emptyText="rollup 후보 없음" />
             <section className="aui-command-lane">
               <h2>핵심 근거</h2>
               {active?.coreDocuments?.length ? (

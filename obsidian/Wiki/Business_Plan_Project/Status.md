@@ -42,3 +42,37 @@ source: ""
 - 상태 변화 메모: 2026-04-30 00:00 운영형 위키 전환 기준으로 Business Plan Project 기존 문서가 점검되었고 운영 판단 레이어와 원문 보존 레이어 연결이 수행/대기됨
 - 원문/긴 추출문은 Raw_Evidence_Index, Sources, Evidence_Log를 기준으로 보존
 - CEO/PM 판단은 Status, Business_Flow, CEO_Brief, PM_Action_Plan, Customer_Followup에서 관리
+
+
+## 상태 변화 메모 - 2026-04-30T15:59:22.070Z
+- 2026-04-30 15:59 similarity+graph merge scan 기준으로 Raw Evidence Index / Customer Follow-up 병합 후보가 기록됨되었고 프로젝트 허브 연결가 수행/대기됨
+  - Decision: 병합 전략 검토: Raw Evidence Index ↔ Customer Follow-up
+  - 처리: approve
+  - 근거: obsidian/Wiki/Business_Plan_Project/Raw_Evidence_Index.md
+  - Primary: obsidian/Wiki/Business_Plan_Project/Raw_Evidence_Index.md
+  - Secondary: obsidian/Wiki/DaehanCable_ProcessInnovation_Project/Customer_Followup.md
+  - 메모: 승인 전 근거 충돌과 보류 조건을 먼저 따져줘.
+
+
+## 상태 변화 메모 - 2026-04-30T15:59:25.349Z
+- 2026-04-30 15:59 wiki_signal 기준으로 Conflict Register가 기록됨되었고 승인 전 근거 충돌과 보류 조건을 먼저 따져줘.가 수행/대기됨
+  - Decision: Conflict Register
+  - 처리: approve
+  - 근거: obsidian/Wiki/Business_Plan_Project/Conflict_Register.md
+  - 메모: 승인 전 근거 충돌과 보류 조건을 먼저 따져줘.
+
+
+## 상태 변화 메모 - 2026-04-30T15:59:27.209Z
+- 2026-04-30 15:59 wiki_signal 기준으로 Conflict Register가 기록됨되었고 승인 전 근거 충돌과 보류 조건을 먼저 따져줘.가 수행/대기됨
+  - Decision: Conflict Register
+  - 처리: approve
+  - 근거: obsidian/Wiki/Business_Plan_Project/Conflict_Register.md
+  - 메모: 승인 전 근거 충돌과 보류 조건을 먼저 따져줘.
+
+
+## 상태 변화 메모 - 2026-04-30T15:59:28.991Z
+- 2026-04-30 15:59 wiki_signal 기준으로 Conflict Register가 기록됨되었고 승인 전 근거 충돌과 보류 조건을 먼저 따져줘.가 수행/대기됨
+  - Decision: Conflict Register
+  - 처리: approve
+  - 근거: obsidian/Wiki/Business_Plan_Project/Conflict_Register.md
+  - 메모: 승인 전 근거 충돌과 보류 조건을 먼저 따져줘.

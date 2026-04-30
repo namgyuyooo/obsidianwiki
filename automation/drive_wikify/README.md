@@ -19,6 +19,8 @@
   - `config/drive_wikify.docker.example.env`
 - 실제 로컬 설정:
   - `config/.env`
+- 개인 twin vault 예시:
+  - `config/drive_wikify.personal.example.env`
 - Docker 실제 설정:
   - `../../docker/config/drive_wikify.env`
 - legacy 참고:
@@ -107,6 +109,8 @@ PYTHONPATH=automation/drive_wikify/src \
 ```
 
 `--env-file`로 다른 `.env`를 지정할 수 있고, `--config`는 legacy YAML/JSON 호환용이다.
+
+개인 twin vault를 돌릴 때는 업무용 env를 재사용하지 말고, personal 전용 env와 runtime 경로를 분리한다.
 
 ## Slack 수집 예시
 

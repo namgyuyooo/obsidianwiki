@@ -1,30 +1,22 @@
 ---
 type: log
 created: 2026-04-29
-updated: 2026-04-30
+updated: 2026-05-01
 source: "2026-04-29 wiki structure improvement pass"
 ---
 
 # Conflict Register
 
 ## Open Conflicts
-- 상충 수치, 버전 불일치, 고객/내부 판단 불일치, 범위 미확정을 이 문서에 등록합니다.
-- 해소 전까지 허브 상단 `현재 막힘 / 충돌`과 연동해 가시화합니다.
+- 현재 등록된 명시적 충돌: 없음
+- 작성 구조, 문서 정비, 비교본 검토 메모는 [[Wiki/Business_Plan_Project/Action_Items]], [[Wiki/Business_Plan_Project/Decisions]], [[Wiki/Business_Plan_Project/Risks]]에서 관리
 
 ## 처리 원칙
 - 관련 참조는 [[Wiki/Business_Plan_Project/Reference_Register]]에서 우선 확인
-- 충돌이 상태에 영향을 주면 [[Wiki/Business_Plan_Project/Status]]의 blocker와 history에도 반영
-- 확정되면 [[Wiki/Business_Plan_Project/Decisions]]로 승격
-- 실행이 필요하면 [[Wiki/Business_Plan_Project/Action_Items]]로 연결
-- 리스크가 커지면 [[Wiki/Business_Plan_Project/Risks]]로 승격
-
-## 기존 정리 메모
-## Current Status
-
-- 상태: 초기화됨
-- 현재 등록된 충돌: 없음
+- 실제 상충 수치, 버전 불일치, 평가 기준 충돌만 이 문서에 남깁니다.
+- 문서 정비 요청, 허브 보강, 검토 TODO는 [[Wiki/Business_Plan_Project/Action_Items]]나 [[Wiki/Business_Plan_Project/Decisions]]로 보냅니다.
+- 확정되면 [[Wiki/Business_Plan_Project/Decisions]]로 승격합니다.
 
 ## Capture Rule
-
-- 서로 다른 사업계획서 버전, 평가 기준, 예산/일정/성과 수치가 충돌하면 이곳에 등록합니다.
-- 결론을 단일화하기 전까지 기존 값과 신규 값을 모두 보존합니다.
+- 서로 다른 계획서 버전, 평가 기준, 예산, 일정, KPI가 동시에 기준값일 수 없을 때만 등록합니다.
+- 병합 후보나 승인 로그 같은 운영 메타데이터는 conflict로 남기지 않습니다.

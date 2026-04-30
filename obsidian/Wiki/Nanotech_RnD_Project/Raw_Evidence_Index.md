@@ -18,3 +18,9 @@ source: "operational wiki conversion"
 
 ## 변화 메모
 - 2026-04-30 00:00 운영형 위키 전환 기준으로 Nanotech RnD Project 운영 문서 구조가 생성/점검되었고 원문 보존, 상태 갱신, CEO/PM 후속 판단이 수행/대기됨
+
+## 원문/추출 보존 인덱스 - 2026-05-01
+
+- [[Evidence_Log]]: `26.01.22_PSK-R&D센터 협업 프로젝트 논의 초회미팅.docx`, `나노텍_협업Item.pptx`, `OES활용사례및고도화_Nanotech_v3.pptx`, 신청서/개념계획서/로드맵 hwpx는 과제화 구조를 복원하는 핵심 원문이다.
+- [[Project_Overview]]: `Health Score 기반 SP-OES/OES 자동 Calibration`, `SP-OES를 이용한 챔버 내 Particle 검출`, `Virtual Sensor Modeling`, `차별성 부족 시 정부과제 심사 탈락 우려`는 요약으로 축약하지 않는다.
+- 보존 우선순위: 협업 아이템 버전 체인, 기술교류회 요청 메시지, PSK 연계 구조, 정부과제 심사 리스크 문장.

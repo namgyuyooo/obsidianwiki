@@ -45,3 +45,39 @@ source: "wiki management command"
 - 상태 변화 메모: 2026-04-30 00:00 아사히카세히 Common 분석과 보고자료 기준으로 PoC가 양산 도입 판단 단계로 정리되었고 수치 정합성/전폭 데모/검사 우선순위 확인이 대기됨
 - 보강 문서: Status, Business_Flow, CEO_Brief, PM_Action_Plan, Customer_Followup, Raw_Evidence_Index
 - 근거: RTM_YNG_아사히카세이, RTM_YNG_아사히카세이_Status, RTM_YNG_아사히카세이_보고자료_2026-04-22
+
+
+## Decision Queue 운영 변화 - 2026-04-30T16:00:01.211Z
+- 일시: 2026-04-30T16:00:01.211Z
+- 변화 메모: 2026-04-30 16:00 wiki_signal 기준으로 아사히카세히 Conflict Register가 기록됨되었고 승인 전 근거 충돌과 보류 조건을 먼저 따져줘.가 수행/대기됨
+- 원천: wiki_signal
+- Decision ID: wiki-obsidian/Wiki/아사히카세히_Project/Conflict_Register.md-0
+- 처리: approve
+- 근거 경로: obsidian/Wiki/아사히카세히_Project/Conflict_Register.md
+
+
+## Decision Queue 운영 변화 - 2026-04-30T16:00:06.052Z
+- 일시: 2026-04-30T16:00:06.052Z
+- 변화 메모: 2026-04-30 16:00 wiki_signal 기준으로 아사히카세히 Conflict Register가 기록됨되었고 승인 전 근거 충돌과 보류 조건을 먼저 따져줘.가 수행/대기됨
+- 원천: wiki_signal
+- Decision ID: wiki-obsidian/Wiki/아사히카세히_Project/Conflict_Register.md-1
+- 처리: approve
+- 근거 경로: obsidian/Wiki/아사히카세히_Project/Conflict_Register.md
+
+
+## Decision Queue 운영 변화 - 2026-04-30T16:00:08.350Z
+- 일시: 2026-04-30T16:00:08.350Z
+- 변화 메모: 2026-04-30 16:00 wiki_signal 기준으로 아사히카세히 Conflict Register가 기록됨되었고 승인 전 근거 충돌과 보류 조건을 먼저 따져줘.가 수행/대기됨
+- 원천: wiki_signal
+- Decision ID: wiki-obsidian/Wiki/아사히카세히_Project/Conflict_Register.md-2
+- 처리: approve
+- 근거 경로: obsidian/Wiki/아사히카세히_Project/Conflict_Register.md
+
+
+## Decision Queue 운영 변화 - 2026-04-30T16:00:10.763Z
+- 일시: 2026-04-30T16:00:10.763Z
+- 변화 메모: 2026-04-30 16:00 wiki_signal 기준으로 아사히카세히 Conflict Register가 기록됨되었고 승인 전 근거 충돌과 보류 조건을 먼저 따져줘.가 수행/대기됨
+- 원천: wiki_signal
+- Decision ID: wiki-obsidian/Wiki/아사히카세히_Project/Conflict_Register.md-3
+- 처리: approve
+- 근거 경로: obsidian/Wiki/아사히카세히_Project/Conflict_Register.md

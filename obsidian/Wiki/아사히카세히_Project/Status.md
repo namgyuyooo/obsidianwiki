@@ -47,3 +47,35 @@ source: ""
 - 주요 수치: 슬릿롤 폭 `100 cm`, 총장 `2,000 m`, 초기 `100 m` 저속 육안 검사, 이후 `1,900 m`는 `120~150 m/min`; 2차 테스트는 ROI 축소/보조조명으로 `113/114/130 fps` 혼재
 - 막힘: 스지/나이테 공식 기준, 5카메라 전폭 구성, GigE/CoaXPress/실시간 아키텍처, 코팅 후 인라인 검사와 슬릿롤 최종검사 우선순위
 - 상태 변화 메모: 2026-04-30 00:00 아사히카세히 Common 분석과 보고자료 기준으로 PoC가 양산 도입 판단 단계로 정리되었고 수치 정합성/전폭 데모/검사 우선순위 확인이 대기됨
+
+
+## 상태 변화 메모 - 2026-04-30T16:00:01.211Z
+- 2026-04-30 16:00 wiki_signal 기준으로 아사히카세히 Conflict Register가 기록됨되었고 승인 전 근거 충돌과 보류 조건을 먼저 따져줘.가 수행/대기됨
+  - Decision: 아사히카세히 Conflict Register
+  - 처리: approve
+  - 근거: obsidian/Wiki/아사히카세히_Project/Conflict_Register.md
+  - 메모: 승인 전 근거 충돌과 보류 조건을 먼저 따져줘.
+
+
+## 상태 변화 메모 - 2026-04-30T16:00:06.052Z
+- 2026-04-30 16:00 wiki_signal 기준으로 아사히카세히 Conflict Register가 기록됨되었고 승인 전 근거 충돌과 보류 조건을 먼저 따져줘.가 수행/대기됨
+  - Decision: 아사히카세히 Conflict Register
+  - 처리: approve
+  - 근거: obsidian/Wiki/아사히카세히_Project/Conflict_Register.md
+  - 메모: 승인 전 근거 충돌과 보류 조건을 먼저 따져줘.
+
+
+## 상태 변화 메모 - 2026-04-30T16:00:08.350Z
+- 2026-04-30 16:00 wiki_signal 기준으로 아사히카세히 Conflict Register가 기록됨되었고 승인 전 근거 충돌과 보류 조건을 먼저 따져줘.가 수행/대기됨
+  - Decision: 아사히카세히 Conflict Register
+  - 처리: approve
+  - 근거: obsidian/Wiki/아사히카세히_Project/Conflict_Register.md
+  - 메모: 승인 전 근거 충돌과 보류 조건을 먼저 따져줘.
+
+
+## 상태 변화 메모 - 2026-04-30T16:00:10.763Z
+- 2026-04-30 16:00 wiki_signal 기준으로 아사히카세히 Conflict Register가 기록됨되었고 승인 전 근거 충돌과 보류 조건을 먼저 따져줘.가 수행/대기됨
+  - Decision: 아사히카세히 Conflict Register
+  - 처리: approve
+  - 근거: obsidian/Wiki/아사히카세히_Project/Conflict_Register.md
+  - 메모: 승인 전 근거 충돌과 보류 조건을 먼저 따져줘.

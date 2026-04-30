@@ -1,36 +1,22 @@
 ---
 type: log
 created: 2026-04-21
-updated: 2026-04-30
+updated: 2026-05-01
 source: "public Slack evidence sweep (2024-04-21 to 2026-04-21)"
 ---
 
 # Conflict Register
 
 ## Open Conflicts
-- 상충 수치, 버전 불일치, 고객/내부 판단 불일치, 범위 미확정을 이 문서에 등록합니다.
-- 해소 전까지 허브 상단 `현재 막힘 / 충돌`과 연동해 가시화합니다.
+- 현재 등록된 명시적 충돌: 없음
+- 2025 문서군과 2026 문서군의 연결 관계는 [[Wiki/SeoulSemicon_Project/Project_Overview]], [[Wiki/SeoulSemicon_Project/Status]], [[Wiki/SeoulSemicon_Project/Risks]]에서 관리
 
 ## 처리 원칙
 - 관련 참조는 [[Wiki/SeoulSemicon_Project/Reference_Register]]에서 우선 확인
-- 충돌이 상태에 영향을 주면 [[Wiki/SeoulSemicon_Project/Status]]의 blocker와 history에도 반영
-- 확정되면 [[Wiki/SeoulSemicon_Project/Decisions]]로 승격
-- 실행이 필요하면 [[Wiki/SeoulSemicon_Project/Action_Items]]로 연결
-- 리스크가 커지면 [[Wiki/SeoulSemicon_Project/Risks]]로 승격
+- 실제 상충 수치, 계약 범위 불일치, 검수 기준 충돌만 이 문서에 남깁니다.
+- 차수 연결이나 추가 PC 건의 관계 해석은 [[Wiki/SeoulSemicon_Project/Status]]와 [[Wiki/SeoulSemicon_Project/Action_Items]]로 보냅니다.
+- 확정되면 [[Wiki/SeoulSemicon_Project/Decisions]]로 승격합니다.
 
-## 기존 정리 메모
-## 2026-04-21
-
-- 항목명: 2025 문서군과 2026 문서군의 관계
-- 충돌 내용:
-  - 2025년에는 Quotation, PO, Commercial Invoice가 확인됨
-  - 2026년에는 NDA, 계약서, PO, Invoice, Acceptance Report가 확인됨
-- 관련 증적:
-  - Evidence 01
-  - Evidence 02
-  - Evidence 03
-- 현재 판단:
-  - 동일 고객의 연속 차수일 가능성이 높으나 범위가 이어지는지 확인 필요
-- 연결 페이지:
-  - [[Project_Overview]]
-  - [[Risks]]
+## Capture Rule
+- 같은 납품 프로젝트의 범위, 계약, 검수 결과가 서로 다르게 남아 동시에 참일 수 없을 때만 등록합니다.
+- 연속 차수인지 후속 확장인지 확인하는 메모는 conflict보다 상태/리스크 추적이 우선입니다.

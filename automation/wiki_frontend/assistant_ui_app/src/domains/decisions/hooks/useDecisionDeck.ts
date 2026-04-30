@@ -3,17 +3,22 @@ import { useToastCenter } from "../../../components/surface/ToastCenter";
 import { fetchWikiPage, saveWikiPage } from "../../wiki/api/wikiApi";
 import {
   enqueueDecisionMergeCandidate,
+  enqueueWikiIntegrationDecisionCandidate,
   fetchDecisionQueue,
   inferDecisionItem,
   resolveDecisionItem,
   scanAndEnqueueDecisionMergeCandidates,
+  scanAndEnqueueWikiIntegrationCandidates,
   scanDecisionMergeCandidates,
+  scanWikiIntegrationCandidates,
   summarizeDecisionQueue,
   suggestDecisionMerge,
   type DecisionMergeCandidate,
   type DecisionMergeCandidateScan,
   type DecisionItem,
   type DecisionMergeSuggestion,
+  type WikiIntegrationCandidate,
+  type WikiIntegrationCandidateScan,
 } from "../api/decisionApi";
 
 type DecisionDeckStatus =
@@ -40,6 +45,12 @@ type DecisionMergeScanState = {
   snapshot: DecisionMergeCandidateScan | null;
 };
 
+type WikiIntegrationScanState = {
+  phase: "idle" | "scanning" | "ready" | "enqueuing" | "failed";
+  message: string;
+  snapshot: WikiIntegrationCandidateScan | null;
+};
+
 const EMPTY_COMPARE: DecisionCompareState = {
   phase: "idle",
   message: "근거 비교를 열면 출처 문서와 Conflict Register를 나란히 확인합니다.",
@@ -57,6 +68,12 @@ const EMPTY_MERGE_SCAN: DecisionMergeScanState = {
   snapshot: null,
 };
 
+const EMPTY_INTEGRATION_SCAN: WikiIntegrationScanState = {
+  phase: "idle",
+  message: "프로젝트/계정/Slack 성격을 스캔해 승인 게이트용 통합 후보를 찾을 수 있습니다.",
+  snapshot: null,
+};
+
 function isDeletionDecision(item: DecisionItem | null) {
   if (!item) return false;
   return /deletion_candidate/i.test(`${item.kind || ""}`) || /wiki_deletion/i.test(`${item.sourceType || ""}`);
@@ -64,12 +81,13 @@ function isDeletionDecision(item: DecisionItem | null) {
 
 function decisionTargetPath(item: DecisionItem | null, workspace: string) {
   if (!item) return "";
+  if (item.kind === "wiki_integration" || item.sourceType === "wiki_integration_scan") return item.path || "";
   if (isDeletionDecision(item)) return item.path || "";
-  if (item.path && /obsidian\/(Wiki|Personal_Wiki)\//.test(item.path)) {
+  if (item.path && /(^|\/)obsidian\/Wiki\//.test(item.path)) {
     return item.path.replace(/[^/]+\.md$/i, "Conflict_Register.md");
   }
   if (!item.projectKey) return "";
-  const root = workspace === "personal" ? "obsidian/Personal_Wiki" : "obsidian/Wiki";
+  const root = workspace === "personal" ? "../obsidianwiki-personal/obsidian/Wiki" : "obsidian/Wiki";
   return `${root}/${item.projectKey}/Conflict_Register.md`;
 }
 
@@ -84,6 +102,11 @@ function decisionContentItems(content = "") {
 function isConflictDecision(item: DecisionItem | null) {
   if (!item) return false;
   return /conflict|충돌|불일치|상이|상충|미확정|정합성/i.test(`${item.kind || ""} ${item.title || ""} ${item.content || ""}`);
+}
+
+function isIntegrationDecision(item: DecisionItem | null) {
+  if (!item) return false;
+  return item.kind === "wiki_integration" || item.sourceType === "wiki_integration_scan";
 }
 
 function recommendedActionFromInference(content = "") {
@@ -103,6 +126,7 @@ export function useDecisionDeck(workspace: string) {
   const [resolutionNote, setResolutionNote] = useState("");
   const [compare, setCompare] = useState<DecisionCompareState>(EMPTY_COMPARE);
   const [mergeScan, setMergeScan] = useState<DecisionMergeScanState>(EMPTY_MERGE_SCAN);
+  const [integrationScan, setIntegrationScan] = useState<WikiIntegrationScanState>(EMPTY_INTEGRATION_SCAN);
   const [status, setStatus] = useState<DecisionDeckStatus>({
     phase: "loading",
     message: "Decision Queue를 불러오는 중입니다.",
@@ -117,6 +141,7 @@ export function useDecisionDeck(workspace: string) {
   const activeTargetPath = decisionTargetPath(activeItem, workspace);
   const activeIsConflict = isConflictDecision(activeItem);
   const activeIsDeletion = isDeletionDecision(activeItem);
+  const activeIsIntegration = isIntegrationDecision(activeItem);
 
   async function reload(preferredItemId = activeItemId) {
     setStatus({ phase: "loading", message: "Decision Queue를 동기화하는 중입니다." });
@@ -397,6 +422,67 @@ export function useDecisionDeck(workspace: string) {
     }
   };
 
+  const scanIntegrationCandidates = async () => {
+    setIntegrationScan({ phase: "scanning", message: "프로젝트/계정/Slack 성격과 연결 신호를 계산하는 중입니다.", snapshot: integrationScan.snapshot });
+    notify("running", "통합 후보 스캔 시작", "고객/주제/문서 성격을 분석합니다.", { durationMs: 2400 });
+    try {
+      const snapshot = await scanWikiIntegrationCandidates(workspace, 20);
+      setIntegrationScan({
+        phase: "ready",
+        message: `통합 후보 ${snapshot.candidates.length}건 · account rollup ${snapshot.summary.accountRollups || 0}건`,
+        snapshot,
+      });
+      notify("success", "통합 후보 스캔 완료", `${snapshot.candidates.length}건의 통합 후보를 찾았습니다.`);
+    } catch (error) {
+      setIntegrationScan({
+        phase: "failed",
+        message: error instanceof Error ? error.message : "통합 후보 스캔 실패",
+        snapshot: integrationScan.snapshot,
+      });
+      notify("error", "통합 후보 스캔 실패", error instanceof Error ? error.message : "통합 후보 스캔 실패");
+    }
+  };
+
+  const enqueueIntegrationCandidate = async (candidate: WikiIntegrationCandidate) => {
+    setIntegrationScan((current) => ({ ...current, phase: "enqueuing", message: "통합 후보를 Decision Queue에 등록하는 중입니다." }));
+    notify("running", "통합 후보 등록", candidate.groupKey, { durationMs: 2200 });
+    try {
+      await enqueueWikiIntegrationDecisionCandidate(candidate, workspace);
+      await reload("");
+      setIntegrationScan((current) => ({ ...current, phase: "ready", message: "통합 후보를 Decision Queue에 등록했습니다." }));
+      notify("success", "통합 후보 등록 완료", candidate.groupKey);
+    } catch (error) {
+      setIntegrationScan((current) => ({
+        ...current,
+        phase: "failed",
+        message: error instanceof Error ? error.message : "통합 후보 등록 실패",
+      }));
+      notify("error", "통합 후보 등록 실패", error instanceof Error ? error.message : "통합 후보 등록 실패");
+    }
+  };
+
+  const scanAndEnqueueTopIntegrationCandidates = async () => {
+    setIntegrationScan({ phase: "enqueuing", message: "통합 후보를 스캔하고 상위 후보를 Decision Queue에 등록하는 중입니다.", snapshot: integrationScan.snapshot });
+    notify("running", "상위 통합 후보 등록", "스캔 후 상위 5건을 Decision Queue에 올립니다.", { durationMs: 2600 });
+    try {
+      const snapshot = await scanAndEnqueueWikiIntegrationCandidates(workspace, 5, 20);
+      await reload("");
+      setIntegrationScan({
+        phase: "ready",
+        message: `상위 후보 ${snapshot.enqueued?.length || 0}건 등록 · 전체 후보 ${snapshot.candidates.length}건`,
+        snapshot,
+      });
+      notify("success", "상위 통합 후보 등록 완료", `${snapshot.enqueued?.length || 0}건을 Decision Queue에 등록했습니다.`);
+    } catch (error) {
+      setIntegrationScan({
+        phase: "failed",
+        message: error instanceof Error ? error.message : "상위 통합 후보 등록 실패",
+        snapshot: integrationScan.snapshot,
+      });
+      notify("error", "상위 통합 후보 등록 실패", error instanceof Error ? error.message : "상위 통합 후보 등록 실패");
+    }
+  };
+
   return {
     items,
     pendingItems,
@@ -407,11 +493,13 @@ export function useDecisionDeck(workspace: string) {
     activeTargetPath,
     activeIsConflict,
     activeIsDeletion,
+    activeIsIntegration,
     directive,
     inference,
     resolutionNote,
     compare,
     mergeScan,
+    integrationScan,
     status,
     summary,
     setActiveItemId,
@@ -432,5 +520,8 @@ export function useDecisionDeck(workspace: string) {
     scanMergeCandidates,
     enqueueMergeCandidate,
     scanAndEnqueueTopMergeCandidates,
+    scanIntegrationCandidates,
+    enqueueIntegrationCandidate,
+    scanAndEnqueueTopIntegrationCandidates,
   };
 }

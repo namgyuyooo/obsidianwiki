@@ -60,7 +60,10 @@ Do not create project-style evidence scaffolding inside `account`, `common`, or 
 - Keep personal records out of the RTM work wiki by default.
 - This repository is the canonical work/RTM knowledge base, not a personal journal or private life log.
 - If an event has both personal and work implications, record only the work-facing facts in the relevant RTM project space and keep personal context outside this repository.
-- There is currently no personal record migration to perform; personal structure should remain empty unless the human explicitly creates a separate personal vault or namespace.
+- If a personal wiki is created, it should live in a separate vault/repository/service with its own raw sources, `Wiki/`, `L1_memory/`, automation state, and connector/auth context.
+- Personal and work should be separated at folder root, source root, and service/account level where possible; do not mix both domains inside one `obsidian/Wiki/` tree.
+- The personal wiki may mirror this repository's skeleton and operating logic, but it is a sibling system, not a namespace inside this work repository.
+- There is currently no personal record migration to perform inside this repository; personal structure should remain empty here unless the human explicitly changes the repo scope.
 
 ## L1 Memory Workflow
 
@@ -123,6 +126,8 @@ When a new source arrives:
 3. Register source inventory in `Sources.md` and preserve long raw extracts or full extracted text in `Raw_Evidence_Index.md`.
 4. Preserve key quotes, numbers, decisions, and constraints in `Evidence_Log.md`; do not replace source content with a short summary.
 5. Record contradictions in `Conflict_Register.md` instead of flattening them away.
+   Only do this when two facts, numbers, versions, scopes, or decisions cannot practically both be treated as current truth.
+   If the item is really a TODO, stage interpretation, project-boundary note, or review question, route it to `Action_Items.md`, `Status.md`, `Risks.md`, `Decisions.md`, or the hub instead.
 6. Append a status-change memo to `Status.md` in the form: `YYYY-MM-DD HH:mm [source] 기준으로 [change]가 기록되었고 [action]이 수행/대기됨`.
 7. Update operating pages such as `Business_Flow.md`, `CEO_Brief.md`, `PM_Action_Plan.md`, `Customer_Followup.md`, `Project_Overview.md`, `Decisions.md`, `Risks.md`, `KPI.md`.
 8. Add a short entry to `Change_Log.md`.
@@ -140,6 +145,7 @@ When a new work event appears, promote it through the wiki in this order:
 2. Register provenance in `Reference_Register.md` using URL/link first, file name/path fallback second.
 3. Extract facts, quotes, numbers, decisions, and constraints into `Evidence_Log.md`.
 4. Register contradictions or unresolved mismatches in `Conflict_Register.md`.
+   Do not register weak uncertainty such as `정합성 확인 필요`, `범위 확인 필요`, `구조 해석 필요`, `미팅 때 물어볼 것` as conflict unless an explicit contradictory fact is already present.
 5. Preserve long raw extracts and file-level source detail in `Raw_Evidence_Index.md`.
 6. Record actual document/wiki changes in `Change_Log.md`.
 7. Append a concrete status-change memo to `Status.md`.
@@ -148,6 +154,7 @@ When a new work event appears, promote it through the wiki in this order:
 
 Do not jump straight from a new event to a cleaned-up conclusion if source facts, conflicts, or version changes need to remain visible.
 Do not over-promote weak uncertainty into `Conflict_Register.md` when the more practical move is to update `Action_Items.md`, `Decisions.md`, `Risks.md`, `Status.md`, or the hub.
+Do not store approval logs, wiki management logs, or merge metadata in `Conflict_Register.md`; those belong in `Change_Log.md`, global logs, or automation audit files.
 
 ## Practical Operating Logic
 
@@ -181,6 +188,8 @@ Periodically check for:
 - missing cross-links
 - stale summaries
 - contradictions not registered in `Conflict_Register.md`
+- `Conflict_Register.md` entries that are really scope notes, structure notes, stage interpretations, or meeting questions
+- `Conflict_Register.md` polluted with approval logs, wiki management logs, or automation metadata
 - references missing URL/path/file-name fallback in `Reference_Register.md`
 - claims without evidence pages
 - project spaces missing core documents

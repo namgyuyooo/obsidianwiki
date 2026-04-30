@@ -1,8 +1,8 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { ChatContext } from "../../chat/constants";
 import { useToastCenter } from "../../../components/surface/ToastCenter";
 import { promoteKnowledge } from "../../knowledge/api/knowledgeApi";
-import type { PaperclipTask } from "../api/paperclipApi";
+import { fetchPaperclipRunArtifact, type PaperclipRun, type PaperclipTask } from "../api/paperclipApi";
 import { usePaperclipStudio } from "../hooks/usePaperclipStudio";
 
 type PaperclipStudioProps = {
@@ -14,6 +14,27 @@ type ResultActionState = {
   message: string;
 };
 
+type RunArtifactState = {
+  phase: "idle" | "loading" | "ready" | "error";
+  message: string;
+  artifactName: string;
+  content: string;
+  rawContent: string;
+};
+
+type PaperclipResultItem =
+  | {
+    kind: "run";
+    id: string;
+    run: PaperclipRun;
+    task: PaperclipTask | null;
+  }
+  | {
+    kind: "task";
+    id: string;
+    task: PaperclipTask;
+  };
+
 const RESULT_PREVIEW_LIMIT = 5200;
 
 function shortDate(value = "") {
@@ -23,6 +44,10 @@ function shortDate(value = "") {
 function resultString(task: PaperclipTask, key: string) {
   const value = task.result?.[key];
   return typeof value === "string" ? value : "";
+}
+
+function safeDownloadName(value = "", fallback = "paperclip-result") {
+  return value.replace(/[^\w.-]+/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "") || fallback;
 }
 
 function taskResultPath(task: PaperclipTask) {
@@ -45,27 +70,60 @@ function taskResultText(task: PaperclipTask) {
 }
 
 function taskResultFileName(task: PaperclipTask) {
-  const rawName = task.title || task.id || "paperclip-result";
-  const safeName = rawName.replace(/[^\w.-]+/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "");
-  return `${safeName || "paperclip-result"}${resultString(task, "markdown") ? ".md" : ".json"}`;
+  return `${safeDownloadName(task.title || task.id || "paperclip-result")}${resultString(task, "markdown") ? ".md" : ".json"}`;
 }
 
-function taskProjectHint(task: PaperclipTask) {
-  const payload = task.payload || {};
-  const candidate = payload.projectHint || payload.projectKey || payload.project || task.result?.projectHint;
+function taskProjectHint(task?: PaperclipTask | null) {
+  const payload = task?.payload || {};
+  const candidate = payload.projectHint || payload.projectKey || payload.project || task?.result?.projectHint;
   return typeof candidate === "string" ? candidate : "";
 }
 
-function downloadTaskResult(task: PaperclipTask) {
-  const text = taskResultText(task);
-  const type = resultString(task, "markdown") ? "text/markdown;charset=utf-8" : "application/json;charset=utf-8";
+function downloadTextFile(fileName: string, text: string, type: string) {
   const blob = new Blob([text], { type });
   const url = URL.createObjectURL(blob);
   const anchor = document.createElement("a");
   anchor.href = url;
-  anchor.download = taskResultFileName(task);
+  anchor.download = fileName;
   anchor.click();
   URL.revokeObjectURL(url);
+}
+
+function downloadTaskResult(task: PaperclipTask) {
+  downloadTextFile(
+    taskResultFileName(task),
+    taskResultText(task),
+    resultString(task, "markdown") ? "text/markdown;charset=utf-8" : "application/json;charset=utf-8",
+  );
+}
+
+function artifactPreviewText(content = "", artifactName = "") {
+  if (artifactName.endsWith(".json")) {
+    try {
+      return JSON.stringify(JSON.parse(content), null, 2);
+    } catch {
+      return content;
+    }
+  }
+  return content;
+}
+
+function artifactMimeType(artifactName = "") {
+  if (artifactName.endsWith(".json")) return "application/json;charset=utf-8";
+  if (artifactName.endsWith(".md")) return "text/markdown;charset=utf-8";
+  return "text/plain;charset=utf-8";
+}
+
+function artifactPromotable(artifactName = "") {
+  return artifactName.endsWith(".md") || artifactName.endsWith(".txt");
+}
+
+function downloadRunArtifact(run: PaperclipRun, artifactName: string, content: string) {
+  downloadTextFile(
+    `${safeDownloadName(run.title || run.runId || "paperclip-run")}_${artifactName}`,
+    content,
+    artifactMimeType(artifactName),
+  );
 }
 
 function taskSafetyLabel(task: PaperclipTask) {
@@ -86,12 +144,41 @@ export function PaperclipStudio({ chatContext }: PaperclipStudioProps) {
     phase: "idle",
     message: "완료 결과를 검토한 뒤 다운로드하거나 지식 승격 후보로 넘길 수 있습니다.",
   });
+  const [runArtifact, setRunArtifact] = useState<RunArtifactState>({
+    phase: "idle",
+    message: "Run 산출물을 선택하면 여기서 바로 검토할 수 있습니다.",
+    artifactName: "",
+    content: "",
+    rawContent: "",
+  });
   const { snapshot, activeTemplate } = studio;
   const queuedTasks = snapshot.tasks.filter((task) => !["completed", "failed"].includes(task.status || ""));
   const finishedTasks = snapshot.tasks.filter((task) => ["completed", "failed"].includes(task.status || ""));
-  const activeResultTask = finishedTasks.find((task) => task.id === activeResultId) || finishedTasks[0] || null;
   const featuredTasks = queuedTasks.slice(0, 6);
   const recentEvents = snapshot.events.slice(0, 8);
+  const resultItems = useMemo<PaperclipResultItem[]>(() => {
+    const runTaskIds = new Set(snapshot.runs.map((run) => run.taskId).filter(Boolean));
+    const runItems = snapshot.runs.map((run) => ({
+      kind: "run" as const,
+      id: `run:${run.runId}`,
+      run,
+      task: finishedTasks.find((task) => task.id === run.taskId) || null,
+    }));
+    const taskItems = finishedTasks
+      .filter((task) => !runTaskIds.has(task.id))
+      .map((task) => ({
+        kind: "task" as const,
+        id: `task:${task.id}`,
+        task,
+      }));
+    return [...runItems, ...taskItems];
+  }, [finishedTasks, snapshot.runs]);
+  const activeResultItem = resultItems.find((item) => item.id === activeResultId) || resultItems[0] || null;
+  const activeRun = activeResultItem?.kind === "run" ? activeResultItem.run : null;
+  const activeResultTask = activeResultItem?.kind === "task" ? activeResultItem.task : activeResultItem?.task || null;
+  const activeArtifactName = activeRun && activeRun.artifacts.some((artifact) => artifact.name === runArtifact.artifactName)
+    ? runArtifact.artifactName
+    : (activeRun?.preferredArtifactName || activeRun?.artifacts[0]?.name || "");
   const suggestedFlow = useMemo(() => ([
     {
       step: "1. 읽기 요청",
@@ -107,8 +194,58 @@ export function PaperclipStudio({ chatContext }: PaperclipStudioProps) {
     },
   ]), [activeTemplate]);
 
-  const promoteTaskResult = async (task: PaperclipTask) => {
-    const content = taskResultText(task);
+  useEffect(() => {
+    if (resultItems.some((item) => item.id === activeResultId)) return;
+    setActiveResultId(resultItems[0]?.id || "");
+  }, [activeResultId, resultItems]);
+
+  useEffect(() => {
+    if (!activeRun || !activeArtifactName) {
+      setRunArtifact((current) => ({
+        ...current,
+        phase: "idle",
+        message: activeRun ? "표시할 run 아티팩트가 없습니다." : "Run 산출물을 선택하면 여기서 바로 검토할 수 있습니다.",
+        content: "",
+        rawContent: "",
+      }));
+      return undefined;
+    }
+    let cancelled = false;
+    setRunArtifact((current) => ({
+      ...current,
+      phase: "loading",
+      message: `${activeArtifactName} 불러오는 중입니다.`,
+      artifactName: activeArtifactName,
+      content: "",
+      rawContent: "",
+    }));
+    fetchPaperclipRunArtifact(activeRun.runId, activeArtifactName)
+      .then((payload) => {
+        if (cancelled) return;
+        setRunArtifact({
+          phase: "ready",
+          message: `${activeArtifactName} 표시 중`,
+          artifactName: activeArtifactName,
+          content: artifactPreviewText(payload.content, activeArtifactName),
+          rawContent: payload.content,
+        });
+      })
+      .catch((error) => {
+        if (cancelled) return;
+        setRunArtifact({
+          phase: "error",
+          message: error instanceof Error ? error.message : "Run 아티팩트 조회 실패",
+          artifactName: activeArtifactName,
+          content: "",
+          rawContent: "",
+        });
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [activeArtifactName, activeRun]);
+
+  const promoteTaskResult = async (task: PaperclipTask, content: string) => {
     if (!content.trim()) {
       setResultAction({ phase: "error", message: "승격할 Paperclip 결과 본문이 없습니다." });
       notify("error", "Paperclip 결과 승격 실패", "승격할 Paperclip 결과 본문이 없습니다.");
@@ -177,8 +314,8 @@ export function PaperclipStudio({ chatContext }: PaperclipStudioProps) {
         </article>
         <article className="aui-ops-summary-card">
           <span>result</span>
-          <strong>{finishedTasks.length}</strong>
-          <small>{activeResultTask?.title || "아직 완료 결과 없음"}</small>
+          <strong>{resultItems.length}</strong>
+          <small>{activeResultTask?.title || activeRun?.title || "아직 완료 결과 없음"}</small>
         </article>
       </section>
 
@@ -326,48 +463,93 @@ export function PaperclipStudio({ chatContext }: PaperclipStudioProps) {
         <article>
           <div className="aui-paperclip-section-head">
             <span>완료 결과</span>
-            <strong>{finishedTasks.length}개</strong>
+            <strong>{resultItems.length}개</strong>
           </div>
           <div className="aui-paperclip-result-list">
-            {finishedTasks.slice(0, 8).map((task) => (
-              <article className={task.id === activeResultTask?.id ? "active" : ""} key={task.id}>
-                <strong>{task.title || task.id}</strong>
-                <span>{task.status} · {shortDate(task.finishedAt || task.updatedAt)}</span>
-                {taskResultPath(task) ? <code>{taskResultPath(task)}</code> : null}
+            {resultItems.slice(0, 8).map((item) => (
+              <article className={item.id === activeResultItem?.id ? "active" : ""} key={item.id}>
+                <strong>{item.kind === "run" ? (item.task?.title || item.run.title || item.run.runId) : (item.task.title || item.task.id)}</strong>
+                <span>
+                  {item.kind === "run"
+                    ? `${item.run.phase || "run"} · ${shortDate(item.run.updatedAt)}`
+                    : `${item.task.status} · ${shortDate(item.task.finishedAt || item.task.updatedAt)}`}
+                </span>
+                {item.kind === "run"
+                  ? (item.run.runPath ? <code>{item.run.runPath}</code> : null)
+                  : (taskResultPath(item.task) ? <code>{taskResultPath(item.task)}</code> : null)}
                 <div className="aui-paperclip-result-actions">
-                  <button onClick={() => setActiveResultId(task.id)} type="button">열기</button>
-                  <button disabled={!taskResultText(task)} onClick={() => downloadTaskResult(task)} type="button">다운로드</button>
-                  <button
-                    disabled={!taskResultText(task) || resultAction.phase === "promoting"}
-                    onClick={() => promoteTaskResult(task)}
-                    type="button"
-                  >
-                    지식승격
-                  </button>
+                  <button onClick={() => setActiveResultId(item.id)} type="button">열기</button>
                 </div>
               </article>
             ))}
-            {!finishedTasks.length ? <p>아직 완료된 Paperclip 결과가 없습니다.</p> : null}
+            {!resultItems.length ? <p>아직 완료된 Paperclip 결과가 없습니다.</p> : null}
           </div>
         </article>
 
         <article>
           <div className="aui-paperclip-section-head">
             <span>결과 본문</span>
-            <strong>{activeResultTask?.title || "선택된 결과 없음"}</strong>
+            <strong>{activeResultTask?.title || activeRun?.title || "선택된 결과 없음"}</strong>
           </div>
-          {activeResultTask ? (
+          {activeResultItem ? (
             <section className="aui-paperclip-result-preview">
               <div>
                 <span>검토 대상</span>
-                <strong>{activeResultTask.title || activeResultTask.id}</strong>
+                <strong>{activeResultTask?.title || activeRun?.title || activeRun?.runId || "선택된 결과 없음"}</strong>
               </div>
-              {taskResultPath(activeResultTask) ? <code>{taskResultPath(activeResultTask)}</code> : null}
-              <pre>{taskResultText(activeResultTask).slice(0, RESULT_PREVIEW_LIMIT) || "표시할 결과 본문이 없습니다."}</pre>
+              {activeRun ? (
+                <>
+                  {activeRun.runPath ? <code>{activeRun.runPath}</code> : null}
+                  <div className="aui-paperclip-result-actions">
+                    {activeRun.artifacts.map((artifact) => (
+                      <button
+                        key={artifact.name}
+                        onClick={() => setRunArtifact((current) => ({ ...current, artifactName: artifact.name }))}
+                        type="button"
+                      >
+                        {artifact.name}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="aui-paperclip-result-actions">
+                    <button
+                      disabled={!runArtifact.rawContent}
+                      onClick={() => downloadRunArtifact(activeRun, activeArtifactName, runArtifact.rawContent)}
+                      type="button"
+                    >
+                      다운로드
+                    </button>
+                    <button
+                      disabled={!activeResultTask || !runArtifact.rawContent || !artifactPromotable(activeArtifactName) || resultAction.phase === "promoting"}
+                      onClick={() => activeResultTask && promoteTaskResult(activeResultTask, runArtifact.rawContent)}
+                      type="button"
+                    >
+                      지식승격
+                    </button>
+                  </div>
+                  <pre>{runArtifact.content.slice(0, RESULT_PREVIEW_LIMIT) || "표시할 결과 본문이 없습니다."}</pre>
+                </>
+              ) : (
+                <>
+                  {activeResultTask && taskResultPath(activeResultTask) ? <code>{taskResultPath(activeResultTask)}</code> : null}
+                  <div className="aui-paperclip-result-actions">
+                    <button disabled={!activeResultTask || !taskResultText(activeResultTask)} onClick={() => activeResultTask && downloadTaskResult(activeResultTask)} type="button">다운로드</button>
+                    <button
+                      disabled={!activeResultTask || !taskResultText(activeResultTask) || resultAction.phase === "promoting"}
+                      onClick={() => activeResultTask && promoteTaskResult(activeResultTask, taskResultText(activeResultTask))}
+                      type="button"
+                    >
+                      지식승격
+                    </button>
+                  </div>
+                  <pre>{activeResultTask ? taskResultText(activeResultTask).slice(0, RESULT_PREVIEW_LIMIT) : "표시할 결과 본문이 없습니다."}</pre>
+                </>
+              )}
             </section>
           ) : (
             <p className="aui-ops-muted">완료된 결과를 하나 선택하면 여기서 바로 읽고 채택 여부를 판단할 수 있습니다.</p>
           )}
+          {activeRun ? <p className={`aui-paperclip-status ${runArtifact.phase}`}>{runArtifact.message}</p> : null}
           <p className={`aui-paperclip-status ${resultAction.phase}`}>{resultAction.message}</p>
         </article>
       </section>

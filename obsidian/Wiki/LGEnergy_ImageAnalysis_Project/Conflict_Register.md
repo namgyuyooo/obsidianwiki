@@ -1,34 +1,22 @@
 ---
 type: log
 created: 2026-04-21
-updated: 2026-04-30
+updated: 2026-05-01
 source: "public Slack evidence sweep (2024-04-21 to 2026-04-21)"
 ---
 
 # Conflict Register
 
 ## Open Conflicts
-- 상충 수치, 버전 불일치, 고객/내부 판단 불일치, 범위 미확정을 이 문서에 등록합니다.
-- 해소 전까지 허브 상단 `현재 막힘 / 충돌`과 연동해 가시화합니다.
+- 현재 등록된 명시적 충돌: 없음
+- Li 과제, XRM 과제, 병렬 세부 과제 구조는 [[Wiki/LGEnergy_ImageAnalysis_Project/Project_Overview]], [[Wiki/LGEnergy_ImageAnalysis_Project/Status]], [[Wiki/LGEnergy_ImageAnalysis_Project/Action_Items]]에서 관리
 
 ## 처리 원칙
 - 관련 참조는 [[Wiki/LGEnergy_ImageAnalysis_Project/Reference_Register]]에서 우선 확인
-- 충돌이 상태에 영향을 주면 [[Wiki/LGEnergy_ImageAnalysis_Project/Status]]의 blocker와 history에도 반영
-- 확정되면 [[Wiki/LGEnergy_ImageAnalysis_Project/Decisions]]로 승격
-- 실행이 필요하면 [[Wiki/LGEnergy_ImageAnalysis_Project/Action_Items]]로 연결
-- 리스크가 커지면 [[Wiki/LGEnergy_ImageAnalysis_Project/Risks]]로 승격
+- 실제 상충 수치, 환경 제약 충돌, 배포 기준 불일치만 이 문서에 남깁니다.
+- 하나의 프로그램 아래 병렬 과제를 어떻게 묶을지 같은 구조 문제는 [[Wiki/LGEnergy_ImageAnalysis_Project/Project_Overview]]와 [[Wiki/LGEnergy_ImageAnalysis_Project/Action_Items]]로 보냅니다.
+- 확정되면 [[Wiki/LGEnergy_ImageAnalysis_Project/Decisions]]로 승격합니다.
 
-## 기존 정리 메모
-## 2026-04-21
-
-- 항목명: 과제 범위
-- 충돌 내용:
-  - Li 석출 정량화 과제 존재
-  - XRM 분석 과제 존재
-- 관련 증적:
-  - Evidence 02
-- 현재 판단:
-  - 하나의 큰 프로젝트 아래 복수 과제가 병렬로 움직이는 것으로 보이나, 완전 분리 여부는 확인 필요
-- 연결 페이지:
-  - [[Project_Overview]]
-  - [[Risks]]
+## Capture Rule
+- 같은 성능 목표, 환경 조건, 납품 범위가 동시에 둘 이상으로 남아 있을 때만 등록합니다.
+- 병렬 과제 분류나 프로젝트 경계 해석은 conflict가 아니라 운영 구조 메모입니다.

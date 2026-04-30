@@ -16,9 +16,20 @@
 - `obsidian/Wiki/` 아래에는 실행 코드를 두지 않는다.
 - `obsidian/Wiki/`에는 운영 문서, 결과 기록, 증거, 로그만 남긴다.
 - 실제 자동화 코드는 모두 `automation/` 아래에 둔다.
+- 업무 자동화와 개인 자동화는 같은 런타임/상태/설정 파일을 공유하지 않는다.
 - 원본 Google Drive는 절대 삭제하지 않는다.
 - 자동 정리는 `local mirror`에만 적용한다.
 - Drive의 `Github`/`GitHub`/`Obsidian_wiki` 계열 폴더는 본 위키 업로드본이 섞일 수 있으므로 수집 대상에서 제외한다.
+
+## Twin Vault 운영
+
+- 현재 repo는 업무 canonical automation repo다.
+- 개인 twin vault는 sibling repo `../obsidianwiki-personal`로 분리하고, 공통 contract repo는 `../wiki-core`로 둔다.
+- bootstrap:
+
+```bash
+node automation/wiki_core/bootstrap_twin_vaults.mjs --init-git
+```
 
 ## 제안 구조
 

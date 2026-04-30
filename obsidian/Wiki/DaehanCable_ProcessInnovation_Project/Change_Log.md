@@ -28,3 +28,9 @@ source: "public Slack evidence sweep (2024-04-21 to 2026-04-21)"
 - 상태 변화 메모: 2026-04-30 00:00 운영형 위키 전환 기준으로 DaehanCable ProcessInnovation Project 운영 문서 구조가 생성/점검되었고 원문 보존, 상태 갱신, CEO/PM 후속 판단이 수행/대기됨
 - 생성/점검 문서: Status, Business_Flow, CEO_Brief, PM_Action_Plan, Customer_Followup, Raw_Evidence_Index
 - 원칙: 기존 원문/증적은 요약으로 대체하지 않고 보존 레이어와 운영 판단 레이어를 분리
+
+## Change - 2026-05-01 운영 문서 실내용 보강
+
+- 2026-05-01 01:40 KST 기준 [[Project_Overview]]와 [[Evidence_Log]]를 바탕으로 대한전선을 데이터 검증 중심 제안 프로젝트로 재정렬했다.
+- 외관검사 샘플과 SCADA/Monit 이상 탐지 데이터를 하나의 운영 흐름으로 연결하고, `RPM`/`Hz` 단위 차이를 핵심 리스크로 승격했다.
+- 고객 제안 전에 데이터 정의와 분석 기준을 먼저 잠그는 운영 판단을 CEO/PM 문서에 반영했다.

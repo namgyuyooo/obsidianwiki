@@ -1235,7 +1235,7 @@ function decisionTargetPath(project, item) {
   const hubPath = project?.hubPath || "";
   if (hubPath) return hubPath.replace(/hub\.md$/i, targetFile);
   if (project?.projectKey) {
-    const root = state.activeSpace === "personal" ? "obsidian/Personal_Wiki" : "obsidian/Wiki";
+    const root = state.activeSpace === "personal" ? "../obsidianwiki-personal/obsidian/Wiki" : "obsidian/Wiki";
     return `${root}/${project.projectKey}/${targetFile}`;
   }
   return "";

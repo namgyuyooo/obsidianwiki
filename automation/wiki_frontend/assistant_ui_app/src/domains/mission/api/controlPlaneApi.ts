@@ -387,6 +387,7 @@ export type SpotlitePayload = {
   today?: SpotliteItem[];
   week?: SpotliteItem[];
   risks?: SpotliteItem[];
+  integrations?: SpotliteItem[];
   operations?: Array<{
     project?: string;
     projectKey?: string;

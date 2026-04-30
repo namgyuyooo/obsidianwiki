@@ -17,3 +17,10 @@ source: "operational wiki conversion"
 
 ## 변화 메모
 - 2026-04-30 00:00 운영형 위키 전환 기준으로 Nanotech RnD Project 운영 문서 구조가 생성/점검되었고 원문 보존, 상태 갱신, CEO/PM 후속 판단이 수행/대기됨
+
+## 고객 후속 메모 - 2026-05-01
+
+- 나노텍과는 기술교류회 이후 실제 공동 제안서/과제 제출로 이어질 의지가 있는지 먼저 확인해야 한다.
+- 다음 접점에서는 `Calibration`, `Particle 검출`, `Virtual Sensor Modeling` 중 우선순위를 무엇으로 둘지 질문해야 한다.
+- PSK 연계가 전제인지, 별도 정출연 과제인지 고객/협업 구조를 명시적으로 확인해야 한다.
+- 준비물은 `협업Item.pptx`, `OES활용사례및고도화_Nanotech_v3.pptx`, PSK 초회미팅 문서, 개념계획서/로드맵 최신본이다.

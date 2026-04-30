@@ -28,6 +28,19 @@ source: "2026-04-21 ingest redesign discussion; 2026-04-30 practical operations 
 같은 템플릿을 모든 공간에 강제하지 않습니다.
 특히 `account`, `common`, `shared`는 프로젝트용 evidence 세트를 기계적으로 복제하지 않습니다.
 
+## Twin Vault Separation
+
+- 업무 위키와 개인 위키를 함께 운영해야 하면 한 저장소 안의 하위 namespace로 섞지 않고, 별도 vault/repository/service로 분리합니다.
+- 두 위키는 계층 구조와 운영 규칙을 최대한 동일하게 유지할 수 있지만, 아래 루트는 독립적으로 가져갑니다.
+  - raw source root
+  - persistent wiki root
+  - L1 memory root
+  - automation runtime/state
+  - connector/auth/account context
+- 공통으로 맞출 대상은 주로 `AGENTS.md`, `Schema.md`, `Wiki_Ingest_Operating_Model.md`, `Wiki_Ingest_Templates.md`, 프롬프트/자동화 계약 같은 스키마 계층입니다.
+- 실제 콘텐츠, 참조, 증적, 상태, L1 메모리는 업무와 개인 사이에 자동 공유하지 않습니다.
+- 개인/업무가 섞인 이벤트는 “업무 사실”과 “개인 맥락”으로 쪼개서 각 vault에 따로 기록합니다.
+
 ## 실무 운영의 기본 질문
 
 모든 인제스트와 위키 수정은 아래 다섯 질문 중 하나 이상에 답해야 합니다.
@@ -128,14 +141,15 @@ source: "2026-04-21 ingest redesign discussion; 2026-04-30 practical operations 
 2. 관련 파일, 메모, Drive 경로, Slack 링크, 웹 링크를 `Reference_Register.md`에 링크 우선으로 등록합니다.
 3. 링크를 안정적으로 남기기 어렵다면 `Sources.md`에 파일명, 경로, 접근 메모를 fallback으로 기록합니다.
 4. 실제 문장, 수치, 결정사항, 제약 조건을 `Evidence_Log.md`에 추출합니다.
-5. 기존 값과 다른 수치, 일정, 요구사항은 `Conflict_Register.md`에 보류 상태로 등록합니다.
+5. 기존 값과 다른 수치, 일정, 요구사항이 동시에 current truth로 유지될 수 없는 경우에만 `Conflict_Register.md`에 보류 상태로 등록합니다.
+   진행 단계 해석, 프로젝트 경계, 미팅 전 확인 질문은 `Conflict_Register.md`가 아니라 `Status.md`, `Action_Items.md`, `Risks.md`, `Project_Overview.md`로 보냅니다.
 6. 실제 위키 문서나 보고서를 수정했으면 `Change_Log.md`에 기록합니다.
 7. `Action_Items.md`, `Decisions.md`, `Risks.md`에 실무 판단과 다음 행동을 반영합니다.
 8. `Status.md`에 상태 라벨, 단계, 헬스, 오너, 막힘, 다음 게이트를 갱신합니다.
 9. 허브 상단의 실행 현황판, 막힘/충돌, 다음 액션을 갱신합니다.
 10. 프로젝트 상태, 핵심 결정, 미해결 이슈가 바뀌면 `obsidian/L1_memory/{ProjectName}.md`를 갱신합니다.
 
-개인 기록은 이 업무 위키에 저장하지 않습니다. 개인/업무가 섞인 이벤트는 업무상 필요한 사실만 프로젝트 문서에 남기고, 개인 맥락은 별도 개인 공간에 둡니다.
+개인 기록은 이 업무 위키에 저장하지 않습니다. 개인/업무가 섞인 이벤트는 업무상 필요한 사실만 프로젝트 문서에 남기고, 개인 맥락은 별도 개인 vault에 둡니다.
 
 ## 운영 원칙
 
@@ -155,7 +169,9 @@ source: "2026-04-21 ingest redesign discussion; 2026-04-30 practical operations 
 - 숫자는 반드시 문서명과 날짜를 함께 기록합니다.
 - 상충되는 수치는 둘 다 남기고 충돌 상태를 유지합니다.
 - 다만 `정합성 확인 필요`, `검토 필요`, `허브 보강 필요` 같은 약한 문장은 자동으로 conflict로 승격하지 않습니다.
+- `가능성이 높음`, `보는 편이 안전함`, `구조 재검토`, `범위 확인 필요`, `미팅 때 질문` 같은 문장은 실무 판단 메모이지 conflict가 아닐 가능성이 높습니다.
 - 명시적 상충값이 없다면 `Action_Items.md`, `Status.md`, `Risks.md`, `Decisions.md`, `hub.md` 중 더 실무적인 목적지로 보내는 편을 우선합니다.
+- 승인 로그, 위키 승격 로그, 병합 메타데이터는 `Conflict_Register.md`에 append하지 않고 audit/log 계층이나 `Change_Log.md`에 남깁니다.
 - 기존 문서를 덮어쓰지 말고 날짜형 업데이트 블록으로 append 합니다.
 - 나중에 사업계획서, 제안서, 보고서, 발표자료, 영문 문서로 전환 가능한 구조를 우선합니다.
 - 허브 상단만 읽어도 `상태`, `막힘`, `다음 액션`, `근거`를 파악할 수 있어야 합니다.

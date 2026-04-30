@@ -51,3 +51,35 @@ source: ""
 - 주요 수치/표현: 사업 가치 표현으로 `유지보수 비용 20% 절감`, `유지보수 시간 70% 절감`이 사용됨. 단, 원출처 확인 필요
 - 막힘: 후속 협업 제안이 실제 계약/추가 PoC로 이어졌는지, EHM 워크스테이션/GPU/별도 이미지 추론 장비 중 최종 선택이 무엇인지 확인 필요
 - 상태 변화 메모: 2026-04-30 00:00 ZEUS AI바우처 증적 기준으로 프로젝트가 후속 협업/레퍼런스 재사용 검토 상태로 정리되었고 인프라 결정과 사업가치 수치 원출처 확인이 대기됨
+
+
+## 상태 변화 메모 - 2026-04-30T16:00:12.732Z
+- 2026-04-30 16:00 wiki_signal 기준으로 Conflict Register가 기록됨되었고 승인 전 근거 충돌과 보류 조건을 먼저 따져줘.가 수행/대기됨
+  - Decision: Conflict Register
+  - 처리: approve
+  - 근거: obsidian/Wiki/ZEUS_AIVoucher_Project/Conflict_Register.md
+  - 메모: 승인 전 근거 충돌과 보류 조건을 먼저 따져줘.
+
+
+## 상태 변화 메모 - 2026-04-30T16:00:14.360Z
+- 2026-04-30 16:00 wiki_signal 기준으로 Conflict Register가 기록됨되었고 승인 전 근거 충돌과 보류 조건을 먼저 따져줘.가 수행/대기됨
+  - Decision: Conflict Register
+  - 처리: approve
+  - 근거: obsidian/Wiki/ZEUS_AIVoucher_Project/Conflict_Register.md
+  - 메모: 승인 전 근거 충돌과 보류 조건을 먼저 따져줘.
+
+
+## 상태 변화 메모 - 2026-04-30T16:00:16.036Z
+- 2026-04-30 16:00 wiki_signal 기준으로 Conflict Register가 기록됨되었고 승인 전 근거 충돌과 보류 조건을 먼저 따져줘.가 수행/대기됨
+  - Decision: Conflict Register
+  - 처리: approve
+  - 근거: obsidian/Wiki/ZEUS_AIVoucher_Project/Conflict_Register.md
+  - 메모: 승인 전 근거 충돌과 보류 조건을 먼저 따져줘.
+
+
+## 상태 변화 메모 - 2026-04-30T16:00:17.731Z
+- 2026-04-30 16:00 wiki_signal 기준으로 Conflict Register가 기록됨되었고 승인 전 근거 충돌과 보류 조건을 먼저 따져줘.가 수행/대기됨
+  - Decision: Conflict Register
+  - 처리: approve
+  - 근거: obsidian/Wiki/ZEUS_AIVoucher_Project/Conflict_Register.md
+  - 메모: 승인 전 근거 충돌과 보류 조건을 먼저 따져줘.

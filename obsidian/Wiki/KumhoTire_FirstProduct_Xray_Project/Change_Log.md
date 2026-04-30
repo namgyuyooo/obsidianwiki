@@ -35,3 +35,50 @@ source: "public Slack evidence sweep (2024-04-21 to 2026-04-21)"
 - 상태 변화 메모: 2026-04-30 00:00 운영형 위키 전환 기준으로 KumhoTire FirstProduct Xray Project 운영 문서 구조가 생성/점검되었고 원문 보존, 상태 갱신, CEO/PM 후속 판단이 수행/대기됨
 - 생성/점검 문서: Status, Business_Flow, CEO_Brief, PM_Action_Plan, Customer_Followup, Raw_Evidence_Index
 - 원칙: 기존 원문/증적은 요약으로 대체하지 않고 보존 레이어와 운영 판단 레이어를 분리
+
+
+## Decision Queue 운영 변화 - 2026-04-30T15:59:31.435Z
+- 일시: 2026-04-30T15:59:31.435Z
+- 변화 메모: 2026-04-30 15:59 similarity+graph merge scan 기준으로 Business Flow / Customer Follow-up 병합 후보가 기록됨되었고 프로젝트 허브 연결가 수행/대기됨
+- 원천: similarity_graph_merge_scan
+- Decision ID: similarity-merge-b2JzaWRpYW4vV2lraS9BZHZhbmNlZEVs
+- 처리: approve
+- 근거 경로: obsidian/Wiki/KumhoTire_FirstProduct_Xray_Project/Business_Flow.md
+- Primary: obsidian/Wiki/KumhoTire_FirstProduct_Xray_Project/Business_Flow.md
+- Secondary: obsidian/Wiki/AdvancedElectricKorea_Project/Customer_Followup.md
+
+
+## Decision Queue 운영 변화 - 2026-04-30T15:59:34.922Z
+- 일시: 2026-04-30T15:59:34.922Z
+- 변화 메모: 2026-04-30 15:59 wiki_signal 기준으로 Conflict Register가 기록됨되었고 승인 전 근거 충돌과 보류 조건을 먼저 따져줘.가 수행/대기됨
+- 원천: wiki_signal
+- Decision ID: wiki-obsidian/Wiki/KumhoTire_FirstProduct_Xray_Project/Conflict_Register.md-0
+- 처리: approve
+- 근거 경로: obsidian/Wiki/KumhoTire_FirstProduct_Xray_Project/Conflict_Register.md
+
+
+## Decision Queue 운영 변화 - 2026-04-30T15:59:36.991Z
+- 일시: 2026-04-30T15:59:36.991Z
+- 변화 메모: 2026-04-30 15:59 wiki_signal 기준으로 Conflict Register가 기록됨되었고 승인 전 근거 충돌과 보류 조건을 먼저 따져줘.가 수행/대기됨
+- 원천: wiki_signal
+- Decision ID: wiki-obsidian/Wiki/KumhoTire_FirstProduct_Xray_Project/Conflict_Register.md-1
+- 처리: approve
+- 근거 경로: obsidian/Wiki/KumhoTire_FirstProduct_Xray_Project/Conflict_Register.md
+
+
+## Decision Queue 운영 변화 - 2026-04-30T15:59:38.727Z
+- 일시: 2026-04-30T15:59:38.727Z
+- 변화 메모: 2026-04-30 15:59 wiki_signal 기준으로 Conflict Register가 기록됨되었고 승인 전 근거 충돌과 보류 조건을 먼저 따져줘.가 수행/대기됨
+- 원천: wiki_signal
+- Decision ID: wiki-obsidian/Wiki/KumhoTire_FirstProduct_Xray_Project/Conflict_Register.md-2
+- 처리: approve
+- 근거 경로: obsidian/Wiki/KumhoTire_FirstProduct_Xray_Project/Conflict_Register.md
+
+
+## Decision Queue 운영 변화 - 2026-04-30T15:59:40.532Z
+- 일시: 2026-04-30T15:59:40.532Z
+- 변화 메모: 2026-04-30 15:59 wiki_signal 기준으로 Conflict Register가 기록됨되었고 승인 전 근거 충돌과 보류 조건을 먼저 따져줘.가 수행/대기됨
+- 원천: wiki_signal
+- Decision ID: wiki-obsidian/Wiki/KumhoTire_FirstProduct_Xray_Project/Conflict_Register.md-3
+- 처리: approve
+- 근거 경로: obsidian/Wiki/KumhoTire_FirstProduct_Xray_Project/Conflict_Register.md

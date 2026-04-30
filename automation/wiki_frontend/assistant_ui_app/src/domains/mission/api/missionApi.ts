@@ -32,6 +32,9 @@ export type MissionProject = {
   customerFollowups?: string[];
   rawEvidence?: string[];
   opsActions?: string[];
+  linkedWikis?: string[];
+  integrationSignals?: string[];
+  accountRollupCandidates?: string[];
   lastActivityAt?: string;
   hubPath?: string;
   score?: number;
@@ -44,6 +47,7 @@ export type MissionSummary = {
   highPriorityDocuments: number;
   operationalReady?: number;
   operationalGaps?: number;
+  integrationCandidates?: number;
 };
 
 export type MissionSnapshot = {

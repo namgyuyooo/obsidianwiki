@@ -14,6 +14,8 @@ node automation/wiki_api/server.mjs
 http://127.0.0.1:8787
 ```
 
+Twin vault 분리 기준에서는 업무/개인용 API를 다른 인스턴스와 다른 URL로 띄운다.
+
 ## 제공 기능
 
 - `automation/wiki_frontend/` 정적 파일 서빙
@@ -48,6 +50,13 @@ http://127.0.0.1:8787
 
 - `WIKI_API_PORT`: 기본 `8787`
 - `WIKI_API_HOST`: 기본 `127.0.0.1`
+- `WIKI_ALLOWED_WORKSPACES`: 기본 `rtm,personal`. URL 분리를 강제할 때는 인스턴스별로 `rtm` 또는 `personal`만 허용
+- `WIKI_DEFAULT_WORKSPACE`: 기본 워크스페이스
+- `PERSONAL_WIKI_REPO_ROOT`: 기본 `../obsidianwiki-personal`
+- `WORK_WIKI_PUBLIC_BASE_URL`: 업무 위키 URL 메타데이터
+- `PERSONAL_WIKI_PUBLIC_BASE_URL`: 개인 위키 URL 메타데이터
+- `WORK_WIKI_AUTH_MODE` / `PERSONAL_WIKI_AUTH_MODE`: `required`, `public` 등 인증 정책 메타데이터
+- `WORK_WIKI_VISIBILITY` / `PERSONAL_WIKI_VISIBILITY`: 노출 정책 메타데이터
 - `GLM_API_KEY`: GLM digest/chat에서 사용
 - `GLM_API_URL`: GLM endpoint. Z.ai Lite Coding Plan은 `https://api.z.ai/api/coding/paas/v4` 사용
 - `GLM_MODEL`: GLM 모델명
@@ -67,6 +76,18 @@ http://127.0.0.1:8787
 - `Slack 수집`: 채널 목록 조회, 증분 수집, raw export/state 보존을 담당한다.
 - `운영`: 상태, 예약, 설정, 스킬 카탈로그를 담당한다.
 - `Paperclip`: 독립 지식 저장소가 아니라 위키와 GLM 챗이 참고할 agent/template/task 컨텍스트 브리지다.
+
+## Twin URL 권장 실행
+
+- 업무 인스턴스:
+  - `WIKI_ALLOWED_WORKSPACES=rtm`
+  - `WIKI_DEFAULT_WORKSPACE=rtm`
+  - `WORK_WIKI_PUBLIC_BASE_URL=https://work.example.com`
+- 개인 인스턴스:
+  - `WIKI_ALLOWED_WORKSPACES=personal`
+  - `WIKI_DEFAULT_WORKSPACE=personal`
+  - `PERSONAL_WIKI_REPO_ROOT=../obsidianwiki-personal`
+  - `PERSONAL_WIKI_PUBLIC_BASE_URL=https://personal.example.com`
 
 ## GLM 챗 보조 지식 저장
 

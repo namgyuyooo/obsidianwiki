@@ -18,6 +18,7 @@ source: ""
 ## 활성 운영 모델
 - [[Wiki/index]]: 위키 전역 진입점
 - [[Wiki/log]]: 위키 운영의 시간 순 로그
+- [[Wiki/Common/Twin_Vault_Separation_Model]]: 업무/개인 위키를 별도 vault로 분리하면서 같은 운영 골격을 유지하는 기준
 - [[Wiki/Common/Wiki_Reference_Operating_Model]]: 링크 우선 참조 레지스터 운영 모델
 - [[Wiki/Common/Reference_Link_Restoration_Queue]]: URL이 비어 있는 참조 항목의 복원 큐
 - [[Wiki/Common/Decisions]]: Common 운영 판단과 디시전큐 확정 결과
@@ -42,6 +43,7 @@ source: ""
 - [[Wiki/Common/Hanmac_Assessment]]: 한맥 채널의 최근 2년 증적 밀도와 보류 판단
 - [[Wiki/Common/MOCVD_Recipe]]: 여러 프로젝트에서 재사용하는 공정 개념
 - [[Wiki/Common/Wiki_Reference_Operating_Model]]: 요약은 남기되 원문 위치와 링크를 추적하는 참조 중심 운영 기준
+- [[Wiki/Common/Twin_Vault_Separation_Model]]: 개인과 업무를 source/service/folder 레벨에서 분리 운영하는 twin-vault 기준
 - [[Wiki/Common/Reference_Link_Restoration_Queue]]: URL 미복원 참조를 Slack/Drive/Local 기준으로 추적하는 복원 작업 큐
 - [[Wiki/Common/Decisions]]: Common 운영 판단과 디시전큐 확정 결과
 - [[Wiki/Common/Action_Items]]: Common 운영 후속 실행 큐
@@ -69,6 +71,7 @@ source: ""
 - [[Wiki/Common/Project_Candidate_Register]]: 공개 Slack 증적을 기준으로 분리 가능한 프로젝트 후보 레지스터
 - [[Wiki/Common/Cross_Project_Patterns]]: 고객별 로그를 넘어 반복되는 전환/배포/운영 패턴 정리
 - [[Wiki/Common/Accounts_Index]]: 여러 하위 축을 함께 봐야 하는 고객 계정 허브 인덱스
+- [[Wiki/Common/Twin_Vault_Separation_Model]]: 개인/업무 twin-vault 운영 기준
 - [[Wiki/Common/Hanmac_Assessment]]: 한맥 채널의 최근 2년 증적 밀도와 보류 판단
 - [[Wiki/Common/MOCVD_Recipe]]: 여러 프로젝트에서 재사용하는 공정 개념
 - [[Wiki/Common/Wiki_Reference_Operating_Model]]: 링크 우선 참조 레지스터 운영 모델

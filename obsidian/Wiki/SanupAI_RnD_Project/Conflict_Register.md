@@ -1,30 +1,23 @@
 ---
 type: log
+projectKey: SanupAI_RnD_Project
 created: 2026-04-29
-updated: 2026-04-30
+updated: 2026-05-01
 source: "2026-04-29 wiki structure improvement pass"
 ---
 
 # Conflict Register
 
 ## Open Conflicts
-- 상충 수치, 버전 불일치, 고객/내부 판단 불일치, 범위 미확정을 이 문서에 등록합니다.
-- 해소 전까지 허브 상단 `현재 막힘 / 충돌`과 연동해 가시화합니다.
+- 현재 등록된 명시적 충돌: 없음
+- 정부과제 문서 정합성 점검과 작성 TODO는 [[Wiki/SanupAI_RnD_Project/Action_Items]], [[Wiki/SanupAI_RnD_Project/Status]], [[Wiki/SanupAI_RnD_Project/Risks]]에서 관리
 
 ## 처리 원칙
 - 관련 참조는 [[Wiki/SanupAI_RnD_Project/Reference_Register]]에서 우선 확인
-- 충돌이 상태에 영향을 주면 [[Wiki/SanupAI_RnD_Project/Status]]의 blocker와 history에도 반영
-- 확정되면 [[Wiki/SanupAI_RnD_Project/Decisions]]로 승격
-- 실행이 필요하면 [[Wiki/SanupAI_RnD_Project/Action_Items]]로 연결
-- 리스크가 커지면 [[Wiki/SanupAI_RnD_Project/Risks]]로 승격
-
-## 기존 정리 메모
-## Current Status
-
-- 상태: 초기화됨
-- 현재 등록된 충돌: 없음
+- 실제 과제번호, 예산, 참여기관 역할, KPI, 일정, 제출본 버전 충돌만 이 문서에 남깁니다.
+- 승인 로그나 구조 정비 메모는 conflict로 남기지 않습니다.
+- 확정되면 [[Wiki/SanupAI_RnD_Project/Decisions]]로 승격합니다.
 
 ## Capture Rule
-
-- 과제번호, 예산, 참여기관 역할, KPI, 일정, 제출본 버전이 서로 다르면 이곳에 충돌로 등록합니다.
-- 해결 전까지 기존 값과 신규 값을 모두 보존합니다.
+- 기존 값과 신규 값이 동시에 제출 기준이 될 수 없을 때만 등록합니다.
+- 문서 생성/갱신 승인 로그는 [[Wiki/SanupAI_RnD_Project/Change_Log]]나 전역 로그로 남깁니다.

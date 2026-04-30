@@ -20,6 +20,7 @@ const EMPTY_SNAPSHOT: PaperclipSnapshot = {
   templates: [],
   tasks: [],
   events: [],
+  runs: [],
 };
 
 function parsePayloadText(value: string): Record<string, unknown> {
@@ -94,17 +95,23 @@ export function usePaperclipStudio() {
 
   const queueAndTrigger = () =>
     runWithPayload(
-      (template, payload) => triggerPaperclipTemplate({ templateId: template.id, title: title || template.title, dryRun: template.dryRun, payload }),
+      (template, payload) => triggerPaperclipTemplate({
+        templateId: template.id,
+        title: title || template.title,
+        dryRun: template.dryRun,
+        payload,
+        async: true,
+      }),
       "triggering",
-      "Paperclip task를 생성하고 실행했습니다.",
+      "Paperclip task를 생성하고 비동기 실행을 요청했습니다.",
     );
 
   const triggerTask = async (task: PaperclipTask) => {
     setPhase("triggering");
     notify("running", "Paperclip task 실행 시작", task.title || task.id, { durationMs: 2200 });
     try {
-      await triggerExistingPaperclipTask(task.id);
-      setMessage(`${task.title || task.id} 실행을 요청했습니다.`);
+      await triggerExistingPaperclipTask(task.id, { async: true });
+      setMessage(`${task.title || task.id} 비동기 실행을 요청했습니다.`);
       await reload();
       notify("success", "Paperclip task 실행 요청 완료", task.title || task.id);
     } catch (error) {

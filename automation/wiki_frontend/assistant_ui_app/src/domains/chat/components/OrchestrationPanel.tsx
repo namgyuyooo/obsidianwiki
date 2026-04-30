@@ -1,6 +1,8 @@
 import type { ChatProject } from "../api/chatWorkspaceApi";
 import type { ReactNode } from "react";
 import { useMemo, useState } from "react";
+import { useThreadRuntime } from "@assistant-ui/react";
+import { stopChatProjectRun } from "../api/chatWorkspaceApi";
 
 type OrchestrationPanelProps = {
   data: Record<string, any>;
@@ -121,6 +123,7 @@ function buildThinkingSteps(input: {
 export function OrchestrationPanel({ data, activeProject }: OrchestrationPanelProps) {
   const [thinkingOpen, setThinkingOpen] = useState(true);
   const [debugOpen, setDebugOpen] = useState(true);
+  const runtime = useThreadRuntime();
   const retrieval = data.retrieval || {};
   const validation = data.validation || {};
   const paperclip = data.paperclip || {};
@@ -144,6 +147,27 @@ export function OrchestrationPanel({ data, activeProject }: OrchestrationPanelPr
     projectBinding,
     activeProject,
   }), [activeProject, paperclip, projectBinding, retrieval, status, validation]);
+  const activeCheckpoint = paperclip.checkpoint || paperclip.triggeredTasks?.[0]?.checkpoint || paperclip.followupTask?.checkpoint || null;
+  const actionableTasks = paperclip.triggeredTasks?.length ? paperclip.triggeredTasks : paperclip.recentProjectTasks;
+
+  const runCheckpointAction = async (action: Record<string, any>) => {
+    if (!action) return;
+    if (action.type === "prompt" && action.prompt) {
+      runtime.composer.setText(String(action.prompt));
+      runtime.composer.send();
+      return;
+    }
+    if (action.type === "surface" && action.surface) {
+      const url = new URL(window.location.href);
+      url.searchParams.set("surface", String(action.surface));
+      window.history.pushState(null, "", `${url.pathname}${url.search}${url.hash}`);
+      window.dispatchEvent(new PopStateEvent("popstate"));
+      return;
+    }
+    if (action.id === "stop_chat" && activeProject?.id) {
+      await stopChatProjectRun(activeProject.id).catch(() => null);
+    }
+  };
 
   return (
     <aside className="aui-chat-orchestration-panel" aria-label="chat orchestration rail">
@@ -233,15 +257,32 @@ export function OrchestrationPanel({ data, activeProject }: OrchestrationPanelPr
           <span>Blocked {paperclip.blockedActions?.length || 0}</span>
         </div>
         {listOrFallback(
-          paperclip.autoRuns?.length ? paperclip.autoRuns : paperclip.agentDrafts,
+          actionableTasks?.length ? actionableTasks : (paperclip.autoRuns?.length ? paperclip.autoRuns : paperclip.agentDrafts),
           (item, index) => (
             <article className="aui-orch-item" key={`${item.id || item.templateId || index}`}>
               <strong>{item.title || item.templateId || item.agent || "Paperclip task"}</strong>
               <span>{item.agent || "-"} · {item.status || item.approval || "pending"}</span>
+              {item.phase ? <small>{item.phase}</small> : null}
+              {item.runPath ? <small>{item.runPath}</small> : null}
             </article>
           ),
           "이번 턴에서 실행되거나 제안된 Paperclip 작업이 없습니다.",
         )}
+        {activeCheckpoint ? (
+          <article className="aui-orch-item">
+            <strong>{activeCheckpoint.label || activeCheckpoint.phase || "checkpoint"}</strong>
+            <span>{activeCheckpoint.message || "-"}</span>
+            {activeCheckpoint.availableActions?.length ? (
+              <div className="aui-paperclip-result-actions">
+                {activeCheckpoint.availableActions.map((action: Record<string, any>) => (
+                  <button key={action.id || action.label} onClick={() => void runCheckpointAction(action)} type="button">
+                    {action.label || action.id}
+                  </button>
+                ))}
+              </div>
+            ) : null}
+          </article>
+        ) : null}
       </section>
 
       <section className="aui-orch-card">

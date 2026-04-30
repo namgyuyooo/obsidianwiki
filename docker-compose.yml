@@ -11,19 +11,63 @@ services:
       WIKI_OPS_REPO_ROOT: /workspace/wiki-repo
       WIKI_API_HOST: 0.0.0.0
       WIKI_API_PORT: 8787
+      WIKI_ALLOWED_WORKSPACES: rtm
+      WIKI_DEFAULT_WORKSPACE: rtm
+      WORK_WIKI_PUBLIC_BASE_URL: http://127.0.0.1:8787
+      WORK_WIKI_AUTH_MODE: required
+      WORK_WIKI_VISIBILITY: private
       DRIVE_WIKIFY_ENV: /config/drive_wikify.env
       DRIVE_WIKIFY_RUNTIME: /data/drive_wikify/runtime
       WIKI_API_RUNTIME: /data/wiki_api/runtime
       RCLONE_CONFIG: /config/rclone/rclone.conf
       PYTHONPATH: /workspace/wiki-repo/automation/drive_wikify/src
       RHWP_BIN: /usr/local/bin/rhwp
+      WIKI_HOST_USER_MOUNT_ROOT: /host/Users/rtm
     volumes:
       - .:/workspace/wiki-repo
       - ./docker/config:/config
-      - /Users/rtm:/host/Users/rtm:ro
+      - ${HOME}:/host/Users/rtm:ro
       - wiki_ops_data:/data
     healthcheck:
       test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:8787/api/health >/dev/null || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  wiki-ops-personal:
+    build:
+      context: .
+    image: obsidian-wiki-ops:local
+    container_name: obsidian-wiki-ops-personal
+    restart: unless-stopped
+    ports:
+      - "8788:8788"
+    environment:
+      WIKI_OPS_REPO_ROOT: /workspace/wiki-repo
+      PERSONAL_WIKI_REPO_ROOT: /workspace/personal-wiki
+      WIKI_API_HOST: 0.0.0.0
+      WIKI_API_PORT: 8788
+      WIKI_ALLOWED_WORKSPACES: personal
+      WIKI_DEFAULT_WORKSPACE: personal
+      PERSONAL_WIKI_PUBLIC_BASE_URL: http://127.0.0.1:8788
+      PERSONAL_WIKI_AUTH_MODE: public
+      PERSONAL_WIKI_VISIBILITY: public
+      DRIVE_WIKIFY_ENV: /config/personal_drive_wikify.env
+      DRIVE_WIKIFY_RUNTIME: /data/drive_wikify/runtime-personal
+      WIKI_API_RUNTIME: /data/wiki_api/runtime-personal
+      RCLONE_CONFIG: /config/rclone/rclone.conf
+      PYTHONPATH: /workspace/wiki-repo/automation/drive_wikify/src
+      RHWP_BIN: /usr/local/bin/rhwp
+      WIKI_HOST_USER_MOUNT_ROOT: /host/Users/rtm
+    volumes:
+      - .:/workspace/wiki-repo
+      - ../obsidianwiki-personal:/workspace/personal-wiki
+      - ./docker/config:/config
+      - ${HOME}:/host/Users/rtm:ro
+      - wiki_ops_data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:8788/api/health >/dev/null || exit 1"]
       interval: 30s
       timeout: 5s
       retries: 5

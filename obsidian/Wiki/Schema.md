@@ -19,6 +19,8 @@ source: ""
 - 모든 페이지는 적어도 하나의 들어오는 링크와 나가는 링크를 갖도록 노력합니다.
 - 민감한 자격증명(비밀번호, 토큰 등)은 wiki에 저장하지 않습니다.
 - 개인 기록은 RTM 업무 위키에 저장하지 않습니다. 개인/업무가 섞인 이벤트는 업무상 필요한 사실만 프로젝트 문서에 남기고 개인 맥락은 별도 개인 공간에 둡니다.
+- 개인 위키를 운영할 경우 이 저장소 내부 하위 폴더가 아니라 별도 vault/repository/service로 분리합니다.
+- 업무 위키와 개인 위키는 구조와 운영 규칙은 닮을 수 있지만 raw source root, persistent wiki root, L1 memory root, automation runtime, connector/auth context는 분리합니다.
 
 ## Space Type Schema
 
@@ -35,6 +37,7 @@ source: ""
   - Raw sources: `obsidian/raw/`
   - Persistent wiki: `obsidian/Wiki/`
   - Schema and operating rules: `AGENTS.md`, `[[Wiki/Schema]]`, `[[Wiki/Common/Wiki_Ingest_Operating_Model]]`
+- 개인용 twin vault를 만들더라도 동일한 3층 구조를 별도 루트에서 독립적으로 복제하는 방식을 기본값으로 합니다.
 - Raw sources는 원본 보존 계층이며, LLM이 읽을 수는 있어도 수정하지 않는 것을 기본값으로 합니다.
 - Persistent wiki는 LLM이 유지보수하는 지식 계층입니다.
 - Schema 계층은 LLM의 작업 방식과 문서 규칙을 고정하는 운영 문서입니다.
@@ -88,7 +91,7 @@ source: ""
   - `다음 액션`: 누가 무엇을 확인하거나 실행해야 하는지입니다.
 - `Change_Log.md`는 위키 구조/내용 변경 이력이고, 허브의 운영 메모와 일시별 추진내용은 실제 실무 추진 상태를 보는 현황판입니다. 둘은 목적이 다르므로 둘 다 유지합니다.
 - “허브 표준화”, “위키 정리”, “문서 목록 전환”처럼 위키 내부 관리 행위만 설명하는 문장은 허브의 핵심 진행기록으로 쓰지 않습니다. 그런 내용은 필요하면 `Change_Log.md`에만 남깁니다.
-- 허브에는 확정되지 않은 대화나 임시 추론을 최종 사실처럼 쓰지 않습니다. 미확정 내용은 `Conflict_Register.md`나 메모리/챗 보조 지식으로 분리합니다.
+- 허브에는 확정되지 않은 대화나 임시 추론을 최종 사실처럼 쓰지 않습니다. 다만 미확정 내용이 모두 conflict는 아닙니다. 실무 질문, 후속 확인, 구조 해석은 `Status.md`, `Action_Items.md`, `Risks.md`, `Decisions.md`, `hub.md`로 보내고, 명시적 상충값만 `Conflict_Register.md`에 둡니다.
 
 ### Space Type별 허브 기준
 
@@ -119,11 +122,13 @@ source: ""
 - `Reference_Register.md`는 요약된 참조 항목, 설명 위치, 관련 문서, URL/경로/fallback 파일명을 관리합니다.
 - `Sources.md`는 상세한 출처 메타데이터나 레거시 원문 관리가 필요한 경우에만 보조적으로 사용합니다.
 - `Evidence_Log.md`는 핵심 문장, 수치, 산식, 결정 이유, 제약 조건의 발췌를 보관합니다.
-- `Conflict_Register.md`는 상충 수치, 상충 주장, 미확정 판단을 보관합니다.
+- `Conflict_Register.md`는 상충 수치, 상충 주장, 버전 불일치처럼 동시에 current truth로 둘 수 없는 항목을 보관합니다.
 - `Change_Log.md`는 위키 구조 변경, 복구 이력, 핵심 업데이트를 기록합니다.
 - `Evidence Log.md`, `Conflict Register.md`, `Change Log.md` 같은 space 방식 파일명은 새로 만들지 않습니다.
 - 다만 `Conflict_Register.md`는 실제 상충값, 상충 주장, 버전 불일치처럼 충돌이 명시적인 경우에 우선 사용합니다.
 - 단순한 `검토 필요`, `정합성 확인`, `허브/상태/액션 업데이트 필요`는 conflict보다 `Action_Items.md`, `Decisions.md`, `Risks.md`, `Status.md`, `hub.md` 업데이트로 먼저 흡수합니다.
+- 프로젝트 경계, 차수 연결, 범위 해석, 미팅 질문, 구조 메모 같은 약한 항목은 conflict가 아니라 운영 문서의 문제입니다.
+- 승인 로그, 위키 승격 로그, 병합 메타데이터는 `Conflict_Register.md`에 남기지 않습니다.
 
 프로젝트가 아닌 `account`, `common`, `shared` 공간에는 위 문서 세트를 강제로 만들지 않습니다. 다만 특정 운영 흐름상 필요한 경우 명시적으로 추가할 수 있습니다.
 
@@ -134,7 +139,7 @@ source: ""
   - `Reference_Register.md`에 링크/경로/fallback 파일명 기준 참조 등록
   - 필요 시 `Sources.md`에 상세 출처 메모 등록
   - `Evidence_Log.md`에 사실, 원문, 수치, 결정사항 추출
-  - 충돌 또는 미확정 값은 `Conflict_Register.md`에 등록
+  - 충돌 또는 미확정 값은 성격을 먼저 구분한 뒤, 명시적 상충값만 `Conflict_Register.md`에 등록
   - 실제 문서 수정은 `Change_Log.md`에 기록
   - 프로젝트 상태가 바뀌면 `obsidian/L1_memory/{ProjectName}.md` 갱신
 

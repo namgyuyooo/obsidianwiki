@@ -51,3 +51,27 @@ source: ""
 - 가장 가까운 게이트: 2026 양식 HWP 목차를 작성 셀 단위로 쪼개고, 신청서/사업비/AI공장 구축 트랙 정합성 확인
 - 막힘: 신청 유형, 사업비, 고객 현장 문제 정의, RTM 역할, 양산 데이터 규모, 미탐 `D_3310`, `D_2324` 설명 방식
 - 상태 변화 메모: 2026-04-30 00:00 쏘닉스 사업계획서 작성 분석 기준으로 PoC 후속 영업이 제출 준비 단계로 구체화되었고 KPI/작성 셀 분해/고객 확인 액션이 대기됨
+
+
+## 상태 변화 메모 - 2026-04-30T16:00:32.380Z
+- 2026-04-30 16:00 wiki_signal 기준으로 Conflict Register가 기록됨되었고 승인 전 근거 충돌과 보류 조건을 먼저 따져줘.가 수행/대기됨
+  - Decision: Conflict Register
+  - 처리: approve
+  - 근거: obsidian/Wiki/Sawnics_ManufacturingAI_Project/Conflict_Register.md
+  - 메모: 승인 전 근거 충돌과 보류 조건을 먼저 따져줘.
+
+
+## 상태 변화 메모 - 2026-04-30T16:00:33.642Z
+- 2026-04-30 16:00 wiki_signal 기준으로 Conflict Register가 기록됨되었고 승인 전 근거 충돌과 보류 조건을 먼저 따져줘.가 수행/대기됨
+  - Decision: Conflict Register
+  - 처리: approve
+  - 근거: obsidian/Wiki/Sawnics_ManufacturingAI_Project/Conflict_Register.md
+  - 메모: 승인 전 근거 충돌과 보류 조건을 먼저 따져줘.
+
+
+## 상태 변화 메모 - 2026-04-30T16:00:35.356Z
+- 2026-04-30 16:00 wiki_signal 기준으로 Conflict Register가 기록됨되었고 승인 전 근거 충돌과 보류 조건을 먼저 따져줘.가 수행/대기됨
+  - Decision: Conflict Register
+  - 처리: approve
+  - 근거: obsidian/Wiki/Sawnics_ManufacturingAI_Project/Conflict_Register.md
+  - 메모: 승인 전 근거 충돌과 보류 조건을 먼저 따져줘.

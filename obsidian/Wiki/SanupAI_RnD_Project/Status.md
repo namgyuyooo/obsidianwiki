@@ -48,3 +48,35 @@ source: ""
 - 막힘: 연구개발 목표, 참여기관 역할, 예산, KPI, 실증 범위, 평가 기준 근거 부족
 - 가장 가까운 게이트: 관련 Drive/Slack/파일 원문을 `Sources`, `Evidence_Log`, `Raw_Evidence_Index`에 연결하고, 충돌 가능 항목을 `Conflict_Register`에 등록
 - 상태 변화 메모: 2026-04-30 00:00 SanupAI R&D 허브 기준으로 프로젝트가 운영형 골격은 갖췄으나 원문 근거 부족 상태로 기록되었고 수집/인제스트 액션이 대기됨
+
+
+## 상태 변화 메모 - 2026-04-30T16:00:36.581Z
+- 2026-04-30 16:00 wiki_signal 기준으로 Conflict Register가 기록됨되었고 승인 전 근거 충돌과 보류 조건을 먼저 따져줘.가 수행/대기됨
+  - Decision: Conflict Register
+  - 처리: approve
+  - 근거: obsidian/Wiki/SanupAI_RnD_Project/Conflict_Register.md
+  - 메모: 승인 전 근거 충돌과 보류 조건을 먼저 따져줘.
+
+
+## 상태 변화 메모 - 2026-04-30T16:00:58.078Z
+- 2026-04-30 16:00 wiki_signal 기준으로 Conflict Register가 기록됨되었고 GLM 연결이 없어서 규칙 기반 병합 초안을 생성했습니다. 출처 우선으로 보되 대상 문서의 기존 구조를 유지하는 방식으로 검토하세요.가 수행/대기됨
+  - Decision: Conflict Register
+  - 처리: approve
+  - 근거: obsidian/Wiki/SanupAI_RnD_Project/Conflict_Register.md
+  - 메모: GLM 연결이 없어서 규칙 기반 병합 초안을 생성했습니다. 출처 우선으로 보되 대상 문서의 기존 구조를 유지하는 방식으로 검토하세요.
+
+
+## 상태 변화 메모 - 2026-04-30T16:01:10.451Z
+- 2026-04-30 16:01 wiki_signal 기준으로 Conflict Register가 기록됨되었고 Decision Deck 비교 패널에서 저장 후 승인 처리가 수행/대기됨
+  - Decision: Conflict Register
+  - 처리: approve
+  - 근거: obsidian/Wiki/SanupAI_RnD_Project/Conflict_Register.md
+  - 메모: Decision Deck 비교 패널에서 저장 후 승인 처리
+
+
+## 상태 변화 메모 - 2026-04-30T16:01:24.555Z
+- 2026-04-30 16:01 wiki_signal 기준으로 Conflict Register가 기록됨되었고 GLM 연결이 없어서 규칙 기반 병합 초안을 생성했습니다. 출처 우선으로 보되 대상 문서의 기존 구조를 유지하는 방식으로 검토하세요.가 수행/대기됨
+  - Decision: Conflict Register
+  - 처리: approve
+  - 근거: obsidian/Wiki/SanupAI_RnD_Project/Conflict_Register.md
+  - 메모: GLM 연결이 없어서 규칙 기반 병합 초안을 생성했습니다. 출처 우선으로 보되 대상 문서의 기존 구조를 유지하는 방식으로 검토하세요.

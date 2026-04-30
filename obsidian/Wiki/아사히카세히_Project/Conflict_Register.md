@@ -1,38 +1,22 @@
 ---
 type: conflict
 created: 2026-04-29
-updated: 2026-04-30
+updated: 2026-05-01
 source: "wiki management command"
 ---
 
-# 아사히카세히 Conflict Register
+# Conflict Register
 
 ## Open Conflicts
-- 상충 수치, 버전 불일치, 고객/내부 판단 불일치, 범위 미확정을 이 문서에 등록합니다.
-- 해소 전까지 허브 상단 `현재 막힘 / 충돌`과 연동해 가시화합니다.
+- 현재 등록된 명시적 충돌: 없음
+- 승격 이력과 프로젝트 구조 메모는 [[Wiki/아사히카세히_Project/Change_Log]]와 관련 허브에서 관리
 
 ## 처리 원칙
 - 관련 참조는 [[Wiki/아사히카세히_Project/Reference_Register]]에서 우선 확인
-- 충돌이 상태에 영향을 주면 [[Wiki/아사히카세히_Project/Status]]의 blocker와 history에도 반영
-- 확정되면 [[Wiki/아사히카세히_Project/Decisions]]로 승격
-- 실행이 필요하면 [[Wiki/아사히카세히_Project/Action_Items]]로 연결
-- 리스크가 커지면 [[Wiki/아사히카세히_Project/Risks]]로 승격
+- 실제 상충 수치, 범위, 일정, 버전 불일치만 이 문서에 남깁니다.
+- 위키 승격 로그나 구조 변경 이력은 conflict가 아니라 [[Wiki/아사히카세히_Project/Change_Log]]로 보냅니다.
+- 확정되면 [[Wiki/아사히카세히_Project/Decisions]]로 승격합니다.
 
-## 기존 정리 메모
-충돌/불일치 후보를 관리합니다.
-
-## Wiki Management Promotion 2026-04-29T06:26:09.341Z
-<!-- wiki-management:1777440860508-wiki-management:project_customer_promotion -->
-- 명령: 아사히카세히의 위키를 모두 모아 프로젝트, 고객사로 승격해. 참고로 아사히카세이->아사히카세히 영칭도 일괄수정
-- 실행시각: 2026-04-29T06:26:09.341Z
-- 성격: conflict
-
-### 연결 근거
-- [[L1_memory/GLM_Chat_Projects/1777435884212-아사히카세이_업무실]]: GLM Chat Project - 아사히카세이 업무실
-- [[L1_memory/RTM_YNG_아사히카세이]]: RTM_YNG_아사히카세이
-- [[Wiki/Common/RTM_YNG_Drive_Discovery_2026-04-21]]: RTM_YNG Drive Discovery
-- [[Wiki/Common/RTM_YNG_Project_Index_2026-04-21]]: RTM_YNG Project Index
-- [[Wiki/Common/RTM_YNG_Project_Knowledge_Base_2026-04-21]]: RTM_YNG Project Knowledge Base
-- [[Wiki/Common/RTM_YNG_Wiki_Build_Plan_2026-04-21]]: RTM_YNG Wiki Build Plan
-- [[Wiki/Common/RTM_YNG_아사히카세이_보고자료_2026-04-22]]: 아사히카세이 보고자료 2026-04-22
-- [[Wiki/Common/RTM_YNG_아사히카세이]]: 아사히카세이
+## Capture Rule
+- 서로 다른 근거가 동시에 운영 기준이 될 수 없을 때만 등록합니다.
+- 위키 관리 명령, 승격 작업, 승인 로그는 conflict로 남기지 않습니다.

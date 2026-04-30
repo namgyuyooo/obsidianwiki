@@ -27,6 +27,7 @@ source: "Global wiki index initialized from existing project hubs"
 ## Operating Documents
 
 - [[Wiki/Common/Wiki_Reference_Operating_Model]]: 링크 우선 참조 레지스터 운영 모델
+- [[Wiki/Common/Twin_Vault_Separation_Model]]: 업무 위키와 개인 위키를 별도 vault/service/source로 완전 분리하면서 같은 운영 로직을 유지하는 기준
 - [[Wiki/Common/Reference_Link_Restoration_Queue]]: URL 미복원 참조의 복원 큐
 - [[Wiki/Common/Wiki_Ingest_Operating_Model]]: 인제스트 운영 원칙
 - [[Wiki/Common/Wiki_Ingest_Templates]]: 핵심 문서 템플릿
@@ -115,6 +116,7 @@ Drive 소스 기반으로 구축된 RTM_YNG 계열 프로젝트 페이지 (L1_me
 ## Usage Notes
 
 - top-level 공간은 `project`, `account`, `common`, `shared` 역할로 구분해 운영합니다.
+- 이 저장소는 업무 전용 위키입니다. 개인 위키가 필요하면 이 저장소 내부 namespace가 아니라 별도 vault/repo/service로 분리하고, 구조와 로직만 `[[Wiki/Common/Twin_Vault_Separation_Model]]` 기준으로 맞춥니다.
 - `project` 허브는 상태, 막힘, 다음 액션, 근거가 상단에 보여야 합니다.
 - 각 `project` 공간의 `Status.md`를 상태 라벨, 단계, 헬스, 담당, 막힘, 다음 게이트의 기준 레지스터로 사용합니다.
 - 신규 데이터나 결정이 상태를 바꾸면 `Status.md`와 `Change_Log.md`에 `YYYY-MM-DD HH:mm [원천] 기준으로 [변화]가 기록되었고 [후속 액션]이 수행/대기됨` 형식의 상태 변화 메모를 남깁니다.

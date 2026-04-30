@@ -43,3 +43,9 @@ source: "wiki management command"
 - [[Wiki/Common/RTM_YNG_Wiki_Build_Plan_2026-04-21]]: RTM_YNG Wiki Build Plan
 - [[Wiki/Common/RTM_YNG_아사히카세이_보고자료_2026-04-22]]: 아사히카세이 보고자료 2026-04-22
 - [[Wiki/Common/RTM_YNG_아사히카세이]]: 아사히카세이
+
+## Action - 2026-04-30T16:29:19.692Z
+- 담당: 미지정
+- 기한: 미지정
+- 상태: planned
+- 액션: 아사히카세히 롤투롤공정 프로젝트는 현재 진행중이야. 현장테스트를 위한 내부 준비를 하고 있는단계야.
