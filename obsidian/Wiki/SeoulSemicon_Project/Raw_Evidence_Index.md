@@ -12,6 +12,12 @@ source: "operational wiki conversion"
 - 운영 요약은 Status, Business_Flow, CEO_Brief, PM_Action_Plan에서 별도 관리한다.
 - 원문이 아직 연결되지 않은 경우 `pending review`로 남기고, 추후 수집/인제스트 결과를 append한다.
 
+## 원문/추출 보존 인덱스 - 2026-04-30
+
+- [[Evidence_Log]]: 2025-06-17 Quotation, 2025-11-18 PO/Commercial Invoice, 2026-03-31 NDA/계약서/PO/Invoice/Acceptance Report, 2026-03-24 현장 속도/연동 이슈, 2026-03-26 4대 정상 가동/wrap up 원문.
+- [[Project_Overview]]: PCB당 처리 속도, 이더넷 속도별 편차, 해외 납품형 프로젝트 템플릿 해석.
+- 보존 원칙: 계약/검수 문서군과 현장 속도 수치는 후속 납품 조건의 기준값이므로 파일명/날짜/수치를 그대로 유지한다.
+
 | 원천 | 원문/추출 경로 | 유형 | 버전/일시 | 보존 범위 | 위키 반영 상태 |
 | --- | --- | --- | --- | --- | --- |
 | 운영형 전환 스캐폴드 | [[Wiki/SeoulSemicon_Project/hub]] | wiki scaffold | 2026-04-30 | 원문 연결 대기 | pending review |

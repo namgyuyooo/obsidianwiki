@@ -22,6 +22,11 @@ source: "public Slack evidence sweep (2024-04-21 to 2026-04-21)"
 - 서울세미콘 / SSC Vina 공개 Slack 증적 정리 시작
 - 2025 견적-발주-인보이스 흐름 등록
 - 2026 NDA-계약-PO-Invoice-Acceptance Report 문서군 등록
+
+## Change - 2026-04-30 운영 문서 실내용 보강
+
+- 2026-04-30 17:10 KST 기준 [[Project_Overview]]와 [[Evidence_Log]]를 바탕으로 서울세미콘/SSC Vina의 납품/검수/wrap up 상태를 운영 문서에 반영했다.
+- 계약 문서군과 현장 운영 속도 이슈를 분리해 CEO/PM 판단 항목으로 승격했다.
 - 출장/현장 운영 메시지 증적 등록
 
 ## Change - 2026-04-30

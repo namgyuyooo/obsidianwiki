@@ -8,6 +8,13 @@ source: "operational wiki conversion"
 # PM Action Plan
 
 | 액션 | Owner | 기한 | 선행조건 | 근거 | 상태 |
+
+## PM 실행 계획 - 2026-04-30
+
+- [ ] 2025 Quotation/PO/Invoice 흐름과 2026 NDA/계약/PO/Invoice/Acceptance Report가 같은 scope인지 확인한다.
+- [ ] 현장 4대 정상 가동 상태와 Acceptance Report를 검수 완료 근거로 연결한다.
+- [ ] `1000M -> 15초`, `100M -> 2분대` 속도 차이를 환경 요구사항으로 정리한다.
+- [ ] 추가 PC 계약/서류 공유 메시지를 확장 기회 또는 후속 유지보수 항목으로 분류한다.
 | --- | --- | --- | --- | --- | --- |
 | 원문/추출문 검토 후 현재 상태와 다음 액션 확정 | TBD | TBD | Raw_Evidence_Index 확인 | [[Wiki/SeoulSemicon_Project/Raw_Evidence_Index]] | planned |
 | 충돌/중복 후보가 있으면 Decision Queue에 등록 | TBD | TBD | Evidence_Log/Conflict_Register 확인 | [[Wiki/SeoulSemicon_Project/Evidence_Log]] | planned |

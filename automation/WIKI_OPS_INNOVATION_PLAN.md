@@ -57,6 +57,25 @@
   - 신규 데이터가 기존 프로젝트 허브와 얼마나 가까운지 자동 계산
   - 확정 전에는 Decision Queue로만 이동
 
+- [x] 실제 위키 운영 문서 1차 보강
+  - `Sawnics_ManufacturingAI_Project`, `아사히카세히_Project`, `ZEUS_AIVoucher_Project`, `Pixel_AIVoucher_Project`, `SanupAI_RnD_Project`에 실제 운영 블록 반영
+  - 각 프로젝트에 `Status`, `Business_Flow`, `CEO_Brief`, `PM_Action_Plan`, `Customer_Followup`, `Raw_Evidence_Index`, `Change_Log` 실내용 추가
+  - 원문/추출 보존 위치와 CEO/PM 판단 레이어를 분리
+
+- [x] 실제 위키 운영 문서 2차 보강
+  - `PSK_Project`, `LGEnergy_ImageAnalysis_Project`, `KumhoTire_FirstProduct_Xray_Project`, `HyundaiMobis_Project`, `SeoulBiosys_Project`에 운영 블록 반영
+  - 장기 계정, 요구사항/환경 제약, 현장 납품 전환, 견적/납기 협의, POC 확장 검토처럼 프로젝트별 운영 성격을 명시
+  - 금액, PO, 납기, 성능 목표, 가격 제안, 고객 수용 기준을 원문 보존 대상으로 지정
+
+- [x] 실제 위키 운영 문서 3차 보강
+  - `KumhoTire_CMS_Project`, `SeoulSemicon_Project`, `Mecaro_Forecast_Project`, `Daeduck_AFVI_Project`, `BGF_EcoSpecialty_Project`에 운영 블록 반영
+  - 배포 후 보정, 납품/검수, PoC-제안 전환, 제안/기술검토, 장기 운영 안정화처럼 프로젝트별 운영 성격을 명시
+  - 실패 케이스, 계약/검수 문서군, FCST 근거자료, ODB/인터페이스 조건, 성능 지표/항목 제외 기준을 원문 보존 대상으로 지정
+
+- [ ] 실제 위키 운영 문서 4차 보강 후보
+  - 근거량 기준 우선순위: `KoreaAlbac_Project`, `AdvancedElectricKorea_Project`, `DaehanCable_ProcessInnovation_Project`, `Nanotech_RnD_Project`, `HsAIVoucher_Project`, `2023_ai_pattern_Project`, `2023_main_mission_title_our_Project`, `2023_필요_불량유형의_대한_허용기준에_반영_자동라벨링_Project`, `2023_sheet1_Project`, `Business_Plan_Project`
+  - 완료 기준: 각 프로젝트 7개 운영 문서에 날짜형 실내용 블록이 있고, `Change_Log`에 동일 일시의 변환 기록이 남아야 함
+
 ## 운영 원칙
 
 - 원문은 보존하고, 요약은 색인과 의사결정 보조 레이어로만 사용한다.

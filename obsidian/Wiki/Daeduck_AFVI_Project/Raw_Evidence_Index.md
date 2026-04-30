@@ -12,6 +12,12 @@ source: "operational wiki conversion"
 - 운영 요약은 Status, Business_Flow, CEO_Brief, PM_Action_Plan에서 별도 관리한다.
 - 원문이 아직 연결되지 않은 경우 `pending review`로 남기고, 추후 수집/인제스트 결과를 append한다.
 
+## 원문/추출 보존 인덱스 - 2026-04-30
+
+- [[Evidence_Log]]: 2023-10-04 AFVI 초기 제안서, 2023-12-18 ODB 추가 제안서, 2024-03-11 최종 제안서 공유 요청, 상세 업무/공수/일정 보완 필요 메시지, ODB 데이터 소유권 메시지, ODB feature 파일.
+- [[Project_Overview]]: AFVI/FCCSP/ODB/크레셈/SDK 연동 구조와 고객 가시성 리스크 해석.
+- 보존 원칙: 제안서 버전명, ODB feature 파일, 연동 요구 항목은 scope 분쟁 가능성이 있으므로 원문/버전 체인을 유지한다.
+
 | 원천 | 원문/추출 경로 | 유형 | 버전/일시 | 보존 범위 | 위키 반영 상태 |
 | --- | --- | --- | --- | --- | --- |
 | 운영형 전환 스캐폴드 | [[Wiki/Daeduck_AFVI_Project/hub]] | wiki scaffold | 2026-04-30 | 원문 연결 대기 | pending review |
