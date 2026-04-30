@@ -14,6 +14,9 @@ source: "Initial Sawnics project wiki creation"
 - 실무 판단 자체는 [[Wiki/Sawnics_ManufacturingAI_Project/Decisions]]에, 실행 큐는 [[Wiki/Sawnics_ManufacturingAI_Project/Action_Items]]에 남기고 이 문서는 변경 사실을 기록합니다.
 
 ## 2026-04-30
+- Drive `5.국책과제/쏘닉스` 폴더 직접 확인 결과를 기준으로 [[Wiki/Sawnics_ManufacturingAI_Project/Business_Plan_Writing_Analysis_2026-04-30]]를 추가
+- 허브, Sources, Evidence_Log, Action_Items에 사업계획서 작성 분석 흐름 연결
+- PoC의 `IDT 13/13`, `Metal 4/5`, `Non Metal 4/5`, `D_3310`, `D_2324`를 합격용 사업계획서의 KPI/검증계획/성능개선 WBS로 전환하는 방향 명시
 - 핵심 운영 문서를 실무형 표준 섹션으로 재정비
 - 공고 PDF, 제출안내 PDF, 2026 양식 HWP, 2025 기존본 HWP를 로컬 경로에서 직접 추출
 - `rhwp` 로컬 바이너리 동작을 재확인하고 `RFP_Writing_Strategy_2026-04-30.md` 작성

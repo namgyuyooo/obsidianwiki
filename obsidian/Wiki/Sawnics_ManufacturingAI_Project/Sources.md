@@ -13,6 +13,62 @@ source: "Slack thread, local report config, local synced files"
 - URL을 직접 남기기 어렵거나 접근 메모가 더 중요한 경우 이 문서를 함께 사용합니다.
 
 ## 상세 출처 메모
+## 2026-04-30 / Drive `5.국책과제/쏘닉스` 직접 확인
+
+### Primary
+- 문서명: `★[공고] 2026년도 제조AI특화 스마트공장 구축지원사업 공고.pdf`
+- 유형: 공고 PDF
+- 상태: 로컬 Drive 쏘닉스 폴더 내 존재 확인, 기존 전략 문서에서 핵심 요건 반영
+- 로컬 경로: `/Users/rtm/Library/CloudStorage/GoogleDrive-jaykafka12@gmail.com/.shortcut-targets-by-id/1ogQO1tIP_l5pXwttvyRt6YEsP3vkgjzl/RTM_YNG/2026_RTM(drive)/5.국책과제/쏘닉스/양식/★[공고] 2026년도 제조AI특화 스마트공장 구축지원사업 공고.pdf`
+- 연결 페이지:
+  - [[RFP_Writing_Strategy_2026-04-30]]
+  - [[Business_Plan_Writing_Analysis_2026-04-30]]
+
+### Primary
+- 문서명: `첨부#00. (필독)2026년도 제조AI특화 스마트공장 구축사업 사업계획서 제출 안내문_경기테크노파크.pdf`
+- 유형: 제출 안내 PDF
+- 상태: 로컬 Drive 쏘닉스 폴더 내 존재 확인, 제출 일정/절차 기준 문서
+- 로컬 경로: `/Users/rtm/Library/CloudStorage/GoogleDrive-jaykafka12@gmail.com/.shortcut-targets-by-id/1ogQO1tIP_l5pXwttvyRt6YEsP3vkgjzl/RTM_YNG/2026_RTM(drive)/5.국책과제/쏘닉스/첨부#00. (필독)2026년도 제조AI특화 스마트공장 구축사업 사업계획서 제출 안내문_경기테크노파크.pdf`
+- 연결 페이지:
+  - [[RFP_Writing_Strategy_2026-04-30]]
+  - [[Business_Plan_Writing_Analysis_2026-04-30]]
+
+### Primary
+- 문서명: `첨부#02. 2. [사업계획서] 제조AI특화 스마트공장 사업계획서_양식_260326_01_데이터수집검증 중복화.hwp`
+- 유형: 사업계획서 작성 양식 HWP
+- 상태: 로컬 Drive 쏘닉스 폴더 내 존재 확인, 2026 작성 기준본
+- 로컬 경로: `/Users/rtm/Library/CloudStorage/GoogleDrive-jaykafka12@gmail.com/.shortcut-targets-by-id/1ogQO1tIP_l5pXwttvyRt6YEsP3vkgjzl/RTM_YNG/2026_RTM(drive)/5.국책과제/쏘닉스/첨부#02. 2. [사업계획서] 제조AI특화 스마트공장 사업계획서_양식_260326_01_데이터수집검증 중복화.hwp`
+- 연결 페이지:
+  - [[RFP_Writing_Strategy_2026-04-30]]
+  - [[Business_Plan_Writing_Analysis_2026-04-30]]
+
+### Primary
+- 문서명: `별첨#02. (신청단계), 2025년 정부일반형 스마트공장 사업계획서_쏘닉스_20250117(보완2).hwp`
+- 유형: 2025 기존 사업계획서 HWP
+- 상태: 로컬 Drive 쏘닉스 폴더 내 존재 확인, 현장/공정/ERP/MES/RMS/Recipe 베이스라인 후보
+- 로컬 경로: `/Users/rtm/Library/CloudStorage/GoogleDrive-jaykafka12@gmail.com/.shortcut-targets-by-id/1ogQO1tIP_l5pXwttvyRt6YEsP3vkgjzl/RTM_YNG/2026_RTM(drive)/5.국책과제/쏘닉스/별첨#02. (신청단계), 2025년 정부일반형 스마트공장 사업계획서_쏘닉스_20250117(보완2).hwp`
+- 연결 페이지:
+  - [[RFP_Writing_Strategy_2026-04-30]]
+  - [[Business_Plan_Writing_Analysis_2026-04-30]]
+
+### Primary
+- 문서명: `별첨#01. (수정본)1. [사업신청서] 제조AI특화 스마트공장 사업신청서.pdf`
+- 유형: 신청서 PDF
+- 상태: 로컬 Drive 쏘닉스 폴더 내 존재 확인, 신청 유형/사업비/범위 정합성 확인 필요
+- 로컬 경로: `/Users/rtm/Library/CloudStorage/GoogleDrive-jaykafka12@gmail.com/.shortcut-targets-by-id/1ogQO1tIP_l5pXwttvyRt6YEsP3vkgjzl/RTM_YNG/2026_RTM(drive)/5.국책과제/쏘닉스/별첨#01. (수정본)1. [사업신청서] 제조AI특화 스마트공장 사업신청서.pdf`
+- 연결 페이지:
+  - [[Business_Plan_Writing_Analysis_2026-04-30]]
+  - [[Action_Items]]
+
+### Primary
+- 문서명: `첨부#03. 3. SW개발비_FP산출내역서(도입기업명).xlsx`
+- 유형: 사업비/FP 산출 Excel
+- 상태: 로컬 Drive 쏘닉스 폴더 내 존재 확인, 사업비와 개발범위 정합성 확인 필요
+- 로컬 경로: `/Users/rtm/Library/CloudStorage/GoogleDrive-jaykafka12@gmail.com/.shortcut-targets-by-id/1ogQO1tIP_l5pXwttvyRt6YEsP3vkgjzl/RTM_YNG/2026_RTM(drive)/5.국책과제/쏘닉스/첨부#03. 3. SW개발비_FP산출내역서(도입기업명).xlsx`
+- 연결 페이지:
+  - [[Business_Plan_Writing_Analysis_2026-04-30]]
+  - [[Action_Items]]
+
 ## 운영 원칙
 - 이 문서는 출처 레지스터입니다. 문서명, 날짜, 경로, 상태, 대표본 여부를 우선 남깁니다.
 - 대표본/비교본/보류본 구분이 필요한 경우 명시합니다.

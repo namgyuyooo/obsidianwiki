@@ -2,7 +2,7 @@ import { createServer } from "node:http";
 import { readFile, readdir, stat, writeFile, mkdir, unlink, rm } from "node:fs/promises";
 import { createReadStream, existsSync } from "node:fs";
 import { spawn } from "node:child_process";
-import { dirname, extname, isAbsolute, join, normalize, relative, resolve } from "node:path";
+import { basename, dirname, extname, isAbsolute, join, normalize, relative, resolve } from "node:path";
 
 const defaultRepoRoot = resolve(new URL("../../", import.meta.url).pathname);
 const repoRoot = resolve(process.env.WIKI_OPS_REPO_ROOT || defaultRepoRoot);
@@ -51,7 +51,19 @@ const activeJobs = new Map();
 const activeChatRequests = new Map();
 const activeChatControllers = new Map();
 let runHistoryWrite = Promise.resolve();
-const autoSkillAllowedRoots = [repoRoot, driveRuntime, chatUploadsRoot];
+const configuredAutoSkillRoots = String(process.env.WIKI_AUTO_SKILL_ALLOWED_ROOTS || "")
+  .split(":")
+  .map((item) => item.trim())
+  .filter(Boolean)
+  .map((item) => resolve(item));
+const autoSkillAllowedRoots = [
+  repoRoot,
+  driveRuntime,
+  chatUploadsRoot,
+  // Local Google Drive/Dropbox-style sync folders are read-only evidence sources for Paperclip.
+  "/Users/rtm/Library/CloudStorage",
+  ...configuredAutoSkillRoots,
+].map((item) => resolve(item));
 
 const host = process.env.WIKI_API_HOST || "127.0.0.1";
 const port = Number(process.env.WIKI_API_PORT || 8787);
@@ -126,6 +138,9 @@ const editableSettings = new Set([
   "SLACK_MIXED_CHANNEL_PREFIXES",
   "SLACK_PROJECT_WIKI_ROOT",
   "SLACK_COMPANY_WIKI_ROOT",
+  "FILESYSTEM_BROWSE_MAX_DEPTH",
+  "FILESYSTEM_BROWSE_MAX_FILES",
+  "FILESYSTEM_BROWSE_MAX_ENTRIES",
 ]);
 const sensitiveSettings = new Set(["GLM_API_KEY", "OPENCLAW_API_KEY", "PAPERCLIP_API_KEY", "SLACK_BOT_TOKEN", "SLACK_USER_TOKEN"]);
 const protectedWikiDeletionFiles = new Set([
@@ -486,6 +501,94 @@ async function writePipelineState(nextState = {}) {
   };
   await writeFile(pipelineStatePath, JSON.stringify(state, null, 2), "utf-8");
   return { updatedAt: state.updatedAt, state };
+}
+
+function slackScopeKeyFromBody(body = {}) {
+  return JSON.stringify({
+    channels: [...(body.channels || []).map((channel) => String(channel))].sort(),
+    sinceDate: body.sinceDate || "",
+    untilDate: body.untilDate || "",
+    limitPerChannel: Number(body.limitPerChannel || 0) || 0,
+  });
+}
+
+function runningCommand(prefix) {
+  return [...activeJobs.values()].find((job) => String(job.command || "").startsWith(prefix));
+}
+
+async function collectFilesystemPath(body = {}) {
+  if (activeJobs.size) {
+    return {
+      status: "blocked",
+      error: "다른 수집 작업이 이미 실행 중입니다.",
+      running: [...activeJobs.values()].map((job) => ({
+        runId: job.runId,
+        command: job.command,
+        status: job.status || "running",
+        startedAt: job.startedAt,
+        progress: job.progress || {},
+      })),
+    };
+  }
+  const rawPath = String(body.path || "").trim();
+  if (!rawPath) return { status: "failed", error: "path is required" };
+  const targetPath = isAbsolute(rawPath) ? resolve(rawPath) : resolveRepoPath(rawPath);
+  if (!localPathAllowedForAutoSkill(targetPath)) {
+    return { status: "blocked", error: "허용된 로컬 repo/mirror/upload 범위 밖의 경로입니다.", path: displayPath(targetPath) };
+  }
+  const targetStat = await stat(targetPath).catch(() => null);
+  if (!targetStat?.isDirectory?.()) {
+    return { status: "failed", error: "파일 브라우징 수집 대상은 폴더여야 합니다.", path: displayPath(targetPath) };
+  }
+  const { values: env } = await readEnvFile();
+  const browse = await inspectFilesystemTargets(targetPath, {
+    includeDirectories: true,
+    maxDepth: Number(body.maxDepth || env.FILESYSTEM_BROWSE_MAX_DEPTH || 8),
+    maxFiles: Number(body.maxFiles || env.FILESYSTEM_BROWSE_MAX_FILES || 5000),
+    maxEntriesPerDirectory: Number(body.maxEntriesPerDirectory || env.FILESYSTEM_BROWSE_MAX_ENTRIES || 300),
+    maxTreeEntries: 400,
+  });
+  if (body.dryRun !== false) {
+    const runId = `${Date.now()}-filesystem-collect`;
+    const entry = {
+      runId,
+      command: "filesystem-collect --dry-run",
+      status: "completed",
+      code: 0,
+      stdout: `Filesystem collection preview: ${displayPath(targetPath)} (${browse.files.length} files, ${browse.directories.length} directories). Next actual run: read manifest -> file skill analysis -> wiki intake -> temporary retention.`,
+      stderr: "",
+      createdAt: new Date().toISOString(),
+      startedAt: new Date().toISOString(),
+      finishedAt: new Date().toISOString(),
+      source: "filesystem_collect_api",
+      filesystemPath: displayPath(targetPath),
+      progress: {
+        summary: `${browse.files.length} files · ${browse.directories.length} directories`,
+        currentFile: displayPath(targetPath),
+        updatedAt: new Date().toISOString(),
+      },
+      browse,
+    };
+    await appendRunHistory(entry);
+    return entry;
+  }
+  const steps = [];
+  steps.push(await runCommand("build-manifest", false, {
+    source: "filesystem_collect_api",
+    filesystemPath: displayPath(targetPath),
+    extraArgs: ["--root", targetPath, "--drive-name", body.driveName || "filesystem-browser"],
+  }));
+  if (body.continueAfter !== false) steps.push(await runCommand("run", false, { source: "filesystem_collect_api" }));
+  if (body.refreshAfter !== false) steps.push(await runCommand("refresh-global", false, { source: "filesystem_collect_api" }));
+  return {
+    runId: `${Date.now()}-filesystem-collect`,
+    command: "filesystem-collect",
+    status: steps.every((step) => step.status === "completed") ? "completed" : "failed",
+    steps,
+    browse,
+    stdout: `Filesystem collection pipeline completed: copy/path ready -> read manifest -> file skill analysis/wiki intake -> temporary retention (${displayPath(targetPath)})`,
+    createdAt: new Date().toISOString(),
+  };
 }
 
 async function recordLlmUsage(entry = {}) {
@@ -851,6 +954,8 @@ function defaultMirrorRetention() {
     enabled: false,
     days: 7,
     scope: "uploads",
+    cleanupMode: "age",
+    maxBytes: 0,
     timeOfDay: "03:30",
     updatedAt: "",
   };
@@ -939,11 +1044,16 @@ async function cleanupMirrorData({
   olderThanDays = 0,
   dryRun = true,
   deleteAll = false,
+  cleanupMode = "age",
+  thresholdBytes = 0,
 } = {}) {
   const roots = mirrorRoots(env);
   const rootPath = roots[scope] || roots.uploads;
   const rootStat = await stat(rootPath).catch(() => null);
   const cutoffMs = !deleteAll && olderThanDays > 0 ? Date.now() - olderThanDays * 24 * 60 * 60 * 1000 : 0;
+  const currentStats = await collectMirrorTreeStats(rootPath, olderThanDays);
+  const mirrorStatus = await collectionStatusSnapshot(env).catch(() => ({ processedFiles: [] }));
+  const processedFiles = new Set((mirrorStatus.processedFiles || []).map((item) => String(item || "").replace(/\\/g, "/")));
   const files = [];
   const directories = [];
   if (!rootStat?.isDirectory?.()) {
@@ -953,12 +1063,36 @@ async function cleanupMirrorData({
       dryRun,
       deleteAll,
       olderThanDays,
+      cleanupMode,
+      thresholdBytes,
+      currentBytes: 0,
       exists: false,
       matchedFiles: 0,
       deletedFiles: 0,
       deletedDirectories: 0,
       freedBytes: 0,
       samplePaths: [],
+    };
+  }
+  if (!deleteAll && thresholdBytes > 0 && Number(currentStats.totalBytes || 0) < thresholdBytes) {
+    return {
+      scope,
+      rootPath: displayPath(rootPath),
+      dryRun,
+      deleteAll,
+      olderThanDays,
+      cleanupMode,
+      thresholdBytes,
+      currentBytes: Number(currentStats.totalBytes || 0),
+      exists: true,
+      skipped: true,
+      skipReason: "threshold_not_reached",
+      matchedFiles: 0,
+      deletedFiles: 0,
+      deletedDirectories: 0,
+      freedBytes: 0,
+      samplePaths: [],
+      executedAt: new Date().toISOString(),
     };
   }
 
@@ -974,11 +1108,23 @@ async function cleanupMirrorData({
       if (!entry.isFile()) continue;
       const fileStat = await stat(fullPath).catch(() => null);
       if (!fileStat?.isFile?.()) continue;
-      if (!deleteAll && cutoffMs && fileStat.mtimeMs >= cutoffMs) continue;
+      const relativeToAllRoot = relative(roots.all, fullPath).replace(/\\/g, "/").replace(/^\/+/, "");
+      const processedEligible = processedFiles.has(relativeToAllRoot);
+      const ageEligible = cutoffMs ? fileStat.mtimeMs < cutoffMs : false;
+      const modeEligible = deleteAll
+        ? true
+        : cleanupMode === "processed"
+          ? processedEligible
+          : cleanupMode === "processed_or_age"
+            ? (processedEligible || ageEligible)
+            : ageEligible;
+      if (!modeEligible) continue;
       files.push({
         path: fullPath,
         size: Number(fileStat.size || 0),
         modifiedAt: fileStat.mtime instanceof Date ? fileStat.mtime.toISOString() : "",
+        processedEligible,
+        relativeToAllRoot,
       });
     }
   }
@@ -1009,6 +1155,9 @@ async function cleanupMirrorData({
     dryRun,
     deleteAll,
     olderThanDays,
+    cleanupMode,
+    thresholdBytes,
+    currentBytes: Number(currentStats.totalBytes || 0),
     exists: true,
     matchedFiles: files.length,
     deletedFiles: dryRun ? 0 : deletedFiles,
@@ -1030,6 +1179,8 @@ async function saveMirrorRetentionPolicy(body = {}, env = {}) {
     enabled: body.enabled !== undefined ? Boolean(body.enabled) : current.enabled,
     days: Math.max(1, Number(body.days || current.days || 7)),
     scope: body.scope === "all" ? "all" : "uploads",
+    cleanupMode: body.cleanupMode === "processed" || body.cleanupMode === "processed_or_age" ? body.cleanupMode : "age",
+    maxBytes: Math.max(0, Number(body.maxBytes || current.maxBytes || 0)),
     timeOfDay: String(body.timeOfDay || current.timeOfDay || "03:30"),
     updatedAt: new Date().toISOString(),
   };
@@ -1052,6 +1203,8 @@ async function saveMirrorRetentionPolicy(body = {}, env = {}) {
       retentionManaged: true,
       retentionDays: next.days,
       scope: next.scope,
+      cleanupMode: next.cleanupMode,
+      retentionMaxBytes: next.maxBytes,
     });
   }
   for (const schedule of retained) {
@@ -1648,6 +1801,32 @@ function docKindPriorityBoost(docKind = "", path = "") {
 function localPathAllowedForAutoSkill(path) {
   const fullPath = resolve(path || "");
   return autoSkillAllowedRoots.some((root) => fullPath === root || fullPath.startsWith(`${root}/`));
+}
+
+async function filesystemRootOptions() {
+  const roots = [
+    { key: "wiki-repo", label: "Wiki repo", path: repoRoot },
+    { key: "drive-mirror", label: "Drive mirror", path: join(driveRuntime, "mirror") },
+    { key: "drive-runtime", label: "Drive runtime", path: driveRuntime },
+    { key: "chat-uploads", label: "Chat uploads", path: chatUploadsRoot },
+    { key: "assistant-uploads", label: "Assistant UI uploads", path: chatUploadMirrorRoot },
+    { key: "cloud-storage", label: "CloudStorage", path: "/Users/rtm/Library/CloudStorage" },
+    ...configuredAutoSkillRoots.map((path, index) => ({ key: `extra-${index + 1}`, label: `Extra root ${index + 1}`, path })),
+  ];
+  const unique = [];
+  const seen = new Set();
+  for (const root of roots) {
+    const resolvedPath = resolve(root.path);
+    if (seen.has(resolvedPath) || !localPathAllowedForAutoSkill(resolvedPath)) continue;
+    seen.add(resolvedPath);
+    const info = await stat(resolvedPath).catch(() => null);
+    unique.push({
+      ...root,
+      path: displayPath(resolvedPath),
+      exists: Boolean(info?.isDirectory?.()),
+    });
+  }
+  return unique;
 }
 
 async function sparseWikiSearch(query, workspaceId = "rtm", limit = 12) {
@@ -2507,10 +2686,13 @@ async function deleteWikiPage(body = {}) {
 
 async function deleteWikiProjectPackage(body = {}) {
   const workspaceId = body.workspace || "rtm";
-  const projectKey = String(body.projectKey || "").trim();
-  if (!projectKey) throw new Error("projectKey is required");
+  const requestedProjectKey = String(body.projectKey || "").trim();
+  const pathHint = String(body.path || "").trim();
+  if (!requestedProjectKey && !pathHint) throw new Error("projectKey is required");
   const workspace = wikiWorkspace(workspaceId);
-  const projectDir = projectDirForKey(projectKey, workspaceId);
+  const hintedProjectDir = projectDirFromWikiPath(pathHint, workspaceId);
+  const projectDir = hintedProjectDir || projectDirForKey(requestedProjectKey, workspaceId);
+  const projectKey = basename(projectDir);
   const projectRelPath = relative(repoRoot, projectDir);
   const l1Path = join(workspace.l1Root, `${projectKey}.md`);
   const removedPaths = [];
@@ -2534,6 +2716,9 @@ async function deleteWikiProjectPackage(body = {}) {
     if (statusStore.pages?.[path]) delete statusStore.pages[path];
   }
   if (statusStore.projects?.[projectKey]) delete statusStore.projects[projectKey];
+  if (requestedProjectKey && requestedProjectKey !== projectKey && statusStore.projects?.[requestedProjectKey]) {
+    delete statusStore.projects[requestedProjectKey];
+  }
   await writeJsonFile(wikiStatusesPath, statusStore);
 
   const payload = {
@@ -2800,6 +2985,17 @@ function projectDirForKey(projectKey, workspaceId = "rtm") {
   const safeProjectKey = String(projectKey || "").replace(/[\\/:*?"<>|]/g, "_").trim();
   if (!safeProjectKey) throw new Error("projectKey is required");
   return safeJoin(workspace.wikiRoot, safeProjectKey);
+}
+
+function projectDirFromWikiPath(pathHint, workspaceId = "rtm") {
+  const workspace = wikiWorkspace(workspaceId);
+  const normalized = String(pathHint || "").trim().replace(/\\/g, "/").replace(/^\/+/, "");
+  if (!normalized) return null;
+  const absolute = safeJoin(repoRoot, normalized);
+  const candidateDir = extname(absolute).toLowerCase() === ".md" ? dirname(absolute) : absolute;
+  const relativeToWikiRoot = relative(workspace.wikiRoot, candidateDir);
+  if (!relativeToWikiRoot || relativeToWikiRoot.startsWith("..") || isAbsolute(relativeToWikiRoot)) return null;
+  return candidateDir;
 }
 
 function documentTitle(record = {}) {
@@ -4958,6 +5154,8 @@ async function createSchedule(body) {
     retryAfterMinutes: Math.max(1, Number(body.retryAfterMinutes || 10)),
     retentionDays: Number(body.retentionDays || 0) || undefined,
     scope: body.scope === "all" ? "all" : body.scope === "uploads" ? "uploads" : undefined,
+    cleanupMode: body.cleanupMode === "processed" || body.cleanupMode === "processed_or_age" ? body.cleanupMode : body.cleanupMode === "age" ? "age" : undefined,
+    retentionMaxBytes: Number(body.retentionMaxBytes || 0) || undefined,
     retentionManaged: Boolean(body.retentionManaged),
   };
   schedule.nextRunAt = nextScheduleRun(schedule);
@@ -4984,6 +5182,8 @@ async function runScheduledCommand(schedule) {
       scope: schedule.scope === "all" ? "all" : "uploads",
       olderThanDays: Math.max(1, Number(schedule.retentionDays || 7)),
       dryRun: Boolean(schedule.dryRun),
+      cleanupMode: schedule.cleanupMode === "processed" || schedule.cleanupMode === "processed_or_age" ? schedule.cleanupMode : "age",
+      thresholdBytes: Math.max(0, Number(schedule.retentionMaxBytes || 0)),
     });
     const entry = {
       runId: `${Date.now()}-mirror-cleanup`,
@@ -4993,6 +5193,10 @@ async function runScheduledCommand(schedule) {
       stdout: [
         `scope=${result.scope}`,
         `olderThanDays=${result.olderThanDays}`,
+        `cleanupMode=${result.cleanupMode || "age"}`,
+        `thresholdBytes=${result.thresholdBytes || 0}`,
+        `currentBytes=${result.currentBytes || 0}`,
+        `skipped=${Boolean(result.skipped)}`,
         `matchedFiles=${result.matchedFiles}`,
         `deletedFiles=${result.deletedFiles}`,
         `deletedDirectories=${result.deletedDirectories}`,
@@ -5506,6 +5710,16 @@ function routeChatSkills(message, evidence = [], paperclip = null, options = {})
     || uploadContext.extensions.some((ext) => [".hwp", ".hwpx"].includes(ext))
     || uploadContext.routes.includes("rhwp-hwp-reader")
     || /\.(hwp|hwpx)\b/i.test(text);
+  const needsPdf = localPaths.some((path) => extname(path).toLowerCase() === ".pdf")
+    || browserBlock.extensions.includes(".pdf")
+    || uploadContext.extensions.includes(".pdf")
+    || uploadContext.routes.includes("pdf-document-reader")
+    || /\.pdf\b|pdf 문서|피디에프/i.test(text);
+  const needsPptx = localPaths.some((path) => extname(path).toLowerCase() === ".pptx")
+    || browserBlock.extensions.includes(".pptx")
+    || uploadContext.extensions.includes(".pptx")
+    || uploadContext.routes.includes("pptx-slide-reader")
+    || /\.(pptx|ppt)\b|powerpoint|파워포인트|슬라이드|발표자료|피피티/i.test(text);
   const needsSpreadsheet = localPaths.some((path) => [".xlsx", ".xls", ".csv"].includes(extname(path).toLowerCase()))
     || browserBlock.extensions.some((ext) => [".xlsx", ".xls", ".csv"].includes(ext))
     || uploadContext.extensions.some((ext) => [".xlsx", ".xls", ".csv"].includes(ext))
@@ -5515,7 +5729,7 @@ function routeChatSkills(message, evidence = [], paperclip = null, options = {})
     || uploadContext.files.some((item) => /공고|rfp|사업계획서|평가기준|작성양식|지원자격|지원 규모/i.test(`${item.path} ${item.summary}`));
   const totalContextFiles = browserBlock.fileCount + uploadContext.fileCount;
   const wantsComprehensiveAnalysis = totalContextFiles >= 3
-    || (totalContextFiles >= 2 && (needsGrantRfp || needsHwp || needsSpreadsheet));
+    || (totalContextFiles >= 2 && (needsGrantRfp || needsHwp || needsPdf || needsPptx || needsSpreadsheet));
   const needsValidation = wantsComprehensiveAnalysis
     || /검수|검증|coverage|커버리지|누락|충돌|conflict|정합|리스크 점검|근거 점검/i.test(lower)
     || evidence.some((item) => item.docKind === "conflict" || (item.conflicts || []).length);
@@ -5532,14 +5746,17 @@ function routeChatSkills(message, evidence = [], paperclip = null, options = {})
   if (needsFilesystemWikiIntake) suggestedTemplateIds.push("filesystem-wiki-intake");
   if (needsGrantRfp) suggestedTemplateIds.push("grant-rfp-strategy");
   if (needsHwp) suggestedTemplateIds.push("rhwp-hwp-reader");
+  if (needsPdf) suggestedTemplateIds.push("pdf-document-reader");
+  if (needsPptx) suggestedTemplateIds.push("pptx-slide-reader");
   if (needsSpreadsheet) suggestedTemplateIds.push("spreadsheet-stat-analyzer");
   if (needsValidation) suggestedTemplateIds.push("validator");
   const availableTemplates = new Set((paperclip?.templates || []).map((item) => item.id));
   const forcedTemplateIds = [...new Set([].concat(options.forcedTemplateIds || []).map((item) => String(item || "").trim()).filter(Boolean))]
     .filter((id) => availableTemplates.size ? availableTemplates.has(id) : true);
   suggestedTemplateIds.push(...forcedTemplateIds);
+  const readOnlySkillIds = ["os-file-browser", "filesystem-wiki-intake", "rhwp-hwp-reader", "pdf-document-reader", "pptx-slide-reader", "spreadsheet-stat-analyzer", "grant-rfp-strategy"];
   return {
-    needs_reading_skill: needsFileBrowsing || needsFilesystemWikiIntake || needsHwp || needsSpreadsheet || needsGrantRfp || forcedTemplateIds.some((id) => ["os-file-browser", "filesystem-wiki-intake", "rhwp-hwp-reader", "spreadsheet-stat-analyzer", "grant-rfp-strategy"].includes(id)),
+    needs_reading_skill: needsFileBrowsing || needsFilesystemWikiIntake || needsHwp || needsPdf || needsPptx || needsSpreadsheet || needsGrantRfp || forcedTemplateIds.some((id) => readOnlySkillIds.includes(id)),
     needs_validation_skill: needsValidation || forcedTemplateIds.includes("validator"),
     suggested_template_ids: [...new Set(suggestedTemplateIds)].filter((id) => availableTemplates.size ? availableTemplates.has(id) : true),
     blocked_write_actions: [...new Set(blockedWriteActions)],
@@ -5550,6 +5767,8 @@ function routeChatSkills(message, evidence = [], paperclip = null, options = {})
       needsFilesystemWikiIntake ? "로컬 파일시스템 위키화 intake 필요" : "",
       needsGrantRfp ? "공고/RFP/사업계획서 전략 분석 필요" : "",
       needsHwp ? "hwp/hwpx 문서 해석 필요" : "",
+      needsPdf ? "PDF 문서 조회 필요" : "",
+      needsPptx ? "PowerPoint 슬라이드 조회 필요" : "",
       needsSpreadsheet ? "xlsx/csv 통계 해석 필요" : "",
       needsValidation ? "coverage/충돌 검수 필요" : "",
       blockedWriteActions.length ? "write/run 계열은 추천만 허용" : "",
@@ -5581,7 +5800,9 @@ function autoReadablePathsForTemplate(route = {}, templateId = "") {
     .filter((path) => {
       const ext = extname(path).toLowerCase();
       if (templateId === "filesystem-wiki-intake") return [".hwp", ".hwpx", ".pdf", ".docx", ".pptx", ".xlsx", ".xls", ".csv", ".html", ".htm", ".md", ".txt", ".json"].includes(ext);
-      if (templateId === "rhwp-hwp-reader") return [".hwp", ".hwpx", ".pdf", ".docx", ".pptx", ".html", ".htm"].includes(ext);
+      if (templateId === "rhwp-hwp-reader") return [".hwp", ".hwpx"].includes(ext);
+      if (templateId === "pdf-document-reader") return ext === ".pdf";
+      if (templateId === "pptx-slide-reader") return ext === ".pptx";
       if (templateId === "grant-rfp-strategy") return [".hwp", ".hwpx", ".pdf", ".docx", ".pptx", ".xlsx", ".xls", ".csv", ".html", ".htm"].includes(ext);
       if (templateId === "spreadsheet-stat-analyzer") return [".xlsx", ".xls", ".csv"].includes(ext);
       return true;
@@ -5694,7 +5915,7 @@ async function createPaperclipAgentDrafts(route, message, project = {}) {
   const suggested = (route.suggested_template_ids || [])
     .filter((templateId) => {
       if (!route.has_auto_read_input) return true;
-      if (!["filesystem-wiki-intake", "rhwp-hwp-reader", "grant-rfp-strategy", "spreadsheet-stat-analyzer"].includes(templateId)) return true;
+      if (!["filesystem-wiki-intake", "rhwp-hwp-reader", "pdf-document-reader", "pptx-slide-reader", "grant-rfp-strategy", "spreadsheet-stat-analyzer"].includes(templateId)) return true;
       return !autoReadablePathsForTemplate(route, templateId).length;
     })
     .filter((templateId) => templateId !== "validator")
@@ -7195,6 +7416,26 @@ function skillCatalog() {
       output: "automation/wiki_api/runtime/skill_outputs/*.md",
     },
     {
+      id: "pdf-document-reader",
+      name: "PDF 문서 조회",
+      type: "paperclip-glm-skill",
+      status: "available",
+      safety: "local_read_and_markdown_output",
+      description: "PDF를 pypdf 우선, fallback 보조로 페이지 텍스트와 근거 위치를 추출해 업무 관점 Markdown으로 정리한다.",
+      bestFor: ["PDF 제안서", "PDF 결과보고서", "스캔 가능성/추출 한계 점검"],
+      output: "automation/wiki_api/runtime/skill_outputs/*.md",
+    },
+    {
+      id: "pptx-slide-reader",
+      name: "PowerPoint 슬라이드 조회",
+      type: "paperclip-glm-skill",
+      status: "available",
+      safety: "local_read_and_markdown_output",
+      description: "PPTX를 zip/xml 기반으로 읽어 슬라이드 텍스트, 표/도형 텍스트, 발표 흐름, 버전/제안 근거를 추출한다.",
+      bestFor: ["고객 발표자료", "PoC 결과 발표", "제품/솔루션 소개서"],
+      output: "automation/wiki_api/runtime/skill_outputs/*.md",
+    },
+    {
       id: "grant-rfp-strategy",
       name: "Grant RFP 전략 분석",
       type: "paperclip-glm-skill",
@@ -7460,6 +7701,28 @@ function paperclipTemplates() {
       output: "automation/wiki_api/runtime/skill_outputs/*.md",
     },
     {
+      id: "pdf-document-reader",
+      agent: "PDF Evidence Reader",
+      title: "PDF 문서 조회",
+      description: "PDF 경로를 받아 페이지별 텍스트, 핵심 주장, 수치, 추출 한계, 위키 반영 후보를 정리한다.",
+      command: "glm-skill",
+      dryRun: false,
+      safety: "local_read_and_markdown_output",
+      inputHint: "로컬 pdf 경로와 분석 목적(예: 제안서 근거, 결과보고서 수치, 계약/공고 확인)을 적으세요.",
+      output: "automation/wiki_api/runtime/skill_outputs/*.md",
+    },
+    {
+      id: "pptx-slide-reader",
+      agent: "PowerPoint Slide Reader",
+      title: "PowerPoint 슬라이드 조회",
+      description: "pptx 경로를 받아 슬라이드별 텍스트/표/도형 문구와 발표 흐름, 근거 후보, 누락 가능성을 정리한다.",
+      command: "glm-skill",
+      dryRun: false,
+      safety: "local_read_and_markdown_output",
+      inputHint: "로컬 pptx 경로와 분석 목적(예: PoC 발표자료, 제품 소개, 고객 미팅 자료)을 적으세요.",
+      output: "automation/wiki_api/runtime/skill_outputs/*.md",
+    },
+    {
       id: "grant-rfp-strategy",
       agent: "Grant RFP Strategist",
       title: "공고/RFP 전략 분석",
@@ -7692,7 +7955,29 @@ function paperclipSkillSystemPrompt(templateId) {
     ].join("\n");
   }
   if (templateId === "rhwp-hwp-reader") {
-    return "당신은 RTM의 문서 해석 담당자입니다. 제공된 한글문서 추출문을 왜곡 없이 분석해 핵심 내용, 수치, 조직/참석자, 결정/요청, 리스크, 확인 필요 항목을 한국어 Markdown으로 정리하십시오. 추출 품질 경고가 있으면 한계로 명시하십시오.";
+    return [
+      "당신은 RTM의 문서 해석 담당자입니다.",
+      "제공된 한글문서 추출문을 왜곡 없이 분석해 핵심 내용, 수치, 조직/참석자, 결정/요청, 리스크, 확인 필요 항목을 한국어 Markdown으로 정리하십시오.",
+      "추출 품질 경고가 있으면 한계로 명시하십시오.",
+      "중요: 입력에 `Paperclip 경로 차단`, `Paperclip 경로 미해결`, `Paperclip 입력 파일 없음`이 있으면 파일을 읽지 못한 것입니다. 이 경우를 HWP 보안 설정, 암호화, 배포용 문서, 권한 잠금으로 단정하지 마십시오.",
+      "보안/암호화 실패라고 말할 수 있는 경우는 로컬 추출 결과 또는 extractor warning에 그 원인이 명시된 때뿐입니다.",
+    ].join("\n");
+  }
+  if (templateId === "pdf-document-reader") {
+    return [
+      "당신은 RTM의 PDF 증거 문서 조회 담당자입니다.",
+      "제공된 PDF 추출문을 페이지/섹션 단위 근거로 보존하면서 핵심 주장, 수치, 일정, 조직/고객명, 결정/요청, 리스크, 확인 필요 항목을 한국어 Markdown으로 정리하십시오.",
+      "pypdf 또는 fallback 추출 한계가 있으면 반드시 한계로 명시하고, 스캔 이미지처럼 텍스트가 비어 있는 부분은 추측하지 마십시오.",
+      "위키 승격 후보는 Sources/Evidence_Log/Conflict_Register/Change_Log 관점으로 나누되, 실제 반영된 것처럼 쓰지 마십시오.",
+    ].join("\n");
+  }
+  if (templateId === "pptx-slide-reader") {
+    return [
+      "당신은 RTM의 PowerPoint 슬라이드 조회 담당자입니다.",
+      "제공된 PPTX 추출문을 슬라이드 흐름 기준으로 해석하고, 제목/표/도형 텍스트/발표 노트에서 확인되는 핵심 주장, 수치, 제품명, 고객명, 일정, 리스크, 버전 차이를 한국어 Markdown으로 정리하십시오.",
+      "슬라이드 이미지나 차트에만 존재해 텍스트로 추출되지 않은 정보는 추출 한계로 표시하고 추측하지 마십시오.",
+      "위키 승격 후보는 Sources/Evidence_Log/Conflict_Register/Change_Log 관점으로 나누되, 실제 반영된 것처럼 쓰지 마십시오.",
+    ].join("\n");
   }
   if (templateId === "grant-rfp-strategy") {
     return [
@@ -7973,6 +8258,7 @@ async function resolvePaperclipInputTargets(text, extensions = [], options = {})
   const browserHintPaths = await resolveBrowserHintFiles(text, extensions, options);
   const targets = [];
   const blocked = [];
+  const missing = [];
   for (const fullPath of [...new Set(filePaths.concat(directoryPaths, browserHintPaths))]) {
     const allowed = localPathAllowedForAutoSkill(fullPath);
     if (!allowed) {
@@ -7980,7 +8266,10 @@ async function resolvePaperclipInputTargets(text, extensions = [], options = {})
       continue;
     }
     const info = await stat(fullPath).catch(() => null);
-    if (!info) continue;
+    if (!info) {
+      missing.push(fullPath);
+      continue;
+    }
     if (info.isDirectory()) {
       const collected = await collectFilesFromDirectory(fullPath, extensions, options);
       targets.push({ path: fullPath, type: "directory", fileCount: collected.files.length, directoryCount: collected.directories.length });
@@ -8001,6 +8290,7 @@ async function resolvePaperclipInputTargets(text, extensions = [], options = {})
     directories,
     targets,
     blocked,
+    missing,
   };
 }
 
@@ -8024,14 +8314,14 @@ async function inspectFilesystemTargets(text, options = {}) {
         tree.push({
           depth,
           type: child.isDirectory() ? "directory" : child.isFile() ? "file" : "other",
-          path: relative(repoRoot, fullPath),
+          path: displayPath(fullPath),
         });
         if (child.isDirectory()) await walk(fullPath, depth + 1);
       }
     }
     await walk(target.path, 0);
     entries.push({
-      path: relative(repoRoot, target.path),
+      path: displayPath(target.path),
       type: "directory",
       fileCount: target.fileCount || 0,
       directoryCount: target.directoryCount || 0,
@@ -8042,7 +8332,7 @@ async function inspectFilesystemTargets(text, options = {}) {
     const info = await stat(filePath).catch(() => null);
     if (!info?.isFile?.()) continue;
     entries.push({
-      path: relative(repoRoot, filePath),
+      path: displayPath(filePath),
       type: "file",
       ext: extname(filePath).toLowerCase(),
       size: info.size,
@@ -8051,9 +8341,9 @@ async function inspectFilesystemTargets(text, options = {}) {
   }
   return {
     targets: resolved.targets,
-    files: resolved.files.map((item) => relative(repoRoot, item)),
-    directories: resolved.directories.map((item) => relative(repoRoot, item)),
-    blocked: resolved.blocked.map((item) => relative(repoRoot, item)),
+    files: resolved.files.map((item) => displayPath(item)),
+    directories: resolved.directories.map((item) => displayPath(item)),
+    blocked: resolved.blocked.map((item) => displayPath(item)),
     entries,
   };
 }
@@ -8146,6 +8436,25 @@ async function extractHwpLike(paths) {
     env: { PYTHONPATH: driveWikifySrc },
   });
   return result.stdout || result.stderr;
+}
+
+function extractionDiagnostics(targets = {}, expectedLabel = "파일") {
+  const lines = [];
+  if (targets.blocked?.length) {
+    lines.push("## Paperclip 경로 차단");
+    lines.push("아래 경로는 자동 읽기 allowlist 밖이라 문서 추출을 실행하지 않았습니다. 이 경우를 HWP 보안/암호화 실패로 해석하지 마십시오.");
+    lines.push(...targets.blocked.map((path) => `- ${displayPath(path)}`));
+  }
+  if (targets.missing?.length) {
+    lines.push("## Paperclip 경로 미해결");
+    lines.push("아래 경로는 파일시스템에서 찾지 못했습니다. 이 경우를 HWP 보안/암호화 실패로 해석하지 마십시오.");
+    lines.push(...targets.missing.map((path) => `- ${displayPath(path)}`));
+  }
+  if (!targets.files?.length && !targets.blocked?.length && !targets.missing?.length) {
+    lines.push("## Paperclip 입력 파일 없음");
+    lines.push(`${expectedLabel} 경로가 해석되지 않아 추출을 실행하지 않았습니다. 파일명 힌트만 있는 경우 실제 절대경로 또는 업로드 mirror 경로가 필요합니다.`);
+  }
+  return lines.join("\n");
 }
 
 async function extractSpreadsheetLike(paths) {
@@ -8316,8 +8625,22 @@ async function analyzeUploadedChatFile(file, fields = {}, fileMeta = {}, batchId
   let extracted = "";
   let analysis = "";
   if ([".hwp", ".hwpx", ".pdf", ".docx", ".pptx", ".html", ".htm"].includes(ext)) {
-    route = ext === ".hwp" || ext === ".hwpx" ? "rhwp-hwp-reader" : ext === ".html" || ext === ".htm" ? "html-report-reader" : "document-reader";
-    templateId = ext === ".html" || ext === ".htm" ? "html-report-reader" : "rhwp-hwp-reader";
+    route = ext === ".hwp" || ext === ".hwpx"
+      ? "rhwp-hwp-reader"
+      : ext === ".pdf"
+        ? "pdf-document-reader"
+        : ext === ".pptx"
+          ? "pptx-slide-reader"
+          : ext === ".html" || ext === ".htm"
+            ? "html-report-reader"
+            : "document-reader";
+    templateId = ext === ".html" || ext === ".htm"
+      ? "html-report-reader"
+      : ext === ".pdf"
+        ? "pdf-document-reader"
+        : ext === ".pptx"
+          ? "pptx-slide-reader"
+          : "rhwp-hwp-reader";
     extracted = await extractHwpLike([savedPath]);
     analysis = await summarizeAttachmentWithGlm({ templateId, fileName, extracted, userNote: fields.note || "" });
   } else if ([".xlsx", ".xls", ".csv"].includes(ext)) {
@@ -8399,6 +8722,86 @@ async function handleChatFileUpload(req) {
   };
 }
 
+async function handleFilesystemFolderImport(req) {
+  const raw = await readRawBody(req);
+  const { fields, files } = parseMultipartForm(raw, req.headers["content-type"] || "");
+  if (!files.length) throw new Error("folder files are required");
+  const { values: env } = await readEnvFile();
+  const maxFiles = Number(fields.maxFiles || env.FILESYSTEM_BROWSE_MAX_FILES || 5000);
+  const maxDepth = Number(fields.maxDepth || env.FILESYSTEM_BROWSE_MAX_DEPTH || 8);
+  const maxEntriesPerDirectory = Number(fields.maxEntriesPerDirectory || env.FILESYSTEM_BROWSE_MAX_ENTRIES || 300);
+  let browserManifest = [];
+  if (fields.browser_manifest) {
+    try {
+      const parsed = JSON.parse(fields.browser_manifest);
+      if (Array.isArray(parsed)) browserManifest = parsed;
+    } catch {
+      browserManifest = [];
+    }
+  }
+  const browserManifestByField = new Map(
+    browserManifest
+      .filter((item) => item && typeof item === "object")
+      .map((item) => [String(item.fieldName || ""), item]),
+  );
+  const workspaceSegment = normalizeChatUploadWorkspace(fields.workspace);
+  const projectSegment = normalizeChatUploadProjectSegment(fields);
+  const effectiveBatchId = slugifyName(fields.batchId || `${Date.now()}-pipeline-filesystem`) || `${Date.now()}-pipeline-filesystem`;
+  const batchRoot = join(chatUploadMirrorRoot, workspaceSegment, projectSegment, effectiveBatchId);
+  await mkdir(batchRoot, { recursive: true });
+  const imported = [];
+  const skipped = Math.max(0, files.length - maxFiles);
+  for (const file of files.slice(0, maxFiles)) {
+    const meta = browserManifestByField.get(file.fieldName) || {};
+    const relativePath = sanitizeUploadRelativePath(meta.relativePath || meta.originalPath || file.filename, file.filename || "upload");
+    const targetPath = join(batchRoot, relativePath);
+    if (!targetPath.startsWith(`${batchRoot}/`) && targetPath !== batchRoot) continue;
+    await mkdir(dirname(targetPath), { recursive: true });
+    await writeFile(targetPath, file.buffer);
+    imported.push({
+      fileName: file.filename,
+      originalPath: meta.originalPath || meta.relativePath || file.filename,
+      mirrorPath: displayPath(targetPath),
+      size: file.buffer.length,
+    });
+  }
+  const browse = await inspectFilesystemTargets(batchRoot, {
+    includeDirectories: true,
+    maxDepth,
+    maxFiles,
+    maxEntriesPerDirectory,
+    maxTreeEntries: 400,
+  });
+  const runId = `${Date.now()}-filesystem-import`;
+  await appendRunHistory({
+    runId,
+    command: "filesystem-import",
+    status: "completed",
+    code: 0,
+    stdout: `Filesystem explorer import: ${imported.length} files -> ${displayPath(batchRoot)}`,
+    stderr: "",
+    createdAt: new Date().toISOString(),
+    startedAt: new Date().toISOString(),
+    finishedAt: new Date().toISOString(),
+    source: "pipeline_filesystem_explorer",
+    filesystemPath: displayPath(batchRoot),
+    progress: {
+      summary: `${imported.length} files imported · ${skipped} skipped`,
+      currentFile: displayPath(batchRoot),
+      updatedAt: new Date().toISOString(),
+    },
+  });
+  return {
+    status: "completed",
+    runId,
+    importedFiles: imported.length,
+    skippedFiles: skipped,
+    mirrorBatchPath: displayPath(batchRoot),
+    files: imported.slice(0, 20),
+    browse,
+  };
+}
+
 async function paperclipSkillExtraction(task) {
   const note = task.payload?.note || "";
   if (task.templateId === "os-file-browser") {
@@ -8431,6 +8834,7 @@ async function paperclipSkillExtraction(task) {
     return {
       paths: targets.files,
       extracted: [
+        extractionDiagnostics(targets, "문서"),
         "# Filesystem inspection",
         JSON.stringify(inspected, null, 2),
         targets.directories.length ? `# Expanded directories\n${targets.directories.map((path) => `- ${relative(repoRoot, path)}`).join("\n")}` : "",
@@ -8444,10 +8848,33 @@ async function paperclipSkillExtraction(task) {
     };
   }
   if (task.templateId === "rhwp-hwp-reader") {
-    const targets = await resolvePaperclipInputTargets(note, ["hwp", "hwpx", "pdf", "docx", "pptx", "html", "htm"], { maxDepth: 4, maxFiles: 60 });
+    const targets = await resolvePaperclipInputTargets(note, ["hwp", "hwpx"], { maxDepth: 4, maxFiles: 60 });
     return {
       paths: targets.files,
       extracted: [
+        extractionDiagnostics(targets, "HWP/HWPX"),
+        targets.directories.length ? `# Expanded directories\n${targets.directories.map((path) => `- ${relative(repoRoot, path)}`).join("\n")}` : "",
+        await extractHwpLike(targets.files),
+      ].filter(Boolean).join("\n\n"),
+    };
+  }
+  if (task.templateId === "pdf-document-reader") {
+    const targets = await resolvePaperclipInputTargets(note, ["pdf"], { maxDepth: 4, maxFiles: 80 });
+    return {
+      paths: targets.files,
+      extracted: [
+        extractionDiagnostics(targets, "PDF"),
+        targets.directories.length ? `# Expanded directories\n${targets.directories.map((path) => `- ${relative(repoRoot, path)}`).join("\n")}` : "",
+        await extractHwpLike(targets.files),
+      ].filter(Boolean).join("\n\n"),
+    };
+  }
+  if (task.templateId === "pptx-slide-reader") {
+    const targets = await resolvePaperclipInputTargets(note, ["pptx"], { maxDepth: 4, maxFiles: 80 });
+    return {
+      paths: targets.files,
+      extracted: [
+        extractionDiagnostics(targets, "PPTX"),
         targets.directories.length ? `# Expanded directories\n${targets.directories.map((path) => `- ${relative(repoRoot, path)}`).join("\n")}` : "",
         await extractHwpLike(targets.files),
       ].filter(Boolean).join("\n\n"),
@@ -8460,6 +8887,7 @@ async function paperclipSkillExtraction(task) {
     return {
       paths: targets.files,
       extracted: [
+        extractionDiagnostics(targets, "공고/RFP/사업계획서"),
         targets.directories.length ? `# Expanded directories\n${targets.directories.map((path) => `- ${relative(repoRoot, path)}`).join("\n")}` : "",
         documentPaths.length ? "## Document extraction" : "",
         documentPaths.length ? await extractHwpLike(documentPaths) : "",
@@ -8473,6 +8901,7 @@ async function paperclipSkillExtraction(task) {
     return {
       paths: targets.files,
       extracted: [
+        extractionDiagnostics(targets, "스프레드시트"),
         targets.directories.length ? `# Expanded directories\n${targets.directories.map((path) => `- ${relative(repoRoot, path)}`).join("\n")}` : "",
         await extractSpreadsheetLike(targets.files),
       ].filter(Boolean).join("\n\n"),
@@ -8695,6 +9124,19 @@ const server = createServer(async (req, res) => {
     }
     if (pathname === "/api/slack/collect" && req.method === "POST") {
       const body = await readBody(req);
+      const existingSlackJob = runningCommand("slack-collect");
+      if (existingSlackJob) {
+        return sendJson(res, 409, {
+          error: "Slack 수집이 이미 실행 중입니다.",
+          running: {
+            runId: existingSlackJob.runId,
+            command: existingSlackJob.command,
+            status: existingSlackJob.status || "running",
+            startedAt: existingSlackJob.startedAt,
+            progress: existingSlackJob.progress || {},
+          },
+        });
+      }
       const extraArgs = [];
       for (const channel of body.channels || []) {
         extraArgs.push("--channel", String(channel));
@@ -8705,7 +9147,18 @@ const server = createServer(async (req, res) => {
       if (body.limitPerChannel) extraArgs.push("--limit-per-channel", String(body.limitPerChannel));
       if (body.includeThreads === false) extraArgs.push("--no-threads");
       if (body.includeFiles === false) extraArgs.push("--no-files");
-      const result = await runCommand("slack-collect", Boolean(body.dryRun), { source: "slack_collect_api", extraArgs });
+      const result = await runCommand("slack-collect", Boolean(body.dryRun), {
+        source: "slack_collect_api",
+        extraArgs,
+        slackScopeKey: slackScopeKeyFromBody(body),
+        slackScope: {
+          channels: body.channels || [],
+          sinceDate: body.sinceDate || "",
+          untilDate: body.untilDate || "",
+          oldestDays: body.oldestDays || null,
+          limitPerChannel: body.limitPerChannel || null,
+        },
+      });
       return sendJson(res, ["completed", "previewed"].includes(result.status) ? 200 : 500, result);
     }
     if (pathname === "/api/automation/status" && req.method === "GET") {
@@ -8728,6 +9181,18 @@ const server = createServer(async (req, res) => {
     }
     if (pathname === "/api/automation/trigger" && req.method === "POST") {
       const body = await readBody(req);
+      if (activeJobs.size && body.command !== "refresh-global") {
+        return sendJson(res, 409, {
+          error: "다른 수집 작업이 이미 실행 중입니다.",
+          running: [...activeJobs.values()].map((job) => ({
+            runId: job.runId,
+            command: job.command,
+            status: job.status || "running",
+            startedAt: job.startedAt,
+            progress: job.progress || {},
+          })),
+        });
+      }
       const result = body.command === "full-cycle" ? await fullCycle(Boolean(body.dryRun)) : await runCommand(body.command, Boolean(body.dryRun));
       return sendJson(res, result.status === "completed" ? 200 : 500, result);
     }
@@ -8738,6 +9203,18 @@ const server = createServer(async (req, res) => {
     if (pathname === "/api/automation/target-rclone-copy" && req.method === "POST") {
       const body = await readBody(req);
       if (!body.remotePath) return sendJson(res, 400, { error: "remotePath is required" });
+      if (activeJobs.size) {
+        return sendJson(res, 409, {
+          error: "다른 수집 작업이 이미 실행 중입니다.",
+          running: [...activeJobs.values()].map((job) => ({
+            runId: job.runId,
+            command: job.command,
+            status: job.status || "running",
+            startedAt: job.startedAt,
+            progress: job.progress || {},
+          })),
+        });
+      }
       const result = await targetRcloneCopy(body.remotePath, body.dryRun !== false, { existingMode: body.existingMode });
       return sendJson(res, ["completed", "blocked", "skipped"].includes(result.status) ? 200 : 500, result);
     }
@@ -8776,17 +9253,29 @@ const server = createServer(async (req, res) => {
       const body = await readBody(req);
       return sendJson(res, 200, await createSkillDraft(body));
     }
+    if (pathname === "/api/filesystem/roots" && req.method === "GET") {
+      return sendJson(res, 200, { roots: await filesystemRootOptions() });
+    }
+    if (pathname === "/api/filesystem/import-folder" && req.method === "POST") {
+      return sendJson(res, 200, await handleFilesystemFolderImport(req));
+    }
     if (pathname === "/api/filesystem/browse" && req.method === "POST") {
       const body = await readBody(req);
+      const { values: env } = await readEnvFile();
       const result = await inspectFilesystemTargets([body.path || "", body.note || ""].filter(Boolean).join("\n"), {
         extensions: Array.isArray(body.extensions) ? body.extensions : [],
         includeDirectories: true,
-        maxDepth: body.maxDepth || 4,
-        maxFiles: body.maxFiles || 80,
-        maxEntriesPerDirectory: body.maxEntriesPerDirectory || 60,
-        maxTreeEntries: body.maxTreeEntries || 200,
+        maxDepth: body.maxDepth || env.FILESYSTEM_BROWSE_MAX_DEPTH || 8,
+        maxFiles: body.maxFiles || env.FILESYSTEM_BROWSE_MAX_FILES || 5000,
+        maxEntriesPerDirectory: body.maxEntriesPerDirectory || env.FILESYSTEM_BROWSE_MAX_ENTRIES || 300,
+        maxTreeEntries: body.maxTreeEntries || 400,
       });
       return sendJson(res, 200, result);
+    }
+    if (pathname === "/api/filesystem/collect" && req.method === "POST") {
+      const body = await readBody(req);
+      const result = await collectFilesystemPath(body);
+      return sendJson(res, result.status === "blocked" ? 409 : result.status === "failed" ? 500 : 200, result);
     }
     if (pathname === "/api/drive/remote-browser" && req.method === "POST") {
       const body = await readBody(req);

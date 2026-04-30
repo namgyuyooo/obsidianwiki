@@ -81,6 +81,7 @@ export type AutomationRun = {
     recentLines?: string[];
     updatedAt?: string;
   };
+  slackScopeKey?: string;
 };
 
 export type AutomationSnapshot = {

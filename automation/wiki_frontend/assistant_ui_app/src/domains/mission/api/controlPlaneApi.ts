@@ -82,6 +82,51 @@ export type PipelineStatePayload = {
   state?: Record<string, unknown>;
 };
 
+export type FilesystemBrowsePayload = {
+  files?: string[];
+  directories?: string[];
+  blocked?: string[];
+  entries?: Array<{
+    path?: string;
+    type?: string;
+    fileCount?: number;
+    directoryCount?: number;
+    tree?: Array<{
+      depth?: number;
+      path?: string;
+      type?: string;
+    }>;
+    ext?: string;
+    size?: number;
+    updatedAt?: string;
+  }>;
+};
+
+export type FilesystemRoot = {
+  key?: string;
+  label?: string;
+  path: string;
+  exists?: boolean;
+};
+
+export type FilesystemCollectResult = {
+  runId?: string;
+  command?: string;
+  status?: string;
+  stdout?: string;
+  stderr?: string;
+  browse?: FilesystemBrowsePayload;
+  steps?: Array<{ command?: string; status?: string; stdout?: string }>;
+};
+
+export type FilesystemFolderImportResult = {
+  status?: string;
+  importedFiles?: number;
+  skippedFiles?: number;
+  mirrorBatchPath?: string;
+  browse?: FilesystemBrowsePayload;
+};
+
 export type CoveragePayload = {
   label?: string;
   progressPercent?: number;
@@ -106,6 +151,19 @@ export type LlmPolicyPayload = {
   usage?: Array<Record<string, unknown>>;
 };
 
+export type LlmUsageEntry = {
+  id?: string;
+  createdAt?: string;
+  provider?: string;
+  feature?: string;
+  reason?: string;
+  model?: string;
+  status?: string;
+  durationMs?: number;
+  fallback?: string;
+  error?: string;
+};
+
 export type AutomationSchedule = {
   id: string;
   name?: string;
@@ -122,6 +180,8 @@ export type AutomationSchedule = {
   retryAfterMinutes?: number;
   retentionDays?: number;
   scope?: "uploads" | "all";
+  cleanupMode?: "age" | "processed" | "processed_or_age";
+  retentionMaxBytes?: number;
   retentionManaged?: boolean;
 };
 
@@ -147,6 +207,8 @@ export type MirrorStatusPayload = {
     enabled?: boolean;
     days?: number;
     scope?: "uploads" | "all";
+    cleanupMode?: "age" | "processed" | "processed_or_age";
+    maxBytes?: number;
     timeOfDay?: string;
     updatedAt?: string;
     scheduleId?: string;
@@ -161,6 +223,11 @@ export type MirrorCleanupPayload = {
   dryRun?: boolean;
   deleteAll?: boolean;
   olderThanDays?: number;
+  cleanupMode?: "age" | "processed" | "processed_or_age";
+  thresholdBytes?: number;
+  currentBytes?: number;
+  skipped?: boolean;
+  skipReason?: string;
   exists?: boolean;
   matchedFiles?: number;
   deletedFiles?: number;
@@ -168,6 +235,45 @@ export type MirrorCleanupPayload = {
   freedBytes?: number;
   samplePaths?: Array<{ path?: string; size?: number; modifiedAt?: string }>;
   executedAt?: string;
+};
+
+export type CoreDocumentRecord = {
+  key?: string;
+  title?: string;
+  driveName?: string;
+  folderPath?: string;
+  filePath?: string;
+  modifiedTime?: string;
+  projectKey?: string;
+  projectLabel?: string;
+  projectMatchScore?: number;
+  score?: number;
+  priority?: string;
+  status?: string;
+  statusLabel?: string;
+  note?: string;
+  importance?: string;
+  updatedAt?: string;
+  connections?: {
+    inSources?: boolean;
+    inEvidence?: boolean;
+    inActions?: boolean;
+    inDecisions?: boolean;
+    inRisks?: boolean;
+    inUsage?: boolean;
+  };
+};
+
+export type CoreDocumentsPayload = {
+  manifestPath?: string;
+  documents?: CoreDocumentRecord[];
+  summary?: {
+    manifestDocuments?: number;
+    coreCandidates?: number;
+    highPriority?: number;
+    used?: number;
+    decisionEvidence?: number;
+  };
 };
 
 export type SpotliteItem = {
@@ -204,9 +310,10 @@ export type SpotliteTemplatesPayload = {
 };
 
 async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
+  const isFormData = typeof FormData !== "undefined" && init?.body instanceof FormData;
   const response = await fetch(path, {
     ...init,
-    headers: {
+    headers: isFormData ? init?.headers : {
       "Content-Type": "application/json",
       ...(init?.headers || {}),
     },
@@ -313,6 +420,44 @@ export function savePipelineState(state: Record<string, unknown>) {
   });
 }
 
+export function fetchFilesystemRoots() {
+  return requestJson<{ roots: FilesystemRoot[] }>("/api/filesystem/roots");
+}
+
+export function browseFilesystem(input: {
+  path: string;
+  maxDepth?: number;
+  maxFiles?: number;
+  maxEntriesPerDirectory?: number;
+}) {
+  return requestJson<FilesystemBrowsePayload>("/api/filesystem/browse", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+
+export function importFilesystemFolder(form: FormData) {
+  return requestJson<FilesystemFolderImportResult>("/api/filesystem/import-folder", {
+    method: "POST",
+    body: form,
+  });
+}
+
+export function collectFilesystem(input: {
+  path: string;
+  dryRun?: boolean;
+  continueAfter?: boolean;
+  refreshAfter?: boolean;
+  maxDepth?: number;
+  maxFiles?: number;
+  maxEntriesPerDirectory?: number;
+}) {
+  return requestJson<FilesystemCollectResult>("/api/filesystem/collect", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+
 export function fetchCoverage() {
   return requestJson<CoveragePayload>("/api/coverage");
 }
@@ -321,8 +466,16 @@ export function fetchLlmPolicy() {
   return requestJson<LlmPolicyPayload>("/api/ops/llm-policy");
 }
 
+export function fetchLlmUsage() {
+  return requestJson<{ usage: LlmUsageEntry[] }>("/api/ops/llm-usage");
+}
+
 export function fetchSchedules() {
   return requestJson<{ schedules: AutomationSchedule[] }>("/api/automation/schedules");
+}
+
+export function fetchCoreDocuments(workspace = "rtm") {
+  return requestJson<CoreDocumentsPayload>(`/api/documents/core?workspace=${encodeURIComponent(workspace)}`);
 }
 
 export function fetchMirrorStatus() {
@@ -334,6 +487,8 @@ export function cleanupMirror(input: {
   olderThanDays?: number;
   dryRun?: boolean;
   deleteAll?: boolean;
+  cleanupMode?: "age" | "processed" | "processed_or_age";
+  thresholdBytes?: number;
 }) {
   return requestJson<MirrorCleanupPayload>("/api/mirror/cleanup", {
     method: "POST",
@@ -345,6 +500,8 @@ export function saveMirrorRetention(input: {
   enabled: boolean;
   days?: number;
   scope?: "uploads" | "all";
+  cleanupMode?: "age" | "processed" | "processed_or_age";
+  maxBytes?: number;
   timeOfDay?: string;
 }) {
   return requestJson<MirrorStatusPayload>("/api/mirror/retention", {
@@ -366,6 +523,8 @@ export function createSchedule(input: {
   retryAfterMinutes?: number;
   retentionDays?: number;
   scope?: "uploads" | "all";
+  cleanupMode?: "age" | "processed" | "processed_or_age";
+  retentionMaxBytes?: number;
   retentionManaged?: boolean;
 }) {
   return requestJson<{ schedule: AutomationSchedule }>("/api/automation/schedules", {

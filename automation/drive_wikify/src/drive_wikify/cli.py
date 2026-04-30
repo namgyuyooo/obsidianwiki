@@ -103,7 +103,10 @@ def main() -> int:
         passed = sum(1 for result in results if result.validation.passed)
         print(f"Processed {len(results)} documents; validation passed for {passed}.")
         for result in results:
-            print(f"- {result.record.file_path.name}: {result.decision.action} -> {result.decision.project_name}")
+            extractor = result.extracted.extractor_name or "unknown_extractor"
+            print(f"- {result.record.file_path.name}: {result.decision.action} -> {result.decision.project_name} [{extractor}]")
+            for warning in result.extracted.warnings:
+                print(f"  skill warning: {warning}")
             if result.validation.issues:
                 for issue in result.validation.issues:
                     print(f"  validation issue: {issue}")

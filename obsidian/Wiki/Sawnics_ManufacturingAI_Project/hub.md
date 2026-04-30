@@ -22,6 +22,7 @@ source: "2026-04-27 #sales_team thread + /Users/rtm/Documents/GitHub/commonWork/
 - 현재 오너/대상: [[Wiki/Sawnics_ManufacturingAI_Project/Status]]의 오너 기준으로 관리
 - 다음 액션: `Action_Items.md`와 `Conflict_Register.md`를 기준으로 실행 우선순위 재정렬
 - 작성 전략 기준본: [[Wiki/Sawnics_ManufacturingAI_Project/RFP_Writing_Strategy_2026-04-30]]
+- 사업계획서 작성 분석: [[Wiki/Sawnics_ManufacturingAI_Project/Business_Plan_Writing_Analysis_2026-04-30]]
 
 ## 현재 막힘 / 충돌
 - 확인 필요: 최신 고객 요청, 일정, 산출물 기준본 확인 필요
@@ -36,6 +37,7 @@ source: "2026-04-27 #sales_team thread + /Users/rtm/Documents/GitHub/commonWork/
 ## 최근 업데이트
 | 일시 | 추진내용 | 실무 의미 | 연결 증적 | 다음 액션 |
 | --- | --- | --- | --- | --- |
+| 2026-04-30 | Drive `5.국책과제/쏘닉스` 폴더에서 신청서, 공고, 제출안내, 양식, 2025 기존본, PoC 파일을 확인하고 사업계획서 작성 분석 착수본 작성 | 합격용 사업계획서 작성 모드로 전환. PoC 기술결과를 평가항목/KPI/검증계획으로 흡수할 기준 마련 | [[Wiki/Sawnics_ManufacturingAI_Project/Business_Plan_Writing_Analysis_2026-04-30]], [[Wiki/Sawnics_ManufacturingAI_Project/Sources]], [[Wiki/Sawnics_ManufacturingAI_Project/Evidence_Log]] | 신청서 기준 유형/사업비 확인 후 HWP 목차별 작성 셀 분해 |
 | 2026-04-30 | 공고 PDF, 제출안내 PDF, 2026 양식 HWP, 2025 기존본 HWP를 로컬 추출해 작성 전략 문서화 | 파일브라우저/에이전트 막힘과 별개로 실제 제안서 작성 판단이 가능해짐 | [[Wiki/Sawnics_ManufacturingAI_Project/RFP_Writing_Strategy_2026-04-30]], [[Wiki/Sawnics_ManufacturingAI_Project/Evidence_Log]], [[Wiki/Sawnics_ManufacturingAI_Project/Reference_Register]] | AI 시나리오, KPI 근거, 데이터 현황표 초안 작성 |
 | 2026-04-30 | 허브를 실무 운영형 구조로 재정비 | 상단에서 상태, 막힘, 다음 액션, 근거를 바로 확인할 수 있게 전환 | [[Wiki/Sawnics_ManufacturingAI_Project/Change_Log]], [[Wiki/Sawnics_ManufacturingAI_Project/Sources]], [[Wiki/Sawnics_ManufacturingAI_Project/Evidence_Log]] | 실제 진행 상황으로 현행화 |
 
@@ -56,6 +58,7 @@ source: "2026-04-27 #sales_team thread + /Users/rtm/Documents/GitHub/commonWork/
 - [[Wiki/Sawnics_ManufacturingAI_Project/Reference_Register]]
 - [[Wiki/Sawnics_ManufacturingAI_Project/Project_Overview]]
 - [[Wiki/Sawnics_ManufacturingAI_Project/RFP_Writing_Strategy_2026-04-30]]
+- [[Wiki/Sawnics_ManufacturingAI_Project/Business_Plan_Writing_Analysis_2026-04-30]]
 - [[Wiki/Sawnics_ManufacturingAI_Project/Sources]]
 - [[Wiki/Sawnics_ManufacturingAI_Project/Evidence_Log]]
 - [[Wiki/Sawnics_ManufacturingAI_Project/Action_Items]]

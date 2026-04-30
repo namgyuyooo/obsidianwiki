@@ -20,6 +20,59 @@ source: "2026-04-27 #sales_team thread + /Users/rtm/Documents/GitHub/commonWork/
 - 리스크: [[Wiki/Sawnics_ManufacturingAI_Project/Risks]]
 
 ## 기존 정리 메모
+## 2026-04-30 / 사업계획서 작성 분석 착수
+
+### Evidence 14
+- Source: Local Google Drive folder listing
+- Folder: `/Users/rtm/Library/CloudStorage/GoogleDrive-jaykafka12@gmail.com/.shortcut-targets-by-id/1ogQO1tIP_l5pXwttvyRt6YEsP3vkgjzl/RTM_YNG/2026_RTM(drive)/5.국책과제/쏘닉스`
+- Date: 확인일 `2026-04-30`
+- Topic: 쏘닉스 사업계획서 작성 자산 확보
+- Type: 근거
+- Original:
+  > 공고 PDF, 제출 안내문 PDF, 2026 사업계획서 양식 HWP, 2025 정부일반형 기존본 HWP, 사업신청서 PDF, SW개발비 FP산출내역서 XLSX, PoC PDF/HTML이 같은 쏘닉스 폴더에 존재
+- Interpretation:
+  - 이제 업무 초점은 파일 확보가 아니라 `사업계획서 합격용 작성 분석`과 `신청서-계획서-사업비 정합성` 검증이다.
+- Linked Pages:
+  - [[Business_Plan_Writing_Analysis_2026-04-30]]
+  - [[Sources]]
+  - [[Action_Items]]
+
+### Evidence 15
+- Source: Local Report Config
+- File: `sawnics_poc_report_config.json`
+- Date: 재확인일 `2026-04-30`
+- Topic: PoC 결과의 사업계획서 전환 포인트
+- Type: 수치
+- Original:
+  > 총 50장 이미지, 정상 30장, 불량 20장
+  >
+  > IDT `13 / 13`, Metal `4 / 5`, Non Metal `4 / 5`
+  >
+  > Metal 미탐 `D_3310`, Non Metal 미탐 `D_2324`
+- Interpretation:
+  - 대표 AI 시나리오는 `IDT 소자 외관/품질 검사 AI`로 두고, Metal/Non Metal 미탐은 리스크 은폐가 아니라 성능개선 WBS와 검증계획으로 전환해야 한다.
+- Linked Pages:
+  - [[Business_Plan_Writing_Analysis_2026-04-30]]
+  - [[KPI]]
+  - [[Conflict_Register]]
+
+### Evidence 16
+- Source: Local Report Config
+- File: `sawnics_poc_report_config.json`
+- Date: 재확인일 `2026-04-30`
+- Topic: 미탐 개선 방향
+- Type: 결정
+- Original:
+  > Metal 미탐 케이스는 탐지 threshold 세분화 또는 더 높은 해상도 입력 검토 필요
+  >
+  > Non Metal 미탐 케이스는 합성 불량 이미지 생성과 라벨링을 통한 재학습 제안
+- Interpretation:
+  - 사업계획서에는 `고해상도 입력 실험`, `threshold sweep`, `합성/라벨링/재학습`을 성능개선 검증계획으로 명시하는 것이 안전하다.
+- Linked Pages:
+  - [[Business_Plan_Writing_Analysis_2026-04-30]]
+  - [[Action_Items]]
+  - [[Risks]]
+
 ## 2026-04-30 / 공고·양식 로컬 추출 및 전략화
 
 ### Evidence 09

@@ -8,6 +8,11 @@ source: "Slack thread + local report config"
 # Action Items
 
 ## Open
+- [ ] `사업신청서.pdf`에서 신청 유형, 사업명, 도입/공급기업, 사업비, 구축범위를 확인하고 `AI공장 구축` 문안과 충돌 여부 판단
+- [ ] 2026 사업계획서 HWP 목차를 작성 셀 단위로 쪼개 `2025 기존본 재사용 / PoC 근거 / 신규 작성 / 확인 필요` 태그 부여
+- [ ] [[Wiki/Sawnics_ManufacturingAI_Project/Business_Plan_Writing_Analysis_2026-04-30]] 기준으로 `IDT 검사 AI` 대표 시나리오 초안 작성
+- [ ] `D_3310`, `D_2324` 미탐 사례를 성능개선 WBS와 검증계획 문구로 전환
+- [ ] FP산출내역서와 사업비 표가 작성 범위, AI 기능, SW개발 항목과 맞는지 확인
 - [ ] `[[Wiki/Sawnics_ManufacturingAI_Project/RFP_Writing_Strategy_2026-04-30]]` 기준으로 쏘닉스 신청 유형을 `AI공장 구축` vs `데이터 수집·검증` 중 하나로 확정
 - [ ] 대표 대상 공정 1~2개와 대표 AI 시나리오 1개를 확정하고 `2.5`, `2.6`, `2.7` 초안 작성
 - [ ] KPI 기존값, 목표값, 측정식, 원천 데이터 보유 위치를 표로 정리
@@ -23,6 +28,8 @@ source: "Slack thread + local report config"
 - [ ] 고객 회신, 내부 승인, 최신 문서본 등 외부 입력 대기 항목 정리
 
 ## Done
+- [x] 2026-04-30 Drive `5.국책과제/쏘닉스` 폴더에서 신청서, 제출안내문, 사업계획서 양식, 2025 기존본, PoC 보고서, FP산출내역 파일 존재 확인
+- [x] 2026-04-30 `Business_Plan_Writing_Analysis_2026-04-30.md` 작성
 - [x] 2026-04-30 운영형 문서 구조 반영
 - [x] 2026-04-30 공고 PDF, 제출안내 PDF, 2026 양식 HWP, 2025 기존본 HWP 로컬 추출 성공
 - [x] 2026-04-30 `RFP_Writing_Strategy_2026-04-30.md` 작성

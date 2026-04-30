@@ -253,7 +253,7 @@ export async function deleteWikiPage(path: string, reason: string, workspace: st
   });
 }
 
-export async function deleteWikiProjectPackage(projectKey: string, reason: string, workspace: string) {
+export async function deleteWikiProjectPackage(projectKey: string, reason: string, workspace: string, path?: string) {
   return requestJson<{
     status: string;
     projectKey: string;
@@ -264,7 +264,7 @@ export async function deleteWikiProjectPackage(projectKey: string, reason: strin
     timestamp: string;
   }>("/api/wiki/project/delete", {
     method: "POST",
-    body: JSON.stringify({ projectKey, reason, workspace }),
+    body: JSON.stringify({ projectKey, reason, workspace, path }),
   });
 }
 

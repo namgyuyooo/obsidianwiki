@@ -700,6 +700,22 @@ textarea:focus-visible {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
+.aui-ops-drive-browser {
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid var(--aui-line);
+  border-radius: var(--aui-radius-md);
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+}
+
+.aui-ops-drive-browser-controls {
+  align-items: end;
+  display: grid;
+  gap: 12px;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+}
+
 .aui-ops-settings-group {
   display: grid;
   gap: 10px;
@@ -751,7 +767,8 @@ textarea:focus-visible {
   .aui-ops-workbench,
   .aui-ops-settings-grid,
   .aui-ops-settings-focus,
-  .aui-ops-channel-list {
+  .aui-ops-channel-list,
+  .aui-ops-drive-browser-controls {
     grid-template-columns: minmax(0, 1fr);
   }
 
@@ -5386,10 +5403,239 @@ button.aui-notion-table-row.active {
 .aui-wiki-folder-tree {
   border-bottom: 1px solid #e8e5df;
   display: grid;
-  gap: 2px;
+  align-content: start;
+  gap: 6px;
+  height: 100%;
   min-height: 0;
   overflow: auto;
-  padding-bottom: 10px;
+  padding-bottom: 6px;
+}
+
+.wiki-sidebar-expanded .aui-wiki-sidebar {
+  width: min(340px, 24vw);
+}
+
+.wiki-sidebar-expanded.aui-wiki-console {
+  grid-template-columns: minmax(300px, 0.78fr) minmax(0, 1.66fr) minmax(340px, 0.94fr);
+}
+
+.aui-wiki-sidebar.expanded {
+  min-width: min(340px, 24vw);
+}
+
+.aui-wiki-bulk-card {
+  background: rgba(255, 255, 255, 0.74);
+  border: 1px solid var(--aui-line);
+  border-radius: 14px;
+  display: grid;
+  gap: 8px;
+  margin-bottom: 8px;
+  padding: 10px;
+}
+
+.aui-wiki-bulk-card.collapsed {
+  padding: 8px 10px;
+}
+
+.aui-wiki-bulk-head {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  display: flex;
+  gap: 8px;
+  justify-content: space-between;
+  padding: 0;
+  text-align: left;
+}
+
+.aui-wiki-bulk-head div {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.aui-wiki-bulk-head strong {
+  color: var(--aui-ink);
+  font-size: 13px;
+}
+
+.aui-wiki-bulk-head span,
+.aui-wiki-bulk-head small {
+  color: var(--aui-muted);
+  font-size: 11px;
+}
+
+.aui-wiki-selection-anchor {
+  background: rgba(255, 255, 255, 0.98);
+  border: 1px solid rgba(17, 19, 24, 0.1);
+  border-radius: 16px;
+  bottom: 18px;
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.16);
+  left: 50%;
+  max-width: min(760px, calc(100vw - 48px));
+  position: fixed;
+  transform: translateX(-50%);
+  width: min(760px, calc(100vw - 48px));
+  z-index: 90;
+}
+
+.aui-wiki-selection-anchor-bar {
+  align-items: center;
+  display: flex;
+  gap: 14px;
+  justify-content: space-between;
+  padding: 12px 14px;
+}
+
+.aui-wiki-selection-anchor-bar > div:first-child {
+  display: grid;
+  gap: 2px;
+}
+
+.aui-wiki-selection-anchor-bar strong {
+  color: var(--aui-ink);
+  font-size: 14px;
+}
+
+.aui-wiki-selection-anchor-bar span {
+  color: var(--aui-muted);
+  font-size: 12px;
+}
+
+.aui-wiki-selection-anchor-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.aui-wiki-selection-sheet {
+  border-top: 1px solid var(--aui-line);
+  display: grid;
+  gap: 10px;
+  padding: 12px 14px 14px;
+}
+
+.aui-wiki-tree-node {
+  display: grid;
+  gap: 4px;
+}
+
+.aui-wiki-tree-node.active {
+  background: rgba(233, 229, 221, 0.56);
+  border-radius: 10px;
+}
+
+.aui-wiki-tree-row {
+  align-items: start;
+  display: grid;
+  gap: 6px;
+  grid-template-columns: 18px 18px minmax(0, 1fr);
+}
+
+.aui-wiki-tree-check {
+  align-items: center;
+  display: grid;
+  margin-top: 6px;
+}
+
+.aui-wiki-tree-toggle {
+  background: transparent;
+  border: 0;
+  border-radius: 8px;
+  color: var(--aui-muted);
+  cursor: pointer;
+  font-size: 13px;
+  padding: 6px 0;
+}
+
+.aui-wiki-tree-label {
+  background: #fcfcfd;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  color: #37352f;
+  cursor: pointer;
+  display: grid;
+  gap: 3px;
+  padding: 8px 10px;
+  text-align: left;
+}
+
+.aui-wiki-tree-label:hover,
+.aui-wiki-tree-label.active {
+  background: #eef4fb;
+  border-color: rgba(31, 78, 121, 0.18);
+}
+
+.aui-wiki-tree-label strong,
+.aui-wiki-tree-label small,
+.aui-wiki-tree-child-button strong,
+.aui-wiki-tree-child-button span {
+  overflow-wrap: normal;
+  word-break: keep-all;
+}
+
+.aui-wiki-tree-label strong {
+  color: var(--aui-ink);
+  font-size: 13px;
+  font-weight: 760;
+}
+
+.aui-wiki-tree-label small {
+  color: var(--aui-muted);
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.aui-wiki-tree-children {
+  display: grid;
+  gap: 4px;
+  margin-left: 22px;
+}
+
+.aui-wiki-tree-child {
+  align-items: start;
+  display: grid;
+  gap: 6px;
+  grid-template-columns: 18px minmax(0, 1fr);
+}
+
+.aui-wiki-result-row {
+  align-items: start;
+  display: grid;
+  gap: 6px;
+  grid-template-columns: 18px minmax(0, 1fr);
+}
+
+.aui-wiki-tree-child-button {
+  background: #ffffff;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  cursor: pointer;
+  display: grid;
+  gap: 2px;
+  padding: 7px 9px;
+  text-align: left;
+}
+
+.aui-wiki-tree-child.active .aui-wiki-tree-child-button,
+.aui-wiki-tree-child-button:hover,
+.aui-wiki-result-row button:hover {
+  background: #f5f8fb;
+  border-color: rgba(31, 78, 121, 0.16);
+}
+
+.aui-wiki-tree-child-button strong {
+  color: var(--aui-ink);
+  font-size: 12px;
+}
+
+.aui-wiki-tree-child-button span {
+  color: var(--aui-muted);
+  font-size: 11px;
+  line-height: 1.45;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .aui-wiki-folder-tree button {
@@ -5770,14 +6016,96 @@ button.aui-notion-table-row.active {
 .aui-wiki-inspector {
   background: #fbfaf8;
   border-left: 1px solid #e8e5df;
-  overflow: auto;
-  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow: hidden;
+  padding: 10px;
 }
 
 .aui-wiki-card {
   display: grid;
-  gap: 12px;
-  padding: 12px 10px;
+  gap: 10px;
+  padding: 10px;
+}
+
+.aui-wiki-inspector-summary {
+  gap: 6px;
+}
+
+.aui-wiki-inspector-summary.collapsed {
+  gap: 4px;
+  padding-bottom: 8px;
+}
+
+.aui-wiki-summary-toggle {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  color: var(--aui-muted);
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  padding: 0;
+  text-align: left;
+  width: 100%;
+}
+
+.aui-wiki-summary-toggle small {
+  color: var(--aui-faint);
+  font-size: 11px;
+}
+
+.aui-wiki-inspector-summary.collapsed strong {
+  font-size: 18px;
+  line-height: 1.25;
+}
+
+.aui-wiki-index-card {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.aui-wiki-result-list.inspector-list {
+  flex: 1 1 auto;
+  height: 100%;
+  min-height: 0;
+  overflow: auto;
+}
+
+.aui-wiki-fold-card {
+  background: #ffffff;
+  border: 1px solid var(--aui-line);
+  border-radius: 10px;
+  overflow: hidden;
+  flex: 0 0 auto;
+}
+
+.aui-wiki-fold-trigger {
+  background: #ffffff;
+  border: 0;
+  color: var(--aui-ink-soft);
+  cursor: pointer;
+  display: block;
+  font-size: 12px;
+  font-weight: 760;
+  padding: 9px 12px;
+  text-align: left;
+  width: 100%;
+}
+
+.aui-wiki-fold-card.open .aui-wiki-fold-trigger {
+  background: #f7fafc;
+}
+
+.aui-wiki-fold-body {
+  border-top: 1px solid var(--aui-line);
+  display: grid;
+  gap: 8px;
+  padding: 8px;
 }
 
 .aui-wiki-card-head {
@@ -7316,7 +7644,7 @@ body {
 .aui-wiki-sidebar {
   border-right: 1px solid var(--aui-line);
   margin-right: 0;
-  padding: 10px;
+  padding: 8px;
 }
 
 .aui-wiki-main {
@@ -7330,17 +7658,35 @@ body {
   border-left: 1px solid var(--aui-line);
   margin-left: 0;
   overflow: auto;
-  padding: 10px;
+  padding: 8px;
 }
 
 .aui-wiki-brand {
   border-bottom: 1px solid #edf1f6;
-  padding: 8px 4px 10px;
+  padding: 4px 2px 8px;
 }
 
 .aui-wiki-brand h1 {
   color: var(--aui-ink);
-  font-size: 18px;
+  font-size: 16px;
+  margin: 2px 0 0;
+}
+
+.aui-wiki-brand .aui-kicker {
+  font-size: 11px;
+}
+
+.aui-wiki-search {
+  gap: 8px;
+  padding: 10px;
+}
+
+.aui-wiki-search .aui-wiki-filter-grid {
+  gap: 8px;
+}
+
+.aui-wiki-search label span {
+  font-size: 11px;
 }
 
 .aui-wiki-search,
@@ -8218,7 +8564,7 @@ pre,
 
 .aui-wiki-console {
   gap: var(--aui-section-gap);
-  grid-template-columns: 290px minmax(620px, 1fr) 286px;
+  grid-template-columns: minmax(300px, 0.78fr) minmax(0, 1.66fr) minmax(340px, 0.94fr);
   padding: var(--aui-app-pad);
 }
 
@@ -8226,12 +8572,50 @@ pre,
 .aui-wiki-main,
 .aui-wiki-inspector {
   margin: 0;
+  min-width: 0;
 }
 
 .aui-wiki-sidebar,
 .aui-wiki-inspector {
   gap: var(--aui-section-gap);
-  padding: 10px;
+  min-width: 0;
+  overflow-x: hidden;
+  padding: 8px;
+}
+
+.aui-wiki-sidebar {
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr);
+}
+
+.aui-wiki-inspector > * {
+  min-width: 0;
+}
+
+.aui-wiki-inspector .aui-wiki-card,
+.aui-wiki-inspector .aui-field,
+.aui-wiki-inspector .aui-decision-compare-actions,
+.aui-wiki-inspector .aui-wiki-queue-list,
+.aui-wiki-inspector .aui-wiki-thinking {
+  min-width: 0;
+  width: 100%;
+}
+
+.aui-wiki-inspector input,
+.aui-wiki-inspector textarea,
+.aui-wiki-inspector select,
+.aui-wiki-inspector button,
+.aui-wiki-inspector pre {
+  max-width: 100%;
+  min-width: 0;
+}
+
+.aui-wiki-inspector p,
+.aui-wiki-inspector strong,
+.aui-wiki-inspector dd,
+.aui-wiki-inspector pre {
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .aui-wiki-main {
@@ -8516,6 +8900,181 @@ pre,
   grid-template-columns: minmax(360px, 1fr) minmax(360px, 1fr);
 }
 
+.aui-pipeline-command-grid {
+  display: grid;
+  gap: var(--aui-section-gap);
+  grid-template-columns: minmax(320px, 0.78fr) minmax(520px, 1.22fr);
+}
+
+.aui-pipeline-panel {
+  background: var(--aui-surface);
+  border: 1px solid var(--aui-line);
+  border-radius: var(--aui-radius-panel);
+  box-shadow: var(--aui-shadow-soft);
+  display: grid;
+  gap: var(--aui-space-3);
+  padding: var(--aui-card-pad);
+}
+
+.aui-pipeline-panel-scope,
+.aui-pipeline-panel-status {
+  grid-column: 1 / -1;
+}
+
+.aui-pipeline-panel header {
+  align-items: center;
+  display: flex;
+  gap: var(--aui-space-3);
+}
+
+.aui-pipeline-panel header > span {
+  align-items: center;
+  background: #111827;
+  border-radius: 999px;
+  color: #ffffff;
+  display: inline-flex;
+  flex: 0 0 28px;
+  font-size: 13px;
+  font-weight: 850;
+  height: 28px;
+  justify-content: center;
+  width: 28px;
+}
+
+.aui-pipeline-panel header strong {
+  color: var(--aui-ink);
+  font-size: var(--aui-type-section);
+  line-height: var(--aui-line-tight);
+}
+
+.aui-pipeline-panel header small {
+  color: var(--aui-muted);
+}
+
+.aui-pipeline-next-card {
+  background: linear-gradient(135deg, rgba(9, 105, 218, 0.1), rgba(12, 166, 120, 0.08));
+  border: 1px solid rgba(9, 105, 218, 0.22);
+  border-radius: var(--aui-radius-control);
+  display: grid;
+  gap: 5px;
+  padding: var(--aui-row-pad-y) var(--aui-row-pad-x);
+}
+
+.aui-pipeline-next-card span,
+.aui-pipeline-scope-head span,
+.aui-pipeline-skill-routes > div:first-child span {
+  color: var(--aui-muted);
+  font-size: var(--aui-type-caption);
+  font-weight: 750;
+}
+
+.aui-pipeline-next-card strong {
+  color: var(--aui-ink);
+  font-size: 16px;
+}
+
+.aui-pipeline-scope-grid {
+  display: grid;
+  gap: var(--aui-section-gap);
+  grid-template-columns: repeat(auto-fit, minmax(330px, 1fr));
+}
+
+.aui-pipeline-scope-card {
+  background: #f8fafc;
+  border: 1px solid var(--aui-line);
+  border-radius: var(--aui-radius-panel);
+  display: grid;
+  gap: var(--aui-space-3);
+  min-width: 0;
+  padding: var(--aui-card-pad);
+}
+
+.aui-pipeline-scope-head {
+  align-items: start;
+  display: flex;
+  gap: var(--aui-space-2);
+  justify-content: space-between;
+}
+
+.aui-pipeline-scope-head strong {
+  color: var(--aui-ink);
+}
+
+.aui-pipeline-execute-grid {
+  display: grid;
+  gap: var(--aui-space-2);
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.aui-pipeline-execute-grid section {
+  background: #f8fafc;
+  border: 1px solid var(--aui-line);
+  border-radius: var(--aui-radius-control);
+  display: grid;
+  gap: var(--aui-space-2);
+  padding: var(--aui-row-pad-y) var(--aui-row-pad-x);
+}
+
+.aui-pipeline-execute-grid section strong {
+  color: var(--aui-ink);
+}
+
+.aui-pipeline-execute-grid button,
+.aui-pipeline-advanced summary {
+  background: #f2f5f9;
+  border: 1px solid var(--aui-line);
+  border-radius: var(--aui-radius-control);
+  color: var(--aui-ink);
+  cursor: pointer;
+  font-weight: 800;
+  min-height: 34px;
+  padding: var(--aui-control-pad-y) var(--aui-control-pad-x);
+}
+
+.aui-pipeline-execute-grid button.primary {
+  background: #111827;
+  border-color: #111827;
+  color: #ffffff;
+}
+
+.aui-pipeline-execute-grid button:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
+}
+
+.aui-pipeline-advanced {
+  display: grid;
+  gap: var(--aui-space-3);
+}
+
+.aui-pipeline-advanced[open] {
+  background: rgba(248, 250, 252, 0.72);
+  border: 1px solid var(--aui-line);
+  border-radius: var(--aui-radius-panel);
+  padding: var(--aui-space-3);
+}
+
+.aui-pipeline-advanced summary {
+  list-style: none;
+  width: fit-content;
+}
+
+.aui-pipeline-status-grid {
+  display: grid;
+  gap: var(--aui-space-3);
+  grid-template-columns: minmax(320px, 1.2fr) repeat(2, minmax(260px, 0.9fr));
+}
+
+.aui-pipeline-status-grid > section {
+  display: grid;
+  gap: var(--aui-space-2);
+  min-width: 0;
+}
+
+.aui-pipeline-status-grid > section > strong {
+  color: var(--aui-ink);
+}
+
 .aui-pipeline-step,
 .aui-pipeline-rail > article {
   background: var(--aui-surface);
@@ -8648,6 +9207,73 @@ pre,
   grid-template-columns: minmax(0, 1fr) auto;
 }
 
+.aui-pipeline-filesystem-roots,
+.aui-pipeline-filesystem-tree,
+.aui-pipeline-filesystem-primary,
+.aui-pipeline-filebox .aui-ops-muted,
+.aui-pipeline-filebox small {
+  grid-column: 1 / -1;
+}
+
+.aui-pipeline-filesystem-primary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--aui-space-2);
+}
+
+.aui-pipeline-filesystem-roots,
+.aui-pipeline-filesystem-tree {
+  display: grid;
+  gap: var(--aui-space-2);
+}
+
+.aui-pipeline-filesystem-roots > strong,
+.aui-pipeline-filesystem-tree > strong {
+  font-size: var(--aui-type-caption);
+}
+
+.aui-pipeline-filesystem-roots > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--aui-space-2);
+}
+
+.aui-pipeline-filesystem-roots button,
+.aui-pipeline-filesystem-tree button {
+  background: #ffffff;
+  border: 1px solid var(--aui-line);
+  border-radius: var(--aui-radius-control);
+  color: var(--aui-ink);
+  cursor: pointer;
+  font-size: var(--aui-type-caption);
+  font-weight: 800;
+  min-height: 30px;
+  padding: 5px 9px;
+  text-align: left;
+}
+
+.aui-pipeline-filesystem-roots button.active,
+.aui-pipeline-filesystem-tree button.active {
+  background: rgba(12, 166, 120, 0.1);
+  border-color: rgba(12, 166, 120, 0.42);
+}
+
+.aui-pipeline-filesystem-tree {
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid var(--aui-line);
+  border-radius: var(--aui-radius-control);
+  max-height: 260px;
+  overflow: auto;
+  padding: var(--aui-space-2);
+}
+
+.aui-pipeline-filesystem-tree button {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+}
+
 .aui-pipeline-automation-options {
   display: grid;
   gap: var(--aui-space-2);
@@ -8741,6 +9367,46 @@ pre,
 .aui-pipeline-rule-grid small {
   color: var(--aui-muted);
   font-size: 11px;
+}
+
+.aui-pipeline-runtime-stages {
+  display: grid;
+  gap: var(--aui-space-2);
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.aui-pipeline-runtime-stages article {
+  background: linear-gradient(180deg, rgba(12, 166, 120, 0.08), rgba(255, 255, 255, 0.92));
+  border: 1px solid rgba(12, 166, 120, 0.22);
+  border-radius: var(--aui-radius-control);
+  display: grid;
+  gap: 5px;
+  min-height: 120px;
+  padding: 10px;
+}
+
+.aui-pipeline-runtime-stages article > span {
+  align-items: center;
+  background: #0f766e;
+  border-radius: 999px;
+  color: #ffffff;
+  display: inline-flex;
+  font-size: 11px;
+  font-weight: 900;
+  height: 22px;
+  justify-content: center;
+  width: 22px;
+}
+
+.aui-pipeline-runtime-stages strong {
+  color: var(--aui-ink);
+  font-size: var(--aui-type-caption);
+}
+
+.aui-pipeline-runtime-stages small {
+  color: var(--aui-muted);
+  font-size: 11px;
+  line-height: 1.45;
 }
 
 .aui-pipeline-schedule-list {
@@ -8840,6 +9506,9 @@ pre,
   display: grid;
   gap: var(--aui-space-3);
   padding: var(--aui-card-pad);
+  position: sticky;
+  top: var(--aui-space-2);
+  z-index: 35;
 }
 
 .aui-pipeline-progress.idle {
@@ -8887,6 +9556,36 @@ pre,
   color: rgba(255, 255, 255, 0.74);
 }
 
+.aui-pipeline-progress-brief {
+  display: grid;
+  gap: var(--aui-space-2);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.aui-pipeline-progress-brief div {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  border-radius: var(--aui-radius-control);
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  padding: 9px 11px;
+}
+
+.aui-pipeline-progress-brief span,
+.aui-pipeline-progress-details summary {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: var(--aui-type-caption);
+  font-weight: 850;
+  letter-spacing: 0.04em;
+}
+
+.aui-pipeline-progress-brief strong {
+  color: #ffffff;
+  font-size: var(--aui-type-caption);
+  line-height: 1.35;
+}
+
 .aui-pipeline-progress-bar {
   background: rgba(255, 255, 255, 0.16);
   border-radius: 999px;
@@ -8910,6 +9609,20 @@ pre,
 @keyframes aui-progress-pulse {
   from { transform: translateX(-24%); }
   to { transform: translateX(138%); }
+}
+
+.aui-pipeline-progress-details {
+  display: grid;
+  gap: var(--aui-space-2);
+}
+
+.aui-pipeline-progress-details summary {
+  cursor: pointer;
+  list-style: none;
+}
+
+.aui-pipeline-progress-details summary::-webkit-details-marker {
+  display: none;
 }
 
 .aui-pipeline-progress-grid {
@@ -8978,6 +9691,55 @@ pre,
   background: rgba(217, 119, 6, 0.1);
   border-color: rgba(217, 119, 6, 0.28);
   color: #92400e;
+}
+
+.aui-pipeline-skill-routes {
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.04), rgba(12, 166, 120, 0.06));
+  border: 1px solid var(--aui-line);
+  border-radius: var(--aui-radius-panel);
+  display: grid;
+  gap: var(--aui-space-3);
+  padding: var(--aui-card-pad);
+}
+
+.aui-pipeline-skill-routes > div:first-child {
+  display: grid;
+  gap: 4px;
+}
+
+.aui-pipeline-skill-routes > div:first-child strong {
+  color: var(--aui-ink);
+}
+
+.aui-pipeline-skill-routes > div:last-child {
+  display: grid;
+  gap: var(--aui-space-2);
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+}
+
+.aui-pipeline-skill-routes article {
+  background: #ffffff;
+  border: 1px solid var(--aui-line);
+  border-radius: var(--aui-radius-control);
+  display: grid;
+  gap: 5px;
+  padding: 10px;
+}
+
+.aui-pipeline-skill-routes article.active {
+  background: rgba(12, 166, 120, 0.1);
+  border-color: rgba(12, 166, 120, 0.38);
+}
+
+.aui-pipeline-skill-routes b {
+  color: var(--aui-ink);
+}
+
+.aui-pipeline-skill-routes article span,
+.aui-pipeline-skill-routes article small {
+  color: var(--aui-muted);
+  font-size: var(--aui-type-caption);
+  line-height: 1.4;
 }
 
 .aui-pipeline-batch-status {
@@ -9102,16 +9864,23 @@ pre,
 
 @media (max-width: 1120px) {
   .aui-pipeline-core,
+  .aui-pipeline-command-grid,
+  .aui-pipeline-scope-grid,
+  .aui-pipeline-status-grid,
   .aui-pipeline-rail {
     grid-template-columns: 1fr;
   }
 
   .aui-pipeline-source-grid,
+  .aui-pipeline-source-grid.compact,
   .aui-pipeline-filebox,
   .aui-pipeline-policy-grid,
   .aui-pipeline-rule-grid,
+  .aui-pipeline-runtime-stages,
   .aui-pipeline-existing-mode,
   .aui-pipeline-batch-status,
+  .aui-pipeline-execute-grid,
+  .aui-pipeline-progress-brief,
   .aui-pipeline-progress-grid {
     grid-template-columns: 1fr;
   }

@@ -103,6 +103,7 @@ const GRAPH_EDGE_LIMIT = 120;
 const GRAPH_WIDTH = 360;
 const GRAPH_HEIGHT = 240;
 const MIRROR_PREFIX = "automation/drive_wikify/runtime/mirror/";
+const DEFAULT_COLLECTION_PATH = "automation/drive_wikify/runtime/mirror";
 const EMPTY_BROWSE: FilesystemBrowsePayload = {
   targets: [],
   files: [],
@@ -110,6 +111,11 @@ const EMPTY_BROWSE: FilesystemBrowsePayload = {
   blocked: [],
   entries: [],
 };
+
+function initialCollectionParam(name: string) {
+  if (typeof window === "undefined") return "";
+  return new URLSearchParams(window.location.search).get(name) || "";
+}
 const EMPTY_GRAPH: WikiGraphPayload = {
   nodes: [],
   edges: [],
@@ -191,6 +197,15 @@ function folderType(page: WikiPageIndexItem) {
   return page.division || "Folder";
 }
 
+function projectKeyFromWikiPath(path: string) {
+  const normalized = String(path || "").trim().replace(/\\/g, "/");
+  if (!normalized) return "";
+  const parts = normalized.split("/").filter(Boolean);
+  const wikiIndex = parts.findIndex((part) => part === "Wiki");
+  if (wikiIndex === -1) return "";
+  return parts[wikiIndex + 1] || "";
+}
+
 function folderSortRank(type: string) {
   const rank = FOLDER_TYPE_ORDER.indexOf(type);
   return rank === -1 ? FOLDER_TYPE_ORDER.length : rank;
@@ -217,6 +232,14 @@ function buildFolderGroups(pages: WikiPageIndexItem[]) {
   return [...groups.values()].sort((a, b) => {
     return folderSortRank(a.type) - folderSortRank(b.type) || a.label.localeCompare(b.label, "ko");
   });
+}
+
+function folderLatestUpdatedAt(folder: WikiFolderGroup) {
+  return folder.pages.reduce<string | null>((latest, page) => {
+    if (!page.updatedAt) return latest;
+    if (!latest || page.updatedAt > latest) return page.updatedAt;
+    return latest;
+  }, null);
 }
 
 function isWikiPageIndexItem(item: WikiResultItem): item is WikiPageIndexItem {
@@ -1112,7 +1135,15 @@ function WikiManagementConsole({
 export function WikiWorkspace({ chatContext }: WikiWorkspaceProps) {
   const { notify } = useToastCenter();
   const wiki = useWikiEvidenceConsole(chatContext.workspace);
-  const [sidebarExpanded, setSidebarExpanded] = useState(false);
+  const sidebarExpanded = true;
+  const [bulkPanelOpen, setBulkPanelOpen] = useState(false);
+  const [inspectorSummaryCollapsed, setInspectorSummaryCollapsed] = useState(false);
+  const [inspectorPanels, setInspectorPanels] = useState({
+    status: false,
+    delete: false,
+    ops: false,
+    log: false,
+  });
   const [activeFolderKey, setActiveFolderKey] = useState(ALL_FOLDER_KEY);
   const [expandedFolderKeys, setExpandedFolderKeys] = useState<string[]>([]);
   const [selectedWikiPaths, setSelectedWikiPaths] = useState<string[]>([]);
@@ -1121,7 +1152,7 @@ export function WikiWorkspace({ chatContext }: WikiWorkspaceProps) {
   const [kindFilter, setKindFilter] = useState(ALL_FILTER_VALUE);
   const [sortKey, setSortKey] = useState<WikiSortKey>("updated");
   const [sortDirection, setSortDirection] = useState<WikiSortDirection>("desc");
-  const [collectionPath, setCollectionPath] = useState("automation/drive_wikify/runtime/mirror");
+  const [collectionPath, setCollectionPath] = useState(() => initialCollectionParam("collectionPath") || DEFAULT_COLLECTION_PATH);
   const [collectionNote, setCollectionNote] = useState("");
   const [collectionPhase, setCollectionPhase] = useState<"idle" | "loading" | "running" | "error">("idle");
   const [collectionMessage, setCollectionMessage] = useState("로컬/미러 경로를 탐색해 remote path 수집 큐로 넘길 수 있습니다.");
@@ -1265,7 +1296,6 @@ export function WikiWorkspace({ chatContext }: WikiWorkspaceProps) {
     return filteredItems.slice(0, WIKI_RESULT_LIMIT);
   }, [filteredItems]);
   const visiblePages = useMemo(() => visibleItems.map((item) => itemMeta(item, pageIndexByPath)).filter(Boolean) as WikiPageIndexItem[], [pageIndexByPath, visibleItems]);
-  const visiblePagePaths = useMemo(() => visiblePages.map((page) => page.path), [visiblePages]);
   const visibleFolderGroups = useMemo(() => {
     const grouped = new Map<string, WikiFolderGroup>();
     visiblePages.forEach((page) => {
@@ -1287,9 +1317,9 @@ export function WikiWorkspace({ chatContext }: WikiWorkspaceProps) {
     return [...grouped.values()].sort((a, b) => folderSortRank(a.type) - folderSortRank(b.type) || a.label.localeCompare(b.label, "ko"));
   }, [visiblePages]);
   const selectedWikiPages = useMemo(() => selectedWikiPaths.map((path) => pageIndexByPath.get(path)).filter(Boolean) as WikiPageIndexItem[], [pageIndexByPath, selectedWikiPaths]);
-  const selectedProjectPackageKeys = useMemo(() => [...new Set(selectedWikiPages
-    .filter((page) => ["project", "account"].includes(page.division || "") && Boolean(page.projectKey))
-    .map((page) => page.projectKey || ""))].filter(Boolean), [selectedWikiPages]);
+  const selectedProjectHubPages = useMemo(() => (
+    selectedWikiPages.filter((page) => ["project", "account"].includes(page.division || "") && page.docKind === "hub" && (page.projectKey || projectKeyFromWikiPath(page.path)))
+  ), [selectedWikiPages]);
   const resultCountLabel = filteredItems.length > visibleItems.length ? `${visibleItems.length}/${filteredItems.length}건` : `${visibleItems.length}건`;
   const loadGraph = async () => {
     setGraphPhase("loading");
@@ -1404,14 +1434,22 @@ export function WikiWorkspace({ chatContext }: WikiWorkspaceProps) {
     }
   }, [selectedWikiPaths.length, wiki.activeIndexItem?.path]);
 
-  const toggleSidebarExpanded = () => {
-    setSidebarExpanded((current) => !current);
-  };
+  useEffect(() => {
+    if (selectedWikiPaths.length) {
+      setBulkPanelOpen(true);
+      return;
+    }
+    setBulkPanelOpen(false);
+  }, [selectedWikiPaths.length]);
 
   const toggleFolderExpanded = (folderKeyValue: string) => {
     setExpandedFolderKeys((current) => current.includes(folderKeyValue)
       ? current.filter((key) => key !== folderKeyValue)
       : [...current, folderKeyValue]);
+  };
+
+  const toggleInspectorPanel = (key: keyof typeof inspectorPanels) => {
+    setInspectorPanels((current) => ({ ...current, [key]: !current[key] }));
   };
 
   const toggleWikiPathSelected = (path: string) => {
@@ -1430,10 +1468,6 @@ export function WikiWorkspace({ chatContext }: WikiWorkspaceProps) {
     replaceSelectedWikiPaths(allSelected
       ? selectedWikiPaths.filter((path) => !folderPaths.includes(path))
       : [...selectedWikiPaths, ...folderPaths]);
-  };
-
-  const selectVisibleWikiPages = () => {
-    replaceSelectedWikiPaths(visiblePagePaths);
   };
 
   const clearSelectedWikiPages = () => {
@@ -1484,13 +1518,14 @@ export function WikiWorkspace({ chatContext }: WikiWorkspaceProps) {
     setDeletionPhase("running");
     notify("running", "일괄 삭제 시작", `${selectedWikiPages.length}개 문서`, { durationMs: 2400 });
     try {
-      const projectPages = selectedWikiPages.filter((page) => ["project", "account"].includes(page.division || "") && page.docKind === "hub" && page.projectKey);
-      const nonProjectPages = selectedWikiPages.filter((page) => !(["project", "account"].includes(page.division || "") && page.docKind === "hub" && page.projectKey));
+      const projectPages = selectedProjectHubPages;
+      const nonProjectPages = selectedWikiPages.filter((page) => !(["project", "account"].includes(page.division || "") && page.docKind === "hub" && (page.projectKey || projectKeyFromWikiPath(page.path))));
       const handledProjectKeys = new Set<string>();
       for (const page of projectPages) {
-        if (!page.projectKey || handledProjectKeys.has(page.projectKey)) continue;
-        handledProjectKeys.add(page.projectKey);
-        await deleteWikiProjectPackageApi(page.projectKey, deletionReason, chatContext.workspace);
+        const projectKey = page.projectKey || projectKeyFromWikiPath(page.path);
+        if (!projectKey || handledProjectKeys.has(projectKey)) continue;
+        handledProjectKeys.add(projectKey);
+        await deleteWikiProjectPackageApi(projectKey, deletionReason, chatContext.workspace, page.path);
       }
       for (const page of nonProjectPages) {
         await deleteWikiPageApi(page.path, deletionReason, chatContext.workspace, false);
@@ -1532,6 +1567,13 @@ export function WikiWorkspace({ chatContext }: WikiWorkspaceProps) {
       setCollectionMessage(error instanceof Error ? error.message : "filesystem browse 실패");
     }
   };
+
+  useEffect(() => {
+    const autoBrowse = initialCollectionParam("collectionAutoBrowse") === "1";
+    const initialPath = initialCollectionParam("collectionPath");
+    if (!autoBrowse || !initialPath) return;
+    runCollectionBrowse();
+  }, []);
 
   const runRemoteBrowse = async (path = remoteBrowsePath) => {
     setCollectionPhase("loading");
@@ -1809,7 +1851,7 @@ export function WikiWorkspace({ chatContext }: WikiWorkspaceProps) {
     setDeletionPhase("running");
     notify("running", "프로젝트 전체 삭제 시작", projectKey, { durationMs: 2400 });
     try {
-      const result = await deleteWikiProjectPackageApi(projectKey, deletionReason, chatContext.workspace);
+      const result = await deleteWikiProjectPackageApi(projectKey, deletionReason, chatContext.workspace, wiki.activeIndexItem?.path);
       await Promise.all([wiki.reloadIndex(), loadGraph()]);
       setDeletionCandidates((current) => ({
         ...current,
@@ -1855,12 +1897,6 @@ export function WikiWorkspace({ chatContext }: WikiWorkspaceProps) {
         <div className="aui-wiki-brand">
           <span className="aui-kicker">위키 문서</span>
           <h1>문서함</h1>
-          <p>프로젝트와 상태 기준으로 문서를 찾아볼 수 있습니다.</p>
-          <div className="aui-wiki-sidebar-actions">
-            <button onClick={toggleSidebarExpanded} type="button">{sidebarExpanded ? "패널 접기" : "패널 확대"}</button>
-            <button className="ghost" onClick={selectVisibleWikiPages} type="button">보이는 항목 선택</button>
-            <button className="ghost" onClick={clearSelectedWikiPages} type="button">선택 해제</button>
-          </div>
         </div>
 
         <form className="aui-wiki-search" onSubmit={handleSubmit}>
@@ -1917,41 +1953,6 @@ export function WikiWorkspace({ chatContext }: WikiWorkspaceProps) {
           </div>
         </form>
 
-        <section className="aui-wiki-bulk-card">
-          <div className="aui-wiki-list-meta">
-            <strong>트리 관리</strong>
-            <span>{selectedWikiPaths.length}개 선택</span>
-          </div>
-          <label className="aui-field">
-            <span>일괄 상태</span>
-            <select value={bulkStatusDraft.status} onChange={(event) => setBulkStatusDraft((current) => ({ ...current, status: event.target.value }))}>
-              {Object.entries(wiki.statusCatalog).map(([key, meta]) => (
-                <option key={key} value={key}>{meta.label}</option>
-              ))}
-            </select>
-          </label>
-          <label className="aui-field">
-            <span>일괄 태그</span>
-            <input value={bulkStatusDraft.tags} onChange={(event) => setBulkStatusDraft((current) => ({ ...current, tags: event.target.value }))} placeholder="고객대응, 이번주, 보고서" />
-          </label>
-          {sidebarExpanded ? (
-            <>
-              <label className="aui-field">
-                <span>일괄 하이라이트</span>
-                <input value={bulkStatusDraft.highlight} onChange={(event) => setBulkStatusDraft((current) => ({ ...current, highlight: event.target.value }))} placeholder="운영 상태 한 줄" />
-              </label>
-              <label className="aui-field">
-                <span>일괄 메모</span>
-                <textarea rows={3} value={bulkStatusDraft.note} onChange={(event) => setBulkStatusDraft((current) => ({ ...current, note: event.target.value }))} />
-              </label>
-            </>
-          ) : null}
-          <div className="aui-decision-compare-actions">
-            <button className="aui-wide-action" disabled={!selectedWikiPaths.length} onClick={applyBulkStatusChange} type="button">일괄 상태변경</button>
-            <button className="aui-wide-action danger" disabled={!selectedWikiPaths.length} onClick={runBulkDelete} type="button">일괄 삭제</button>
-          </div>
-        </section>
-
         <div className="aui-wiki-folder-tree" aria-label="project folders">
           <button
             className={activeFolderKey === ALL_FOLDER_KEY ? "active" : ""}
@@ -1962,26 +1963,29 @@ export function WikiWorkspace({ chatContext }: WikiWorkspaceProps) {
             <small>{wiki.pages.length} pages</small>
           </button>
           {(sidebarExpanded ? visibleFolderGroups : folderGroups).map((folder) => {
-            const folderSelected = folder.pages.every((page) => selectedWikiPaths.includes(page.path));
             const folderExpanded = expandedFolderKeys.includes(folder.key);
+            const folderSelected = folder.pages.every((page) => selectedWikiPaths.includes(page.path));
             return (
               <div className={`aui-wiki-tree-node ${activeFolderKey === folder.key ? "active" : ""}`} key={folder.key}>
                 <div className="aui-wiki-tree-row">
                   <label className="aui-wiki-tree-check">
-                    <input checked={folderSelected} onChange={() => toggleFolderSelection(folder)} type="checkbox" />
+                    <input
+                      checked={folderSelected}
+                      onChange={() => toggleFolderSelection(folder)}
+                      onClick={(event) => event.stopPropagation()}
+                      type="checkbox"
+                    />
                   </label>
-                  {sidebarExpanded ? (
-                    <button className="aui-wiki-tree-toggle" onClick={() => toggleFolderExpanded(folder.key)} type="button">
-                      {folderExpanded ? "▾" : "▸"}
-                    </button>
-                  ) : null}
+                  <button className="aui-wiki-tree-toggle" onClick={() => toggleFolderExpanded(folder.key)} type="button">
+                    {folderExpanded ? "▾" : "▸"}
+                  </button>
                   <button
                     className={`aui-wiki-tree-label ${activeFolderKey === folder.key ? "active" : ""}`}
                     onClick={() => selectFolder(folder)}
                     type="button"
                   >
-                    <span>{folder.label}</span>
-                    <small>{folder.type} · {folder.count}</small>
+                    <strong>{folder.label}</strong>
+                    <small>{folder.type} · {folder.count}개 · 최근 {shortDate(folderLatestUpdatedAt(folder))}</small>
                   </button>
                 </div>
                 {sidebarExpanded && folderExpanded ? (
@@ -1992,7 +1996,12 @@ export function WikiWorkspace({ chatContext }: WikiWorkspaceProps) {
                       .map((page) => (
                         <div className={`aui-wiki-tree-child ${wiki.isActiveResult(page.path) ? "active" : ""}`} key={page.path}>
                           <label className="aui-wiki-tree-check">
-                            <input checked={selectedWikiPaths.includes(page.path)} onChange={() => toggleWikiPathSelected(page.path)} type="checkbox" />
+                            <input
+                              checked={selectedWikiPaths.includes(page.path)}
+                              onChange={() => toggleWikiPathSelected(page.path)}
+                              onClick={(event) => event.stopPropagation()}
+                              type="checkbox"
+                            />
                           </label>
                           <button className="aui-wiki-tree-child-button" onClick={() => openWikiPage(page.path)} type="button">
                             <strong>{page.title}</strong>
@@ -2007,33 +2016,6 @@ export function WikiWorkspace({ chatContext }: WikiWorkspaceProps) {
           })}
         </div>
 
-        <div className="aui-wiki-list-meta">
-          <strong>{sidebarExpanded ? "선택/필터 결과" : wiki.searchResults.length ? "검색 결과" : activeFolder?.label || "위키 인덱스"}</strong>
-          <span>{resultCountLabel}</span>
-        </div>
-
-        <div className="aui-wiki-result-list">
-          {visibleItems.map((item) => {
-            const meta = itemMeta(item, pageIndexByPath);
-            return (
-              <div className={`aui-wiki-result-row ${wiki.isActiveResult(item.path) ? "active" : ""}`} key={item.path}>
-                <label className="aui-wiki-tree-check">
-                  <input checked={selectedWikiPaths.includes(item.path)} onChange={() => toggleWikiPathSelected(item.path)} type="checkbox" />
-                </label>
-                <button
-                  className={wiki.isActiveResult(item.path) ? "active" : ""}
-                  onClick={() => openWikiPage(item.path)}
-                  type="button"
-                >
-                  <strong>{resultTitle(item)}</strong>
-                  <span>{item.path}</span>
-                  <em>{resultKind(item, meta)} · {resultStatusLabel(item, meta)} · {shortDate(resultUpdatedAt(item, meta))}</em>
-                  {"snippet" in item && item.snippet ? <small>{item.snippet}</small> : null}
-                </button>
-              </div>
-            );
-          })}
-        </div>
       </aside>
 
       <section className="aui-wiki-main" aria-label="wiki document editor">
@@ -2117,124 +2099,203 @@ export function WikiWorkspace({ chatContext }: WikiWorkspaceProps) {
       </section>
 
       <aside className="aui-wiki-inspector" aria-label="wiki document properties">
-        <section className="aui-wiki-card">
-          <span>상태</span>
-          <strong>{wiki.phase}</strong>
-          <p>{wiki.message}</p>
+        <section className={`aui-wiki-card aui-wiki-inspector-summary ${inspectorSummaryCollapsed ? "collapsed" : ""}`}>
+          <button className="aui-wiki-summary-toggle" onClick={() => setInspectorSummaryCollapsed((current) => !current)} type="button">
+            <span>{wiki.phase}</span>
+            <small>{inspectorSummaryCollapsed ? "열기" : "닫기"}</small>
+          </button>
+          <strong>{selectedTitle}</strong>
+          {!inspectorSummaryCollapsed ? <p>{wiki.message}</p> : null}
+          {!inspectorSummaryCollapsed ? (
+            <dl className="aui-wiki-properties">
+              <div><dt>Project</dt><dd>{wiki.activeIndexItem?.projectLabel || wiki.activeIndexItem?.projectKey || "-"}</dd></div>
+              <div><dt>Kind</dt><dd>{wiki.activeIndexItem?.docKind || "-"}</dd></div>
+              <div><dt>Workflow</dt><dd>{wiki.activeIndexItem?.workflowStatusLabel || "-"}</dd></div>
+              <div><dt>Updated</dt><dd>{shortDate(wiki.activeIndexItem?.updatedAt)}</dd></div>
+            </dl>
+          ) : null}
         </section>
 
-        <section className="aui-wiki-card">
-          <span>문서 속성</span>
-          <dl className="aui-wiki-properties">
-            <div><dt>Project</dt><dd>{wiki.activeIndexItem?.projectLabel || wiki.activeIndexItem?.projectKey || "-"}</dd></div>
-            <div><dt>Kind</dt><dd>{wiki.activeIndexItem?.docKind || "-"}</dd></div>
-            <div><dt>Workflow</dt><dd>{wiki.activeIndexItem?.workflowStatusLabel || "-"}</dd></div>
-            <div><dt>Updated</dt><dd>{shortDate(wiki.activeIndexItem?.updatedAt)}</dd></div>
-            <div><dt>Size</dt><dd>{wiki.activeIndexItem?.size ? `${wiki.activeIndexItem.size.toLocaleString()} bytes` : "-"}</dd></div>
-          </dl>
-        </section>
-
-        <section className="aui-wiki-card">
-          <span>상태 관리</span>
-          <StatusEditor page={wiki.activeIndexItem} catalog={wiki.statusCatalog} onSave={wiki.saveActiveStatus} />
-        </section>
-
-        <section className="aui-wiki-card">
-          <span>삭제 정리</span>
-          <strong>{deletionCandidates.summary?.total || 0} candidate pages</strong>
-          <p>{deletionMessage}</p>
-          <label className="aui-field">
-            <span>삭제 사유</span>
-            <textarea rows={3} value={deletionReason} onChange={(event) => setDeletionReason(event.target.value)} />
-          </label>
-          <div className="aui-decision-compare-actions">
-            <button className="aui-wide-action" disabled={deletionPhase === "loading" || deletionPhase === "running"} onClick={refreshDeletionCandidates} type="button">삭제 추천 분석</button>
-            <button
-              className="aui-wide-action"
-              disabled={deletionPhase === "loading" || deletionPhase === "running" || !deletionCandidates.candidates.length}
-              onClick={() => enqueueDeletionRecommendations()}
-              type="button"
-            >
-              추천을 디시전으로
-            </button>
+        <section className="aui-wiki-card aui-wiki-index-card">
+          <div className="aui-wiki-list-meta">
+            <strong>{sidebarExpanded ? "선택/필터 결과" : wiki.searchResults.length ? "검색 결과" : activeFolder?.label || "위키 인덱스"}</strong>
+            <span>{resultCountLabel}</span>
           </div>
-          <div className="aui-wiki-queue-list">
-            {wiki.activeIndexItem?.path ? (
-              <>
-                {activeProjectDeleteEligible ? (
+          <div className="aui-wiki-result-list inspector-list">
+            {visibleItems.map((item) => {
+              const meta = itemMeta(item, pageIndexByPath);
+              return (
+                <div className={`aui-wiki-result-row ${wiki.isActiveResult(item.path) ? "active" : ""}`} key={item.path}>
                   <button
-                    className="aui-wide-action danger"
-                    disabled={deletionPhase === "running"}
-                    onClick={runDeleteProjectPackage}
+                    className={wiki.isActiveResult(item.path) ? "active" : ""}
+                    onClick={() => openWikiPage(item.path)}
                     type="button"
                   >
-                    프로젝트 전체 삭제
+                    <strong>{resultTitle(item)}</strong>
+                    <span>{item.path}</span>
+                    <em>{resultKind(item, meta)} · {resultStatusLabel(item, meta)} · {shortDate(resultUpdatedAt(item, meta))}</em>
+                    {"snippet" in item && item.snippet ? <small>{item.snippet}</small> : null}
                   </button>
-                ) : null}
+                </div>
+              );
+            })}
+          </div>
+        </section>
+
+        <section className={`aui-wiki-fold-card ${inspectorPanels.status ? "open" : ""}`}>
+          <button className="aui-wiki-fold-trigger" onClick={() => toggleInspectorPanel("status")} type="button">문서 상태 관리</button>
+          {inspectorPanels.status ? <div className="aui-wiki-fold-body">
+            <StatusEditor page={wiki.activeIndexItem} catalog={wiki.statusCatalog} onSave={wiki.saveActiveStatus} />
+          </div> : null}
+        </section>
+
+        <section className={`aui-wiki-fold-card ${inspectorPanels.delete ? "open" : ""}`}>
+          <button className="aui-wiki-fold-trigger" onClick={() => toggleInspectorPanel("delete")} type="button">삭제 정리와 프로젝트 제거</button>
+          {inspectorPanels.delete ? <div className="aui-wiki-fold-body">
+            <section className="aui-wiki-card">
+              <span>삭제 정리</span>
+              <strong>{deletionCandidates.summary?.total || 0} candidate pages</strong>
+              <p>{deletionMessage}</p>
+              <label className="aui-field">
+                <span>삭제 사유</span>
+                <textarea rows={3} value={deletionReason} onChange={(event) => setDeletionReason(event.target.value)} />
+              </label>
+              <div className="aui-decision-compare-actions">
+                <button className="aui-wide-action" disabled={deletionPhase === "loading" || deletionPhase === "running"} onClick={refreshDeletionCandidates} type="button">삭제 추천 분석</button>
                 <button
-                  className="aui-wide-action danger"
-                  disabled={deletionPhase === "running" || wiki.activeIndexItem.statusManaged === false || activeDeleteProtected}
-                  onClick={() => runDeletePage(wiki.activeIndexItem?.path || "", wiki.activeIndexItem?.title, false)}
+                  className="aui-wide-action"
+                  disabled={deletionPhase === "loading" || deletionPhase === "running" || !deletionCandidates.candidates.length}
+                  onClick={() => enqueueDeletionRecommendations()}
                   type="button"
                 >
-                  현재 문서 바로 삭제
+                  추천을 디시전으로
                 </button>
-                {activeDeleteHub ? (
-                  <button
-                    className="aui-wide-action danger"
-                    disabled={deletionPhase === "running" || wiki.activeIndexItem.statusManaged === false}
-                    onClick={() => runDeletePage(wiki.activeIndexItem?.path || "", wiki.activeIndexItem?.title, true)}
-                    type="button"
-                  >
-                    현재 허브 강제 삭제
-                  </button>
-                ) : null}
-                {activeDeleteProtected && !activeDeleteHub ? <p className="aui-wiki-muted">현재 문서는 핵심 운영 문서라 직접 삭제가 막혀 있습니다.</p> : null}
-                {activeProjectDeleteEligible ? <p className="aui-wiki-muted">불필요한 프로젝트를 정리하려면 `프로젝트 전체 삭제`를 사용하세요. 프로젝트 폴더와 대응 L1 메모리를 함께 제거합니다.</p> : null}
-                {activeDeleteHub ? <p className="aui-wiki-muted">`현재 허브 강제 삭제`는 `hub.md` 한 장만 지웁니다. 연관 문서까지 없애려면 `프로젝트 전체 삭제`를 사용하세요.</p> : null}
-              </>
-            ) : null}
-            {deletionCandidates.candidates.slice(0, 6).map((candidate: WikiDeletionCandidate) => (
-              <div className="aui-wiki-thinking" key={candidate.path}>
-                <strong>{candidate.title}</strong>
-                <pre>{[`score ${candidate.score}`, candidate.path, ...candidate.reasons.slice(0, 3)].join("\n")}</pre>
-                <div className="aui-decision-compare-actions">
-                  <button className="aui-wide-action" onClick={() => openWikiPage(candidate.path)} type="button">열기</button>
-                  <button className="aui-wide-action" onClick={() => enqueueDeletionRecommendations([candidate.path])} type="button">디시전 등록</button>
-                  <button className="aui-wide-action danger" onClick={() => runDeletePage(candidate.path, candidate.title)} type="button">바로 삭제</button>
-                </div>
               </div>
-            ))}
-            {!deletionCandidates.candidates.length ? <p className="aui-wiki-muted">삭제 추천 분석을 실행하면 고아/임시/보관 문서 후보를 보여줍니다.</p> : null}
-          </div>
+              <div className="aui-wiki-queue-list">
+                {wiki.activeIndexItem?.path ? (
+                  <>
+                    {activeProjectDeleteEligible ? (
+                      <button
+                        className="aui-wide-action danger"
+                        disabled={deletionPhase === "running"}
+                        onClick={runDeleteProjectPackage}
+                        type="button"
+                      >
+                        프로젝트 전체 삭제
+                      </button>
+                    ) : null}
+                    <button
+                      className="aui-wide-action danger"
+                      disabled={deletionPhase === "running" || wiki.activeIndexItem.statusManaged === false || activeDeleteProtected}
+                      onClick={() => runDeletePage(wiki.activeIndexItem?.path || "", wiki.activeIndexItem?.title, false)}
+                      type="button"
+                    >
+                      현재 문서 바로 삭제
+                    </button>
+                    {activeDeleteHub ? (
+                      <button
+                        className="aui-wide-action danger"
+                        disabled={deletionPhase === "running" || wiki.activeIndexItem.statusManaged === false}
+                        onClick={() => runDeletePage(wiki.activeIndexItem?.path || "", wiki.activeIndexItem?.title, true)}
+                        type="button"
+                      >
+                        현재 허브 강제 삭제
+                      </button>
+                    ) : null}
+                    {activeDeleteProtected && !activeDeleteHub ? <p className="aui-wiki-muted">현재 문서는 핵심 운영 문서라 직접 삭제가 막혀 있습니다.</p> : null}
+                    {activeProjectDeleteEligible ? <p className="aui-wiki-muted">불필요한 프로젝트를 정리하려면 `프로젝트 전체 삭제`를 사용하세요. 프로젝트 폴더와 대응 L1 메모리를 함께 제거합니다.</p> : null}
+                    {activeDeleteHub ? <p className="aui-wiki-muted">`현재 허브 강제 삭제`는 `hub.md` 한 장만 지웁니다. 연관 문서까지 없애려면 `프로젝트 전체 삭제`를 사용하세요.</p> : null}
+                  </>
+                ) : null}
+                {deletionCandidates.candidates.slice(0, 6).map((candidate: WikiDeletionCandidate) => (
+                  <div className="aui-wiki-thinking" key={candidate.path}>
+                    <strong>{candidate.title}</strong>
+                    <pre>{[`score ${candidate.score}`, candidate.path, ...candidate.reasons.slice(0, 3)].join("\n")}</pre>
+                    <div className="aui-decision-compare-actions">
+                      <button className="aui-wide-action" onClick={() => openWikiPage(candidate.path)} type="button">열기</button>
+                      <button className="aui-wide-action" onClick={() => enqueueDeletionRecommendations([candidate.path])} type="button">디시전 등록</button>
+                      <button className="aui-wide-action danger" onClick={() => runDeletePage(candidate.path, candidate.title)} type="button">바로 삭제</button>
+                    </div>
+                  </div>
+                ))}
+                {!deletionCandidates.candidates.length ? <p className="aui-wiki-muted">삭제 추천 분석을 실행하면 고아/임시/보관 문서 후보를 보여줍니다.</p> : null}
+              </div>
+            </section>
+          </div> : null}
         </section>
 
-        <WikiGraphPanel
-          activePath={wiki.activePath}
-          graph={wikiGraph}
-          message={graphMessage}
-          onExpand={() => setGraphModalOpen(true)}
-          onOpenPage={openWikiPage}
-          onRefreshGraph={runGraphRefresh}
-          phase={graphPhase}
-        />
+        <section className={`aui-wiki-fold-card ${inspectorPanels.ops ? "open" : ""}`}>
+          <button className="aui-wiki-fold-trigger" onClick={() => toggleInspectorPanel("ops")} type="button">운영 패널</button>
+          {inspectorPanels.ops ? <div className="aui-wiki-fold-body">
+            <WikiGraphPanel
+              activePath={wiki.activePath}
+              graph={wikiGraph}
+              message={graphMessage}
+              onExpand={() => setGraphModalOpen(true)}
+              onOpenPage={openWikiPage}
+              onRefreshGraph={runGraphRefresh}
+              phase={graphPhase}
+            />
+            <WikiManagementConsole onOpenPage={openWikiPage} onReloadIndex={wiki.reloadIndex} />
+          </div> : null}
+        </section>
 
-        <WikiManagementConsole onOpenPage={openWikiPage} onReloadIndex={wiki.reloadIndex} />
-
-        <section className="aui-wiki-card">
-          <span>Thinking Log</span>
-          <strong>{reasonLog.length} recent decisions</strong>
-          <div className="aui-wiki-queue-list">
-            {reasonLog.map((entry) => (
-              <div className="aui-wiki-thinking" key={entry.id}>
-                <strong>{entry.title}</strong>
-                <pre>{entry.detail}</pre>
+        <section className={`aui-wiki-fold-card ${inspectorPanels.log ? "open" : ""}`}>
+          <button className="aui-wiki-fold-trigger" onClick={() => toggleInspectorPanel("log")} type="button">Thinking Log</button>
+          {inspectorPanels.log ? <div className="aui-wiki-fold-body">
+            <section className="aui-wiki-card">
+              <strong>{reasonLog.length} recent decisions</strong>
+              <div className="aui-wiki-queue-list">
+                {reasonLog.map((entry) => (
+                  <div className="aui-wiki-thinking" key={entry.id}>
+                    <strong>{entry.title}</strong>
+                    <pre>{entry.detail}</pre>
+                  </div>
+                ))}
+                {!reasonLog.length ? <p className="aui-wiki-muted">큐 추가, 단건 실행, batch 실행, 후속 체인을 시작하면 판단 로그가 쌓입니다.</p> : null}
               </div>
-            ))}
-            {!reasonLog.length ? <p className="aui-wiki-muted">큐 추가, 단건 실행, batch 실행, 후속 체인을 시작하면 판단 로그가 쌓입니다.</p> : null}
-          </div>
+            </section>
+          </div> : null}
         </section>
       </aside>
+      {selectedWikiPaths.length ? (
+        <div className={`aui-wiki-selection-anchor ${bulkPanelOpen ? "open" : ""}`} role="dialog" aria-label="선택 문서 일괄 작업">
+          <div className="aui-wiki-selection-anchor-bar">
+            <div>
+              <strong>{selectedWikiPaths.length}개 선택</strong>
+              <span>{selectedProjectHubPages.length ? `허브 ${selectedProjectHubPages.length}개 포함 · 삭제 시 프로젝트 전체 삭제` : "선택한 문서를 상태 변경하거나 삭제할 수 있습니다."}</span>
+            </div>
+            <div className="aui-wiki-selection-anchor-actions">
+              <button className="ghost" onClick={clearSelectedWikiPages} type="button">선택 해제</button>
+              <button onClick={() => setBulkPanelOpen((current) => !current)} type="button">{bulkPanelOpen ? "접기" : "작업 열기"}</button>
+            </div>
+          </div>
+          {bulkPanelOpen ? (
+            <div className="aui-wiki-selection-sheet">
+              <label className="aui-field">
+                <span>일괄 상태</span>
+                <select value={bulkStatusDraft.status} onChange={(event) => setBulkStatusDraft((current) => ({ ...current, status: event.target.value }))}>
+                  {Object.entries(wiki.statusCatalog).map(([key, meta]) => (
+                    <option key={key} value={key}>{meta.label}</option>
+                  ))}
+                </select>
+              </label>
+              <label className="aui-field">
+                <span>일괄 태그</span>
+                <input value={bulkStatusDraft.tags} onChange={(event) => setBulkStatusDraft((current) => ({ ...current, tags: event.target.value }))} placeholder="고객대응, 이번주, 보고서" />
+              </label>
+              <label className="aui-field">
+                <span>일괄 메모</span>
+                <textarea rows={2} value={bulkStatusDraft.note} onChange={(event) => setBulkStatusDraft((current) => ({ ...current, note: event.target.value }))} />
+              </label>
+              <div className="aui-decision-compare-actions">
+                <button className="aui-wide-action" onClick={applyBulkStatusChange} type="button">일괄 상태변경</button>
+                <button className="aui-wide-action danger" onClick={runBulkDelete} type="button">{selectedProjectHubPages.length ? "일괄 삭제 · 프로젝트 포함" : "일괄 삭제"}</button>
+              </div>
+            </div>
+          ) : null}
+        </div>
+      ) : null}
       {graphModalOpen ? (
         <div className="aui-settings-overlay" role="dialog" aria-label="그래프맵 확대 보기" aria-modal="true">
           <button className="aui-settings-scrim" onClick={() => setGraphModalOpen(false)} type="button" aria-label="그래프맵 닫기" />
