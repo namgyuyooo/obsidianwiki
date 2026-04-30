@@ -1,12 +1,14 @@
 from __future__ import annotations
 
 import argparse
+import json
 from pathlib import Path
 
 from .config import RuntimeConfig
 from .manifest_builder import build_manifest
 from .rclone_sync import run_rclone_copy
 from .runner import DriveWikifyRunner
+from .slack_collector import collect_channels, list_channels
 from .wiki_maintenance import refresh_global_artifacts, sparse_search
 
 
@@ -45,6 +47,22 @@ def build_parser() -> argparse.ArgumentParser:
     sync_parser.add_argument("--checkers", type=int, help="Parallel checkers.")
     sync_parser.add_argument("--transfers", type=int, help="Parallel transfers.")
     sync_parser.add_argument("--dry-run", action="store_true", help="Print command without changing files.")
+
+    slack_channels_parser = subparsers.add_parser("slack-channels", help="List accessible Slack channels using the configured Slack token.")
+    slack_channels_parser.add_argument("--query", default="", help="Filter channels by name/topic/purpose.")
+    slack_channels_parser.add_argument("--limit", type=int, default=200, help="Maximum number of channels to return.")
+    slack_channels_parser.add_argument("--include-archived", action="store_true", help="Include archived channels.")
+    slack_channels_parser.add_argument("--channel-types", help="Comma-separated Slack channel types, e.g. public_channel,private_channel.")
+    slack_channels_parser.add_argument("--json", action="store_true", help="Print machine-readable JSON output.")
+
+    slack_collect_parser = subparsers.add_parser("slack-collect", help="Collect Slack channel history into local raw exports.")
+    slack_collect_parser.add_argument("--channel", action="append", dest="channels", help="Slack channel name or ID. Repeat to collect multiple channels.")
+    slack_collect_parser.add_argument("--oldest-days", type=int, help="Lookback window in days when no incremental state exists.")
+    slack_collect_parser.add_argument("--limit-per-channel", type=int, help="Maximum number of messages to fetch per channel.")
+    slack_collect_parser.add_argument("--no-threads", action="store_true", help="Skip thread reply expansion.")
+    slack_collect_parser.add_argument("--no-files", action="store_true", help="Skip Slack file metadata capture.")
+    slack_collect_parser.add_argument("--dry-run", action="store_true", help="Preview what would be exported without writing files.")
+    slack_collect_parser.add_argument("--json", action="store_true", help="Print machine-readable JSON output.")
     return parser
 
 
@@ -141,6 +159,40 @@ def main() -> int:
             )
         except ValueError as exc:
             parser.exit(2, f"error: {exc}\n")
+        return 0
+
+    if args.command == "slack-channels":
+        payload = list_channels(
+            config,
+            query=args.query,
+            include_archived=bool(args.include_archived),
+            limit=args.limit,
+            channel_types=[item.strip() for item in args.channel_types.split(",") if item.strip()] if args.channel_types else None,
+        )
+        if args.json:
+            print(json.dumps(payload, ensure_ascii=False, indent=2))
+        else:
+            print(f"Slack channels ({payload['count']})")
+            for channel in payload["channels"]:
+                print(f"- #{channel['name']} ({channel['id']}) [{channel['type']}] archived={channel['is_archived']}")
+        return 0
+
+    if args.command == "slack-collect":
+        payload = collect_channels(
+            config,
+            channel_selectors=args.channels,
+            oldest_days=args.oldest_days,
+            limit_per_channel=args.limit_per_channel,
+            include_threads=not args.no_threads,
+            include_files=not args.no_files,
+            dry_run=bool(args.dry_run),
+        )
+        if args.json:
+            print(json.dumps(payload, ensure_ascii=False, indent=2))
+        else:
+            print(f"Slack collection {payload['status']} ({payload['channel_count']} channels)")
+            for export in payload["exports"]:
+                print(f"- #{export['channel_name']} ({export['channel_id']}): {export['messages']} messages -> {export['export_path']}")
         return 0
 
     raise ValueError(f"Unsupported command: {args.command}")

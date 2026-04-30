@@ -45,7 +45,15 @@ Thumbs.db
 *.tmp
 *.temp
 ~$*
+__pycache__/
+*.py[cod]
 
 # Local automation settings
 automation/drive_wikify/config/.env
+automation/drive_wikify/runtime/
 automation/wiki_api/runtime/
+docker/config/*
+!docker/config/.gitkeep
+!docker/config/rclone/
+docker/config/rclone/*
+!docker/config/rclone/.gitkeep

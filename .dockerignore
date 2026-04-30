@@ -1,0 +1,11 @@
+.git
+.DS_Store
+.obsidian/workspace.json
+.obsidian/graph.json
+automation/drive_wikify/runtime
+automation/wiki_api/runtime
+docker/config
+node_modules
+*.log
+*.tmp
+*.temp

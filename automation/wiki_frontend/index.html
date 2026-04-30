@@ -520,6 +520,60 @@
                 <input name="PAPERCLIP_API_KEY" type="password" autocomplete="off" />
               </label>
               <label>
+                <span>Slack Bot Token</span>
+                <input name="SLACK_BOT_TOKEN" type="password" autocomplete="off" />
+              </label>
+              <label>
+                <span>Slack User Token</span>
+                <input name="SLACK_USER_TOKEN" type="password" autocomplete="off" />
+              </label>
+              <label>
+                <span>Slack Workspace 이름</span>
+                <input name="SLACK_WORKSPACE_NAME" placeholder="예: RTM Workspace" />
+              </label>
+              <label>
+                <span>Slack 채널 타입</span>
+                <input name="SLACK_CHANNEL_TYPES" placeholder="public_channel,private_channel" />
+              </label>
+              <label>
+                <span>Slack 기본 수집 채널</span>
+                <input name="SLACK_CHANNELS" placeholder="sales_team,pjt_zeus_ai바우처" />
+              </label>
+              <label>
+                <span>Slack export 경로</span>
+                <input name="SLACK_EXPORT_ROOT" placeholder="obsidian/raw/exports/slack" />
+              </label>
+              <label>
+                <span>Slack state 경로</span>
+                <input name="SLACK_STATE_PATH" placeholder="automation/wiki_api/runtime/slack_collection_state.json" />
+              </label>
+              <label>
+                <span>Slack 채널당 메시지 수</span>
+                <input name="SLACK_HISTORY_LIMIT" type="number" min="1" placeholder="예: 200" />
+              </label>
+              <label>
+                <span>Slack 기본 lookback 일수</span>
+                <input name="SLACK_OLDEST_DAYS" type="number" min="1" placeholder="예: 30" />
+              </label>
+              <label>
+                <span>Slack 스레드 수집</span>
+                <select name="SLACK_INCLUDE_THREADS">
+                  <option value="true">true</option>
+                  <option value="false">false</option>
+                </select>
+              </label>
+              <label>
+                <span>Slack 파일 메타 수집</span>
+                <select name="SLACK_INCLUDE_FILES">
+                  <option value="true">true</option>
+                  <option value="false">false</option>
+                </select>
+              </label>
+              <label>
+                <span>Slack 수집 시간 제한</span>
+                <input name="SLACK_COLLECT_MAX_MINUTES" type="number" min="1" placeholder="기본 10분" />
+              </label>
+              <label>
                 <span>개인용 Spotlite PIN</span>
                 <input name="SPOTLITE_PERSONAL_PIN" type="password" inputmode="numeric" maxlength="4" placeholder="기본 0953" />
               </label>

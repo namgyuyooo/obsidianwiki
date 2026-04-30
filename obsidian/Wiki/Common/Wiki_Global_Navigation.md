@@ -1,7 +1,7 @@
 ---
 type: index
-created: 2026-04-29
-updated: 2026-04-29
+created: 2026-04-30
+updated: 2026-04-30
 source: "automation/drive_wikify global navigation generator"
 ---
 
@@ -10,10 +10,10 @@ source: "automation/drive_wikify global navigation generator"
 이 문서는 위키 전체 갱신 상태를 전역 관점에서 요약하는 자동 생성 네비게이션 맵입니다.
 
 ## Global Snapshot
-- 생성 시각: `2026-04-29T18:32:38.320131`
+- 생성 시각: `2026-04-30T02:26:33.374488`
 - 총 페이지: `373`
-- 총 링크 엣지: `1235`
-- 고아 페이지: `96`
+- 총 링크 엣지: `1238`
+- 고아 페이지: `93`
 - 프로젝트/공간 수: `36`
 
 ## High Connectivity Pages
@@ -31,8 +31,8 @@ source: "automation/drive_wikify global navigation generator"
 - [[Wiki/ZEUS_AIVoucher_Project/Sources]]: degree `45`
 
 ## Project Coverage
-- `Common`: pages `87`, memory `0`, graph links `840`
-- `memory`: pages `40`, memory `40`, graph links `185`
+- `Common`: pages `87`, memory `0`, graph links `843`
+- `memory`: pages `40`, memory `40`, graph links `188`
 - `Business_Plan_Project`: pages `16`, memory `0`, graph links `31`
 - `PSK_Project`: pages `16`, memory `0`, graph links `87`
 - `LGEnergy_ImageAnalysis_Project`: pages `11`, memory `0`, graph links `34`
@@ -53,9 +53,6 @@ source: "automation/drive_wikify global navigation generator"
 - `DaehanCable_ProcessInnovation_Project`: pages `9`, memory `0`, graph links `22`
 
 ## Orphan Pages
-- [[L1_memory/GLM_Chat_Projects/1777452125800-새_GLM_프로젝트]]
-- [[L1_memory/GLM_Chat_Projects/default]]
-- [[L1_memory/GLM_Global_Instructions]]
 - [[Wiki/2025_20240815545_00_1723770661746_제안요청서_Project/Conflict_Register]]
 - [[Wiki/2025_20240815545_00_1723770661746_제안요청서_Project/Decisions]]
 - [[Wiki/2025_20240815545_00_1723770661746_제안요청서_Project/Evidence_Log]]
@@ -73,6 +70,9 @@ source: "automation/drive_wikify global navigation generator"
 - [[Wiki/BGF_EcoSpecialty_Project/Project_Overview]]
 - [[Wiki/BGF_EcoSpecialty_Project/Risks]]
 - [[Wiki/Business_Plan_Project/Change_Log]]
+- [[Wiki/Business_Plan_Project/Conflict_Register]]
+- [[Wiki/Daeduck_AFVI_Project/Action_Items]]
+- [[Wiki/Daeduck_AFVI_Project/Change_Log]]
 
 ## Runtime Outputs
 - `automation/drive_wikify/runtime/wiki_sparse_index.json`

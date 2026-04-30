@@ -129,6 +129,18 @@ const settingLabels = {
   OPENCLAW_API_KEY: "OpenClaw GLM API Key override",
   PAPERCLIP_URL: "Paperclip URL",
   PAPERCLIP_API_KEY: "Paperclip API Key",
+  SLACK_BOT_TOKEN: "Slack Bot Token",
+  SLACK_USER_TOKEN: "Slack User Token",
+  SLACK_WORKSPACE_NAME: "Slack Workspace 이름",
+  SLACK_CHANNEL_TYPES: "Slack 채널 타입",
+  SLACK_CHANNELS: "Slack 기본 수집 채널",
+  SLACK_EXPORT_ROOT: "Slack export 경로",
+  SLACK_STATE_PATH: "Slack state 경로",
+  SLACK_HISTORY_LIMIT: "Slack 채널당 메시지 수",
+  SLACK_OLDEST_DAYS: "Slack 기본 lookback 일수",
+  SLACK_INCLUDE_THREADS: "Slack 스레드 수집",
+  SLACK_INCLUDE_FILES: "Slack 파일 메타 수집",
+  SLACK_COLLECT_MAX_MINUTES: "Slack 수집 시간 제한",
 };
 
 function personalSpotlitePin() {

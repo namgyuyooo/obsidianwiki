@@ -140,6 +140,13 @@ def _require_string(payload: dict[str, str], key: str) -> str:
     return value
 
 
+def _resolve_config_path(base: Path, value: str) -> Path:
+    path = Path(value).expanduser()
+    if path.is_absolute():
+        return path.resolve()
+    return (base / path).resolve()
+
+
 @dataclass
 class RuntimeConfig:
     wiki_root: Path
@@ -169,13 +176,29 @@ class RuntimeConfig:
     drive_name: str | None = None
     manifest_path: Path | None = None
     run_output_path: Path | None = None
+    slack_token: str | None = None
+    slack_workspace_name: str | None = None
+    slack_export_root: Path | None = None
+    slack_state_path: Path | None = None
+    slack_channel_types: list[str] = field(default_factory=list)
+    slack_channels: list[str] = field(default_factory=list)
+    slack_history_limit: int = 200
+    slack_oldest_days: int = 30
+    slack_include_threads: bool = True
+    slack_include_files: bool = True
 
     @staticmethod
     def repo_root() -> Path:
+        configured = os.environ.get("WIKI_OPS_REPO_ROOT")
+        if configured:
+            return Path(configured).expanduser().resolve()
         return Path(__file__).resolve().parents[4]
 
     @staticmethod
     def default_env_path() -> Path:
+        configured = os.environ.get("DRIVE_WIKIFY_ENV") or os.environ.get("WIKI_OPS_ENV_FILE")
+        if configured:
+            return Path(configured).expanduser().resolve()
         return RuntimeConfig.repo_root() / "automation" / "drive_wikify" / "config" / ".env"
 
     @classmethod
@@ -191,17 +214,17 @@ class RuntimeConfig:
     def from_env_file(cls, path: Path) -> "RuntimeConfig":
         base = cls.repo_root()
         payload = _load_dotenv(path)
-        payload.update({key: value for key, value in os.environ.items() if key in payload or key.startswith(("RCLONE_", "WIKI_", "L1_", "COVERAGE_", "LOG_", "STATE_", "LOCK_", "DELETION_", "AUTO_", "CLEANUP_", "MAX_", "CHUNK_", "ALLOWED_", "DRIVE_", "MANIFEST_", "RUN_"))})
+        payload.update({key: value for key, value in os.environ.items() if key in payload or key.startswith(("RCLONE_", "WIKI_", "L1_", "COVERAGE_", "LOG_", "STATE_", "LOCK_", "DELETION_", "AUTO_", "CLEANUP_", "MAX_", "CHUNK_", "ALLOWED_", "DRIVE_", "MANIFEST_", "RUN_", "SLACK_"))})
 
         drive_delete_source = _as_bool(payload.get("DRIVE_DELETE_SOURCE"), default=False)
         if drive_delete_source:
             raise ValueError("Unsafe setting detected: DRIVE_DELETE_SOURCE must remain false. Source Google Drive deletion is not supported.")
 
         return cls(
-            wiki_root=(base / _require_string(payload, "WIKI_ROOT")).resolve(),
-            l1_memory_root=(base / payload.get("L1_MEMORY_ROOT", "obsidian/L1_memory")).resolve(),
-            coverage_tracker=(base / _require_string(payload, "COVERAGE_TRACKER")).resolve(),
-            log_page=(base / _require_string(payload, "LOG_PAGE")).resolve(),
+            wiki_root=_resolve_config_path(base, _require_string(payload, "WIKI_ROOT")),
+            l1_memory_root=_resolve_config_path(base, payload.get("L1_MEMORY_ROOT", "obsidian/L1_memory")),
+            coverage_tracker=_resolve_config_path(base, _require_string(payload, "COVERAGE_TRACKER")),
+            log_page=_resolve_config_path(base, _require_string(payload, "LOG_PAGE")),
             allowed_file_types=_as_list(
                 payload.get("ALLOWED_FILE_TYPES"),
                 ["hwp", "hwpx", "pdf", "docx", "pptx", "html", "htm", "gdoc", "gslides"],
@@ -211,15 +234,15 @@ class RuntimeConfig:
             max_fetch_docs=_as_int(payload.get("MAX_FETCH_DOCS"), 3),
             chunk_size_min_chars=_as_int(payload.get("CHUNK_SIZE_MIN_CHARS"), 8000),
             chunk_size_max_chars=_as_int(payload.get("CHUNK_SIZE_MAX_CHARS"), 15000),
-            state_dir=(base / payload["STATE_DIR"]).resolve() if payload.get("STATE_DIR") else None,
-            lock_file=(base / payload["LOCK_FILE"]).resolve() if payload.get("LOCK_FILE") else None,
+            state_dir=_resolve_config_path(base, payload["STATE_DIR"]) if payload.get("STATE_DIR") else None,
+            lock_file=_resolve_config_path(base, payload["LOCK_FILE"]) if payload.get("LOCK_FILE") else None,
             auto_create_project_space=_as_bool(payload.get("AUTO_CREATE_PROJECT_SPACE"), True),
             cleanup_processed_files=_as_bool(payload.get("CLEANUP_LOCAL_MIRROR"), False),
-            deletion_log=(base / payload["DELETION_LOG"]).resolve() if payload.get("DELETION_LOG") else None,
+            deletion_log=_resolve_config_path(base, payload["DELETION_LOG"]) if payload.get("DELETION_LOG") else None,
             drive_delete_source=drive_delete_source,
             rclone_remote=payload.get("RCLONE_REMOTE"),
             rclone_remote_path=payload.get("RCLONE_REMOTE_PATH"),
-            rclone_mirror_root=(base / payload["RCLONE_MIRROR_ROOT"]).resolve() if payload.get("RCLONE_MIRROR_ROOT") else None,
+            rclone_mirror_root=_resolve_config_path(base, payload["RCLONE_MIRROR_ROOT"]) if payload.get("RCLONE_MIRROR_ROOT") else None,
             rclone_bwlimit=payload.get("RCLONE_BWLIMIT", "1M"),
             rclone_tpslimit=_as_float(payload.get("RCLONE_TPSLIMIT"), 1.0),
             rclone_checkers=_as_int(payload.get("RCLONE_CHECKERS"), 1),
@@ -229,8 +252,18 @@ class RuntimeConfig:
                 ["Github/**", "GitHub/**", "github/**", "Obsidian_wiki/**", "obsidianwiki/**"],
             ),
             drive_name=payload.get("DRIVE_NAME"),
-            manifest_path=(base / payload["MANIFEST_PATH"]).resolve() if payload.get("MANIFEST_PATH") else None,
-            run_output_path=(base / payload["RUN_OUTPUT_PATH"]).resolve() if payload.get("RUN_OUTPUT_PATH") else None,
+            manifest_path=_resolve_config_path(base, payload["MANIFEST_PATH"]) if payload.get("MANIFEST_PATH") else None,
+            run_output_path=_resolve_config_path(base, payload["RUN_OUTPUT_PATH"]) if payload.get("RUN_OUTPUT_PATH") else None,
+            slack_token=payload.get("SLACK_BOT_TOKEN") or payload.get("SLACK_USER_TOKEN"),
+            slack_workspace_name=payload.get("SLACK_WORKSPACE_NAME"),
+            slack_export_root=_resolve_config_path(base, payload.get("SLACK_EXPORT_ROOT", "obsidian/raw/exports/slack")),
+            slack_state_path=_resolve_config_path(base, payload.get("SLACK_STATE_PATH", "automation/wiki_api/runtime/slack_collection_state.json")),
+            slack_channel_types=_as_list(payload.get("SLACK_CHANNEL_TYPES"), ["public_channel", "private_channel"]),
+            slack_channels=_as_list(payload.get("SLACK_CHANNELS"), []),
+            slack_history_limit=_as_int(payload.get("SLACK_HISTORY_LIMIT"), 200),
+            slack_oldest_days=_as_int(payload.get("SLACK_OLDEST_DAYS"), 30),
+            slack_include_threads=_as_bool(payload.get("SLACK_INCLUDE_THREADS"), default=True),
+            slack_include_files=_as_bool(payload.get("SLACK_INCLUDE_FILES"), default=True),
         )
 
     @classmethod

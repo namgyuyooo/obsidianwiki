@@ -37,6 +37,22 @@ automation/
 └── wiki_frontend/
 ```
 
+## Docker 운영
+
+다른 PC에서도 같은 운영 환경을 쓰려면 repo는 git으로 받고, 인증키와 런타임은 `docker/config`와 Docker volume에 둔다.
+
+```bash
+./automation/docker/bootstrap_config.sh
+docker compose up --build
+```
+
+- Docker env 예시: `automation/drive_wikify/config/drive_wikify.docker.example.env`
+- 실제 인증키 위치: `docker/config/drive_wikify.env`
+- 실제 rclone 인증 위치: `docker/config/rclone/rclone.conf`
+- 런타임/mirror/manifest 위치: Docker volume `wiki_ops_data`
+
+`docker/config`는 git에 올리지 않는다. 인증키를 넣어도 되지만, 이동 시에는 해당 폴더를 별도로 복사한다.
+
 ## 위키와의 경계
 
 - 위키 문서:

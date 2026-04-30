@@ -16,8 +16,11 @@
 
 - 예시:
   - `config/drive_wikify.example.env`
+  - `config/drive_wikify.docker.example.env`
 - 실제 로컬 설정:
   - `config/.env`
+- Docker 실제 설정:
+  - `../../docker/config/drive_wikify.env`
 - legacy 참고:
   - `config/pipeline.example.yaml`
   - `config/rclone.example.env`
@@ -92,6 +95,22 @@ PYTHONPATH=automation/drive_wikify/src \
 ```
 
 `--env-file`로 다른 `.env`를 지정할 수 있고, `--config`는 legacy YAML/JSON 호환용이다.
+
+## Docker 실행
+
+Docker에서는 repo, 인증키, 런타임을 분리한다.
+
+```bash
+./automation/docker/bootstrap_config.sh
+docker compose up --build
+```
+
+- `DRIVE_WIKIFY_ENV=/config/drive_wikify.env`
+- `RCLONE_CONFIG=/config/rclone/rclone.conf`
+- `DRIVE_WIKIFY_RUNTIME=/data/drive_wikify/runtime`
+- `WIKI_API_RUNTIME=/data/wiki_api/runtime`
+
+다른 PC로 옮길 때는 git clone 후 `docker/config/drive_wikify.env`, `docker/config/rclone/rclone.conf`를 복사하면 같은 설정으로 실행된다.
 
 ## 기본 운용값
 

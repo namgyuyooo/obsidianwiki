@@ -2,20 +2,21 @@ import { createServer } from "node:http";
 import { readFile, readdir, stat, writeFile, mkdir, unlink } from "node:fs/promises";
 import { createReadStream, existsSync } from "node:fs";
 import { spawn } from "node:child_process";
-import { extname, join, normalize, relative, resolve } from "node:path";
+import { extname, isAbsolute, join, normalize, relative, resolve } from "node:path";
 
-const repoRoot = resolve(new URL("../../", import.meta.url).pathname);
+const defaultRepoRoot = resolve(new URL("../../", import.meta.url).pathname);
+const repoRoot = resolve(process.env.WIKI_OPS_REPO_ROOT || defaultRepoRoot);
 const frontendRoot = join(repoRoot, "automation/wiki_frontend");
 const wikiRoot = join(repoRoot, "obsidian/Wiki");
 const l1Root = join(repoRoot, "obsidian/L1_memory");
 const personalWikiRoot = join(repoRoot, "obsidian/Personal_Wiki");
 const personalL1Root = join(repoRoot, "obsidian/Personal_L1_memory");
 const driveWikifySrc = join(repoRoot, "automation/drive_wikify/src");
-const driveWikifyEnv = join(repoRoot, "automation/drive_wikify/config/.env");
-const driveRuntime = join(repoRoot, "automation/drive_wikify/runtime");
+const driveWikifyEnv = resolvePathEnv("DRIVE_WIKIFY_ENV", process.env.WIKI_OPS_ENV_FILE || "automation/drive_wikify/config/.env");
+const driveRuntime = resolvePathEnv("DRIVE_WIKIFY_RUNTIME", "automation/drive_wikify/runtime");
 const wikiSparseIndexPath = join(driveRuntime, "wiki_sparse_index.json");
 const wikiGraphSnapshotPath = join(driveRuntime, "wiki_graph_snapshot.json");
-const apiRuntime = join(repoRoot, "automation/wiki_api/runtime");
+const apiRuntime = resolvePathEnv("WIKI_API_RUNTIME", "automation/wiki_api/runtime");
 const runHistoryPath = join(apiRuntime, "runs.json");
 const driveCollectionStatePath = join(apiRuntime, "drive_collection_state.json");
 const paperclipTasksPath = join(apiRuntime, "paperclip_tasks.json");
@@ -83,8 +84,30 @@ const editableSettings = new Set([
   "OPENCLAW_API_KEY",
   "PAPERCLIP_URL",
   "PAPERCLIP_API_KEY",
+  "SLACK_BOT_TOKEN",
+  "SLACK_USER_TOKEN",
+  "SLACK_WORKSPACE_NAME",
+  "SLACK_CHANNEL_TYPES",
+  "SLACK_CHANNELS",
+  "SLACK_EXPORT_ROOT",
+  "SLACK_STATE_PATH",
+  "SLACK_HISTORY_LIMIT",
+  "SLACK_OLDEST_DAYS",
+  "SLACK_INCLUDE_THREADS",
+  "SLACK_INCLUDE_FILES",
+  "SLACK_COLLECT_MAX_MINUTES",
 ]);
-const sensitiveSettings = new Set(["GLM_API_KEY", "OPENCLAW_API_KEY", "PAPERCLIP_API_KEY"]);
+const sensitiveSettings = new Set(["GLM_API_KEY", "OPENCLAW_API_KEY", "PAPERCLIP_API_KEY", "SLACK_BOT_TOKEN", "SLACK_USER_TOKEN"]);
+
+function resolvePathEnv(name, fallback) {
+  const value = process.env[name] || fallback;
+  return isAbsolute(value) ? resolve(value) : resolve(repoRoot, value);
+}
+
+function resolveConfigPath(value, fallback) {
+  const target = value || fallback;
+  return isAbsolute(target) ? resolve(target) : resolve(repoRoot, target);
+}
 
 const wikiWorkspaces = {
   rtm: {
@@ -123,6 +146,45 @@ function sendJson(res, statusCode, payload) {
 function sendText(res, statusCode, text) {
   res.writeHead(statusCode, { "Content-Type": "text/plain; charset=utf-8" });
   res.end(text);
+}
+
+async function runPythonJson(args, timeoutMs = 60_000) {
+  const python = resolvePythonBin();
+  const env = {
+    ...process.env,
+    PYTHONPATH: driveWikifySrc,
+  };
+  return new Promise((resolvePromise, rejectPromise) => {
+    let stdout = "";
+    let stderr = "";
+    const child = spawn(python, args, { cwd: repoRoot, env });
+    const timeout = setTimeout(() => {
+      child.kill("SIGTERM");
+      rejectPromise(new Error(`Timed out after ${Math.round(timeoutMs / 1000)}s`));
+    }, timeoutMs);
+    child.stdout.on("data", (chunk) => {
+      stdout += chunk.toString();
+    });
+    child.stderr.on("data", (chunk) => {
+      stderr += chunk.toString();
+    });
+    child.on("error", (error) => {
+      clearTimeout(timeout);
+      rejectPromise(error);
+    });
+    child.on("close", (code) => {
+      clearTimeout(timeout);
+      if (code !== 0) {
+        rejectPromise(new Error(stderr.trim() || stdout.trim() || `${python} exited with code ${code}`));
+        return;
+      }
+      try {
+        resolvePromise(JSON.parse(stdout));
+      } catch (error) {
+        rejectPromise(new Error(`Failed to parse JSON output: ${stderr || stdout || error.message}`));
+      }
+    });
+  });
 }
 
 function safeJoin(root, target) {
@@ -209,6 +271,35 @@ async function readEnvFile() {
     values[key.trim()] = rest.join("=").trim();
   }
   return { text, lines, values };
+}
+
+async function slackStatus() {
+  const { values: env } = await readEnvFile();
+  const exportRoot = resolveConfigPath(env.SLACK_EXPORT_ROOT, "obsidian/raw/exports/slack");
+  const statePath = resolveConfigPath(env.SLACK_STATE_PATH, "automation/wiki_api/runtime/slack_collection_state.json");
+  const state = await readJsonFile(statePath, { channels: {} });
+  const channels = Object.values(state.channels || {});
+  const lastCollectedAt = channels
+    .map((channel) => channel.last_collected_at)
+    .filter(Boolean)
+    .sort()
+    .at(-1) || state.last_run_at || "";
+  return {
+    configured: Boolean((env.SLACK_BOT_TOKEN || env.SLACK_USER_TOKEN || "").trim()),
+    authMode: env.SLACK_BOT_TOKEN ? "bot_token" : env.SLACK_USER_TOKEN ? "user_token" : "missing",
+    workspace: env.SLACK_WORKSPACE_NAME || "",
+    channelSelectors: (env.SLACK_CHANNELS || "").split(",").map((item) => item.trim()).filter(Boolean),
+    channelTypes: (env.SLACK_CHANNEL_TYPES || "public_channel,private_channel").split(",").map((item) => item.trim()).filter(Boolean),
+    exportRoot: relative(repoRoot, exportRoot),
+    statePath: relative(repoRoot, statePath),
+    historyLimit: Number(env.SLACK_HISTORY_LIMIT || 200),
+    oldestDays: Number(env.SLACK_OLDEST_DAYS || 30),
+    includeThreads: env.SLACK_INCLUDE_THREADS !== "false",
+    includeFiles: env.SLACK_INCLUDE_FILES !== "false",
+    collectedChannels: channels.length,
+    lastCollectedAt,
+    recentChannels: channels.slice(0, 20),
+  };
 }
 
 async function writeEnvValues(updates) {
@@ -356,7 +447,14 @@ async function walkFiles(root) {
 }
 
 function resolveRepoPath(path) {
-  return resolve(repoRoot, path || "");
+  if (!path) return repoRoot;
+  return isAbsolute(path) ? resolve(path) : resolve(repoRoot, path);
+}
+
+function displayPath(path) {
+  const relativePath = relative(repoRoot, path);
+  if (!relativePath || relativePath.startsWith("..") || isAbsolute(relativePath)) return path;
+  return relativePath;
 }
 
 function allowedManifestSuffixes(env = {}) {
@@ -1503,13 +1601,13 @@ async function collectStatus() {
   const { values: env } = await readEnvFile();
   const manifest = await readJsonFile(manifestPath, { documents: [] });
   const runOutput = await readJsonFile(runOutputPath, { results: [] });
-  const deletionLog = await readFile(deletionLogPath, "utf-8").catch("");
+  const deletionLog = await readFile(deletionLogPath, "utf-8").catch(() => "");
   const deletionCount = deletionLog.split("\n").filter(Boolean).length;
 
   return {
     status: {
       targetDrive: env.RCLONE_REMOTE_PATH || `${env.RCLONE_REMOTE || "gdrive"}: 최상위`,
-      manifest: `${relative(repoRoot, manifestPath)} (${manifest.documents?.length || 0} docs)`,
+      manifest: `${displayPath(manifestPath)} (${manifest.documents?.length || 0} docs)`,
       lastRun: `${runOutput.results?.length || 0} processed`,
       cleanup: `local mirror only (${deletionCount} logged)`,
     },
@@ -1529,7 +1627,7 @@ async function coverageSummary() {
   const tracker = await readFile(trackerPath, "utf-8").catch(() => "");
   const manifest = await readJsonFile(manifestPath, { documents: [] });
   const runOutput = await readJsonFile(runOutputPath, { results: [] });
-  const deletionLog = await readFile(deletionLogPath, "utf-8").catch("");
+  const deletionLog = await readFile(deletionLogPath, "utf-8").catch(() => "");
   const statuses = {
     queued: 0,
     running: 0,
@@ -3114,14 +3212,14 @@ function parseRcloneProgressText(text = "") {
 }
 
 async function runCommand(command, dryRun, meta = {}) {
-  const allowed = new Set(["rclone-copy", "build-manifest", "run", "refresh-global"]);
+  const allowed = new Set(["rclone-copy", "build-manifest", "run", "refresh-global", "slack-collect"]);
   if (!allowed.has(command)) {
     throw new Error(`Unsupported automation command: ${command}`);
   }
   const { values: configEnv } = await readEnvFile();
   const { extraArgs = [], ...entryMeta } = meta;
   const args = ["-m", "drive_wikify.cli", command];
-  if (command === "rclone-copy" && dryRun) args.push("--dry-run");
+  if ((command === "rclone-copy" || command === "slack-collect") && dryRun) args.push("--dry-run");
   args.push(...extraArgs);
 
   const env = {
@@ -3131,6 +3229,8 @@ async function runCommand(command, dryRun, meta = {}) {
   const copyTimeoutMinutes = command === "rclone-copy" && !dryRun ? rcloneCopyTimeoutMinutes(configEnv, meta) : null;
   const timeoutMs = command === "rclone-copy" && !dryRun
     ? Math.max(1, Number(copyTimeoutMinutes || 30)) * 60 * 1000
+    : command === "slack-collect"
+      ? Math.max(1, Number(configEnv.SLACK_COLLECT_MAX_MINUTES || 10)) * 60 * 1000
     : command === "refresh-global"
       ? 1000 * 60 * 3
       : 1000 * 60 * 5;
@@ -3365,7 +3465,7 @@ async function saveSchedules(schedules) {
 }
 
 async function createSchedule(body) {
-  const allowed = new Set(["rclone-copy", "build-manifest", "run", "full-cycle"]);
+  const allowed = new Set(["rclone-copy", "build-manifest", "run", "full-cycle", "slack-collect"]);
   const command = body.command || "rclone-copy";
   if (!allowed.has(command)) throw new Error(`Unsupported schedule command: ${command}`);
   const schedule = {
@@ -4830,6 +4930,16 @@ function skillCatalog() {
       output: "automation/wiki_api/runtime/skill_outputs/*.md",
     },
     {
+      id: "slack-evidence-collector",
+      name: "Slack 증적 수집기",
+      type: "paperclip-automation-skill",
+      status: "available",
+      safety: "slack_read_api_to_local_raw_export",
+      description: "Slack API 토큰으로 채널 목록 조회와 증분 메시지 수집을 수행하고, 결과를 `obsidian/raw/exports/slack` 아래 raw export로 저장한다.",
+      bestFor: ["영업/프로젝트 채널 백필", "주기적 증분 수집", "위키 승격 전 raw 증적 확보"],
+      output: "obsidian/raw/exports/slack/*.json + automation/wiki_api/runtime/slack_collection_state.json",
+    },
+    {
       id: "meeting-minutes-writer",
       name: "회의록/미팅정리 작성",
       type: "paperclip-glm-skill",
@@ -5091,6 +5201,17 @@ function paperclipTemplates() {
       command: "rclone-copy",
       dryRun: true,
       safety: "remote_delete_forbidden",
+    },
+    {
+      id: "slack-evidence-collector",
+      agent: "Slack Evidence Collector",
+      title: "Slack raw 증적 수집",
+      description: "Slack API로 채널 목록, 메시지, 스레드, 파일 메타데이터를 로컬 raw export로 수집한다. 위키 반영은 별도 검토 후 진행한다.",
+      command: "slack-collect",
+      dryRun: true,
+      safety: "slack_read_only_local_export",
+      inputHint: "SLACK_CHANNELS, SLACK_HISTORY_LIMIT, SLACK_OLDEST_DAYS를 설정하거나 task payload로 채널명을 넘기세요.",
+      output: "obsidian/raw/exports/slack/*.json + automation/wiki_api/runtime/slack_collection_state.json",
     },
     {
       id: "manifest-builder",
@@ -5541,6 +5662,15 @@ const server = createServer(async (req, res) => {
     const url = new URL(req.url || "/", `http://${req.headers.host}`);
     const pathname = url.pathname;
 
+    if (pathname === "/api/health" && req.method === "GET") {
+      return sendJson(res, 200, {
+        status: "ok",
+        repoRoot,
+        driveWikifyEnv,
+        driveRuntime,
+        apiRuntime,
+      });
+    }
     if (pathname === "/api/status" && req.method === "GET") {
       return sendJson(res, 200, await collectStatus());
     }
@@ -5622,6 +5752,41 @@ const server = createServer(async (req, res) => {
     }
     if (pathname === "/api/automation/runs" && req.method === "GET") {
       return sendJson(res, 200, { runs: await readJsonFile(runHistoryPath, []) });
+    }
+    if (pathname === "/api/slack/status" && req.method === "GET") {
+      return sendJson(res, 200, await slackStatus());
+    }
+    if (pathname === "/api/slack/channels" && req.method === "GET") {
+      const query = url.searchParams.get("q") || "";
+      const limit = url.searchParams.get("limit") || "200";
+      const channelTypes = url.searchParams.get("channelTypes") || "";
+      const includeArchived = url.searchParams.get("includeArchived") === "true";
+      const payload = await runPythonJson([
+        "-m",
+        "drive_wikify.cli",
+        "slack-channels",
+        "--json",
+        "--query",
+        query,
+        "--limit",
+        limit,
+        ...(channelTypes ? ["--channel-types", channelTypes] : []),
+        ...(includeArchived ? ["--include-archived"] : []),
+      ]);
+      return sendJson(res, 200, payload);
+    }
+    if (pathname === "/api/slack/collect" && req.method === "POST") {
+      const body = await readBody(req);
+      const extraArgs = [];
+      for (const channel of body.channels || []) {
+        extraArgs.push("--channel", String(channel));
+      }
+      if (body.oldestDays) extraArgs.push("--oldest-days", String(body.oldestDays));
+      if (body.limitPerChannel) extraArgs.push("--limit-per-channel", String(body.limitPerChannel));
+      if (body.includeThreads === false) extraArgs.push("--no-threads");
+      if (body.includeFiles === false) extraArgs.push("--no-files");
+      const result = await runCommand("slack-collect", Boolean(body.dryRun), { source: "slack_collect_api", extraArgs });
+      return sendJson(res, ["completed", "previewed"].includes(result.status) ? 200 : 500, result);
     }
     if (pathname === "/api/automation/status" && req.method === "GET") {
       return sendJson(res, 200, await automationSnapshot());

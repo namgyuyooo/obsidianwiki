@@ -1,10 +1,10 @@
 {
-  "generated_at": "2026-04-29T18:32:38.320131",
+  "generated_at": "2026-04-30T02:26:33.374488",
   "version": 1,
   "stats": {
     "pages": 373,
-    "edges": 1235,
-    "orphan_pages": 96,
+    "edges": 1238,
+    "orphan_pages": 93,
     "projects": 36
   },
   "nodes": [
@@ -201,6 +201,14 @@
       "degree": 16
     },
     {
+      "id": "obsidian/Wiki/Common/Wiki_Global_Navigation.md",
+      "title": "Wiki Global Navigation",
+      "project_key": "Common",
+      "root_kind": "wiki",
+      "type": "index",
+      "degree": 16
+    },
+    {
       "id": "obsidian/Wiki/Common/RTM_YNG_Change_Log_2026-04-21.md",
       "title": "RTM_YNG Change Log",
       "project_key": "Common",
@@ -286,14 +294,6 @@
       "project_key": "Common",
       "root_kind": "wiki",
       "type": "knowledge",
-      "degree": 13
-    },
-    {
-      "id": "obsidian/Wiki/Common/Wiki_Global_Navigation.md",
-      "title": "Wiki Global Navigation",
-      "project_key": "Common",
-      "root_kind": "wiki",
-      "type": "index",
       "degree": 13
     },
     {
@@ -2033,6 +2033,30 @@
       "degree": 2
     },
     {
+      "id": "obsidian/L1_memory/GLM_Chat_Projects/1777452125800-새_GLM_프로젝트.md",
+      "title": "GLM Chat Project - 쏘닉스",
+      "project_key": "memory",
+      "root_kind": "l1_memory",
+      "type": "auxiliary_chat_project_memory",
+      "degree": 1
+    },
+    {
+      "id": "obsidian/L1_memory/GLM_Chat_Projects/default.md",
+      "title": "GLM Chat Project - 기본 업무 챗",
+      "project_key": "memory",
+      "root_kind": "l1_memory",
+      "type": "auxiliary_chat_project_memory",
+      "degree": 1
+    },
+    {
+      "id": "obsidian/L1_memory/GLM_Global_Instructions.md",
+      "title": "GLM Global Instructions",
+      "project_key": "memory",
+      "root_kind": "l1_memory",
+      "type": "global_chat_instruction",
+      "degree": 1
+    },
+    {
       "id": "obsidian/L1_memory/SanupAI_RnD_Project.md",
       "title": "산업현장문제해결형 산업AI 에이전트 기술개발 R&D — L1 Memory Snapshot",
       "project_key": "memory",
@@ -2223,30 +2247,6 @@
       "root_kind": "wiki",
       "type": "log",
       "degree": 1
-    },
-    {
-      "id": "obsidian/L1_memory/GLM_Chat_Projects/1777452125800-새_GLM_프로젝트.md",
-      "title": "GLM Chat Project - 쏘닉스",
-      "project_key": "memory",
-      "root_kind": "l1_memory",
-      "type": "auxiliary_chat_project_memory",
-      "degree": 0
-    },
-    {
-      "id": "obsidian/L1_memory/GLM_Chat_Projects/default.md",
-      "title": "GLM Chat Project - 기본 업무 챗",
-      "project_key": "memory",
-      "root_kind": "l1_memory",
-      "type": "auxiliary_chat_project_memory",
-      "degree": 0
-    },
-    {
-      "id": "obsidian/L1_memory/GLM_Global_Instructions.md",
-      "title": "GLM Global Instructions",
-      "project_key": "memory",
-      "root_kind": "l1_memory",
-      "type": "global_chat_instruction",
-      "degree": 0
     },
     {
       "id": "obsidian/Wiki/2025_20240815545_00_1723770661746_제안요청서_Project/Conflict_Register.md",
@@ -5708,6 +5708,21 @@
       "source": "obsidian/Wiki/Common/Wiki_Global_Navigation.md",
       "target": "obsidian/Wiki/ZEUS_AIVoucher_Project/Sources.md",
       "label": "Wiki/ZEUS_AIVoucher_Project/Sources"
+    },
+    {
+      "source": "obsidian/Wiki/Common/Wiki_Global_Navigation.md",
+      "target": "obsidian/L1_memory/GLM_Chat_Projects/1777452125800-새_GLM_프로젝트.md",
+      "label": "L1_memory/GLM_Chat_Projects/1777452125800-새_GLM_프로젝트"
+    },
+    {
+      "source": "obsidian/Wiki/Common/Wiki_Global_Navigation.md",
+      "target": "obsidian/L1_memory/GLM_Chat_Projects/default.md",
+      "label": "L1_memory/GLM_Chat_Projects/default"
+    },
+    {
+      "source": "obsidian/Wiki/Common/Wiki_Global_Navigation.md",
+      "target": "obsidian/L1_memory/GLM_Global_Instructions.md",
+      "label": "L1_memory/GLM_Global_Instructions"
     },
     {
       "source": "obsidian/Wiki/Common/Wiki_Ingest_Operating_Model.md",
@@ -9316,16 +9331,13 @@
       "project_key": "Business_Plan_Project"
     },
     {
-      "path": "obsidian/Wiki/Common/RTM_YNG_Change_Log_2026-04-21.md",
-      "title": "RTM_YNG Change Log",
-      "degree": 15,
+      "path": "obsidian/Wiki/Common/Wiki_Global_Navigation.md",
+      "title": "Wiki Global Navigation",
+      "degree": 16,
       "project_key": "Common"
     }
   ],
   "orphan_pages": [
-    "obsidian/L1_memory/GLM_Chat_Projects/1777452125800-새_GLM_프로젝트.md",
-    "obsidian/L1_memory/GLM_Chat_Projects/default.md",
-    "obsidian/L1_memory/GLM_Global_Instructions.md",
     "obsidian/Wiki/2025_20240815545_00_1723770661746_제안요청서_Project/Conflict_Register.md",
     "obsidian/Wiki/2025_20240815545_00_1723770661746_제안요청서_Project/Decisions.md",
     "obsidian/Wiki/2025_20240815545_00_1723770661746_제안요청서_Project/Evidence_Log.md",
@@ -9425,13 +9437,13 @@
       "project_key": "Common",
       "pages": 87,
       "memory_pages": 0,
-      "links": 840
+      "links": 843
     },
     {
       "project_key": "memory",
       "pages": 40,
       "memory_pages": 40,
-      "links": 185
+      "links": 188
     },
     {
       "project_key": "Business_Plan_Project",
