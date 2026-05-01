@@ -9668,26 +9668,30 @@ async function paperclipStatus() {
   const tasks = await readJsonFile(paperclipTasksPath, []);
   const events = await readJsonFile(paperclipEventsPath, []);
   const templates = paperclipTemplates();
+  const embeddedAvailable = templates.length > 0;
+  const base = {
+    url,
+    recommendedAgents: templates.map((template) => template.agent),
+    templates,
+    tasks: tasks.slice(0, 20),
+    events: events.slice(0, 30),
+  };
   try {
     const response = await fetch(url);
     return {
-      available: response.ok,
-      url,
-      status: response.ok ? "reachable" : `HTTP ${response.status}`,
-      recommendedAgents: templates.map((template) => template.agent),
-      templates,
-      tasks: tasks.slice(0, 20),
-      events: events.slice(0, 30),
+      ...base,
+      available: response.ok || embeddedAvailable,
+      bridgeAvailable: response.ok,
+      mode: response.ok ? "bridge" : embeddedAvailable ? "embedded_runtime" : "unavailable",
+      status: response.ok ? "reachable" : embeddedAvailable ? `embedded runtime active (bridge HTTP ${response.status})` : `HTTP ${response.status}`,
     };
   } catch (error) {
     return {
-      available: false,
-      url,
-      status: error.message,
-      recommendedAgents: templates.map((template) => template.agent),
-      templates,
-      tasks: tasks.slice(0, 20),
-      events: events.slice(0, 30),
+      ...base,
+      available: embeddedAvailable,
+      bridgeAvailable: false,
+      mode: embeddedAvailable ? "embedded_runtime" : "unavailable",
+      status: embeddedAvailable ? `embedded runtime active (${error.message})` : error.message,
     };
   }
 }
@@ -10740,9 +10744,13 @@ async function resolveFilenameHintFiles(text, extensions = [], options = {}) {
 const RESOLVED_BROWSER_FILE_BLOCK_START = "[자동해결 파일경로]";
 const RESOLVED_BROWSER_FILE_BLOCK_END = "[/자동해결 파일경로]";
 
+function escapeRegex(value = "") {
+  return String(value || "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
 function stripResolvedBrowserFileBlock(text = "") {
   return String(text || "")
-    .replace(new RegExp(`\\n?${RESOLVED_BROWSER_FILE_BLOCK_START.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\$&")}[\\s\\S]*?${RESOLVED_BROWSER_FILE_BLOCK_END.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\$&")}\\n?`, "g"), "\n")
+    .replace(new RegExp(`\\n?${escapeRegex(RESOLVED_BROWSER_FILE_BLOCK_START)}[\\s\\S]*?${escapeRegex(RESOLVED_BROWSER_FILE_BLOCK_END)}\\n?`, "g"), "\n")
     .replace(/\n{3,}/g, "\n\n")
     .trim();
 }
@@ -12057,6 +12065,15 @@ async function serveStatic(req, res, pathname) {
     headers.Expires = "0";
   } else if (targetPath.includes("/assets/")) {
     headers["Cache-Control"] = "public, max-age=31536000, immutable";
+  }
+  if (targetPath === "assistant-ui/index.html") {
+    const html = await readFile(filePath, "utf-8");
+    const injected = html
+      .replace("__DEFAULT_WORKSPACE__", defaultWorkspaceId)
+      .replace("__ALLOWED_WORKSPACES__", JSON.stringify(Object.keys(wikiWorkspaces)));
+    res.writeHead(200, headers);
+    res.end(injected);
+    return;
   }
   res.writeHead(200, headers);
   createReadStream(filePath).pipe(res);

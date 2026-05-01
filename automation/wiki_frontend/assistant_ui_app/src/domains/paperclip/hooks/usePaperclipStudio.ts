@@ -47,7 +47,7 @@ export function usePaperclipStudio() {
       const next = await fetchPaperclipSnapshot();
       setSnapshot(next);
       setActiveTemplateId((current) => current || next.templates[0]?.id || "");
-      setMessage(next.available ? "Paperclip bridge reachable" : next.status || "Paperclip bridge unavailable");
+      setMessage(next.status || (next.available ? "Paperclip available" : "Paperclip unavailable"));
       setPhase("idle");
     } catch (error) {
       setPhase("error");

@@ -1,4 +1,30 @@
-export const DEFAULT_WORKSPACE = "rtm";
+type AssistantWorkspaceWindow = Window & typeof globalThis & {
+  __WIKI_ASSISTANT_DEFAULT_WORKSPACE__?: string;
+  __WIKI_ASSISTANT_ALLOWED_WORKSPACES__?: string[];
+};
+
+function normalizeWorkspace(value: string) {
+  return value === "personal" ? "personal" : "rtm";
+}
+
+function injectedDefaultWorkspace() {
+  if (typeof window === "undefined") return "";
+  return normalizeWorkspace((window as AssistantWorkspaceWindow).__WIKI_ASSISTANT_DEFAULT_WORKSPACE__ || "");
+}
+
+function savedWorkspaceFallback() {
+  if (typeof window === "undefined") return "";
+  try {
+    const saved = window.localStorage.getItem("wiki_ops_active_space");
+    if (saved === "personal") return "personal";
+    if (saved === "work") return "rtm";
+  } catch {
+    return "";
+  }
+  return "";
+}
+
+export const DEFAULT_WORKSPACE = injectedDefaultWorkspace() || savedWorkspaceFallback() || "rtm";
 export const DEFAULT_PROJECT_ID = "default";
 
 export const CHAT_API_ENDPOINTS = {
@@ -60,7 +86,8 @@ export type ChatContext = {
 
 function queryParam(name: string, fallback: string) {
   const params = new URLSearchParams(window.location.search);
-  return params.get(name) || fallback;
+  const value = params.get(name) || fallback;
+  return name === "workspace" ? normalizeWorkspace(value) : value;
 }
 
 export function readChatContextFromUrl(): ChatContext {
