@@ -172,8 +172,8 @@ export function useChatWorkspace(initialContext: ChatContext): ChatWorkspaceStat
       const project = await saveChatProject({
         name: workspace === "personal" ? "새 개인 챗" : "새 업무 챗",
         instructions: workspace === "personal"
-          ? "개인용 위키와 개인 메모리 범위에서만 답한다."
-          : "업무용 RTM 위키와 고객 프로젝트 운영 범위에서 답한다.",
+          ? "개인용 위키 범위에서 답한다."
+          : "",
         workspace,
       });
       await reload(project.id);

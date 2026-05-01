@@ -28,6 +28,7 @@ source: "Wiki Ops frontend skill catalog and MCP recommendation pass"
 - `Documents`: DOCX 작성, 편집, 렌더 검증에 사용한다.
 - `Presentations`: PPTX 작성, 수정, 렌더 검증에 사용한다.
 - `Spreadsheets`: XLSX/CSV 분석과 표/차트 작업에 사용한다.
+- `정부과제 발표평가 발표전략`: 공고문, RFP, 사업계획서, 연구개발계획서, 기존 발표자료, 회의자료를 교차 해석해 평가위원 설득용 발표 논리, 추천 목차, 슬라이드 메시지, 예상 Q&A를 Markdown으로 설계한다.
 
 ## MCP 후보
 

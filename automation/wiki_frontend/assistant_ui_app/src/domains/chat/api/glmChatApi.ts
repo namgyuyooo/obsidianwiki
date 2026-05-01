@@ -92,7 +92,11 @@ async function* streamGlmChat(
         observer?.onEvent?.({
           type: "retrieval",
           payload: streamEvent.payload.retrieval
-            ? { ...streamEvent.payload.retrieval, runId: streamEvent.payload.runId || "" }
+            ? {
+              ...streamEvent.payload.retrieval,
+              retrievalMeta: streamEvent.payload.retrievalMeta || null,
+              runId: streamEvent.payload.runId || "",
+            }
             : null,
         });
       }

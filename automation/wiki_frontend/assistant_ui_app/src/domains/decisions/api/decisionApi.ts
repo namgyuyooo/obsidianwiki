@@ -14,6 +14,21 @@ export type DecisionItem = {
   resolvedAt?: string;
   note?: string;
   appliedPath?: string;
+  operationalChangePaths?: string[];
+  reflectionDocs?: string[];
+  targetFile?: string;
+  auditDiffs?: Array<{
+    path: string;
+    changeType: string;
+    beforeChars: number;
+    afterChars: number;
+    beforePreview?: string;
+    afterPreview?: string;
+  }>;
+  overrideStrategy?: string;
+  overrideReason?: string;
+  overrideProjectKey?: string;
+  overrideProjectLabel?: string;
   finalVerification?: {
     provider?: string;
     model?: string;
@@ -22,6 +37,14 @@ export type DecisionItem = {
     safeAppendNote?: string;
   };
   original?: Record<string, unknown>;
+};
+
+export type DecisionResolveOptions = {
+  overrideStrategy?: string;
+  overrideReason?: string;
+  overrideProjectKey?: string;
+  overrideProjectLabel?: string;
+  overrideProjectName?: string;
 };
 
 export type DecisionQueueSnapshot = {
@@ -181,10 +204,11 @@ export async function resolveDecisionItem(
   action: "approve" | "hold" | "investigate",
   note = "",
   workspace = "rtm",
+  options: DecisionResolveOptions = {},
 ) {
   return requestJson(`/api/decision-queue/${encodeURIComponent(itemId)}/resolve`, {
     method: "POST",
-    body: JSON.stringify({ action, note, workspace }),
+    body: JSON.stringify({ action, note, workspace, ...options }),
   });
 }
 

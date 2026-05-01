@@ -1,3 +1,4 @@
+import { useComposerRuntime } from "@assistant-ui/react";
 import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
 import type { ChatContext } from "../constants";
@@ -15,6 +16,20 @@ type AssistantShellProps = {
 };
 
 const RECENT_PROJECT_LIMIT = 18;
+const QUICK_ACTIONS = [
+  {
+    label: "현황",
+    prompt: "현재 프로젝트 현황을 간단히 정리해줘. 상태, 핵심 변화, 지금 바로 알아야 할 점만 말해줘.",
+  },
+  {
+    label: "리스크",
+    prompt: "현재 프로젝트의 핵심 리스크와 확인이 필요한 불확실성을 정리해줘.",
+  },
+  {
+    label: "다음 액션",
+    prompt: "현재 문맥 기준으로 다음 액션만 우선순위대로 정리해줘.",
+  },
+] as const;
 
 function projectPreview(instructions = "") {
   return instructions.trim() || "프로젝트 지침 없음";
@@ -62,6 +77,7 @@ function runStatusTone(orchestration: Record<string, any>) {
 }
 
 export function AssistantShell({ chatContext, workspace, orchestration, onOpenWikiPage, children }: AssistantShellProps) {
+  const composer = useComposerRuntime();
   const [projectName, setProjectName] = useState("");
   const [projectInstructions, setProjectInstructions] = useState("");
   const [linkedProjectKey, setLinkedProjectKey] = useState("");
@@ -185,6 +201,11 @@ export function AssistantShell({ chatContext, workspace, orchestration, onOpenWi
     setSettingsOpen(false);
   };
 
+  const triggerQuickAction = (prompt: string) => {
+    composer.setText(prompt);
+    composer.send();
+  };
+
   return (
     <main className={shellClassName}>
       <aside className="aui-project-sidebar" aria-label="GLM chat projects">
@@ -244,7 +265,7 @@ export function AssistantShell({ chatContext, workspace, orchestration, onOpenWi
       <section className="aui-chat-main" aria-label="GLM chat thread">
         <div className="aui-chat-main-utility">
           <div className="aui-chat-main-utility-copy">
-            <span className="aui-mail-thread-kicker">Operational thread</span>
+            <span className="aui-mail-thread-kicker">Wiki-grounded thread</span>
             <div className="aui-chat-main-utility-title">
               <strong title={activeLinkedProject?.path || workspace.activeProject?.name || "현재 챗 프로젝트"}>
                 {activeLinkedProject?.projectLabel || workspace.activeProject?.name || "현재 챗 프로젝트"}
@@ -257,6 +278,18 @@ export function AssistantShell({ chatContext, workspace, orchestration, onOpenWi
             </div>
           </div>
           <div className="aui-chat-main-toolbar">
+            <div className="aui-quick-actions" aria-label="빠른 지시">
+              {QUICK_ACTIONS.map((action) => (
+                <button
+                  key={action.label}
+                  className="aui-quick-action"
+                  onClick={() => triggerQuickAction(action.prompt)}
+                  type="button"
+                >
+                  {action.label}
+                </button>
+              ))}
+            </div>
             <button
               className={`aui-chat-main-toggle ${sidebarOpen && !focusMode ? "active" : ""}`}
               aria-label="좌측 패널 토글"

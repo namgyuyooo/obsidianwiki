@@ -10,6 +10,21 @@ source: "Global wiki operations log"
 이 파일은 위키 운영의 append-only 로그입니다.
 
 ## 2026-05-01
+- `automation/wiki_api/server.mjs`, `automation/wiki_frontend/assistant_ui_app/src/domains/decisions/api/decisionApi.ts`, `automation/wiki_frontend/assistant_ui_app/src/domains/decisions/components/DecisionDeck.tsx`, `automation/wiki_frontend/assistant_ui_app/src/domains/decisions/hooks/useDecisionDeck.ts`, `Wiki/Common/Decisions_Product_Plan.md`: `diff audit`를 반영 문서 count만 보는 수준에서 `before/after` preview까지 보이는 감사 리스트로 확장하고, resolve 시점의 문서 변경 스냅샷을 queue item에 보존
+
+## 2026-05-01
+- `automation/wiki_api/server.mjs`, `automation/wiki_frontend/assistant_ui_app/src/domains/decisions/api/decisionApi.ts`, `automation/wiki_frontend/assistant_ui_app/src/domains/decisions/components/DecisionDeck.tsx`, `automation/wiki_frontend/assistant_ui_app/src/domains/decisions/hooks/useDecisionDeck.ts`, `Wiki/Common/Decisions_Product_Plan.md`: resolve 결과의 `appliedPath`, `operationalChangePaths`, `reflectionDocs`를 queue item에 보존하고, Decisions 화면에 승인 후 반영 문서 수/대표 경로를 보는 `diff audit` 리스트를 추가
+
+## 2026-05-01
+- `automation/wiki_api/server.mjs`, `automation/wiki_frontend/assistant_ui_app/src/domains/decisions/components/DecisionDeck.tsx`, `automation/wiki_frontend/assistant_ui_app/src/domains/decisions/hooks/useDecisionDeck.ts`, `automation/wiki_frontend/assistant_ui_app/src/index.css`, `Wiki/Common/Decisions_Product_Plan.md`: `promote_to_common`, `promote_to_shared`, `hold_for_review` 전략을 Decisions 전면 개편 범위에 포함시키고, pending 카드 나이 기준 `Queue health`/stale SLA 표식을 실행 리스트에 추가
+
+## 2026-05-01
+- `automation/wiki_frontend/assistant_ui_app/src/domains/decisions/components/DecisionDeck.tsx`, `automation/wiki_frontend/assistant_ui_app/src/domains/decisions/hooks/useDecisionDeck.ts`, `automation/wiki_frontend/assistant_ui_app/src/index.css`, `Wiki/Common/Decisions_Product_Plan.md`: `Decisions`를 mock/card 중심 설명 화면에서 `검증 inbox + 전략별 리스트 + 실행 대기열` 중심 운영 화면으로 전면 재편하고, 선택 전략 기준 영향 문서/요약/체크리스트 재계산과 실행 리스트 필터를 추가
+
+## 2026-05-01
+- `automation/wiki_api/server.mjs`, `Wiki/Common/Wiki_Ops_Skill_Catalog.md`: Paperclip에 `정부과제 발표평가 발표전략` 읽기 전용 GLM 스킬을 추가하고, 공고/RFP/사업계획서/연구개발계획서/발표자료/회의자료 업로드 시 평가위원 설득용 발표 논리, 장표 구조, 예상 Q&A를 자동 추천할 수 있게 라우팅 규칙을 확장
+
+## 2026-05-01
 - `Wiki/Common/Decisions_Product_Plan.md`, `Wiki/Common/Decisions.md`, `Wiki/Common/hub.md`, `Wiki/index.md`, `automation/WIKI_OPS_INNOVATION_PLAN.md`: Decisions를 `통합 control plane`으로 보는 제품 기획서, 사용자 시나리오, KPI, kill criteria, 검증/반영 루프를 추가
 
 ## 2026-05-01

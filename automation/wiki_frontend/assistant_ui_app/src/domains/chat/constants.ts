@@ -57,24 +57,24 @@ export const ACCEPTED_ATTACHMENT_TYPES = [
 
 export const STARTER_PROMPTS = [
   {
-    title: "오늘 할 일",
-    description: "업무 상태와 실행 우선순위 정리",
-    prompt: "현재 프로젝트 상태, 리스크, 오늘 바로 해야 할 액션을 정리해줘.",
+    title: "핵심 이해",
+    description: "문서와 문맥을 빠르게 파악",
+    prompt: "이 프로젝트의 핵심 맥락, 주요 논점, 지금 알아야 할 배경을 설명해줘.",
   },
   {
-    title: "위키 반영",
-    description: "변경 포인트와 충돌 후보 검토",
-    prompt: "최근 들어온 자료를 기준으로 위키 반영 포인트와 충돌 가능성을 정리해줘.",
+    title: "문서 비교",
+    description: "관련 문서 차이와 의미 정리",
+    prompt: "관련 문서들 사이의 차이, 충돌 가능성, 실무상 의미를 비교해줘.",
   },
   {
-    title: "미팅 준비",
-    description: "핵심 질문과 확인 포인트 정리",
-    prompt: "미팅 전에 꼭 확인해야 할 질문 리스트를 만들어줘.",
+    title: "초안 작성",
+    description: "메일, 보고, 메모 초안 생성",
+    prompt: "현재 위키 근거를 바탕으로 바로 쓸 수 있는 초안 문서를 작성해줘.",
   },
   {
     title: "추가 조사",
-    description: "문서/근거 확인 순서 제안",
-    prompt: "첨부 자료와 기존 위키 근거를 함께 보고 추가 조사 순서를 제안해줘.",
+    description: "무엇을 더 확인할지 제안",
+    prompt: "지금 정보로 부족한 점과 추가로 확인할 문서/질문/근거를 제안해줘.",
   },
 ] as const;
 

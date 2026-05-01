@@ -37,21 +37,41 @@ function actionLabel(action = "") {
   return "보류";
 }
 
+function strategyLabel(strategy = "") {
+  return {
+    link_only: "상호 링크 추가",
+    promote_to_new_project: "새 canonical project 승격",
+    promote_to_common: "Common 운영 지식 승격",
+    promote_to_shared: "Shared 재사용 자산 승격",
+    keep_separate_project: "별도 project 유지",
+    account_rollup: "Account rollup",
+    hold_for_review: "추가 검토 보류",
+    decision_merge: "승인 게이트 유지",
+    evidence_index_merge: "Raw evidence 연동",
+    status_rollup: "상태 집계",
+    do_not_merge: "병합 금지",
+  }[strategy] || strategy || "전략 미지정";
+}
+
 export function DecisionDeck({ chatContext }: DecisionDeckProps) {
   const deck = useDecisionDeck(chatContext.workspace);
   const item = deck.activeItem;
-  const currentPosition = deck.activeIndex >= 0 ? `${deck.activeIndex + 1} / ${deck.pendingItems.length}` : "0 / 0";
+  const currentPosition = deck.activeIndex >= 0 ? `${deck.activeIndex + 1} / ${deck.filteredPendingItems.length}` : "0 / 0";
   const stats = [
     { label: "Pending", value: deck.summary.pending },
     { label: "Approved", value: deck.summary.approved },
     { label: "Held", value: deck.summary.held },
-    { label: "Total", value: deck.summary.total },
+    { label: "Visible", value: deck.filteredPendingItems.length },
   ];
   const busy = ["loading", "saving", "thinking"].includes(deck.status.phase);
   const compareBusy = ["loading", "merging", "saving"].includes(deck.compare.phase);
   const scanBusy = ["scanning", "enqueuing"].includes(deck.mergeScan.phase);
   const integrationBusy = ["scanning", "enqueuing"].includes(deck.integrationScan.phase);
   const recommendationReady = Boolean(deck.inference.trim());
+  const strategyApprovalLabel = deck.selectedStrategy === "promote_to_new_project" ? "새 project 승격 승인" : "선택 전략 승인";
+  const activeScopeLabel = deck.pendingFilterScopes.find((bucket) => bucket.key === deck.queueScope)?.label || "전체 큐";
+  const activeInboxLabel = deck.pendingValidationBuckets.find((bucket) => bucket.key === deck.queueInboxFilter)?.label || "전체 inbox";
+  const activeStrategyLaneLabel = deck.queueStrategyFilter === "all" ? "전체 전략" : strategyLabel(deck.queueStrategyFilter);
 
   return (
     <WorkspaceSurface variant="decision">
@@ -59,8 +79,25 @@ export function DecisionDeck({ chatContext }: DecisionDeckProps) {
         <BrandCard
           eyebrow="integration review mailbox"
           title="통합 검토 작업함"
-          description="충돌, 미확정 사실, 중복 intake를 검토 큐로 접수하고 GLM 보조 판정, 대표 공간 선정, 병합 제안까지 처리합니다."
+          description="승인 로그가 아니라 canonical workspace를 고르는 운영 콘솔입니다. 검증 inbox, 전략 lane, 실행 대기열, diff audit를 한 화면에서 다룹니다."
         />
+        <div className="aui-decision-hero-strip">
+          <article>
+            <span>운영 모드</span>
+            <strong>{activeScopeLabel}</strong>
+            <small>{deck.filteredPendingItems.length}건 표시 중</small>
+          </article>
+          <article>
+            <span>검증 inbox</span>
+            <strong>{activeInboxLabel}</strong>
+            <small>보류와 승격 판단을 분리</small>
+          </article>
+          <article>
+            <span>전략 lane</span>
+            <strong>{activeStrategyLaneLabel}</strong>
+            <small>선택 전략 기준 실행</small>
+          </article>
+        </div>
         <StatGrid stats={stats} />
         <PanelCard eyebrow="Similarity trigger" title="중복/병합 후보 스캔">
           <p className="aui-decision-empty-note">
@@ -105,7 +142,7 @@ export function DecisionDeck({ chatContext }: DecisionDeckProps) {
               <article key={candidate.id}>
                 <strong>{candidate.groupKey}</strong>
                 <span>
-                  {candidate.recommendedStrategy} · {candidate.conflictRisk ? "충돌 게이트" : "append only"} · score {Math.round((candidate.similarityScore || 0) * 100)}
+                  {strategyLabel(candidate.recommendedStrategy)} · {candidate.conflictRisk ? "충돌 게이트" : "append only"} · score {Math.round((candidate.similarityScore || 0) * 100)}
                 </span>
                 <small>{candidate.relatedWikis.map((item) => item.projectLabel || item.projectKey).join(", ")}</small>
                 <small>{candidate.changeTargets?.slice(0, 2).join(" / ") || candidate.reason?.join(", ")}</small>
@@ -117,8 +154,68 @@ export function DecisionDeck({ chatContext }: DecisionDeckProps) {
           </div>
         </PanelCard>
         <PanelCard eyebrow="Review queue" title={`${deck.pendingItems.length}건`}>
+          <div className="aui-decision-filter-grid">
+            {deck.pendingFilterScopes.map((bucket) => (
+              <button
+                key={bucket.key}
+                className={`aui-filter-chip ${deck.queueScope === bucket.key ? "active" : ""}`}
+                onClick={() => deck.setQueueScope(bucket.key as "all" | "integration" | "conflict" | "deletion")}
+                type="button"
+              >
+                <strong>{bucket.label}</strong>
+                <span>{bucket.count}</span>
+              </button>
+            ))}
+          </div>
+          <button className="aui-wide-action" onClick={() => deck.reload()} type="button">큐 새로고침</button>
+        </PanelCard>
+
+        <PanelCard eyebrow="Validation inbox" title={deck.queueInboxFilter === "all" ? "전체 inbox" : "필터 적용"}>
+          <div className="aui-decision-history">
+            {deck.pendingValidationBuckets.map((bucket) => (
+              <article key={bucket.key}>
+                <strong>{bucket.label}</strong>
+                <span>{bucket.count}건</span>
+                <button className="aui-wide-action" onClick={() => deck.setQueueInboxFilter(bucket.key)} type="button">
+                  {deck.queueInboxFilter === bucket.key ? "선택됨" : "이 inbox 보기"}
+                </button>
+              </article>
+            ))}
+          </div>
+        </PanelCard>
+
+        <PanelCard eyebrow="Queue health" title="재판정 SLA">
+          <div className="aui-decision-history">
+            {deck.pendingAgeBuckets.map((bucket) => (
+              <article key={bucket.key}>
+                <strong>{bucket.label}</strong>
+                <span>{bucket.count}건</span>
+                <small>{bucket.key === "fresh" ? "새로 들어온 카드" : bucket.key === "due" ? "이번 주 내 재검토 권장" : bucket.key === "stale" ? "우선 재판정 필요" : "장기 체류 카드"}</small>
+              </article>
+            ))}
+          </div>
+        </PanelCard>
+
+        <PanelCard eyebrow="Strategy lanes" title={deck.queueStrategyFilter === "all" ? "전체 전략" : strategyLabel(deck.queueStrategyFilter)}>
+          <div className="aui-decision-history">
+            {deck.pendingStrategyBuckets.map((bucket) => (
+              <article key={bucket.key}>
+                <strong>{bucket.label}</strong>
+                <span>{bucket.count}건</span>
+                <button className="aui-wide-action" onClick={() => deck.setQueueStrategyFilter(bucket.key)} type="button">
+                  {deck.queueStrategyFilter === bucket.key ? "선택됨" : "이 전략 보기"}
+                </button>
+              </article>
+            ))}
+          </div>
+        </PanelCard>
+
+        <PanelCard eyebrow="Execution list" title={`${deck.filteredPendingItems.length}건`}>
+          <p className="aui-decision-empty-note">
+            현재 필터에 걸린 카드만 리스트로 유지합니다. 전략/검증 상태를 바꾸면 바로 이 리스트가 줄어드는 방향으로 운영합니다.
+          </p>
           <div className="aui-project-list">
-            {deck.pendingItems.map((queueItem) => (
+            {deck.filteredPendingItems.map((queueItem) => (
               <RailButton
                 active={queueItem.id === item?.id}
                 detail={queueItem.content || queueItem.path || "내용 없음"}
@@ -127,21 +224,47 @@ export function DecisionDeck({ chatContext }: DecisionDeckProps) {
                 title={queueItem.projectLabel || queueItem.projectKey || queueItem.title || "Review"}
               />
             ))}
-            {!deck.pendingItems.length ? <p className="aui-decision-empty-note">대기 중인 카드가 없습니다.</p> : null}
+            {!deck.filteredPendingItems.length ? <p className="aui-decision-empty-note">현재 필터에 맞는 카드가 없습니다.</p> : null}
           </div>
-          <button className="aui-wide-action" onClick={() => deck.reload()} type="button">큐 새로고침</button>
+          <div className="aui-decision-compare-actions">
+            <button className="aui-wide-action" onClick={() => deck.setQueueInboxFilter("all")} type="button">inbox 필터 해제</button>
+            <button className="aui-wide-action" onClick={() => deck.setQueueStrategyFilter("all")} type="button">전략 필터 해제</button>
+          </div>
         </PanelCard>
 
-        <PanelCard eyebrow="Audit trail" title={`${deck.resolvedItems.length}건`}>
+        <PanelCard eyebrow="Apply queue" title={`${deck.executionQueue.length}건`}>
           <div className="aui-decision-history">
-            {deck.resolvedItems.slice(0, 8).map((historyItem) => (
-              <article key={historyItem.id}>
-                <strong>{historyItem.title || historyItem.id}</strong>
-                <span>{actionLabel(historyItem.status)} · {historyItem.resolvedAt?.slice(0, 10) || "처리일 없음"}</span>
-                <small>{shortText(historyItem.appliedPath || historyItem.note || historyItem.content || "감사 메모 없음", 150)}</small>
+            {deck.executionQueue.slice(0, 8).map((entry) => (
+              <article key={entry.id} className={`aui-decision-age-${entry.staleLevel}`}>
+                <strong>{entry.projectLabel}</strong>
+                <span>{entry.strategyLabel} · {entry.validationLabel}</span>
+                <small>{entry.targetCount}개 문서 반영 대기 · 대기 {entry.ageLabel}</small>
+                <button className="aui-wide-action" onClick={() => deck.focusItem(entry.id)} type="button">이 카드 열기</button>
               </article>
             ))}
-            {!deck.resolvedItems.length ? <p className="aui-decision-empty-note">아직 처리 이력이 없습니다.</p> : null}
+            {!deck.executionQueue.length ? <p className="aui-decision-empty-note">실행 대기 리스트가 비어 있습니다.</p> : null}
+          </div>
+        </PanelCard>
+
+        <PanelCard eyebrow="Diff audit" title={`${deck.resolvedAuditQueue.length}건`}>
+          <div className="aui-decision-history">
+            {deck.resolvedAuditQueue.slice(0, 8).map((historyItem) => (
+              <article key={historyItem.id}>
+                <strong>{historyItem.title}</strong>
+                <span>{actionLabel(historyItem.status)} · {historyItem.resolvedAt?.slice(0, 10) || "처리일 없음"}</span>
+                <small>{historyItem.docCount}개 문서 반영 · {shortText(historyItem.summary, 110)}</small>
+                {historyItem.docPreview.map((path) => (
+                  <small key={path}>{path}</small>
+                ))}
+                {historyItem.diffPreview.map((line) => (
+                  <small key={line}>{shortText(line, 140)}</small>
+                ))}
+                <button className="aui-wide-action" onClick={() => deck.setAuditFocusId(historyItem.id)} type="button">
+                  감사 상세
+                </button>
+              </article>
+            ))}
+            {!deck.resolvedAuditQueue.length ? <p className="aui-decision-empty-note">아직 처리 이력이 없습니다.</p> : null}
           </div>
         </PanelCard>
       </section>
@@ -156,12 +279,46 @@ export function DecisionDeck({ chatContext }: DecisionDeckProps) {
         <div className="aui-decision-card-wrap">
           {item ? (
             <article className="aui-decision-card">
+              <div className="aui-decision-mode-banner">
+                <div>
+                  <span>현재 큐</span>
+                  <strong>{activeScopeLabel}</strong>
+                </div>
+                <div>
+                  <span>판정 inbox</span>
+                  <strong>{deck.activeValidationInbox?.label || "일반 판정"}</strong>
+                </div>
+                <div>
+                  <span>선택 전략</span>
+                  <strong>{deck.activeIsIntegration ? strategyLabel(deck.selectedStrategy) : "일반 승인/보류"}</strong>
+                </div>
+              </div>
               <div className="aui-decision-card-meta">
                 <span>{STATUS_LABELS[item.status] || item.status}</span>
                 <span>{item.kind || item.sourceType || "signal"}</span>
                 <span>{item.createdAt?.slice(0, 10) || "날짜 없음"}</span>
+                <span>{deck.activeAgeBucket.label}</span>
               </div>
               <h2>{item.title || "Conflict Register"}</h2>
+              {deck.activeIsIntegration ? (
+                <section className="aui-decision-merge-card">
+                  <strong>권고 판정: {strategyLabel(deck.activeIntegrationCandidate?.recommendedStrategy || deck.selectedStrategy)}</strong>
+                  <p>{deck.activeStrategySummary || "권고 요약 없음"}</p>
+                  {deck.activeValidationInbox ? (
+                    <p>
+                      검증 inbox: <strong>{deck.activeValidationInbox.label}</strong> · {deck.activeValidationInbox.message}
+                    </p>
+                  ) : null}
+                  {deck.activeStrategyReasons.length ? (
+                    <ul>
+                      {deck.activeStrategyReasons.map((line) => <li key={line}>{line}</li>)}
+                    </ul>
+                  ) : null}
+                  {deck.activeRelatedWikis.length ? (
+                    <p>관련 위키: {deck.activeRelatedWikis.map((wiki) => wiki.projectLabel || wiki.projectKey).join(", ")}</p>
+                  ) : null}
+                </section>
+              ) : null}
               <div className="aui-decision-card-grid">
                 <section>
                   <span>접수된 판단 내용</span>
@@ -180,11 +337,82 @@ export function DecisionDeck({ chatContext }: DecisionDeckProps) {
                     {deck.activeIsDeletion
                       ? "승인 시 보호 규칙을 다시 확인한 뒤 실제 문서를 삭제하고 감사 로그를 남깁니다."
                       : deck.activeIsIntegration
-                        ? "승인 시 추천 전략에 맞는 hub/Status/Change_Log append만 수행합니다. 자동 병합과 원문 삭제는 하지 않습니다."
+                        ? "승인 시 선택한 전략에 맞는 문서만 반영합니다. 자동 병합과 원문 삭제는 하지 않습니다."
                         : "승인 시 충돌 기록 또는 대표 문서 갱신에 필요한 메모를 함께 남깁니다."}
                   </p>
                 </section>
               </div>
+              {deck.activeIsIntegration ? (
+                <div className="aui-decision-card-grid">
+                  <section>
+                    <span>영향 문서 미리보기</span>
+                    {deck.activeChangeTargets.length ? (
+                      <ul>
+                        {deck.activeChangeTargets.map((path) => <li key={path}>{path}</li>)}
+                      </ul>
+                    ) : (
+                      <p>예상 반영 문서가 없습니다.</p>
+                    )}
+                  </section>
+                  <section>
+                    <span>반영 체크리스트</span>
+                    {deck.reflectionChecklist.length ? (
+                      <ul>
+                        {deck.reflectionChecklist.map((line) => <li key={line}>{line}</li>)}
+                      </ul>
+                    ) : (
+                      <p>체크리스트 없음</p>
+                    )}
+                  </section>
+                </div>
+              ) : null}
+              {deck.activeIsIntegration ? (
+                <div className="aui-decision-resolution-note">
+                  <label className="aui-field">
+                    <span>전략 선택</span>
+                    <select value={deck.overrideStrategy} onChange={(event) => deck.setOverrideStrategy(event.target.value)}>
+                      {[
+                        deck.activeIntegrationCandidate?.recommendedStrategy,
+                        "promote_to_new_project",
+                        "promote_to_common",
+                        "promote_to_shared",
+                        "keep_separate_project",
+                        "account_rollup",
+                        "hold_for_review",
+                        "decision_merge",
+                        "evidence_index_merge",
+                        "status_rollup",
+                        "link_only",
+                        "do_not_merge",
+                      ].filter(Boolean).filter((value, index, array) => array.indexOf(value) === index).map((value) => (
+                        <option key={value} value={value}>
+                          {strategyLabel(value)}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  {deck.overrideStrategy === "promote_to_new_project" ? (
+                    <label className="aui-field">
+                      <span>승격 project 이름</span>
+                      <input
+                        type="text"
+                        value={deck.promotionProjectName}
+                        onChange={(event) => deck.setPromotionProjectName(event.target.value)}
+                        placeholder="예: CustomerA_NewProposal_Project"
+                      />
+                    </label>
+                  ) : null}
+                  <label className="aui-field">
+                    <span>전략 override 이유</span>
+                    <textarea
+                      rows={3}
+                      value={deck.overrideReason}
+                      onChange={(event) => deck.setOverrideReason(event.target.value)}
+                      placeholder="예: 같은 고객이지만 계약/예산/오너가 달라 새 project로 분리"
+                    />
+                  </label>
+                </div>
+              ) : null}
               <div className="aui-decision-path-stack">
                 {item.path ? <code>source: {item.path}</code> : <code>source: 경로 없음</code>}
                 {deck.activeTargetPath ? <code>target: {deck.activeTargetPath}</code> : <code>target: 프로젝트 경로 계산 필요</code>}
@@ -212,7 +440,10 @@ export function DecisionDeck({ chatContext }: DecisionDeckProps) {
             <button className="aui-wide-action" disabled={busy} onClick={() => deck.move(-1)} type="button">이전</button>
             <button className="aui-wide-action" disabled={busy || !item} onClick={() => deck.resolveActive("hold")} type="button">보류</button>
             <button className="aui-wide-action" disabled={busy || !item} onClick={() => deck.resolveActive("investigate")} type="button">추가 조사</button>
-            <button className="aui-wide-action" disabled={busy || !item} onClick={() => deck.resolveActive("approve")} type="button">승인 반영</button>
+            <button className="aui-wide-action" disabled={busy || !item} onClick={deck.approveWithSelectedStrategy} type="button">{strategyApprovalLabel}</button>
+            {deck.activeIsIntegration ? (
+              <button className="aui-wide-action" disabled={busy || !item} onClick={deck.approvePromoteToProject} type="button">빠른 새 project 승격</button>
+            ) : null}
             <button className="aui-wide-action" disabled={busy} onClick={() => deck.move(1)} type="button">다음</button>
           </div>
         </div>
@@ -244,6 +475,30 @@ export function DecisionDeck({ chatContext }: DecisionDeckProps) {
         <PanelCard eyebrow="Inference" title="검토 보조 결과">
           <div className="aui-decision-inference">
             {deck.inference || "아직 실행된 GLM 판정이 없습니다."}
+          </div>
+        </PanelCard>
+
+        <PanelCard eyebrow="Diff drilldown" title={deck.activeAuditItem?.title || "감사 상세 없음"}>
+          <div className="aui-decision-history">
+            {deck.activeAuditItem ? (
+              <>
+                <article className="aui-decision-audit-lead">
+                  <strong>{deck.activeAuditItem.title}</strong>
+                  <span>{actionLabel(deck.activeAuditItem.status)} · {deck.activeAuditItem.resolvedAt?.slice(0, 10) || "처리일 없음"}</span>
+                  <small>{deck.activeAuditItem.docCount}개 문서 반영</small>
+                </article>
+                {deck.activeAuditItem.diffs.map((diff) => (
+                  <article key={`${deck.activeAuditItem.id}-${diff.path}`} className="aui-decision-diff-row">
+                    <strong>{diff.changeType} · {diff.path}</strong>
+                    <span>{diff.beforeChars}자 → {diff.afterChars}자</span>
+                    <small>before: {shortText(diff.beforePreview || "empty", 140)}</small>
+                    <small>after: {shortText(diff.afterPreview || "empty", 140)}</small>
+                  </article>
+                ))}
+              </>
+            ) : (
+              <p className="aui-decision-empty-note">아직 선택된 감사 항목이 없습니다.</p>
+            )}
           </div>
         </PanelCard>
 

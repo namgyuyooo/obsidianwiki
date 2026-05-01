@@ -28,6 +28,13 @@ type PersistedDocumentWorkbench = {
   comparePages: RelatedWikiPage[];
 };
 
+type RetrievalMeta = {
+  sparseSource?: string;
+  graphActive?: boolean;
+  sourceCounts?: Record<string, number>;
+  projectResolution?: string;
+};
+
 function summarizeQuery(rawQuery: string | undefined) {
   const text = String(rawQuery || "").trim();
   if (!text) return "아직 실행 없음";
@@ -234,6 +241,43 @@ function writeDocumentWorkbench(scope: string, value: PersistedDocumentWorkbench
   }));
 }
 
+function sourceLabel(source: string | undefined) {
+  const key = String(source || "").trim();
+  if (!key) return "retrieval";
+  if (key === "sparse_bm25") return "BM25";
+  if (key === "fallback_substring") return "substring fallback";
+  if (key === "project_detect") return "자동 인식";
+  if (key === "explicit_project_mention") return "@프로젝트";
+  if (key === "linked_project_scope") return "연결 프로젝트";
+  if (key === "project_context") return "프로젝트 컨텍스트";
+  if (key === "graph_1hop") return "Graph 1-hop";
+  if (key === "graph_2hop") return "Graph 2-hop";
+  return key.replace(/_/g, " ");
+}
+
+function projectResolutionLabel(value: string | undefined) {
+  const key = String(value || "").trim();
+  if (key === "linked_project") return "연결 프로젝트 기준";
+  if (key === "explicit_project_mention") return "@프로젝트 지정";
+  if (key === "detected_project") return "문장 내 프로젝트 자동 인식";
+  return "프로젝트 미지정";
+}
+
+function sparseRouteLabel(value: string | undefined) {
+  const key = String(value || "").trim();
+  if (!key) return "BM25 미사용";
+  if (key === "sparse_bm25") return "BM25 인덱스 사용";
+  if (key === "fallback_substring") return "substring fallback 사용";
+  return `${sourceLabel(key)} 사용`;
+}
+
+function routeNarrative(meta: RetrievalMeta, retrieval: Record<string, any>) {
+  const projectPart = projectResolutionLabel(meta.projectResolution);
+  const sparsePart = sparseRouteLabel(meta.sparseSource);
+  const graphPart = meta.graphActive || retrieval.graphExpandedHits?.length ? "그래프 확장 사용" : "그래프 확장 없음";
+  return `${projectPart} · ${sparsePart} · ${graphPart}`;
+}
+
 function phaseLabel(phase: string) {
   if (!phase) return "대기";
   if (phase === "context_building") return "근거 조립 중";
@@ -356,6 +400,7 @@ export function OrchestrationPanel({ data, activeProject, onOpenWikiPage }: Orch
   const [comparePayloads, setComparePayloads] = useState<Record<string, WikiPagePayload | null>>({});
   const runtime = useThreadRuntime();
   const retrieval = data.retrieval || {};
+  const retrievalMeta = (retrieval.retrievalMeta || {}) as RetrievalMeta;
   const validation = data.validation || {};
   const paperclip = data.paperclip || {};
   const projectBinding = data.projectBinding || {};
@@ -396,10 +441,30 @@ export function OrchestrationPanel({ data, activeProject, onOpenWikiPage }: Orch
   const activeCheckpoint = paperclip.checkpoint || paperclip.triggeredTasks?.[0]?.checkpoint || paperclip.followupTask?.checkpoint || null;
   const actionableTasks = paperclip.triggeredTasks?.length ? paperclip.triggeredTasks : paperclip.recentProjectTasks;
   const evidencePreview = (retrieval.finalEvidence || []).slice(0, EVIDENCE_PREVIEW_LIMIT);
+  const graphEvidencePreview = dedupePages(
+    ((retrieval.graphExpandedHits || []) as Array<Record<string, any>>)
+      .filter((item) => item?.path)
+      .map((item) => ({
+        title: String(item.title || item.path || ""),
+        path: String(item.path || ""),
+        docKind: String(item.docKind || "graph"),
+      })),
+  ).slice(0, EVIDENCE_PREVIEW_LIMIT);
   const coverageWarnings = validation.coverageWarnings || [];
   const conflictHotspots = validation.conflictHotspots || [];
   const taskPreview = (actionableTasks || paperclip.autoRuns || paperclip.agentDrafts || []).slice(0, TASK_PREVIEW_LIMIT);
   const issueCount = coverageWarnings.length + conflictHotspots.length;
+  const fallbackEvidencePages = dedupePages([...activeRelatedPages, ...pinnedPages]).slice(0, EVIDENCE_PREVIEW_LIMIT);
+  const routeChips = [
+    projectResolutionLabel(retrievalMeta.projectResolution),
+    sparseRouteLabel(retrievalMeta.sparseSource),
+    retrievalMeta.graphActive || retrieval.graphExpandedHits?.length ? "그래프 확장" : "그래프 없음",
+  ].filter(Boolean);
+  const sourceCountChips = Object.entries(retrievalMeta.sourceCounts || {})
+    .filter(([, count]) => Number(count) > 0)
+    .sort((a, b) => Number(b[1]) - Number(a[1]))
+    .slice(0, 4)
+    .map(([source, count]) => `${sourceLabel(source)} ${count}`);
   const summaryItems = [
     { label: "연결 프로젝트", value: activeBinding?.projectLabel || "없음" },
     { label: "채택 근거", value: `${retrieval.finalEvidence?.length || 0}건` },
@@ -407,6 +472,9 @@ export function OrchestrationPanel({ data, activeProject, onOpenWikiPage }: Orch
   ];
   if (activeCheckpoint?.label || activeCheckpoint?.phase) {
     summaryItems.push({ label: "현재 체크포인트", value: activeCheckpoint.label || activeCheckpoint.phase || "-" });
+  }
+  if (retrieval.graphExpandedHits?.length) {
+    summaryItems.push({ label: "그래프 연결", value: `${retrieval.graphExpandedHits.length}건` });
   }
   const guideText = guidanceSummary({
     phase,
@@ -431,11 +499,23 @@ export function OrchestrationPanel({ data, activeProject, onOpenWikiPage }: Orch
     path: page.path,
     html: highlightHtmlText(markdownPreview(comparePayloads[page.path]?.markdown || ""), searchTerms),
   }));
+  const noEvidenceReason = !String(data.query || "").trim()
+    ? "아직 실행 전이라 수집된 근거가 없습니다."
+    : activeBinding?.path
+      ? "이번 턴에서 최종 채택 근거는 없지만, 연결 프로젝트 문서는 바로 확인할 수 있습니다."
+      : "이 챗은 아직 위키 프로젝트와 연결되지 않아 표시할 근거 문서가 없습니다.";
+  const canRefreshEvidence = !isRunning && Boolean(activeBinding?.path || activeProject?.name || data.query);
 
   const reasonForPath = (path: string) => {
     const evidenceMatch = (retrieval.finalEvidence || []).find((item: any) => item?.path === path);
     if (evidenceMatch?.priorityReason) return String(evidenceMatch.priorityReason);
-    if (evidenceMatch) return `${String(evidenceMatch.retrievalSource || "retrieval")} 근거로 채택된 문서입니다.`;
+    if (evidenceMatch) return `${sourceLabel(String(evidenceMatch.retrievalSource || "retrieval"))} 경로로 채택된 문서입니다.`;
+    const graphMatch = (retrieval.graphExpandedHits || []).find((item: any) => item?.path === path);
+    if (graphMatch) {
+      return graphMatch.graphHops
+        ? `그래프 링크 기준 ${graphMatch.graphHops} hop 연결 문서입니다.`
+        : "그래프 링크 기준으로 연결된 문서입니다.";
+    }
     if (activeRelatedPages.some((item) => item?.path === path)) return "연결 프로젝트 범위에서 직접 연결된 관련 문서입니다.";
     return "";
   };
@@ -504,6 +584,16 @@ export function OrchestrationPanel({ data, activeProject, onOpenWikiPage }: Orch
   const askFromPreview = () => {
     if (!previewTarget?.path) return;
     runtime.composer.setText(`[[${previewTarget.path}]] 문서를 기준으로 이어서 설명해줘.`);
+  };
+
+  const refreshEvidence = () => {
+    const targetPath = activeBinding?.path || activeRelatedPages[0]?.path || "";
+    const projectLabel = activeBinding?.projectLabel || activeProject?.name || "현재 프로젝트";
+    const prompt = targetPath
+      ? `[[${targetPath}]] 문서를 기준으로 현재 상태와 핵심 근거를 다시 정리해줘. 관련 문서가 있으면 함께 연결해줘.`
+      : `${projectLabel} 기준으로 현재 상태와 핵심 근거를 다시 정리해줘. 관련 문서가 있으면 함께 연결해줘.`;
+    runtime.composer.setText(prompt);
+    runtime.composer.send();
   };
 
   const togglePinnedPage = (page: RelatedWikiPage) => {
@@ -638,6 +728,14 @@ export function OrchestrationPanel({ data, activeProject, onOpenWikiPage }: Orch
           <span>관련 페이지 {activeRelatedPages.length}</span>
           <span>@Project {mentionedProjectContexts.length}</span>
         </div>
+        <article className="aui-orch-item compact aui-orch-route">
+          <strong>검색 경로</strong>
+          <span>{routeNarrative(retrievalMeta, retrieval)}</span>
+          <div className="aui-orch-metrics">
+            {routeChips.map((chip) => <span key={chip}>{chip}</span>)}
+            {sourceCountChips.map((chip) => <span key={chip}>{chip}</span>)}
+          </div>
+        </article>
         {listOrFallback(
           activeRelatedPages,
           (page, index) => (
@@ -706,17 +804,68 @@ export function OrchestrationPanel({ data, activeProject, onOpenWikiPage }: Orch
               <span>Graph {retrieval.graphExpandedHits?.length || 0}</span>
               <span>Final {retrieval.finalEvidence?.length || 0}</span>
             </div>
+            <article className="aui-orch-item accent">
+              <strong>그래프 검색</strong>
+              <span>프로젝트 허브와 문서 링크 구조를 따라 연결 근거를 찾는 레이어입니다.</span>
+              <small>{retrieval.graphExpandedHits?.length ? `현재 ${retrieval.graphExpandedHits.length}건 연결됨` : "이번 턴에는 그래프 연결 문서가 아직 없습니다."}</small>
+            </article>
+            {graphEvidencePreview.length ? (
+              <div className="aui-orch-list">
+                {graphEvidencePreview.map((item, index) => (
+                  <button
+                    className="aui-orch-item aui-orch-item-button"
+                    key={`graph-${item.path}-${index}`}
+                    onClick={() => void openRelatedPagePreview(item, graphEvidencePreview)}
+                    type="button"
+                  >
+                    <strong>{item.title || item.path}</strong>
+                    <span>{item.docKind || "graph"} · {item.path || "-"}</span>
+                    <small>{reasonForPath(item.path || "") || "그래프 연결 문서 보기"}</small>
+                  </button>
+                ))}
+              </div>
+            ) : null}
             {listOrFallback(
-              evidencePreview,
-              (item, index) => (
-                <article className="aui-orch-item" key={`${item.path}-${index}`}>
-                  <strong>{item.title || item.path}</strong>
-                  <span>{item.retrievalSource || "retrieval"} · {item.docKind || "doc"}{item.graphHops ? ` · ${item.graphHops} hop` : ""}</span>
-                  {item.priorityReason ? <small>{item.priorityReason}</small> : null}
-                </article>
-              ),
-              "최종 채택 근거가 아직 없습니다.",
+              evidencePreview.length ? evidencePreview : fallbackEvidencePages,
+              (item, index) => {
+                const isFallback = !evidencePreview.length;
+                if (isFallback) {
+                  return (
+                    <button
+                      className="aui-orch-item aui-orch-item-button"
+                      key={`${item.path}-${index}`}
+                      onClick={() => void openRelatedPagePreview(item, fallbackEvidencePages)}
+                      type="button"
+                    >
+                      <strong>{item.title || item.path}</strong>
+                      <span>{item.docKind || "page"} · {item.path || "-"}</span>
+                      <small>{reasonForPath(item.path || "") || "클릭해서 내용 보기"}</small>
+                    </button>
+                  );
+                }
+                return (
+                  <article className="aui-orch-item" key={`${item.path}-${index}`}>
+                    <strong>{item.title || item.path}</strong>
+                    <span>{sourceLabel(item.retrievalSource)} · {item.docKind || "doc"}{item.graphHops ? ` · ${item.graphHops} hop` : ""}</span>
+                    {item.priorityReason ? <small>{item.priorityReason}</small> : null}
+                  </article>
+                );
+              },
+              noEvidenceReason,
             )}
+            {!evidencePreview.length ? (
+              <article className="aui-orch-item compact">
+                <strong>왜 비어 있나</strong>
+                <span>{noEvidenceReason}</span>
+              </article>
+            ) : null}
+            {!evidencePreview.length ? (
+              <div className="aui-paperclip-result-actions">
+                <button disabled={!canRefreshEvidence} onClick={refreshEvidence} type="button">
+                  근거 갱신
+                </button>
+              </div>
+            ) : null}
           </div>
         </details>
       </section>

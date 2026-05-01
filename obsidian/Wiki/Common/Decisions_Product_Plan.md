@@ -283,7 +283,7 @@ source: "Decisions product redesign planning session"
 
 ### V1. 시나리오 리허설
 
-- 위 6개 시나리오를 mock card로 재생한다.
+- 실제 Decision Queue 리스트에서 위 6개 시나리오와 유사한 카드를 골라 검증한다.
 - 각 시나리오에서 시스템 권고, 사용자 선택, 반영 문서가 맞는지 확인한다.
 
 ### V2. Shadow mode
@@ -326,20 +326,33 @@ source: "Decisions product redesign planning session"
 
 - LLM ranking prompt와 recommendation priority를 조정
 
-## 바로 구현해야 할 P0
+## 전면 개편 실행 리스트
+
+### P0 완료
 
 1. 카드 상단에 `권고 판정 + 이유 + 영향 문서`를 한 번에 표시
 2. `새 canonical project 승격` 액션을 1급 버튼으로 노출
 3. 승인 전 `반영 문서 미리보기` 제공
 4. 사용자 override 사유 구조화 저장
 5. 승인 후 `reflection completion` 체크리스트 표시
+6. `Validation inbox` 상태를 `바로 반영 가능 / 근거 더 필요 / 사용자 확인 필요 / 새 project 승격 검토 / account rollup 검토`로 노출
+7. `선택 전략` 기준으로 영향 문서, 요약, 체크리스트를 즉시 재계산
 
-## P1
+### P1 진행 중
 
-1. 시나리오별 mock card 세트 내장
-2. account/common/shared routing 설명 강화
-3. project 승격 wizard 도입
-4. hold 카드 재판정 SLA 표시
+1. `Review queue`를 `검증 inbox -> 전략별 리스트 -> 실행 대기열` 구조로 재편
+2. 카드보다 리스트 운영이 우선 보이도록 필터와 집계 상태를 상단 rail에 유지
+3. 실제 pending 카드만 기준으로 시나리오 리허설을 수행
+4. `common/shared/hold_for_review`를 전략 lane과 반영 경로에 포함
+5. pending 카드의 재판정 SLA와 stale queue 표식을 운영 리스트에서 노출
+6. 승인 후 반영 문서 수, 대표 경로, `before/after` preview를 `diff audit` 리스트에서 바로 확인
+
+### P2 다음 작업
+
+1. `account/common/shared` routing을 추천 로직 수준에서도 더 정교하게 끌어올림
+2. project/common/shared 승격 wizard를 실제 생성 검증과 연결
+3. stale 카드의 자동 재추천 우선순위와 reviewer ownership을 붙임
+4. diff audit에서 문서별 before/after 비교까지 드릴다운 제공
 
 ## Kill Criteria
 
