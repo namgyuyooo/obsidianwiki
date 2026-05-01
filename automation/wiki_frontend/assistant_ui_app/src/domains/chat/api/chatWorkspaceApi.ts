@@ -52,6 +52,13 @@ export type ChatWorkspaceSnapshot = {
   global: ChatGlobalSettings;
 };
 
+export type ActiveChatRun = {
+  projectId: string;
+  status?: string;
+  phase?: string;
+  startedAt?: string;
+};
+
 type SaveProjectInput = {
   id?: string;
   name: string;
@@ -98,6 +105,11 @@ export function wikiWorkspaceFromContext(chatContext: ChatContext) {
 
 export async function fetchChatWorkspace(): Promise<ChatWorkspaceSnapshot> {
   return requestJson<ChatWorkspaceSnapshot>(CHAT_API_ENDPOINTS.projects);
+}
+
+export async function fetchActiveChatRuns(): Promise<ActiveChatRun[]> {
+  const payload = await requestJson<{ active: ActiveChatRun[] }>(CHAT_API_ENDPOINTS.status);
+  return payload.active || [];
 }
 
 export async function fetchWikiProjectOptions(workspace: string): Promise<WikiProjectOption[]> {

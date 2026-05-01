@@ -4,6 +4,7 @@ export const DEFAULT_PROJECT_ID = "default";
 export const CHAT_API_ENDPOINTS = {
   stream: "/api/chat/glm/stream",
   stop: "/api/chat/stop",
+  status: "/api/chat/status",
   files: "/api/chat/files",
   projects: "/api/chat/projects",
   global: "/api/chat/global",

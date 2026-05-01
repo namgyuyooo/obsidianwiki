@@ -8118,6 +8118,37 @@ async function summarizeChatPaperclipTask(task = {}) {
   };
 }
 
+function paperclipTaskCompleted(summary = null) {
+  if (!summary) return false;
+  return ["completed", "partial_completed"].includes(String(summary.phase || summary.status || ""));
+}
+
+async function readChatPaperclipResult(summary = null, maxChars = 7000) {
+  if (!summary?.runId) return null;
+  const artifactName = summary.hasFinal
+    ? "final.md"
+    : summary.hasPartial
+      ? "partial_report.md"
+      : summary.previewArtifactName || "";
+  if (!artifactName) return null;
+  const payload = await readPaperclipRunArtifact(summary.runId, artifactName).catch(() => null);
+  if (!payload?.content) return null;
+  return {
+    taskId: summary.taskId,
+    templateId: summary.templateId,
+    status: summary.status,
+    phase: summary.phase,
+    runId: summary.runId,
+    runPath: summary.runPath,
+    outputPath: summary.outputPath,
+    sourcePaths: summary.sourcePaths || [],
+    artifactName,
+    content: String(payload.content || "").slice(0, maxChars),
+    hasFinal: Boolean(summary.hasFinal),
+    hasPartial: Boolean(summary.hasPartial),
+  };
+}
+
 async function triggerChatPaperclipAutoRuns(route, project = {}, options = {}) {
   const triggeredTasks = [];
   const recommendedTasks = [];
@@ -8203,7 +8234,9 @@ async function latestProjectPaperclipFollowup(projectId = "", options = {}) {
     const exactRecent = tasks.find((task) => task.taskId === mentionedTaskId);
     if (exactRecent) return exactRecent;
   }
-  return tasks.find((task) => ["completed", "running", "queued"].includes(task.status || "")) || null;
+  return tasks.find((task) => paperclipTaskCompleted(task))
+    || tasks.find((task) => ["running", "queued"].includes(task.status || ""))
+    || null;
 }
 
 async function createPaperclipAgentDrafts(route, message, project = {}) {
@@ -8407,6 +8440,12 @@ async function buildGlmChatContext(message, project, workspaceId = "rtm", mode =
   const followupTask = (chatPaperclipFollowupRequested(message) || mentionedTaskId)
     ? await latestProjectPaperclipFollowup(project?.id || "", { taskId: mentionedTaskId }).catch(() => null)
     : null;
+  const activeResultTask = followupTask && paperclipTaskCompleted(followupTask)
+    ? followupTask
+    : recentProjectTasks.find((task) => paperclipTaskCompleted(task)) || null;
+  const activeResult = activeResultTask
+    ? await readChatPaperclipResult(activeResultTask, 9000).catch(() => null)
+    : null;
   const coverageWarnings = [];
   if (coverage?.statuses?.hold) coverageWarnings.push(`coverage_hold:${coverage.statuses.hold}`);
   if (coverage?.statuses?.retry) coverageWarnings.push(`coverage_retry:${coverage.statuses.retry}`);
@@ -8526,6 +8565,7 @@ async function buildGlmChatContext(message, project, workspaceId = "rtm", mode =
       recentProjectTasks,
       followupTaskId: mentionedTaskId,
       followupTask,
+      activeResult,
       checkpoint: triggeredAutoRuns.triggeredTasks[0]?.checkpoint || followupTask?.checkpoint || null,
       recommendedTasks: [...new Map(autoSkill.recommendedTasks.concat(triggeredAutoRuns.recommendedTasks).concat((route.suggested_template_ids || [])
         .filter((id) => approvalRequiredChatTemplateIds.includes(id))
@@ -9236,6 +9276,7 @@ async function glmChat(message, projectId = "default", options = {}) {
               "위키나 검색 시스템 자체를 설명하지 말고, 프로젝트/업무 대상에 대해 바로 답하라.",
               "Paperclip 컨텍스트가 있으면 이를 별도 실행 결과처럼 과장하지 말고, 사용 가능한 agent/template/task 힌트로만 활용하라.",
               "자동 실행된 read/validator skill 결과는 보조 증거로만 쓰고, run/write가 필요하면 실행한 척하지 말고 승인 필요 작업으로만 제안하라.",
+              "paperclip.activeResult가 있으면 final.md 또는 partial_report.md 기반의 실제 실행 결과로 간주하고 그 내용을 우선 근거로 사용하라.",
               "근거는 path로 짧게 붙인다. 확실하지 않으면 '확인 필요'로 표시하고, 무엇을 열어봐야 하는지 제안한다.",
               "기본 형식: 1) 현재 업무상태 2) 진행/완료 3) 리스크/충돌 4) 다음 액션 5) 근거.",
             ].join(" "),
@@ -9331,6 +9372,7 @@ function glmChatMessages(project, globalSettings, message, context, mode = "stan
         "위키나 검색 시스템 자체를 설명하지 말고, 프로젝트/업무 대상에 대해 바로 답하라.",
         "Paperclip 컨텍스트가 있으면 이를 별도 실행 결과처럼 과장하지 말고, 사용 가능한 agent/template/task 힌트로만 활용하라.",
         "자동 실행된 read/validator skill 결과는 보조 증거로만 쓰고, run/write가 필요하면 실행한 척하지 말고 승인 필요 작업으로만 제안하라.",
+        "paperclip.activeResult가 있으면 final.md 또는 partial_report.md 기반의 실제 실행 결과로 간주하고 그 내용을 우선 근거로 사용하라.",
         "근거는 path로 짧게 붙인다. 확실하지 않으면 '확인 필요'로 표시하고, 무엇을 열어봐야 하는지 제안한다.",
         "기본 형식: 1) 현재 업무상태 2) 진행/완료 3) 리스크/충돌 4) 다음 액션 5) 근거.",
       ].join(" "),
@@ -9500,6 +9542,13 @@ function chatBusyPayload(projectId) {
   };
 }
 
+function cleanupActiveChatRequest(projectId, controller = null, active = null) {
+  const currentController = activeChatControllers.get(projectId);
+  const currentActive = activeChatRequests.get(projectId);
+  if (!controller || currentController === controller) activeChatControllers.delete(projectId);
+  if (!active || currentActive === active) activeChatRequests.delete(projectId);
+}
+
 async function stopChatRequest(projectId) {
   const targetId = projectId || [...activeChatRequests.keys()][0];
   const active = activeChatRequests.get(targetId);
@@ -9507,6 +9556,7 @@ async function stopChatRequest(projectId) {
   if (!active || !controller) return { status: "not_running", projectId: targetId || null };
   active.status = "stopping";
   active.phase = "user_stop_requested";
+  cleanupActiveChatRequest(targetId, controller, active);
   controller.abort();
   return { status: "stopping", projectId: targetId };
 }
@@ -12545,6 +12595,12 @@ const server = createServer(async (req, res) => {
       };
       activeChatRequests.set(projectId, active);
       activeChatControllers.set(projectId, controller);
+      const handleStreamClose = () => {
+        if (!controller.signal.aborted) controller.abort();
+        cleanupActiveChatRequest(projectId, controller, active);
+      };
+      req.on("aborted", handleStreamClose);
+      res.on("close", handleStreamClose);
       try {
         const transient = body.transient === true || body.profile === "decision_triage";
         const userMessage = transient
@@ -12585,8 +12641,9 @@ const server = createServer(async (req, res) => {
         sseWrite(res, "error", { error: error.message });
         return res.end();
       } finally {
-        activeChatRequests.delete(projectId);
-        activeChatControllers.delete(projectId);
+        req.off("aborted", handleStreamClose);
+        res.off("close", handleStreamClose);
+        cleanupActiveChatRequest(projectId, controller, active);
       }
     }
     if (pathname === "/api/chat/glm" && req.method === "POST") {
@@ -12627,8 +12684,7 @@ const server = createServer(async (req, res) => {
         result.status = result.provider === "fallback" && /^GLM 연결 실패/.test(result.message || "") ? "failed" : "completed";
         return sendJson(res, 200, result);
       } finally {
-        activeChatRequests.delete(projectId);
-        activeChatControllers.delete(projectId);
+        cleanupActiveChatRequest(projectId, controller, active);
       }
     }
     if (pathname === "/api/chat/evidence" && req.method === "POST") {

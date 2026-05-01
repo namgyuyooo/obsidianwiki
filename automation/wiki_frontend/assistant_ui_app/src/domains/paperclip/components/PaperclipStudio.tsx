@@ -200,6 +200,18 @@ export function PaperclipStudio({ chatContext }: PaperclipStudioProps) {
   }, [activeResultId, resultItems]);
 
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const runId = params.get("paperclipRunId") || "";
+    const taskId = params.get("paperclipTaskId") || "";
+    if (!runId && !taskId) return;
+    const nextItem = resultItems.find((item) => (
+      (runId && item.kind === "run" && item.run.runId === runId)
+      || (taskId && ((item.kind === "run" && item.run.taskId === taskId) || (item.kind === "task" && item.task.id === taskId)))
+    ));
+    if (nextItem && nextItem.id !== activeResultId) setActiveResultId(nextItem.id);
+  }, [activeResultId, resultItems]);
+
+  useEffect(() => {
     if (!activeRun || !activeArtifactName) {
       setRunArtifact((current) => ({
         ...current,

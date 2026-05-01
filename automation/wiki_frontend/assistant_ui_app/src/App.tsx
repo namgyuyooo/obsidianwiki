@@ -1,6 +1,7 @@
 import { RuntimeProvider } from "./domains/chat/runtime/RuntimeProvider";
 import { AssistantShell } from "./domains/chat/components/AssistantShell";
 import { Thread } from "./domains/chat/components/Thread";
+import { CentralStatus } from "./components/surface/CentralStatus";
 import { readChatContextFromUrl } from "./domains/chat/constants";
 import { useChatWorkspace } from "./domains/chat/hooks/useChatWorkspace";
 import { DecisionDeck } from "./domains/decisions/components/DecisionDeck";
@@ -29,12 +30,21 @@ function readSurfaceFromUrl() {
   return normalizeSurfaceId(new URLSearchParams(window.location.search).get("surface") || "chat");
 }
 
-function nextSurfaceUrl(surface: SurfaceId) {
+function nextSurfaceUrl(surface: SurfaceId, options?: { paperclipTaskId?: string; paperclipRunId?: string }) {
   const url = new URL(window.location.href);
   if (surface === "chat") {
     url.searchParams.delete("surface");
   } else {
     url.searchParams.set("surface", surface);
+  }
+  if (surface === "paperclip") {
+    if (options?.paperclipTaskId) url.searchParams.set("paperclipTaskId", options.paperclipTaskId);
+    else url.searchParams.delete("paperclipTaskId");
+    if (options?.paperclipRunId) url.searchParams.set("paperclipRunId", options.paperclipRunId);
+    else url.searchParams.delete("paperclipRunId");
+  } else {
+    url.searchParams.delete("paperclipTaskId");
+    url.searchParams.delete("paperclipRunId");
   }
   return `${url.pathname}${url.search}${url.hash}`;
 }
@@ -44,12 +54,19 @@ function ProductFrame({
   onPrimaryChange,
   onSurfaceChange,
   workspaceLabel,
+  projectId,
+  projectName,
+  orchestration,
   children,
 }: {
   activeSurface: SurfaceId;
   onPrimaryChange: (surface: PrimarySurfaceId) => void;
   onSurfaceChange: (surface: SurfaceId) => void;
   workspaceLabel: string;
+  projectId: string;
+  projectName?: string;
+  orchestration?: Record<string, any>;
+  onOpenPaperclip: (taskId?: string, runId?: string) => void;
   children: ReactNode;
 }) {
   const surfaceDefinition = getSurfaceDefinition(activeSurface);
@@ -67,6 +84,12 @@ function ProductFrame({
 
   return (
     <div className="aui-product-frame">
+      <CentralStatus
+        onOpenPaperclip={onOpenPaperclip}
+        orchestration={orchestration}
+        projectId={projectId}
+        projectName={projectName}
+      />
       <header className="aui-product-nav" aria-label="workspace primary surfaces">
         <div className="aui-product-systembar" aria-label="workspace context">
           <div className="aui-product-suite-id">
@@ -131,6 +154,11 @@ export function App() {
   const selectSurface = (nextSurface: SurfaceId) => {
     window.history.pushState(null, "", nextSurfaceUrl(nextSurface));
     setSurface(nextSurface);
+  };
+
+  const openPaperclipWithFocus = (taskId?: string, runId?: string) => {
+    window.history.pushState(null, "", nextSurfaceUrl("paperclip", { paperclipTaskId: taskId, paperclipRunId: runId }));
+    setSurface("paperclip");
   };
 
   const selectPrimarySurface = (primary: PrimarySurfaceId) => {
@@ -241,6 +269,10 @@ export function App() {
       onPrimaryChange={selectPrimarySurface}
       onSurfaceChange={selectSurface}
       workspaceLabel={chatContext.workspace}
+      projectId={chatContext.projectId}
+      projectName={workspace.activeProject?.name || workspace.activeProject?.linkedWikiProject?.projectLabel || ""}
+      orchestration={orchestration}
+      onOpenPaperclip={openPaperclipWithFocus}
     >
       {content}
     </ProductFrame>
