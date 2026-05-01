@@ -35,6 +35,7 @@ export function usePaperclipStudio() {
   const [snapshot, setSnapshot] = useState<PaperclipSnapshot>(EMPTY_SNAPSHOT);
   const [activeTemplateId, setActiveTemplateId] = useState("");
   const [title, setTitle] = useState("");
+  const [projectHint, setProjectHint] = useState("");
   const [payloadText, setPayloadText] = useState("");
   const [phase, setPhase] = useState<PaperclipPhase>("loading");
   const [message, setMessage] = useState("Paperclip 상태를 불러오는 중입니다.");
@@ -74,6 +75,7 @@ export function usePaperclipStudio() {
     notify("running", successMessage.includes("실행") ? "Paperclip 실행 시작" : "Paperclip 큐 저장 시작", title || activeTemplate.title, { durationMs: 2200 });
     try {
       const payload = parsePayloadText(payloadText);
+      if (projectHint.trim()) payload.projectHint = projectHint.trim();
       await operation(activeTemplate, payload);
       setMessage(successMessage);
       setPayloadText("");
@@ -128,6 +130,8 @@ export function usePaperclipStudio() {
     setActiveTemplateId,
     title,
     setTitle,
+    projectHint,
+    setProjectHint,
     payloadText,
     setPayloadText,
     phase,

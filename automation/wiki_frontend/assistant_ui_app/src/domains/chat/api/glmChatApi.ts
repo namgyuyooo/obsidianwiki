@@ -89,19 +89,39 @@ async function* streamGlmChat(
       }
 
       if (streamEvent.event === "retrieval") {
-        observer?.onEvent?.({ type: "retrieval", payload: streamEvent.payload.retrieval || null });
+        observer?.onEvent?.({
+          type: "retrieval",
+          payload: streamEvent.payload.retrieval
+            ? { ...streamEvent.payload.retrieval, runId: streamEvent.payload.runId || "" }
+            : null,
+        });
       }
 
       if (streamEvent.event === "validation") {
-        observer?.onEvent?.({ type: "validation", payload: streamEvent.payload.validation || null });
+        observer?.onEvent?.({
+          type: "validation",
+          payload: streamEvent.payload.validation
+            ? { ...streamEvent.payload.validation, runId: streamEvent.payload.runId || "" }
+            : null,
+        });
       }
 
       if (streamEvent.event === "paperclip") {
-        observer?.onEvent?.({ type: "paperclip", payload: streamEvent.payload.paperclip || null });
+        observer?.onEvent?.({
+          type: "paperclip",
+          payload: streamEvent.payload.paperclip
+            ? { ...streamEvent.payload.paperclip, runId: streamEvent.payload.runId || "" }
+            : null,
+        });
       }
 
       if (streamEvent.event === "project_binding") {
-        observer?.onEvent?.({ type: "project_binding", payload: streamEvent.payload.projectBinding || null });
+        observer?.onEvent?.({
+          type: "project_binding",
+          payload: streamEvent.payload.projectBinding
+            ? { ...streamEvent.payload.projectBinding, runId: streamEvent.payload.runId || "" }
+            : null,
+        });
       }
 
       if (streamEvent.event === "done") {

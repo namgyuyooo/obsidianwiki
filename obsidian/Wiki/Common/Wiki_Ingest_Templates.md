@@ -391,18 +391,84 @@ source: ""
 ```markdown
 # Decisions
 
-## 2026-04-20
+## 운영 원칙
+- 이 문서는 단순 승인 로그가 아니라 위키 통합/정제 검토 레지스터입니다.
+- Slack, Google Drive, 지식주입, filesystem 수집으로 생긴 project-like space는 먼저 여기서 canonical space 편입 여부를 검토합니다.
+- LLM 제안과 사용자 확정은 구분해 기록합니다.
+- raw approval/audit event는 여기에 그대로 쌓지 않고 운영 판단으로 다시 써서 남깁니다.
+
+## Canonical Space
+- 대표 공간:
+- 현재 분류: project / account / common / shared / hold
+- 판정 유형: merge_into_existing_project / promote_to_new_project / roll_up_to_account / promote_to_common / promote_to_shared / hold_for_review / do_not_merge
+- 마지막 검토일:
+- 사용자 확정:
+- LLM 권고:
+- 검토 이유:
+
+## Open Review Queue
+### 2026-04-20 | Slack 후보를 기존 프로젝트에 편입할지 검토
+- intake 유형: Slack
+- 후보 공간:
+  - [[Wiki/Project_Name/hub]]
+  - [[Wiki/Slack_Project_Name/hub]]
+- 검토 질문:
+  - 같은 고객/같은 실행 단위인가
+  - Slack 쪽이 신규 프로젝트인지 기존 프로젝트의 후속 증거인지
+- LLM 권고:
+  - 기존 `[[Wiki/Project_Name/hub]]`로 편입하고 Slack 공간은 intake view로 유지
+- 사용자 선택:
+  - 미확정
+- 연결 근거:
+  - [[Reference_Register]]
+  - [[Evidence_Log]]
+  - [[Status]]
+- 후속 문서:
+  - [[Action_Items]]
+  - [[Change_Log]]
+
+## Confirmed Decisions
+### 2026-04-20 | 대표본/대표 공간 확정
 - 결정:
   - 대표본은 2026년 연구개발계획서 최종본 v2.1을 기준으로 사용
+  - Drive 초안 공간은 별도 canonical project를 만들지 않고 기존 프로젝트 증거로 편입
 - 근거:
   - 최종본 표기
   - 최신 수정일
   - KPI/예산/일정 완결성 보유
+  - 고객/과제/범위가 기존 프로젝트와 일치
+- 사용자 확정:
+  - 승인
 - 연결 근거:
   - [[Sources]]
   - [[Evidence_Log]]
+  - [[Reference_Register]]
 - 후속 영향:
   - 비교본 차이는 [[Conflict_Register]]와 [[Change_Log]]에 반영
+  - hub, Status, L1_memory를 대표 공간 기준으로 갱신
+
+## Hold / Keep Separate
+### 2026-04-20 | 별도 유지
+- 판단:
+  - 기존 프로젝트와 고객은 같지만 차수/예산/실행 주체가 달라 별도 프로젝트로 유지
+- 재검토 조건:
+  - 다음 미팅에서 범위와 계약 단위를 확인
+- 연결 문서:
+  - [[Status]]
+  - [[Risks]]
+
+## Promote To New Project
+### 2026-04-20 | 신규 canonical project 승격
+- 판단:
+  - 기존 위키와 고객 일부 맥락은 겹치지만 계약 단위, 오너, 산출물, 일정이 독립적이어서 새 project로 승격
+- 생성/갱신 문서:
+  - [[hub]]
+  - [[Status]]
+  - [[Reference_Register]]
+  - [[Project_Overview]]
+  - [[Change_Log]]
+- L1_memory:
+  - `obsidian/L1_memory/{ProjectName}.md` 생성 또는 갱신
 ```
 
 ## Risks.md

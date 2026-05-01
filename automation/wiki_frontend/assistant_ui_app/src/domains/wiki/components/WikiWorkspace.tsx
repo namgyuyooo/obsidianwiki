@@ -2,6 +2,7 @@ import type { FormEvent, KeyboardEvent, PointerEvent, WheelEvent } from "react";
 import { useEffect, useMemo, useRef, useState, type MouseEvent } from "react";
 import type { ChatContext } from "../../chat/constants";
 import { useToastCenter } from "../../../components/surface/ToastCenter";
+import { surfaceScope, writeLastWikiPath } from "../../../shared/surfaceHandoff";
 import { continueAfterCollection, runTargetedRclone } from "../../mission/api/controlPlaneApi";
 import {
   deleteWikiPage as deleteWikiPageApi,
@@ -34,6 +35,8 @@ import { useWikiEvidenceConsole } from "../hooks/useWikiEvidenceConsole";
 
 type WikiWorkspaceProps = {
   chatContext: ChatContext;
+  onOpenChatWithDraft: (text: string) => void;
+  onReturnToChat: () => void;
 };
 
 type StatusEditorProps = {
@@ -1148,7 +1151,7 @@ function WikiManagementConsole({
   );
 }
 
-export function WikiWorkspace({ chatContext }: WikiWorkspaceProps) {
+export function WikiWorkspace({ chatContext, onOpenChatWithDraft, onReturnToChat }: WikiWorkspaceProps) {
   const { notify } = useToastCenter();
   const wiki = useWikiEvidenceConsole(chatContext.workspace);
   const sidebarExpanded = true;
@@ -1197,11 +1200,13 @@ export function WikiWorkspace({ chatContext }: WikiWorkspaceProps) {
   const [deletionReason, setDeletionReason] = useState("위키 정리: 불필요 자료 삭제");
   const [bulkStatusDraft, setBulkStatusDraft] = useState<BulkStatusDraft>(statusDraftForPage(null));
   const [graphModalOpen, setGraphModalOpen] = useState(false);
+  const [requestedWikiPath, setRequestedWikiPath] = useState(() => initialCollectionParam("wikiPath"));
   const [pageHistory, setPageHistory] = useState<string[]>([]);
   const [pageFuture, setPageFuture] = useState<string[]>([]);
   const navModeRef = useRef<"idle" | "push" | "back" | "forward">("idle");
   const historyRef = useRef<string[]>([]);
   const futureRef = useRef<string[]>([]);
+  const handoffScope = surfaceScope(chatContext.projectId, chatContext.workspace);
   const selectedTitle = wiki.activePage?.title || wiki.activeIndexItem?.title || "문서를 선택하세요";
   const previewHtml = markdownPreview(wiki.markdownDraft || "");
   const activeDeleteProtected = isProtectedDeletionPage(wiki.activeIndexItem);
@@ -1245,6 +1250,15 @@ export function WikiWorkspace({ chatContext }: WikiWorkspaceProps) {
     setPageHistory([...historyRef.current, nextPath]);
     navModeRef.current = "forward";
     void wiki.openPage(nextPath);
+  };
+  const askChatAboutCurrentPage = () => {
+    const activePath = wiki.activePage?.path || wiki.activePath || wiki.activeIndexItem?.path || "";
+    if (!activePath) {
+      notify("info", "문서 없음", "먼저 질문할 위키 문서를 선택하세요.");
+      return;
+    }
+    writeLastWikiPath(handoffScope, activePath);
+    onOpenChatWithDraft(`[[${activePath}]] 문서를 기준으로 현재 상태와 다음 액션을 이어서 설명해줘.`);
   };
   const handlePreviewClick = (event: MouseEvent<HTMLDivElement>) => {
     const target = event.target instanceof Element ? event.target : null;
@@ -1393,6 +1407,24 @@ export function WikiWorkspace({ chatContext }: WikiWorkspaceProps) {
   useEffect(() => {
     loadGraph();
   }, []);
+
+  useEffect(() => {
+    const syncRequestedWikiPath = () => setRequestedWikiPath(initialCollectionParam("wikiPath"));
+    window.addEventListener("popstate", syncRequestedWikiPath);
+    return () => window.removeEventListener("popstate", syncRequestedWikiPath);
+  }, []);
+
+  useEffect(() => {
+    if (!requestedWikiPath || requestedWikiPath === wiki.activePath) return;
+    if (!wiki.pages.length || wiki.phase === "loading") return;
+    if (!wiki.pages.some((page) => page.path === requestedWikiPath)) return;
+    void wiki.openPage(requestedWikiPath);
+  }, [requestedWikiPath, wiki.activePath, wiki.pages, wiki.phase]);
+
+  useEffect(() => {
+    if (!wiki.activePath) return;
+    writeLastWikiPath(handoffScope, wiki.activePath);
+  }, [handoffScope, wiki.activePath]);
 
   useEffect(() => {
     const loadCollectionStatus = async () => {
@@ -2073,6 +2105,8 @@ export function WikiWorkspace({ chatContext }: WikiWorkspaceProps) {
             <code>{wiki.activePage?.path || wiki.activePath || "path 없음"}</code>
           </div>
           <div className="aui-wiki-toolbar-actions">
+            <button onClick={onReturnToChat} type="button">채팅으로</button>
+            <button disabled={!wiki.activePath} onClick={askChatAboutCurrentPage} type="button">문서로 질문</button>
             <button disabled={pageHistory.length < 2} onClick={goBackPage} type="button">뒤로</button>
             <button disabled={!pageFuture.length} onClick={goForwardPage} type="button">앞으로</button>
             <span className={`aui-wiki-save-state ${wiki.dirty ? "dirty" : "saved"}`}>

@@ -1,7 +1,7 @@
 ---
 type: index
-created: 2026-04-30
-updated: 2026-04-30
+created: 2026-05-01
+updated: 2026-05-01
 source: "automation/drive_wikify global navigation generator"
 ---
 
@@ -10,17 +10,17 @@ source: "automation/drive_wikify global navigation generator"
 이 문서는 위키 전체 갱신 상태를 전역 관점에서 요약하는 자동 생성 네비게이션 맵입니다.
 
 ## Global Snapshot
-- 생성 시각: `2026-04-30T16:27:51.327946`
-- 총 페이지: `1276`
-- 총 링크 엣지: `4840`
+- 생성 시각: `2026-05-01T02:03:20.770451`
+- 총 페이지: `1282`
+- 총 링크 엣지: `4853`
 - 고아 페이지: `337`
 - 프로젝트/공간 수: `75`
 
 ## High Connectivity Pages
 - [[Wiki/아사히카세히_Project/Evidence_Log]]: degree `455`
-- [[Wiki/아사히카세히_Project/hub]]: degree `390`
+- [[Wiki/아사히카세히_Project/hub]]: degree `393`
 - [[Wiki/아사히카세히_Project/Status]]: degree `349`
-- [[Wiki/아사히카세히_Project/Raw_Evidence_Index]]: degree `326`
+- [[Wiki/아사히카세히_Project/Raw_Evidence_Index]]: degree `327`
 - [[Wiki/ZEUS_AIVoucher_Project/Decisions]]: degree `286`
 - [[Wiki/아사히카세히_Project/Reference_Register]]: degree `265`
 - [[Wiki/아사히카세히_Project/Conflict_Register]]: degree `263`
@@ -31,8 +31,8 @@ source: "automation/drive_wikify global navigation generator"
 - [[Wiki/ZEUS_AIVoucher_Project/Sources]]: degree `204`
 
 ## Project Coverage
-- `Common`: pages `135`, memory `0`, graph links `1192`
-- `memory`: pages `84`, memory `84`, graph links `330`
+- `Common`: pages `136`, memory `0`, graph links `1206`
+- `memory`: pages `89`, memory `89`, graph links `335`
 - `Business_Plan_Project`: pages `27`, memory `0`, graph links `110`
 - `PSK_Project`: pages `23`, memory `0`, graph links `170`
 - `Sawnics_ManufacturingAI_Project`: pages `20`, memory `0`, graph links `175`

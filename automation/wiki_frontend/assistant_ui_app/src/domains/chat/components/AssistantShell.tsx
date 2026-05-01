@@ -4,11 +4,13 @@ import type { ChatContext } from "../constants";
 import type { LinkedWikiProject, WikiProjectOption } from "../api/chatWorkspaceApi";
 import type { ChatWorkspaceState } from "../hooks/useChatWorkspace";
 import { OrchestrationPanel } from "./OrchestrationPanel";
+import { LAST_WIKI_PATH_EVENT, readLastWikiPath, surfaceScope } from "../../../shared/surfaceHandoff";
 
 type AssistantShellProps = {
   chatContext: ChatContext;
   workspace: ChatWorkspaceState;
   orchestration: Record<string, any>;
+  onOpenWikiPage: (path: string) => void;
   children: ReactNode;
 };
 
@@ -59,7 +61,7 @@ function runStatusTone(orchestration: Record<string, any>) {
   return "idle";
 }
 
-export function AssistantShell({ chatContext, workspace, orchestration, children }: AssistantShellProps) {
+export function AssistantShell({ chatContext, workspace, orchestration, onOpenWikiPage, children }: AssistantShellProps) {
   const [projectName, setProjectName] = useState("");
   const [projectInstructions, setProjectInstructions] = useState("");
   const [linkedProjectKey, setLinkedProjectKey] = useState("");
@@ -70,6 +72,7 @@ export function AssistantShell({ chatContext, workspace, orchestration, children
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [orchestrationOpen, setOrchestrationOpen] = useState(false);
   const [focusMode, setFocusMode] = useState(false);
+  const [lastWikiPath, setLastWikiPath] = useState("");
 
   useEffect(() => {
     setProjectName(workspace.activeProject?.name || "");
@@ -95,6 +98,19 @@ export function AssistantShell({ chatContext, workspace, orchestration, children
     });
   }, [workspace.activeProjectId, workspace.projects]);
 
+  useEffect(() => {
+    const scope = surfaceScope(chatContext.projectId, chatContext.workspace);
+    const sync = () => setLastWikiPath(readLastWikiPath(scope));
+    sync();
+    const handleWikiPath = (event: Event) => {
+      const detail = (event as CustomEvent<{ scope?: string }>).detail;
+      if (detail?.scope && detail.scope !== scope) return;
+      sync();
+    };
+    window.addEventListener(LAST_WIKI_PATH_EVENT, handleWikiPath);
+    return () => window.removeEventListener(LAST_WIKI_PATH_EVENT, handleWikiPath);
+  }, [chatContext.projectId, chatContext.workspace]);
+
   const projects = workspace.projects.slice(0, RECENT_PROJECT_LIMIT);
   const moveTargetProjects = workspace.projects.filter((project) => project.id !== workspace.activeProjectId);
   const wikiProjectOptions = linkedProjectOptions(
@@ -106,6 +122,7 @@ export function AssistantShell({ chatContext, workspace, orchestration, children
   const activeConversationCount = workspace.activeProject?.messages?.length || 0;
   const selectedMoveProject = moveTargetProjects.find((project) => project.id === moveTargetProjectId) || null;
   const canMoveConversation = activeConversationCount > 0 && Boolean(selectedMoveProject);
+  const wikiResumePath = lastWikiPath || activeLinkedProject?.path || "";
   const runLabel = runStatusLabel(orchestration);
   const runTone = runStatusTone(orchestration);
   const modelLabel = "GLM";
@@ -155,6 +172,16 @@ export function AssistantShell({ chatContext, workspace, orchestration, children
     );
     if (!confirmed) return;
     await workspace.moveActiveConversation(selectedMoveProject.id);
+    setSettingsOpen(false);
+  };
+
+  const confirmDeleteProject = async () => {
+    const projectLabel = workspace.activeProject?.name || activeLinkedProject?.projectLabel || "현재 챗 프로젝트";
+    const confirmed = window.confirm(
+      `"${projectLabel}" 프로젝트를 삭제할까요?\n\n대화 메시지, 연결, 메모리, 지침 후보가 함께 제거됩니다.`,
+    );
+    if (!confirmed) return;
+    await workspace.deleteActiveProject();
     setSettingsOpen(false);
   };
 
@@ -239,7 +266,7 @@ export function AssistantShell({ chatContext, workspace, orchestration, children
               }}
               type="button"
             >
-              좌
+              목록
             </button>
             <button
               className={`aui-chat-main-toggle ${orchestrationOpen && !focusMode ? "active" : ""}`}
@@ -250,7 +277,7 @@ export function AssistantShell({ chatContext, workspace, orchestration, children
               }}
               type="button"
             >
-              우
+              안내
             </button>
             <button
               className={`aui-chat-main-toggle ${focusMode ? "active" : ""}`}
@@ -259,6 +286,19 @@ export function AssistantShell({ chatContext, workspace, orchestration, children
               type="button"
             >
               집중
+            </button>
+            <button
+              className="aui-chat-main-toggle"
+              aria-label="마지막 위키 문서 열기"
+              disabled={!wikiResumePath}
+              onClick={() => {
+                if (!wikiResumePath) return;
+                onOpenWikiPage(wikiResumePath);
+              }}
+              title={wikiResumePath || "마지막 위키 문서 없음"}
+              type="button"
+            >
+              위키
             </button>
             <button
               aria-label="프로젝트 설정 열기"
@@ -273,7 +313,7 @@ export function AssistantShell({ chatContext, workspace, orchestration, children
         {children}
       </section>
 
-      <OrchestrationPanel data={orchestration} activeProject={workspace.activeProject} />
+      <OrchestrationPanel data={orchestration} activeProject={workspace.activeProject} onOpenWikiPage={onOpenWikiPage} />
 
       {settingsOpen ? (
         <div className="aui-settings-overlay" role="dialog" aria-modal="true" aria-label="프로젝트 연결 및 지침 설정">
@@ -351,6 +391,21 @@ export function AssistantShell({ chatContext, workspace, orchestration, children
                 >
                   현재 대화를 선택 프로젝트로 이동
                 </button>
+              </section>
+
+              <section className="aui-settings-section aui-settings-danger-zone">
+                <div className="aui-settings-section-head">
+                  <strong>프로젝트 삭제</strong>
+                  <span>되돌릴 수 없음</span>
+                </div>
+                <div className="aui-link-preview danger">
+                  <span>삭제 대상</span>
+                  <strong>{workspace.activeProject?.name || activeLinkedProject?.projectLabel || "현재 챗 프로젝트"}</strong>
+                  <small>현재 프로젝트의 대화 메시지, 연결된 설정, 누적 메모리와 지침 후보를 함께 삭제합니다.</small>
+                </div>
+                <div className="aui-settings-action-row">
+                  <button className="danger" onClick={confirmDeleteProject} type="button">이 프로젝트 삭제</button>
+                </div>
               </section>
 
               <section className="aui-settings-section">
@@ -439,7 +494,6 @@ export function AssistantShell({ chatContext, workspace, orchestration, children
             </div>
 
             <footer className="aui-settings-footer">
-              <button className="danger" onClick={workspace.deleteActiveProject} type="button">챗 프로젝트 삭제</button>
               <div>
                 <button onClick={() => setSettingsOpen(false)} type="button">취소</button>
                 <button className="primary" onClick={saveProjectAndClose} type="button">연결 저장</button>

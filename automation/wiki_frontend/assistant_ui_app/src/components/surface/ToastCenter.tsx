@@ -18,6 +18,8 @@ type ToastCenterValue = {
 };
 
 const ToastCenterContext = createContext<ToastCenterValue | null>(null);
+const DEFAULT_RUNNING_TOAST_MS = 1800;
+const DEFAULT_TOAST_MS = 3200;
 
 function nextToastId() {
   return `toast-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -68,7 +70,7 @@ export function useToastCenter() {
 
 function ToastCard({ toast, onDismiss }: { toast: AppToast; onDismiss: (id: string) => void }) {
   useEffect(() => {
-    const timeout = toast.durationMs ?? (toast.tone === "running" ? 2600 : 5200);
+    const timeout = toast.durationMs ?? (toast.tone === "running" ? DEFAULT_RUNNING_TOAST_MS : DEFAULT_TOAST_MS);
     const timer = window.setTimeout(() => onDismiss(toast.id), timeout);
     return () => window.clearTimeout(timer);
   }, [onDismiss, toast.durationMs, toast.id, toast.tone]);

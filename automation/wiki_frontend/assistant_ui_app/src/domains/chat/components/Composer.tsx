@@ -10,6 +10,7 @@ import { useEffect, useMemo, useRef, useState, type ChangeEvent, type KeyboardEv
 import { stopChatProjectRun, type SkillCatalogItem, type WikiProjectOption } from "../api/chatWorkspaceApi";
 import type { ChatContext } from "../constants";
 import { ACCEPTED_ATTACHMENT_TYPES } from "../constants";
+import { CHAT_HANDOFF_EVENT, consumeChatSurfaceHandoff, surfaceScope } from "../../../shared/surfaceHandoff";
 
 type BrowserFile = File & {
   path?: string;
@@ -443,6 +444,35 @@ export function Composer({
       setBrowserSelectionsExpanded(false);
     }
   }, [browserSelections.length]);
+
+  useEffect(() => {
+    const scope = surfaceScope(chatContext.projectId, chatContext.workspace);
+    const applyHandoff = () => {
+      const payload = consumeChatSurfaceHandoff(scope);
+      if (!payload?.text?.trim()) return;
+      const currentText = composerRuntime.getState().text;
+      const nextText = payload.mode === "append" && currentText.trim()
+        ? `${currentText.trim()}\n\n${payload.text.trim()}`
+        : payload.text.trim();
+      composerRuntime.setText(nextText);
+      requestAnimationFrame(() => {
+        const node = inputRef.current;
+        if (!node) return;
+        node.focus();
+        const nextCaret = nextText.length;
+        node.setSelectionRange(nextCaret, nextCaret);
+        setCaret(nextCaret);
+      });
+    };
+    applyHandoff();
+    const handleHandoff = (event: Event) => {
+      const detail = (event as CustomEvent<{ scope?: string }>).detail;
+      if (detail?.scope && detail.scope !== scope) return;
+      applyHandoff();
+    };
+    window.addEventListener(CHAT_HANDOFF_EVENT, handleHandoff);
+    return () => window.removeEventListener(CHAT_HANDOFF_EVENT, handleHandoff);
+  }, [chatContext.projectId, chatContext.workspace, composerRuntime]);
 
   const updateCaretFromElement = (element: HTMLTextAreaElement | null) => {
     if (!element) return;

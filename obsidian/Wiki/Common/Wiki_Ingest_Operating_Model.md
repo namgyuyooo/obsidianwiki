@@ -1,7 +1,7 @@
 ---
 type: knowledge
 created: 2026-04-21
-updated: 2026-04-30
+updated: 2026-05-01
 source: "2026-04-21 ingest redesign discussion; 2026-04-30 practical operations redesign"
 ---
 
@@ -100,6 +100,30 @@ source: "2026-04-21 ingest redesign discussion; 2026-04-30 practical operations 
   - `Equipment.md`
   - `Architecture.md`
 
+## 3.5 통합 검토 계층
+
+수집 경로별로 흩어진 위키 공간을 대표 공간 기준으로 합치거나 분리하는 층입니다.
+
+- 기본 전제
+  - Slack, Google Drive, 지식주입, filesystem ingestion은 서비스 특성상 각각 별도 project-like space를 만들 수 있습니다.
+  - 하지만 생성되었다는 이유만으로 모두 canonical `project`가 되는 것은 아닙니다.
+- `Decisions.md`에서 먼저 검토할 질문
+  - 이 항목은 기존 프로젝트의 추가 증거인가
+  - 기존 프로젝트에 흡수하기보다 새 canonical project로 승격해야 하는가
+  - 같은 고객/같은 과제/같은 실행 단위의 중복 intake view인가
+  - `account`에서 묶어야 할 상위 관계인가
+  - `common`으로 보내야 할 운영 지식인가
+  - `shared`로 승격할 재사용 자산인가
+  - 정말 별도 프로젝트로 남겨야 하는가
+- 기록 원칙
+  - LLM은 병합/분리 권고안을 제안할 수 있지만, 사용자 선택이 있으면 그것을 우선 기록합니다.
+  - 승인 로그 자체를 그대로 복붙하지 말고, durable한 운영 판단으로 다시 써서 남깁니다.
+  - 자동 병합보다 `대표 공간`, `보조 공간`, `보류 공간`, `금지`를 명시하는 편을 우선합니다.
+- 대표 문서
+  - `Decisions.md`
+  - `Action_Items.md`
+  - `Change_Log.md`
+
 ## 4. 이력 및 변경 관리 계층
 
 무엇이 언제 어떻게 바뀌었는지 추적하는 층입니다.
@@ -143,11 +167,12 @@ source: "2026-04-21 ingest redesign discussion; 2026-04-30 practical operations 
 4. 실제 문장, 수치, 결정사항, 제약 조건을 `Evidence_Log.md`에 추출합니다.
 5. 기존 값과 다른 수치, 일정, 요구사항이 동시에 current truth로 유지될 수 없는 경우에만 `Conflict_Register.md`에 보류 상태로 등록합니다.
    진행 단계 해석, 프로젝트 경계, 미팅 전 확인 질문은 `Conflict_Register.md`가 아니라 `Status.md`, `Action_Items.md`, `Risks.md`, `Project_Overview.md`로 보냅니다.
-6. 실제 위키 문서나 보고서를 수정했으면 `Change_Log.md`에 기록합니다.
-7. `Action_Items.md`, `Decisions.md`, `Risks.md`에 실무 판단과 다음 행동을 반영합니다.
-8. `Status.md`에 상태 라벨, 단계, 헬스, 오너, 막힘, 다음 게이트를 갱신합니다.
-9. 허브 상단의 실행 현황판, 막힘/충돌, 다음 액션을 갱신합니다.
-10. 프로젝트 상태, 핵심 결정, 미해결 이슈가 바뀌면 `obsidian/L1_memory/{ProjectName}.md`를 갱신합니다.
+6. 새 source가 intake 특성상 별도 space를 만들었거나 기존 space와 겹칠 수 있으면 `Decisions.md`에서 통합/분리 검토를 기록합니다.
+7. 실제 위키 문서나 보고서를 수정했으면 `Change_Log.md`에 기록합니다.
+8. `Action_Items.md`, `Decisions.md`, `Risks.md`에 실무 판단과 다음 행동을 반영합니다.
+9. `Status.md`에 상태 라벨, 단계, 헬스, 오너, 막힘, 다음 게이트를 갱신합니다.
+10. 허브 상단의 실행 현황판, 막힘/충돌, 다음 액션을 갱신합니다.
+11. 프로젝트 상태, 핵심 결정, 미해결 이슈가 바뀌면 `obsidian/L1_memory/{ProjectName}.md`를 갱신합니다.
 
 개인 기록은 이 업무 위키에 저장하지 않습니다. 개인/업무가 섞인 이벤트는 업무상 필요한 사실만 프로젝트 문서에 남기고, 개인 맥락은 별도 개인 vault에 둡니다.
 
@@ -172,6 +197,9 @@ source: "2026-04-21 ingest redesign discussion; 2026-04-30 practical operations 
 - `가능성이 높음`, `보는 편이 안전함`, `구조 재검토`, `범위 확인 필요`, `미팅 때 질문` 같은 문장은 실무 판단 메모이지 conflict가 아닐 가능성이 높습니다.
 - 명시적 상충값이 없다면 `Action_Items.md`, `Status.md`, `Risks.md`, `Decisions.md`, `hub.md` 중 더 실무적인 목적지로 보내는 편을 우선합니다.
 - 승인 로그, 위키 승격 로그, 병합 메타데이터는 `Conflict_Register.md`에 append하지 않고 audit/log 계층이나 `Change_Log.md`에 남깁니다.
+- `Decisions.md`는 승인 로그 저장소가 아니라 통합 검토 게이트입니다.
+- 수집 채널별 project 폭증을 막기 위해, 새 intake는 기본적으로 `검토 후 canonical space 편입`을 전제로 다룹니다.
+- 다만 기존 space와 억지로 합치지 않고, 고객/범위/산출물/오너/단계가 분명히 분리되면 `새 canonical project 승격`을 명시적으로 선택할 수 있어야 합니다.
 - 기존 문서를 덮어쓰지 말고 날짜형 업데이트 블록으로 append 합니다.
 - 나중에 사업계획서, 제안서, 보고서, 발표자료, 영문 문서로 전환 가능한 구조를 우선합니다.
 - 허브 상단만 읽어도 `상태`, `막힘`, `다음 액션`, `근거`를 파악할 수 있어야 합니다.
@@ -273,4 +301,5 @@ Wiki/
 
 - [[Wiki/Schema]]
 - [[Wiki/Common/Wiki_Ingest_Templates]]
+- [[Wiki/Common/Wiki_Integration_Review_Model]]
 - [[Wiki/Common/Wiki_Ingest_Prompt_Set]]

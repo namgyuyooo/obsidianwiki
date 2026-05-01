@@ -9401,6 +9401,11 @@ function sseWrite(res, event, data) {
   res.write(`data: ${JSON.stringify(data)}\n\n`);
 }
 
+function withRunId(payload, runId) {
+  if (!runId) return payload;
+  return { ...(payload || {}), runId };
+}
+
 function extractStreamDelta(payload) {
   const delta = payload.choices?.[0]?.delta || payload.choices?.[0]?.message || {};
   const thinking = delta.reasoning_content || delta.reasoning || delta.thinking || delta.thoughts || "";
@@ -9420,10 +9425,10 @@ async function streamGlmChat(message, projectId, res, options = {}) {
   const apiUrl = process.env.GLM_API_URL || env.GLM_API_URL;
   const decisionOptions = decisionMode ? glmDecisionTriageOptions(env) : null;
   const model = decisionOptions?.model || process.env.GLM_MODEL || env.GLM_MODEL || "glm-4.5";
-  sseWrite(res, "project_binding", { projectBinding: context.projectBinding || null });
-  sseWrite(res, "retrieval", { retrieval: context.retrieval || null });
-  sseWrite(res, "validation", { validation: context.validation || null });
-  sseWrite(res, "paperclip", { paperclip: context.paperclip || null });
+  sseWrite(res, "project_binding", withRunId({ projectBinding: context.projectBinding || null }, options.runId));
+  sseWrite(res, "retrieval", withRunId({ retrieval: context.retrieval || null }, options.runId));
+  sseWrite(res, "validation", withRunId({ validation: context.validation || null }, options.runId));
+  sseWrite(res, "paperclip", withRunId({ paperclip: context.paperclip || null }, options.runId));
   if (!apiKey || !apiUrl) {
     const fallback = "GLM_API_URL과 GLM_API_KEY를 운영 설정에 넣으면 위키 기반 업무 운영 챗이 연결됩니다.";
     sseWrite(res, "delta", { content: fallback });
@@ -9456,7 +9461,15 @@ async function streamGlmChat(message, projectId, res, options = {}) {
     }
     const timeout = setTimeout(() => controller.abort(), timeoutMs);
     try {
-      sseWrite(res, "status", { phase: "connecting", endpoint: url.includes("/api/coding/paas/") ? "coding" : "paas", maxTokens: body.max_tokens, thinking: body.thinking, tokenBudget: context.tokenBudget, profile: options.profile || "chat", model });
+      sseWrite(res, "status", withRunId({
+        phase: "connecting",
+        endpoint: url.includes("/api/coding/paas/") ? "coding" : "paas",
+        maxTokens: body.max_tokens,
+        thinking: body.thinking,
+        tokenBudget: context.tokenBudget,
+        profile: options.profile || "chat",
+        model,
+      }, options.runId));
       const response = await fetch(url, {
         method: "POST",
         signal: controller.signal,
@@ -12604,7 +12617,9 @@ const server = createServer(async (req, res) => {
         "X-Accel-Buffering": "no",
       });
       const controller = new AbortController();
+      const runId = `${Date.now()}-chat-${String(projectId || "default").replace(/[^a-zA-Z0-9_-]+/g, "-")}`;
       const active = {
+        runId,
         projectId,
         status: "thinking",
         phase: "glm_streaming",
@@ -12629,12 +12644,19 @@ const server = createServer(async (req, res) => {
         const result = await streamGlmChat(effectiveMessage, projectId, res, {
           signal: controller.signal,
           contextMode: body.contextMode || body.mode,
+          runId,
           workspace: body.workspace || "rtm",
           skillTags: Array.isArray(body.skillTags) ? body.skillTags : [],
           profile: body.profile === "decision_triage" ? "decision_triage" : "",
         });
         if (controller.signal.aborted) {
-          sseWrite(res, "done", { status: "stopped", message: "GLM 추론이 사용자 요청으로 중지되었습니다.", messages: { user: userMessage }, context: result.context || null });
+          sseWrite(res, "done", {
+            status: "stopped",
+            runId,
+            message: "GLM 추론이 사용자 요청으로 중지되었습니다.",
+            messages: { user: userMessage },
+            context: result.context || null,
+          });
           return res.end();
         }
         const assistantMessage = transient
@@ -12646,6 +12668,7 @@ const server = createServer(async (req, res) => {
           });
         sseWrite(res, "done", {
           status: "completed",
+          runId,
           provider: result.provider,
           model: result.model,
           endpoint: result.endpoint,
@@ -12655,7 +12678,7 @@ const server = createServer(async (req, res) => {
         });
         return res.end();
       } catch (error) {
-        sseWrite(res, "error", { error: error.message });
+        sseWrite(res, "error", { error: error.message, runId });
         return res.end();
       } finally {
         req.off("aborted", handleStreamClose);

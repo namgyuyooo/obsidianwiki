@@ -73,7 +73,7 @@ export function MissionControl({ chatContext }: MissionControlProps) {
   const briefLines = mission.projectBrief?.brief || [
     `현재상태: ${active?.workflowStatusLabel || active?.workflowStatus || "상태 없음"}`,
     `한줄상황: ${active?.oneLine || "운영 메모 보강 필요"}`,
-    `결정 필요: ${active?.decisionQueueCount || 0}건`,
+    `통합 검토 필요: ${active?.decisionQueueCount || 0}건`,
   ];
 
   const submitAction = async () => {
@@ -126,7 +126,7 @@ export function MissionControl({ chatContext }: MissionControlProps) {
               >
                 <strong>{projectName(project)}</strong>
                 <span>{project.workflowStatusLabel || project.workflowStatus || "상태 없음"}</span>
-                <small>정합성 {project.decisionQueueCount || 0}건 · score {project.score || 0} · {shortDate(project.lastActivityAt)}</small>
+                <small>검토 큐 {project.decisionQueueCount || 0}건 · score {project.score || 0} · {shortDate(project.lastActivityAt)}</small>
               </button>
             ))}
           </div>
@@ -159,7 +159,7 @@ export function MissionControl({ chatContext }: MissionControlProps) {
           <div className="aui-command-brief-grid">
             <ProjectLane title="다음 액션" items={active?.nextActions} emptyText="액션 보강 필요" />
             <ProjectLane title="막힘 / 리스크" items={active?.risks} emptyText="명시 리스크 없음" />
-            <ProjectLane title="결정 / 확정" items={active?.decisions} emptyText="최근 결정 없음" />
+            <ProjectLane title="결정 / 대표 공간" items={active?.decisions} emptyText="최근 결정 없음" />
             <ProjectLane title="충돌 / 정합성" items={active?.conflicts} emptyText="명시 충돌 없음" />
             <ProjectLane title="최근 운영 메모" items={active?.recentMemos} emptyText="최근 메모 없음" />
             <ProjectLane title="상태 변화 메모" items={active?.statusMemos} emptyText="상태 변화 메모 없음" />

@@ -137,6 +137,28 @@ When a new source arrives:
 
 Prefer append-style updates over destructive rewrites when historical context matters.
 
+## Decisions Workflow
+
+`Decisions.md` is not only a final decision memo.
+Its primary operating purpose is to review and refine scattered wiki spaces into the right canonical space.
+
+- Intake-specific spaces created from Slack, Google Drive, knowledge injection, or filesystem ingestion are provisional by default.
+- Do not assume a new source automatically deserves a new canonical `project` space.
+- Review whether the new material should:
+  - merge into an existing `project`
+  - promote into a new canonical `project`
+  - roll up under an `account`
+  - stay in `common` as operating knowledge
+  - promote into `shared` as a reusable asset
+  - remain separate because scope/timeframe/customer truly differ
+- Record the review in `Decisions.md` with:
+  - source intake type
+  - candidate spaces reviewed
+  - LLM recommendation
+  - user-confirmed choice when available
+  - evidence and follow-up wiki changes
+- Approval logs and raw automation audit events do not belong in `Decisions.md` unless they are rewritten as durable operational judgments.
+
 ## Event Capture and Promotion
 
 When a new work event appears, promote it through the wiki in this order:
@@ -193,6 +215,7 @@ Periodically check for:
 - references missing URL/path/file-name fallback in `Reference_Register.md`
 - claims without evidence pages
 - project spaces missing core documents
+- intake-specific duplicate project spaces that were never reviewed in `Decisions.md`
 - project hubs that do not expose current status, blockers, next actions, and evidence links near the top
 - account hubs that do not expose active projects and relationship-level next steps
 - common/shared hubs that do not expose promotion queues or reuse targets
@@ -235,6 +258,15 @@ Most project folders should keep these pages available:
 - optional specialized pages such as `KPI.md`, `Equipment.md`, `Architecture.md`
 
 And a corresponding `obsidian/L1_memory/{ProjectName}.md` must exist.
+
+`Decisions.md` is the canonical integration-review register for a project.
+Use it to track:
+
+- representative wiki space for the work
+- merge or separation decisions across Slack/Drive/knowledge/filesystem intake paths
+- user-confirmed choices and LLM recommendations
+- reasons a candidate was merged, held, kept separate, or promoted elsewhere
+- which wiki pages must be updated after the decision
 
 Project hubs should expose these sections near the top:
 

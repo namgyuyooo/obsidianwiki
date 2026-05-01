@@ -1,7 +1,7 @@
 ---
 type: schema
 created: 2026-04-20
-updated: 2026-04-30
+updated: 2026-05-01
 source: ""
 ---
 
@@ -59,6 +59,9 @@ source: ""
   - 원문 보존 계층: 실제로 읽은 문장, 수치, 결정사항, 충돌, 출처 위치를 보존합니다.
   - 정제 지식 계층: Project Overview, KPI, Risks, Decisions 등 재사용 가능한 지식을 정리합니다.
   - 이력/변경 관리 계층: 날짜별 변경, 충돌, 확정 여부, 버전 변화를 기록합니다.
+- 수집 경로별로 생성된 `Slack_*`, Drive 기반, filesystem 기반, 지식주입 기반 공간은 일단 provisional intake view로 보고, 기존 위키와의 통합/분리 판단을 `Decisions.md`에서 검토합니다.
+- `Decisions.md`의 핵심 목적은 개별 판단을 남기는 것뿐 아니라, 흩어진 위키를 대표 공간 기준으로 통합·정제하는 것입니다.
+- 이 검토 결과는 `기존 project 편입`, `새 canonical project 승격`, `account/common/shared 이동`, `보류` 중 하나로 끝나야 합니다.
 - 결론 문서만 만들지 말고, 근거가 된 evidence와 참조 레지스터도 반드시 함께 남깁니다.
 - 해석과 원문 근거를 분리합니다.
 - 모든 수치에는 문서명과 날짜를 함께 남깁니다.
@@ -124,6 +127,7 @@ source: ""
 - `Evidence_Log.md`는 핵심 문장, 수치, 산식, 결정 이유, 제약 조건의 발췌를 보관합니다.
 - `Conflict_Register.md`는 상충 수치, 상충 주장, 버전 불일치처럼 동시에 current truth로 둘 수 없는 항목을 보관합니다.
 - `Change_Log.md`는 위키 구조 변경, 복구 이력, 핵심 업데이트를 기록합니다.
+- `Decisions.md`는 대표 위키 선정, intake별 중복 후보 검토, 병합/분리/보류 판단, 후속 반영 문서를 기록하는 통합 검토 레지스터입니다.
 - `Evidence Log.md`, `Conflict Register.md`, `Change Log.md` 같은 space 방식 파일명은 새로 만들지 않습니다.
 - 다만 `Conflict_Register.md`는 실제 상충값, 상충 주장, 버전 불일치처럼 충돌이 명시적인 경우에 우선 사용합니다.
 - 단순한 `검토 필요`, `정합성 확인`, `허브/상태/액션 업데이트 필요`는 conflict보다 `Action_Items.md`, `Decisions.md`, `Risks.md`, `Status.md`, `hub.md` 업데이트로 먼저 흡수합니다.
@@ -146,6 +150,7 @@ source: ""
 ## Practical Decision View
 
 - 위키는 “무엇이 있었나”만 남기지 말고 “그래서 지금 무엇을 판단해야 하나”를 남겨야 합니다.
+- 특히 `Decisions.md`는 “어느 위키 공간을 canonical로 볼 것인가”를 먼저 판단하는 문서여야 합니다.
 - 프로젝트 허브 상단만 읽어도 아래 다섯 가지가 보여야 합니다.
   - 지금 상태
   - 마지막 의미 있는 변화

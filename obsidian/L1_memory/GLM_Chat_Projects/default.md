@@ -2,10 +2,10 @@
 type: auxiliary_chat_project_memory
 project_id: "default"
 project_name: "기본 업무 챗"
-status: "active"
+status: "deleted_in_chat_runtime"
 knowledge_role: auxiliary_not_decision
 created: 2026-04-30T15:53:21.969Z
-updated: 2026-05-01T00:51:57.221Z
+updated: 2026-05-01T01:11:45.136Z
 source: wiki_api chat_projects.json
 ---
 

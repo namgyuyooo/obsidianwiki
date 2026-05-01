@@ -25,12 +25,13 @@ import {
 import type { ReactNode } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { ChatStreamEvent } from "./domains/chat/api/glmChatApi";
+import { queueChatSurfaceHandoff, surfaceScope } from "./shared/surfaceHandoff";
 
 function readSurfaceFromUrl() {
   return normalizeSurfaceId(new URLSearchParams(window.location.search).get("surface") || "chat");
 }
 
-function nextSurfaceUrl(surface: SurfaceId, options?: { paperclipTaskId?: string; paperclipRunId?: string }) {
+function nextSurfaceUrl(surface: SurfaceId, options?: { paperclipTaskId?: string; paperclipRunId?: string; wikiPath?: string }) {
   const url = new URL(window.location.href);
   if (surface === "chat") {
     url.searchParams.delete("surface");
@@ -46,7 +47,17 @@ function nextSurfaceUrl(surface: SurfaceId, options?: { paperclipTaskId?: string
     url.searchParams.delete("paperclipTaskId");
     url.searchParams.delete("paperclipRunId");
   }
+  if (surface === "wiki" && options?.wikiPath) {
+    url.searchParams.set("wikiPath", options.wikiPath);
+  } else if (surface !== "wiki") {
+    url.searchParams.delete("wikiPath");
+  }
   return `${url.pathname}${url.search}${url.hash}`;
+}
+
+function eventRunId(event: ChatStreamEvent) {
+  if (!("payload" in event) || !event.payload || typeof event.payload !== "object") return "";
+  return String((event.payload as Record<string, unknown>).runId || "");
 }
 
 function ProductFrame({
@@ -57,6 +68,8 @@ function ProductFrame({
   projectId,
   projectName,
   orchestration,
+  onOpenPaperclip,
+  onOpenMission,
   children,
 }: {
   activeSurface: SurfaceId;
@@ -67,6 +80,7 @@ function ProductFrame({
   projectName?: string;
   orchestration?: Record<string, any>;
   onOpenPaperclip: (taskId?: string, runId?: string) => void;
+  onOpenMission: () => void;
   children: ReactNode;
 }) {
   const surfaceDefinition = getSurfaceDefinition(activeSurface);
@@ -84,12 +98,6 @@ function ProductFrame({
 
   return (
     <div className="aui-product-frame">
-      <CentralStatus
-        onOpenPaperclip={onOpenPaperclip}
-        orchestration={orchestration}
-        projectId={projectId}
-        projectName={projectName}
-      />
       <header className="aui-product-nav" aria-label="workspace primary surfaces">
         <div className="aui-product-systembar" aria-label="workspace context">
           <div className="aui-product-suite-id">
@@ -128,6 +136,13 @@ function ProductFrame({
           ))}
         </nav>
       </header>
+      <CentralStatus
+        onOpenMission={onOpenMission}
+        onOpenPaperclip={onOpenPaperclip}
+        orchestration={orchestration}
+        projectId={projectId}
+        projectName={projectName}
+      />
       <div className="aui-product-body">{children}</div>
     </div>
   );
@@ -161,6 +176,26 @@ export function App() {
     setSurface("paperclip");
   };
 
+  const openWikiWithFocus = (path: string) => {
+    if (!path) return;
+    window.history.pushState(null, "", nextSurfaceUrl("wiki", { wikiPath: path }));
+    setSurface("wiki");
+  };
+
+  const openChatSurface = () => {
+    window.history.pushState(null, "", nextSurfaceUrl("chat"));
+    setSurface("chat");
+  };
+
+  const openChatWithDraft = (text: string) => {
+    if (!text.trim()) return;
+    queueChatSurfaceHandoff(surfaceScope(chatContext.projectId, chatContext.workspace), {
+      text,
+      mode: "replace",
+    });
+    openChatSurface();
+  };
+
   const selectPrimarySurface = (primary: PrimarySurfaceId) => {
     selectSurface(getPrimarySurfaceDefinition(primary).defaultSurfaceId);
   };
@@ -186,10 +221,12 @@ export function App() {
           createdAt: new Date().toISOString(),
         },
       ].slice(-80);
+      const nextRunId = eventRunId(event) || current.runId || null;
       if (event.type === "run-start") {
         return {
           ...current,
           query: event.message,
+          runId: null,
           status: { phase: "context_building" },
           retrieval: current.retrieval || null,
           validation: current.validation || null,
@@ -206,23 +243,24 @@ export function App() {
         };
       }
       if (event.type === "status") {
-        return { ...current, status: event.payload, events: nextEvents, updatedAt: Date.now() };
+        return { ...current, runId: nextRunId, status: event.payload, events: nextEvents, updatedAt: Date.now() };
       }
       if (event.type === "retrieval") {
-        return { ...current, retrieval: event.payload, events: nextEvents, updatedAt: Date.now() };
+        return { ...current, runId: nextRunId, retrieval: event.payload, events: nextEvents, updatedAt: Date.now() };
       }
       if (event.type === "validation") {
-        return { ...current, validation: event.payload, events: nextEvents, updatedAt: Date.now() };
+        return { ...current, runId: nextRunId, validation: event.payload, events: nextEvents, updatedAt: Date.now() };
       }
       if (event.type === "paperclip") {
-        return { ...current, paperclip: event.payload, events: nextEvents, updatedAt: Date.now() };
+        return { ...current, runId: nextRunId, paperclip: event.payload, events: nextEvents, updatedAt: Date.now() };
       }
       if (event.type === "project_binding") {
-        return { ...current, projectBinding: event.payload, events: nextEvents, updatedAt: Date.now() };
+        return { ...current, runId: nextRunId, projectBinding: event.payload, events: nextEvents, updatedAt: Date.now() };
       }
       if (event.type === "done") {
         return {
           ...current,
+          runId: nextRunId,
           done: event.payload,
           status: { ...(current.status || {}), phase: event.payload.status || "completed" },
           events: nextEvents,
@@ -232,6 +270,7 @@ export function App() {
       if (event.type === "error") {
         return {
           ...current,
+          runId: nextRunId,
           error: event.payload,
           status: { ...(current.status || {}), phase: "error" },
           events: nextEvents,
@@ -250,13 +289,18 @@ export function App() {
     if (surface === "decisions") return <DecisionDeck chatContext={chatContext} />;
     if (surface === "ingest") return <IngestWorkbench chatContext={chatContext} />;
     if (surface === "paperclip") return <PaperclipStudio chatContext={chatContext} />;
-    if (surface === "wiki") return <WikiWorkspace chatContext={chatContext} />;
+    if (surface === "wiki") return <WikiWorkspace chatContext={chatContext} onOpenChatWithDraft={openChatWithDraft} onReturnToChat={openChatSurface} />;
     if (surface !== "chat") return <SurfaceMigrationFallback surface={getSurfaceDefinition(surface)} />;
     return (
       <div className="aui-runtime-boundary" key={`${chatContext.workspace}:${chatContext.projectId}`}>
         <RuntimeProvider chatContext={chatContext} onStreamEvent={handleStreamEvent}>
-          <AssistantShell chatContext={chatContext} workspace={workspace} orchestration={orchestration}>
-            <Thread chatContext={chatContext} workspace={workspace} />
+          <AssistantShell chatContext={chatContext} workspace={workspace} orchestration={orchestration} onOpenWikiPage={openWikiWithFocus}>
+            <Thread
+              chatContext={chatContext}
+              onOpenWikiPage={openWikiWithFocus}
+              orchestration={orchestration}
+              workspace={workspace}
+            />
           </AssistantShell>
         </RuntimeProvider>
       </div>
@@ -272,6 +316,7 @@ export function App() {
       projectId={chatContext.projectId}
       projectName={workspace.activeProject?.name || workspace.activeProject?.linkedWikiProject?.projectLabel || ""}
       orchestration={orchestration}
+      onOpenMission={() => selectSurface("mission")}
       onOpenPaperclip={openPaperclipWithFocus}
     >
       {content}

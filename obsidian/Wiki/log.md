@@ -10,6 +10,19 @@ source: "Global wiki operations log"
 이 파일은 위키 운영의 append-only 로그입니다.
 
 ## 2026-05-01
+- `Wiki/Common/Decisions_Product_Plan.md`, `Wiki/Common/Decisions.md`, `Wiki/Common/hub.md`, `Wiki/index.md`, `automation/WIKI_OPS_INNOVATION_PLAN.md`: Decisions를 `통합 control plane`으로 보는 제품 기획서, 사용자 시나리오, KPI, kill criteria, 검증/반영 루프를 추가
+
+## 2026-05-01
+- `AGENTS.md`, `Wiki/Schema.md`, `Wiki/Common/Wiki_Ingest_Operating_Model.md`, `Wiki/Common/Wiki_Ingest_Templates.md`, `Wiki/Common/Wiki_Integration_Review_Model.md`, `Wiki/index.md`: `Decisions` 통합 검토 결과에 `새 canonical project 승격` 경로를 명시적으로 추가
+
+## 2026-05-01
+- `AGENTS.md`, `Wiki/Schema.md`, `Wiki/Common/Wiki_Ingest_Operating_Model.md`, `Wiki/Common/Wiki_Ingest_Templates.md`, `Wiki/Common/Wiki_Integration_Review_Model.md`, `Wiki/Common/Decisions.md`, `Wiki/Common/hub.md`, `Wiki/index.md`: `Decisions`를 승인 로그 중심 문서에서 Slack/Drive/지식주입/filesystem 기반 분산 위키를 검토하고 대표 공간으로 통합하는 운영 게이트로 재정의
+- `automation/wiki_frontend/assistant_ui_app/src/domains/decisions/components/DecisionDeck.tsx`, `automation/wiki_frontend/assistant_ui_app/src/domains/decisions/hooks/useDecisionDeck.ts`, `automation/wiki_frontend/assistant_ui_app/src/domains/mission/components/MissionControl.tsx`: Decision Queue/커맨드센터 카피를 `통합 검토`, `대표 공간 판단`, `중복 intake 정제` 중심으로 조정
+
+## 2026-05-01
+- `Wiki/Common/Paperclip_UX_UI_User_Intent_Analysis.md`, `Wiki/index.md`, `Wiki/Common/hub.md`: Paperclip 화면을 template 실행기보다 `의도 중심 작업대 + 결과 판정 inbox`로 재정의하는 사용자 목적/의도 분석을 추가하고 전역 탐색 링크를 갱신
+
+## 2026-05-01
 - `Wiki/KoreaAlbac_Project/*`, `Wiki/AdvancedElectricKorea_Project/*`, `Wiki/DaehanCable_ProcessInnovation_Project/*`, `Wiki/Nanotech_RnD_Project/*`, `Wiki/HsAIVoucher_Project/*`: `Status`, `Business_Flow`, `CEO_Brief`, `PM_Action_Plan`, `Customer_Followup`, `Raw_Evidence_Index`, `Change_Log`에 `2026-05-01` 운영 보강 블록 추가
 - `L1_memory/KoreaAlbac_Project.md`, `L1_memory/AdvancedElectricKorea_Project.md`, `L1_memory/DaehanCable_ProcessInnovation_Project.md`, `L1_memory/Nanotech_RnD_Project.md`, `L1_memory/HsAIVoucher_Project.md`: 4차 운영 보강 결과에 맞춰 working memory snapshot 갱신
 - `automation/wiki_api/server.mjs`, `automation/wiki_api/scripts/scan_wiki_integration_candidates.mjs`, `automation/wiki_frontend/assistant_ui_app/src/domains/{decisions,mission}/*`: 성격별 위키 통합 후보 스캔, Decision Queue 등록, append-only 승인 반영, Mission/Spotlite/Decisions 노출 기능 추가

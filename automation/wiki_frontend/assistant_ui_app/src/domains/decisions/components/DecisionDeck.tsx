@@ -57,14 +57,14 @@ export function DecisionDeck({ chatContext }: DecisionDeckProps) {
     <WorkspaceSurface variant="decision">
       <section className="aui-brand-panel" aria-label="decision queue rail">
         <BrandCard
-          eyebrow="decision mailbox"
-          title="판정 작업함"
-          description="충돌, 미확정 사실, 버전 차이를 업무 큐로 접수하고 GLM 보조 판정, 병합, 승인 로그까지 처리합니다."
+          eyebrow="integration review mailbox"
+          title="통합 검토 작업함"
+          description="충돌, 미확정 사실, 중복 intake를 검토 큐로 접수하고 GLM 보조 판정, 대표 공간 선정, 병합 제안까지 처리합니다."
         />
         <StatGrid stats={stats} />
-        <PanelCard eyebrow="Similarity trigger" title="병합 후보 스캔">
+        <PanelCard eyebrow="Similarity trigger" title="중복/병합 후보 스캔">
           <p className="aui-decision-empty-note">
-            전체 위키의 주요 태그, 키워드, 그래프맵 연결을 비교해 중복/충돌 가능 문서와 병합 전략을 찾습니다.
+            전체 위키의 주요 태그, 키워드, 그래프맵 연결을 비교해 중복 intake, 충돌 가능 문서, 병합 전략을 찾습니다.
           </p>
           <button className="aui-wide-action" disabled={scanBusy} onClick={deck.scanMergeCandidates} type="button">
             유사도/그래프 병합 후보 찾기
@@ -83,15 +83,15 @@ export function DecisionDeck({ chatContext }: DecisionDeckProps) {
                 <small>{candidate.secondary.title || candidate.secondary.path}</small>
                 <small>{candidate.mergePlan?.changeMemo || candidate.reason?.join(", ")}</small>
                 <button className="aui-wide-action" disabled={scanBusy} onClick={() => deck.enqueueMergeCandidate(candidate)} type="button">
-                  Decision Queue 등록
+                  검토 큐 등록
                 </button>
               </article>
             ))}
           </div>
         </PanelCard>
-        <PanelCard eyebrow="Workspace grouping" title="성격별 통합 후보">
+        <PanelCard eyebrow="Workspace grouping" title="대표 공간 통합 후보">
           <p className="aui-decision-empty-note">
-            프로젝트, Account, Slack 수집형 위키를 고객/주제/문서 성격 기준으로 묶어 승인 게이트용 통합 후보를 찾습니다.
+            프로젝트, Account, Slack 수집형 위키를 고객/주제/문서 성격 기준으로 묶어 어떤 공간을 canonical로 삼을지 검토합니다.
           </p>
           <button className="aui-wide-action" disabled={integrationBusy} onClick={deck.scanIntegrationCandidates} type="button">
             성격별 통합 후보 스캔
@@ -110,13 +110,13 @@ export function DecisionDeck({ chatContext }: DecisionDeckProps) {
                 <small>{candidate.relatedWikis.map((item) => item.projectLabel || item.projectKey).join(", ")}</small>
                 <small>{candidate.changeTargets?.slice(0, 2).join(" / ") || candidate.reason?.join(", ")}</small>
                 <button className="aui-wide-action" disabled={integrationBusy} onClick={() => deck.enqueueIntegrationCandidate(candidate)} type="button">
-                  Decision Queue 등록
+                  검토 큐 등록
                 </button>
               </article>
             ))}
           </div>
         </PanelCard>
-        <PanelCard eyebrow="Pending queue" title={`${deck.pendingItems.length}건`}>
+        <PanelCard eyebrow="Review queue" title={`${deck.pendingItems.length}건`}>
           <div className="aui-project-list">
             {deck.pendingItems.map((queueItem) => (
               <RailButton
@@ -124,7 +124,7 @@ export function DecisionDeck({ chatContext }: DecisionDeckProps) {
                 detail={queueItem.content || queueItem.path || "내용 없음"}
                 key={queueItem.id}
                 onClick={() => deck.focusItem(queueItem.id)}
-                title={queueItem.projectLabel || queueItem.projectKey || queueItem.title || "Decision"}
+                title={queueItem.projectLabel || queueItem.projectKey || queueItem.title || "Review"}
               />
             ))}
             {!deck.pendingItems.length ? <p className="aui-decision-empty-note">대기 중인 카드가 없습니다.</p> : null}
@@ -146,9 +146,9 @@ export function DecisionDeck({ chatContext }: DecisionDeckProps) {
         </PanelCard>
       </section>
 
-      <section className="aui-chat-stage aui-decision-stage" aria-label="decision card">
+      <section className="aui-chat-stage aui-decision-stage" aria-label="integration review card">
         <StageHeader
-          eyebrow="decision record body"
+          eyebrow="integration review body"
           meta={currentPosition}
           title={item?.projectLabel || item?.projectKey || "판정할 카드 없음"}
         />
@@ -174,14 +174,14 @@ export function DecisionDeck({ chatContext }: DecisionDeckProps) {
                   )}
                 </section>
                 <section>
-                  <span>업무 반영 대상</span>
-                  <strong>{deck.activeIsDeletion ? "문서 삭제 + deletion audit" : deck.activeIsIntegration ? "다중 승인 반영 대상" : "Conflict_Register.md"}</strong>
+                  <span>대표 반영 대상</span>
+                  <strong>{deck.activeIsDeletion ? "문서 삭제 + deletion audit" : deck.activeIsIntegration ? "대표 공간 판단 + append 반영" : "Conflict_Register.md 또는 대표 문서"}</strong>
                   <p>
                     {deck.activeIsDeletion
                       ? "승인 시 보호 규칙을 다시 확인한 뒤 실제 문서를 삭제하고 감사 로그를 남깁니다."
                       : deck.activeIsIntegration
                         ? "승인 시 추천 전략에 맞는 hub/Status/Change_Log append만 수행합니다. 자동 병합과 원문 삭제는 하지 않습니다."
-                        : "승인 시 이 프로젝트의 충돌/정합성 기록에 감사 메모와 함께 반영됩니다."}
+                        : "승인 시 충돌 기록 또는 대표 문서 갱신에 필요한 메모를 함께 남깁니다."}
                   </p>
                 </section>
               </div>
@@ -196,7 +196,7 @@ export function DecisionDeck({ chatContext }: DecisionDeckProps) {
                     rows={4}
                     value={deck.resolutionNote}
                     onChange={(event) => deck.setResolutionNote(event.target.value)}
-                    placeholder="승인/보류/추가조사 사유를 남기면 Decision Queue audit에 함께 저장됩니다."
+                    placeholder="승인/보류/추가조사 사유를 남기면 검토 큐 audit에 함께 저장됩니다."
                   />
                 </label>
               </div>
@@ -204,7 +204,7 @@ export function DecisionDeck({ chatContext }: DecisionDeckProps) {
           ) : (
             <article className="aui-decision-card empty">
               <h2>판정 대기 카드 없음</h2>
-              <p>현재 workspace에는 pending Decision Queue 항목이 없습니다.</p>
+              <p>현재 workspace에는 pending 통합 검토 항목이 없습니다.</p>
             </article>
           )}
 
@@ -235,19 +235,19 @@ export function DecisionDeck({ chatContext }: DecisionDeckProps) {
             />
           </label>
           <div className="aui-decision-compare-actions">
-            <button className="aui-wide-action" disabled={busy || !item} onClick={deck.runInference} type="button">GLM 판정 실행</button>
+            <button className="aui-wide-action" disabled={busy || !item} onClick={deck.runInference} type="button">GLM 검토 실행</button>
             <button className="aui-wide-action" disabled={busy || !recommendationReady} onClick={deck.applyInferenceRecommendation} type="button">추천대로 반영</button>
           </div>
           <StatusLine phase={deck.status.phase} message={deck.status.message} />
         </PanelCard>
 
-        <PanelCard eyebrow="Inference" title="판정 보조 결과">
+        <PanelCard eyebrow="Inference" title="검토 보조 결과">
           <div className="aui-decision-inference">
             {deck.inference || "아직 실행된 GLM 판정이 없습니다."}
           </div>
         </PanelCard>
 
-        <PanelCard eyebrow="Evidence Compare" title={deck.activeIsConflict ? "충돌 비교" : "근거 확인"}>
+        <PanelCard eyebrow="Evidence Compare" title={deck.activeIsConflict ? "충돌 비교" : "근거 / 대표 문서 비교"}>
           <div className="aui-decision-compare-actions">
             <button className="aui-wide-action" disabled={compareBusy || !item} onClick={deck.loadComparison} type="button">근거/대상 불러오기</button>
             <button className="aui-wide-action" disabled={compareBusy || !item} onClick={deck.requestMergeSuggestion} type="button">GLM 병합안</button>

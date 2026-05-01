@@ -80,3 +80,13 @@ source: ""
   - 처리: approve
   - 근거: obsidian/Wiki/SeoulBiosys_Project/Conflict_Register.md
   - 메모: 승인 전 근거 충돌과 보류 조건을 먼저 따져줘.
+
+
+## 상태 변화 메모 - 2026-05-01T01:30:11.309Z
+- 2026-05-01 01:29 similarity+graph merge scan 기준으로 Customer Follow-up / Status 병합 후보가 기록됨되었고 프로젝트 허브 연결가 수행/대기됨
+  - Decision: 병합 전략 검토: Customer Follow-up ↔ Status
+  - 처리: approve
+  - 근거: obsidian/Wiki/SeoulBiosys_Project/Customer_Followup.md
+  - Primary: obsidian/Wiki/SeoulBiosys_Project/Customer_Followup.md
+  - Secondary: obsidian/Wiki/2023_프레젠테이션_Project/Status.md
+  - 메모: 승인 전 근거 충돌과 보류 조건을 먼저 따져줘.

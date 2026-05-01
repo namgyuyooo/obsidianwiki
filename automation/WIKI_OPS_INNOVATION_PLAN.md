@@ -2,7 +2,7 @@
 
 ## 목표
 
-위키를 자료 저장소가 아니라 CEO/PM이 바로 의사결정할 수 있는 실무 운영 시스템으로 전환한다. 핵심은 수집, 원문 보존, 상태 변화 기록, 중복/충돌 탐지, 병합 전략, 사용자 승인, LLM 채팅 활용까지 한 흐름으로 묶는 것이다.
+위키를 자료 저장소가 아니라 CEO/PM이 바로 의사결정할 수 있는 실무 운영 시스템으로 전환한다. 핵심은 수집, 원문 보존, 상태 변화 기록, 중복/충돌 탐지, 병합 전략, 사용자 승인, LLM 채팅 활용까지 한 흐름으로 묶는 것이다. 특히 Slack/Drive/지식주입/filesystem 특성 때문에 흩어져 생성된 위키를 검토하고 canonical space로 합치는 것이 `Decisions`의 핵심 역할이다.
 
 ## TODO
 
@@ -52,6 +52,11 @@
   - 원문 보존 범위 자동 산출
   - 병합 후 hub/Status/CEO_Brief에 어떤 문장을 남길지 미리보기
 
+- [ ] Decisions 제품 검증 루프
+  - `Wiki/Common/Decisions_Product_Plan.md`의 6개 핵심 시나리오를 mock card와 실제 카드로 리허설
+  - `time_to_decision`, `wrong_merge_rate`, `premature_project_rate`, `reflection_completion_rate` 수집
+  - 사용자 override 사유를 구조화해 ranking prompt와 integration review rule에 반영
+
 - [ ] 수집 파이프라인 연동
   - Slack/Drive/File 수집 완료 시 자동으로 변화 메모 후보 생성
   - 신규 데이터가 기존 프로젝트 허브와 얼마나 가까운지 자동 계산
@@ -92,3 +97,4 @@
 - LLM 판단은 확정 사실이 아니라 검토 후보로 취급한다.
 - 충돌이 없다는 판단도 근거와 함께 기록한다.
 - 모든 변화는 일시, 원천, 수행 내용, 상태 변화, 다음 액션이 남아야 한다.
+- `Decisions` 기능은 위키 엔트로피를 줄이지 못하면 버리거나 축소한다.

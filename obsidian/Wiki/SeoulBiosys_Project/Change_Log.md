@@ -68,3 +68,14 @@ source: "public Slack evidence sweep (2024-04-21 to 2026-04-21)"
 - Decision ID: wiki-obsidian/Wiki/SeoulBiosys_Project/Conflict_Register.md-3
 - 처리: approve
 - 근거 경로: obsidian/Wiki/SeoulBiosys_Project/Conflict_Register.md
+
+
+## Decision Queue 운영 변화 - 2026-05-01T01:30:11.309Z
+- 일시: 2026-05-01T01:30:11.309Z
+- 변화 메모: 2026-05-01 01:29 similarity+graph merge scan 기준으로 Customer Follow-up / Status 병합 후보가 기록됨되었고 프로젝트 허브 연결가 수행/대기됨
+- 원천: similarity_graph_merge_scan
+- Decision ID: similarity-merge-b2JzaWRpYW4vV2lraS8yMDIzX-2UhOug
+- 처리: approve
+- 근거 경로: obsidian/Wiki/SeoulBiosys_Project/Customer_Followup.md
+- Primary: obsidian/Wiki/SeoulBiosys_Project/Customer_Followup.md
+- Secondary: obsidian/Wiki/2023_프레젠테이션_Project/Status.md

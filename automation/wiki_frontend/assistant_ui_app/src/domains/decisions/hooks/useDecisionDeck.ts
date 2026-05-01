@@ -53,7 +53,7 @@ type WikiIntegrationScanState = {
 
 const EMPTY_COMPARE: DecisionCompareState = {
   phase: "idle",
-  message: "근거 비교를 열면 출처 문서와 Conflict Register를 나란히 확인합니다.",
+  message: "근거 비교를 열면 intake 문서와 대표 반영 문서를 나란히 확인합니다.",
   itemId: "",
   sourcePath: "",
   targetPath: "",
@@ -64,13 +64,13 @@ const EMPTY_COMPARE: DecisionCompareState = {
 
 const EMPTY_MERGE_SCAN: DecisionMergeScanState = {
   phase: "idle",
-  message: "전체 위키의 태그, 키워드, 그래프 연결을 스캔해 병합 후보를 찾을 수 있습니다.",
+  message: "전체 위키의 태그, 키워드, 그래프 연결을 스캔해 중복 intake와 병합 후보를 찾을 수 있습니다.",
   snapshot: null,
 };
 
 const EMPTY_INTEGRATION_SCAN: WikiIntegrationScanState = {
   phase: "idle",
-  message: "프로젝트/계정/Slack 성격을 스캔해 승인 게이트용 통합 후보를 찾을 수 있습니다.",
+  message: "프로젝트/계정/Slack 성격을 스캔해 대표 공간 선정용 통합 후보를 찾을 수 있습니다.",
   snapshot: null,
 };
 
@@ -129,7 +129,7 @@ export function useDecisionDeck(workspace: string) {
   const [integrationScan, setIntegrationScan] = useState<WikiIntegrationScanState>(EMPTY_INTEGRATION_SCAN);
   const [status, setStatus] = useState<DecisionDeckStatus>({
     phase: "loading",
-    message: "Decision Queue를 불러오는 중입니다.",
+    message: "통합 검토 큐를 불러오는 중입니다.",
   });
 
   const pendingItems = items.filter((item) => item.status === "pending");
@@ -144,7 +144,7 @@ export function useDecisionDeck(workspace: string) {
   const activeIsIntegration = isIntegrationDecision(activeItem);
 
   async function reload(preferredItemId = activeItemId) {
-    setStatus({ phase: "loading", message: "Decision Queue를 동기화하는 중입니다." });
+    setStatus({ phase: "loading", message: "통합 검토 큐를 동기화하는 중입니다." });
     try {
       const snapshot = await fetchDecisionQueue(workspace);
       const nextItems = snapshot.items || [];
@@ -154,9 +154,9 @@ export function useDecisionDeck(workspace: string) {
         : nextPending[0]?.id || "";
       setItems(nextItems);
       setActiveItemId(nextActive);
-      setStatus({ phase: "ready", message: `${nextPending.length}건의 판정 대기 카드가 있습니다.` });
+      setStatus({ phase: "ready", message: `${nextPending.length}건의 통합 검토 카드가 있습니다.` });
     } catch (error) {
-      setStatus({ phase: "failed", message: error instanceof Error ? error.message : "Decision Queue 동기화 실패" });
+      setStatus({ phase: "failed", message: error instanceof Error ? error.message : "통합 검토 큐 동기화 실패" });
     }
   }
 
@@ -169,7 +169,7 @@ export function useDecisionDeck(workspace: string) {
         const nextPending = nextItems.filter((item) => item.status === "pending");
         setItems(nextItems);
         setActiveItemId(nextPending[0]?.id || "");
-        setStatus({ phase: "ready", message: `${nextPending.length}건의 판정 대기 카드가 있습니다.` });
+        setStatus({ phase: "ready", message: `${nextPending.length}건의 통합 검토 카드가 있습니다.` });
       })
       .catch((error: unknown) => {
         if (cancelled) return;
@@ -216,7 +216,7 @@ export function useDecisionDeck(workspace: string) {
 
   const runInference = async () => {
     if (!activeItem) return;
-    setStatus({ phase: "thinking", message: "GLM이 현재 Decision Deck 카드를 검토 중입니다." });
+    setStatus({ phase: "thinking", message: "GLM이 현재 통합 검토 카드를 검토 중입니다." });
     notify("running", "Decision 판정 보조 시작", activeItem.title || "카드", { durationMs: 2200 });
     try {
       const result = await inferDecisionItem(activeItem, directive, workspace);
