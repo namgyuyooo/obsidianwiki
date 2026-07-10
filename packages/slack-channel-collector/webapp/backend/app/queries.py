@@ -689,6 +689,8 @@ def apply_contact_event(
     inquiry: str = "",
     occurred_at: str = "",
     source_code: str = "manual",
+    activity_type: str = "",
+    next_action: str = "",
     raw_payload: dict | None = None,
 ) -> dict:
     """Upsert a contact and log an activity, mirroring the HTML ``applyEvent``.
@@ -759,14 +761,14 @@ def apply_contact_event(
     conn.execute(
         """
         INSERT INTO activities
-          (occurred_at, source_type, contact_id, company_id, email_snapshot,
-           name_snapshot, company_snapshot, solution_name, inquiry_text,
-           raw_payload, confidence)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1.0)
+          (occurred_at, source_type, activity_type, next_action, contact_id,
+           company_id, email_snapshot, name_snapshot, company_snapshot,
+           solution_name, inquiry_text, raw_payload, confidence)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1.0)
         """,
         (
-            occurred_at, source_code, contact_id, company_id, email, name,
-            company_name, interest, inquiry,
+            occurred_at, source_code, activity_type, next_action, contact_id,
+            company_id, email, name, company_name, interest, inquiry,
             json.dumps(raw_payload or {}, ensure_ascii=False),
         ),
     )

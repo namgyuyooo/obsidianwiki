@@ -19,16 +19,35 @@ export function SettingsPanel({
       <h2>동기화 규칙 · 주기 설정</h2>
       <div className="sub">Slack 리드 동기화가 어떤 채널을 어떤 주기로 어떻게 처리할지 정합니다.</div>
 
-      <div className="editgrid" style={{ marginTop: 14 }}>
-        <div className="full">
-          <label>채널 ID <span className="hint">(비우면 수집기 기본 채널)</span></label>
-          <input
-            type="text"
-            value={f.channel_id}
-            placeholder="예: C07RMMQC8GP"
-            onChange={(e) => upd("channel_id", e.target.value)}
-          />
+      <div className="field" style={{ marginTop: 14 }}>
+        <div className="k">수집 채널 · 전략</div>
+        {f.channels.map((ch, ix) => (
+          <div className="member" key={ch.id}>
+            <span>
+              <input
+                type="checkbox"
+                checked={ch.enabled}
+                onChange={(e) => {
+                  const channels = f.channels.map((c, i) =>
+                    i === ix ? { ...c, enabled: e.target.checked } : c
+                  );
+                  setF({ ...f, channels });
+                }}
+              />{" "}
+              <b>#{ch.name}</b>{" "}
+              <span className="badge b-ind">
+                {ch.strategy === "inbound" ? "인바운드 훅" : "미팅/활동 로그"}
+              </span>
+            </span>
+            <span className="hint">{ch.id}</span>
+          </div>
+        ))}
+        <div className="hint" style={{ marginTop: 4 }}>
+          인바운드 = 릴레잇/피트페이퍼 훅 → 신규 리드 · 크로스팀 = 미팅 일지/액션 → 활동·회사정보
         </div>
+      </div>
+
+      <div className="editgrid">
         <div>
           <label>수집 범위 (시간)</label>
           <input

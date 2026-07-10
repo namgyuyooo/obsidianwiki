@@ -12,4 +12,12 @@ if [ -d ".venv" ]; then
   export PATH="$(pwd)/.venv/bin:$PATH"
 fi
 
+# Load .env (Slack token, GLM creds, etc.) into the environment if present.
+if [ -f ".env" ]; then
+  set -a
+  # shellcheck disable=SC1091
+  . ./.env
+  set +a
+fi
+
 exec uvicorn app.main:app --reload --host 127.0.0.1 --port "$PORT"

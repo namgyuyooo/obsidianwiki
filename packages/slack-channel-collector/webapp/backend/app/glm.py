@@ -36,7 +36,7 @@ def _endpoint(url: str) -> str:
     return f"{url}/chat/completions"
 
 
-def chat(system: str, user: str, max_tokens: int = 800) -> str:
+def chat(system: str, user: str, max_tokens: int = 4096) -> str:
     c = config()
     if not (c["url"] and c["key"]):
         raise RuntimeError("GLM not configured")
@@ -108,7 +108,7 @@ def extract_search_filters(query: str) -> dict[str, Any]:
         tokens = [t for t in re.split(r"\s+", query.strip()) if t and t not in stop]
         return {"keywords": tokens, "_mode": "fallback"}
     try:
-        content = chat(SEARCH_SYSTEM, query, max_tokens=400)
+        content = chat(SEARCH_SYSTEM, query, max_tokens=2048)
         data = _json_from_text(content)
         data.setdefault("keywords", [])
         data["_mode"] = "glm"
@@ -130,7 +130,7 @@ def infer_company_profile(name: str, context: str = "") -> dict[str, Any]:
         return {"_mode": "unavailable", "message": "GLM이 설정되지 않았습니다 (GLM_API_URL/GLM_API_KEY)."}
     user = f"회사명: {name}\n문맥:\n{context[:1500]}"
     try:
-        data = _json_from_text(chat(INFER_SYSTEM, user, max_tokens=400))
+        data = _json_from_text(chat(INFER_SYSTEM, user, max_tokens=2048))
         data["_mode"] = "glm"
         return data
     except Exception as exc:  # noqa: BLE001

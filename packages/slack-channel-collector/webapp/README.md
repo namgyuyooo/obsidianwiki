@@ -85,11 +85,19 @@ Slack/GLM 해석 결과가 운영 DB를 조용히 오염시키지 않도록, 각
 Slack 원본 링크는 `RTM_SLACK_WORKSPACE_URL` + 채널/타임스탬프로 생성됩니다
 (원본 payload에 permalink가 있으면 그것을 우선 사용).
 
-## 슬랙 리드 동기화
+## 슬랙 리드 동기화 (채널별 전략)
 
-`POST /api/sync`는 collector 정규화 메시지에서 릴레잇/피트페이퍼 리드를 파싱해 DB에 반영합니다
-(GLM 불필요). 입력은 (1) 라이브 collector 실행(SLACK_BOT_TOKEN 필요) 또는 (2) export JSON 파일
-(`RTM_SLACK_EXPORT_FILE` 또는 요청 body `export_file`). `last_synced_ts`로 중복을 방지합니다.
+두 채널을 서로 다른 전략으로 수집합니다:
+
+- **#sales-inbound** (`C07RMMQC8GP`, `inbound`): 온라인 유입 훅(릴레잇/피트페이퍼 봇 메시지)을
+  파싱해 **신규 리드**로 등록.
+- **#tf_cross_team_sales** (`C01L5SA4Y4C`, `cross_team`): 사람이 작성한 미팅/활동 템플릿
+  (`[신규 리드]`/`[고객 활동]`/`[회사 정보 업데이트]`)을 파싱해 **활동 로그·회사정보**로 반영.
+  `확인상태: 확인 필요/추정`이거나 새 회사면 자동 확정 대신 **정합성 확인 큐**로 보냅니다.
+
+`POST /api/sync`는 활성 채널을 각 전략으로 처리합니다(GLM 불필요, 템플릿/봇 포맷 직접 인식).
+입력은 (1) 라이브 collector(SLACK_BOT_TOKEN 필요) 또는 (2) export JSON 파일(`RTM_SLACK_EXPORT_FILE`
+또는 body `export_file`). 채널별 `channel_state`로 중복을 방지합니다.
 
 동기화 규칙·주기는 `⚙ 동기화 설정`(또는 `/api/settings`)에서 조정합니다: 채널, 수집 범위(시간),
 최근 N개만 수집(`sync_limit`, 0=증분), 소스별 포함 여부, 새 회사 자동등록 대신 검수 큐로 보내기,

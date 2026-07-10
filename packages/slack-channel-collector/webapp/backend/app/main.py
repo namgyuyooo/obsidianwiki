@@ -49,8 +49,9 @@ class ReviewResolveIn(BaseModel):
 
 
 class SyncSettingsIn(BaseModel):
-    channel_id: str | None = None
+    channels: list[dict] | None = None
     lookback_hours: int | None = None
+    sync_limit: int | None = None
     include_relate: bool | None = None
     include_featpaper: bool | None = None
     require_review_for_new_company: bool | None = None

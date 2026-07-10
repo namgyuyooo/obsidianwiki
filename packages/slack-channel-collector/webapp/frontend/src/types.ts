@@ -50,8 +50,15 @@ export interface Activity {
   comments: ActivityComment[]; // thread replies
 }
 
+export interface ChannelCfg {
+  id: string;
+  name: string;
+  strategy: "inbound" | "cross_team";
+  enabled: boolean;
+}
+
 export interface SyncSettings {
-  channel_id: string;
+  channels: ChannelCfg[];
   lookback_hours: number;
   sync_limit: number;
   include_relate: boolean;
@@ -59,7 +66,7 @@ export interface SyncSettings {
   require_review_for_new_company: boolean;
   auto_sync_enabled: boolean;
   auto_sync_interval_minutes: number;
-  last_synced_ts: number;
+  channel_state: Record<string, number>;
 }
 
 export interface RawSource {
