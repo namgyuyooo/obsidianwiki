@@ -127,4 +127,23 @@ export const api = {
       `/api/companies/${encodeURIComponent(key)}/infer`,
       { method: "POST", body: JSON.stringify({ context }) }
     ),
+  duplicates: () =>
+    req<{ groups: DuplicateGroup[] }>("/api/companies/duplicates"),
+  mergeCompanies: (keep_key: string, merge_keys: string[]) =>
+    req<{ ok: boolean; moved_contacts: number; moved_activities: number }>(
+      "/api/companies/merge",
+      { method: "POST", body: JSON.stringify({ keep_key, merge_keys }) }
+    ),
 };
+
+export interface DuplicateCompany {
+  id: number;
+  canonical_key: string;
+  display_name: string;
+  industry: string;
+  contact_count: number;
+}
+export interface DuplicateGroup {
+  key: string;
+  companies: DuplicateCompany[];
+}

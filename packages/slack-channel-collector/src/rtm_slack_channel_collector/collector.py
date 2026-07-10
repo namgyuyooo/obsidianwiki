@@ -5,7 +5,12 @@ import os
 import ssl
 import time
 from dataclasses import dataclass
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta, timezone
+
+try:  # Python 3.11+
+    from datetime import UTC
+except ImportError:  # Python 3.10 compatibility
+    UTC = timezone.utc
 from pathlib import Path
 from typing import Any
 from urllib.error import HTTPError, URLError

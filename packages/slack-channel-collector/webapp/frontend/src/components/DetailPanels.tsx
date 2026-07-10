@@ -60,10 +60,24 @@ function Timeline({ events }: { events: Activity[] }) {
               </>
             )}
           </div>
-          <div>
-            {normInterest(e.it)}
-            {e.iq ? " — " + e.iq.slice(0, 160) : ""}
-          </div>
+          {e.it && <div>{normInterest(e.it)}</div>}
+          {e.iq && (
+            <div
+              style={{
+                whiteSpace: "pre-wrap",
+                marginTop: 2,
+                background: "#f9fafb",
+                border: "1px solid var(--line)",
+                borderRadius: 6,
+                padding: "6px 8px",
+                maxHeight: 260,
+                overflow: "auto",
+                fontSize: 12,
+              }}
+            >
+              {e.iq}
+            </div>
+          )}
           {e.next && <div className="hint">▶ 다음 액션: {e.next}</div>}
           {e.comments && e.comments.length > 0 && (
             <div className="hint" style={{ marginTop: 3 }}>
@@ -237,7 +251,7 @@ export function CompanyDetail({
   const myEv = activities
     .filter((e) => memberEmails.has(e.em) || (e.co && e.co === group.name))
     .sort((a, b) => b.dt.localeCompare(a.dt))
-    .slice(0, 15);
+    .slice(0, 50);
 
   // 부서별 그룹핑 (히스토리 계층: 회사 → 부서 → 담당자)
   const deptMap: Record<string, Customer[]> = {};

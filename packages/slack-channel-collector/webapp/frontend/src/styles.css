@@ -83,7 +83,12 @@ tr.dim td { color: #b0b0b6; }
 .tl .ev:before { content: ""; position: absolute; left: -19.5px; top: 4px; width: 9px; height: 9px; border-radius: 50%; background: var(--accent); }
 .tl .ev .d { font-size: 11px; color: var(--muted); }
 .member { display: flex; justify-content: space-between; gap: 8px; padding: 7px 0; border-bottom: 1px dashed var(--line); font-size: 12.5px; }
-.toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--fg); color: #fff; border-radius: 10px; padding: 12px 18px; font-size: 13px; z-index: 99; max-width: 80vw; }
+.toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--fg); color: #fff; border-radius: 10px; padding: 12px 18px; font-size: 13px; z-index: 99; max-width: 80vw; display: flex; align-items: center; gap: 8px; box-shadow: 0 6px 24px rgba(0,0,0,.18); white-space: pre-line; line-height: 1.4; }
+.toast.success { background: #14532d; }
+.toast.error { background: #7f1d1d; }
+.toast.loading { background: var(--fg); }
+.toast .spin { width: 14px; height: 14px; border: 2px solid rgba(255,255,255,.35); border-top-color: #fff; border-radius: 50%; animation: toastspin .7s linear infinite; flex: 0 0 auto; }
+@keyframes toastspin { to { transform: rotate(360deg); } }
 .empty { text-align: center; color: var(--muted); padding: 30px; }
 .hint { font-size: 11px; color: var(--muted); }
 .loading { text-align: center; color: var(--muted); padding: 60px; font-size: 14px; }

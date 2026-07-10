@@ -138,6 +138,10 @@ export function companyGroups(
     g.a += r.a;
     if (r.isNew) g.isNew = true;
   }
+  // company flagged NEW by backend (recent company-level activity)
+  for (const g of Object.values(map)) {
+    if (companies[g.key]?.new) g.isNew = true;
+  }
   const arr = Object.values(map);
   arr.forEach((g) => g.members.sort((a, b) => b.l.localeCompare(a.l)));
   const k = state.sort === "n" ? "name" : state.sort;
@@ -250,10 +254,7 @@ export function ownerGroups(
     const owner = companyProfile(companies, g.key).owner || NO_OWNER;
     (map[owner] = map[owner] || []).push(g);
   }
-  const owners = Object.keys(map).sort((a, b) =>
-    a === NO_OWNER ? 1 : b === NO_OWNER ? -1 : a.localeCompare(b)
-  );
-  return owners.map((owner) => {
+  const result: OwnerGroup[] = Object.keys(map).map((owner) => {
     const groups = map[owner];
     return {
       owner,
@@ -263,6 +264,19 @@ export function ownerGroups(
       lastActivity: groups.reduce((mx, g) => (g.l > mx ? g.l : mx), ""),
     };
   });
+  const key = ["owner", "companyCount", "memberCount", "lastActivity"].includes(state.sort)
+    ? (state.sort as keyof OwnerGroup)
+    : "owner";
+  result.sort((a, b) => {
+    // 미지정 always last regardless of direction
+    if (a.owner === NO_OWNER) return 1;
+    if (b.owner === NO_OWNER) return -1;
+    const av = a[key];
+    const bv = b[key];
+    if (typeof av === "number" && typeof bv === "number") return (av - bv) * state.dir;
+    return String(av).localeCompare(String(bv)) * state.dir;
+  });
+  return result;
 }
 
 export function distinctOwners(companies: Record<string, CompanyProfile>): string[] {

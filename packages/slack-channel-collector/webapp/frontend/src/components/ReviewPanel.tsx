@@ -291,10 +291,15 @@ export function ReviewPanel({
 }) {
   return (
     <>
-      <h2>정합성 확인 대기열</h2>
+      <h2>
+        정합성 확인 대기열{" "}
+        {reviews.length > 0 && (
+          <span className="badge b-status">{reviews.length}건 남음</span>
+        )}
+      </h2>
       <div className="sub">
         Slack/GLM 해석 결과가 운영 DB를 조용히 오염시키지 않도록, 원본과 해석을 비교하고
-        직접 승인·연결·등록하세요.
+        하나씩 승인·연결·등록하세요. 처리하면 목록에서 사라집니다.
       </div>
       <div style={{ marginTop: 12 }}>
         {reviews.length === 0 ? (

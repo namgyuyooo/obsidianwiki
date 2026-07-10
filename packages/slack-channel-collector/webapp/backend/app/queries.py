@@ -9,6 +9,7 @@ mirroring the old ``AUTO_CINFO`` / ``userCInfo`` model.
 from __future__ import annotations
 
 import json
+import re
 import sqlite3
 from typing import Any
 
@@ -176,6 +177,33 @@ def customers(conn: sqlite3.Connection) -> dict[str, Any]:
     for cid, tag in conn.execute("SELECT contact_id, tag FROM contact_tags"):
         tags.setdefault(cid, []).append(tag)
 
+    # NEW: collected within the last 24h (only slack-synced rows set collected_at)
+    from datetime import datetime, timedelta
+    from zoneinfo import ZoneInfo
+
+    cutoff = (datetime.now(ZoneInfo("Asia/Seoul")) - timedelta(days=1)).strftime(
+        "%Y-%m-%d %H:%M:%S"
+    )
+    new_contacts: set[int] = set()
+    new_company_ids: set[int] = set()
+    for cid, coid in conn.execute(
+        "SELECT contact_id, company_id FROM activities "
+        "WHERE collected_at <> '' AND collected_at >= ?",
+        (cutoff,),
+    ):
+        if cid is not None:
+            new_contacts.add(cid)
+        if coid is not None:
+            new_company_ids.add(coid)
+    new_company_keys = set()
+    if new_company_ids:
+        placeholders = ",".join("?" * len(new_company_ids))
+        for (ck,) in conn.execute(
+            f"SELECT canonical_key FROM companies WHERE id IN ({placeholders})",
+            list(new_company_ids),
+        ):
+            new_company_keys.add(ck)
+
     items = []
     for r in rows:
         cid = r["contact_id"]
@@ -197,6 +225,7 @@ def customers(conn: sqlite3.Connection) -> dict[str, Any]:
                 "a": r["a"],
                 "q": r["q"],
                 "ckey": r["ckey"] or "",
+                "isNew": cid in new_contacts,
             }
         )
 
@@ -218,6 +247,7 @@ def customers(conn: sqlite3.Connection) -> dict[str, Any]:
             "memo": co["memo"],
             "auto": co["profile_source"] == "frontend_auto_cinfo"
             and bool(co["industry"] or co["description"]),
+            "new": co["canonical_key"] in new_company_keys,
         }
 
     return {"items": items, "companies": companies}
@@ -320,11 +350,12 @@ def log_activity(conn: sqlite3.Connection, payload: dict) -> dict:
         INSERT INTO activities
           (occurred_at, source_type, activity_type, next_action, contact_id,
            company_id, email_snapshot, name_snapshot, company_snapshot,
-           solution_name, inquiry_text, raw_payload, confidence)
-        VALUES (?, 'manual', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1.0)
+           solution_name, inquiry_text, collected_at, raw_payload, confidence)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1.0)
         """,
         (
             occurred_at,
+            payload.get("source_type", "manual"),
             payload.get("activity_type", ""),
             payload.get("next_action", ""),
             contact_id,
@@ -334,6 +365,7 @@ def log_activity(conn: sqlite3.Connection, payload: dict) -> dict:
             company_snap,
             payload.get("solution_name", ""),
             payload.get("note", ""),
+            payload.get("collected_at", ""),
             json.dumps(payload, ensure_ascii=False),
         ),
     )
@@ -466,6 +498,115 @@ def search_by_filters(conn: sqlite3.Connection, filters: dict) -> dict:
                 continue
         emails.append(r["e"])
     return {"emails": emails, "count": len(emails)}
+
+
+def _dup_fingerprint(name: str) -> str:
+    """Aggressive normalization for near-duplicate grouping.
+
+    Lowercase, drop legal/spacing noise, romanize a few common Korean↔English
+    tech words, and keep only alnum so '삼성전자(통합)' and '삼성전자' or
+    'CTR Robotics' and 'CTR 로보틱스' land together.
+    """
+    n = (name or "").lower()
+    n = re.sub(r"\(주\)|㈜|주식회사|co\.?,?\s*ltd\.?|inc\.?|corp\.?", "", n)
+    repl = {
+        "로보틱스": "robotics", "로보틱": "robot", "테크놀로지": "technology",
+        "테크": "tech", "시스템즈": "systems", "시스템": "system",
+        "솔루션즈": "solutions", "솔루션": "solution", "일렉트로닉스": "electronics",
+        "코리아": "korea", "글로벌": "global",
+    }
+    for k, v in repl.items():
+        n = n.replace(k, v)
+    n = re.sub(r"\([^)]*\)", "", n)  # drop parentheticals
+    n = re.sub(r"[^0-9a-z가-힣]", "", n)
+    return n
+
+
+def find_duplicate_companies(conn: sqlite3.Connection, limit: int = 100) -> list[dict]:
+    """Group companies whose fingerprints collide or where one name contains
+    the other — candidate near-duplicates for merge review."""
+    rows = conn.execute(
+        """
+        SELECT co.id, co.canonical_key, co.display_name, co.industry,
+               COUNT(ct.id) AS contact_count
+        FROM companies co LEFT JOIN contacts ct ON ct.company_id = co.id
+        GROUP BY co.id
+        """
+    ).fetchall()
+    companies = [dict(r) for r in rows]
+    for c in companies:
+        c["fp"] = _dup_fingerprint(c["display_name"])
+
+    groups: dict[str, list[dict]] = {}
+    for c in companies:
+        if c["fp"]:
+            groups.setdefault(c["fp"], []).append(c)
+
+    out = []
+    seen = set()
+    # exact fingerprint collisions
+    for fp, members in groups.items():
+        if len(members) > 1:
+            members.sort(key=lambda m: (-m["contact_count"], m["id"]))
+            out.append({"key": fp, "companies": members})
+            for m in members:
+                seen.add(m["id"])
+
+    # containment (one fingerprint is a prefix/substring of another)
+    fps = [(c["fp"], c) for c in companies if c["fp"] and c["id"] not in seen and len(c["fp"]) >= 3]
+    for i in range(len(fps)):
+        for j in range(len(fps)):
+            if i == j:
+                continue
+            a, ca = fps[i]
+            b, cb = fps[j]
+            if len(a) >= 4 and a != b and a in b and ca["id"] not in seen and cb["id"] not in seen:
+                out.append({"key": a, "companies": sorted(
+                    [ca, cb], key=lambda m: (-m["contact_count"], m["id"])
+                )})
+                seen.add(ca["id"]); seen.add(cb["id"])
+    return out[:limit]
+
+
+def merge_companies(conn: sqlite3.Connection, keep_key: str, merge_keys: list[str]) -> dict:
+    """Merge ``merge_keys`` companies into ``keep_key``: reassign contacts and
+    activities, register aliases, then delete the merged company rows."""
+    keep = conn.execute(
+        "SELECT id FROM companies WHERE canonical_key = ?", (keep_key,)
+    ).fetchone()
+    if keep is None:
+        raise KeyError(keep_key)
+    keep_id = keep["id"]
+    moved_contacts = moved_activities = 0
+    for mk in merge_keys:
+        if mk == keep_key:
+            continue
+        row = conn.execute(
+            "SELECT id FROM companies WHERE canonical_key = ?", (mk,)
+        ).fetchone()
+        if row is None:
+            continue
+        mid = row["id"]
+        cur = conn.execute(
+            "UPDATE contacts SET company_id = ? WHERE company_id = ?", (keep_id, mid)
+        )
+        moved_contacts += cur.rowcount
+        cur = conn.execute(
+            "UPDATE activities SET company_id = ? WHERE company_id = ?", (keep_id, mid)
+        )
+        moved_activities += cur.rowcount
+        conn.execute(
+            "INSERT OR IGNORE INTO company_aliases(alias_key, company_id, source) "
+            "VALUES (?, ?, 'merge')",
+            (mk, keep_id),
+        )
+        conn.execute("DELETE FROM companies WHERE id = ?", (mid,))
+    return {
+        "kept": keep_key,
+        "merged": merge_keys,
+        "moved_contacts": moved_contacts,
+        "moved_activities": moved_activities,
+    }
 
 
 def search_companies(conn: sqlite3.Connection, q: str, limit: int = 20) -> list[dict]:
@@ -691,6 +832,7 @@ def apply_contact_event(
     source_code: str = "manual",
     activity_type: str = "",
     next_action: str = "",
+    collected_at: str = "",
     raw_payload: dict | None = None,
 ) -> dict:
     """Upsert a contact and log an activity, mirroring the HTML ``applyEvent``.
@@ -763,13 +905,13 @@ def apply_contact_event(
         INSERT INTO activities
           (occurred_at, source_type, activity_type, next_action, contact_id,
            company_id, email_snapshot, name_snapshot, company_snapshot,
-           solution_name, inquiry_text, raw_payload, confidence)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1.0)
+           solution_name, inquiry_text, collected_at, raw_payload, confidence)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1.0)
         """,
         (
             occurred_at, source_code, activity_type, next_action, contact_id,
             company_id, email, name, company_name, interest, inquiry,
-            json.dumps(raw_payload or {}, ensure_ascii=False),
+            collected_at, json.dumps(raw_payload or {}, ensure_ascii=False),
         ),
     )
     return {"contact_id": contact_id, "created": created}

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type {
   Activity,
   CompanyProfile,
@@ -32,6 +32,7 @@ import { AddLeadForm } from "./components/AddLeadForm";
 import { ReviewPanel } from "./components/ReviewPanel";
 import { GuidePanel } from "./components/GuidePanel";
 import { SettingsPanel } from "./components/SettingsPanel";
+import { DuplicatesPanel } from "./components/DuplicatesPanel";
 
 const UI_KEY = "rtm-db-ui";
 
@@ -74,18 +75,28 @@ export default function App() {
   const [guide, setGuide] = useState("");
   const [ui, setUiState] = useState<UiState>(loadUi);
   const [drawer, setDrawer] = useState<Drawer>(null);
-  const [toast, setToast] = useState<string | null>(null);
+  type ToastType = "info" | "loading" | "success" | "error";
+  const [toast, setToast] = useState<{ msg: string; type: ToastType } | null>(null);
+  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [syncing, setSyncing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [settings, setSettings] = useState<SyncSettings | null>(null);
   const [glmConfigured, setGlmConfigured] = useState(false);
   const [glmEmails, setGlmEmails] = useState<Set<string> | null>(null);
   const [glmQuery, setGlmQuery] = useState("");
+  const [reviewsOpen, setReviewsOpen] = useState(false); // 정합성 확인: 모달 아닌 전체 창
+  const [dupOpen, setDupOpen] = useState(false); // 유사 중복 병합 창
 
-  const showToast = useCallback((msg: string) => {
-    setToast(msg);
-    setTimeout(() => setToast(null), 4000);
-  }, []);
+  const showToast = useCallback(
+    (msg: string, type: ToastType = "info", ms = 4500) => {
+      if (toastTimer.current) clearTimeout(toastTimer.current);
+      setToast({ msg, type });
+      if (type !== "loading" && ms > 0) {
+        toastTimer.current = setTimeout(() => setToast(null), ms);
+      }
+    },
+    []
+  );
 
   const setUi = useCallback((patch: Partial<UiState>) => {
     setUiState((prev) => {
@@ -178,62 +189,90 @@ export default function App() {
   };
 
   const saveCompanyField = async (key: string, field: "owner" | "memo", value: string) => {
+    const label = field === "owner" ? "담당자" : "메모";
+    showToast(`${companies[key]?.name || key} · ${label} 저장 중…`, "loading");
     try {
       await api.updateCompany(key, { [field]: value });
       patchCompany(key, { [field]: value });
-      showToast("저장됨");
+      showToast(`✅ ${companies[key]?.name || key} · ${label} 저장됨\n${label}: ${value || "(비움)"}`, "success");
     } catch (e) {
-      showToast("⚠ 저장 실패: " + (e instanceof Error ? e.message : e));
+      showToast("⚠ 저장 실패: " + (e instanceof Error ? e.message : e), "error");
     }
   };
 
   const saveCompanyProfile = async (key: string, fields: Record<string, string>) => {
+    const name = companies[key]?.name || key;
+    showToast(`${name} 회사 정보 저장 중…`, "loading");
     try {
       await api.updateCompany(key, fields);
       patchCompany(key, fields);
-      showToast("저장됨 — " + (companies[key]?.name || key));
+      const changed = Object.entries(fields)
+        .filter(([, v]) => v)
+        .map(([k, v]) => `${({ industry: "업종", sub_industry: "세부", description: "설명", owner: "담당", memo: "메모" } as Record<string, string>)[k] || k}: ${String(v).slice(0, 20)}`)
+        .join(" · ");
+      showToast(`✅ ${name} 저장됨\n${changed || "변경 없음"}`, "success");
     } catch (e) {
-      showToast("⚠ 저장 실패: " + (e instanceof Error ? e.message : e));
+      showToast("⚠ 저장 실패: " + (e instanceof Error ? e.message : e), "error");
     }
   };
 
   const addLead = async (lead: LeadPayload) => {
     if (!lead.email) {
-      showToast("⚠ 올바른 이메일을 입력해주세요");
+      showToast("⚠ 올바른 이메일을 입력해주세요", "error");
       return;
     }
+    showToast(`리드 등록 중… ${lead.email}`, "loading");
     try {
       const res = await api.addLead(lead);
       await loadCustomers();
       setDrawer(null);
-      showToast(res.created ? "신규 리드 등록 완료" : "기존 고객에 활동으로 추가됨");
+      showToast(
+        `✅ ${res.created ? "신규 리드 등록 완료" : "기존 고객에 활동 추가"}\n${lead.name || lead.email}${lead.company ? " · " + lead.company : ""}`,
+        "success"
+      );
     } catch (e) {
-      showToast("⚠ 추가 실패: " + (e instanceof Error ? e.message : e));
+      showToast("⚠ 추가 실패: " + (e instanceof Error ? e.message : e), "error");
     }
   };
 
   const resolveReview = async (id: number, payload: ResolvePayload) => {
+    const actionLabel: Record<string, string> = {
+      approve: "승인", edit: "수정 승인", reject: "거절",
+      link_existing: "기고객사 연결", register_new: "신규 등록",
+    };
+    showToast(`정합성 항목 #${id} ${actionLabel[payload.action] || payload.action} 처리 중…`, "loading");
     try {
       await api.resolveReview(id, payload);
       setReviews((prev) => prev.filter((r) => r.id !== id));
-      // company links / field values may have changed the customer data
       if (payload.action !== "reject") await loadCustomers();
-      showToast("처리 완료");
+      const detail =
+        payload.action === "link_existing" ? `→ ${payload.company_key}`
+        : payload.action === "register_new" ? `→ ${payload.company_name}`
+        : payload.action === "edit" ? `→ ${payload.value}` : "";
+      showToast(`✅ #${id} ${actionLabel[payload.action]} 완료 ${detail}\n남은 항목 ${reviews.length - 1}건`, "success");
     } catch (e) {
-      showToast("⚠ 처리 실패: " + (e instanceof Error ? e.message : e));
+      showToast("⚠ 처리 실패: " + (e instanceof Error ? e.message : e), "error");
     }
   };
 
   const runSync = useCallback(async () => {
     setSyncing(true);
+    showToast("슬랙 동기화 중… (채널 수집·파싱)", "loading");
     try {
       const res = await api.sync();
-      showToast(res.message);
       if (res.ok) {
         await Promise.all([loadCustomers(), loadReviews()]);
+        const r = res as unknown as Record<string, number>;
+        showToast(
+          `✅ ${res.message}\n수집 ${r.collected ?? 0} · 신규 ${r.new_leads ?? 0} · 활동 ${r.new_activities ?? 0} · 검수 ${r.queued_reviews ?? 0}`,
+          "success",
+          6000
+        );
+      } else {
+        showToast("ⓘ " + res.message, "info", 6000);
       }
     } catch (e) {
-      showToast("⚠ " + (e instanceof Error ? e.message : e));
+      showToast("⚠ 동기화 실패: " + (e instanceof Error ? e.message : e), "error");
     } finally {
       setSyncing(false);
     }
@@ -381,8 +420,6 @@ export default function App() {
       );
   } else if (drawer?.type === "addlead") {
     drawerBody = <AddLeadForm onSubmit={addLead} />;
-  } else if (drawer?.type === "reviews") {
-    drawerBody = <ReviewPanel reviews={reviews} onResolve={resolveReview} />;
   } else if (drawer?.type === "guide") {
     drawerBody = <GuidePanel markdown={guide} />;
   } else if (drawer?.type === "settings" && settings) {
@@ -405,6 +442,50 @@ export default function App() {
   }
   if (!data) return <div className="loading">불러오는 중…</div>;
 
+  // 유사 중복 병합: 전체 창
+  if (dupOpen) {
+    return (
+      <div style={{ maxWidth: 900, margin: "0 auto" }}>
+        <div className="topbar">
+          <button
+            className="btn"
+            onClick={() => {
+              setDupOpen(false);
+              loadCustomers();
+            }}
+          >
+            ← 대시보드로
+          </button>
+        </div>
+        <DuplicatesPanel
+          onDone={() => {
+            setDupOpen(false);
+            loadCustomers();
+          }}
+        />
+        {toast && <div className="toast">{toast}</div>}
+      </div>
+    );
+  }
+
+  // 정합성 확인: 모달/드로어가 아닌 전체 창(페이지)
+  if (reviewsOpen) {
+    return (
+      <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+        <div className="topbar">
+          <button className="btn" onClick={() => setReviewsOpen(false)}>
+            ← 대시보드로
+          </button>
+          <button className="btn" onClick={() => loadReviews()}>
+            새로고침
+          </button>
+        </div>
+        <ReviewPanel reviews={reviews} onResolve={resolveReview} />
+        {toast && <div className="toast">{toast}</div>}
+      </div>
+    );
+  }
+
   return (
     <>
       <div className="topbar">
@@ -424,7 +505,10 @@ export default function App() {
           <button className="btn" onClick={() => setDrawer({ type: "settings" })}>
             ⚙ 동기화 설정
           </button>
-          <button className="btn" onClick={() => setDrawer({ type: "reviews" })}>
+          <button className="btn" onClick={() => setDupOpen(true)}>
+            🔗 유사 중복
+          </button>
+          <button className="btn" onClick={() => setReviewsOpen(true)}>
             정합성 확인
             {reviews.length > 0 && (
               <span className="badge b-status" style={{ marginLeft: 4 }}>
@@ -451,7 +535,7 @@ export default function App() {
             <div className="v">{kp.v.toLocaleString()}</div>
           </div>
         ))}
-        <div className="kpi clickable" onClick={() => setDrawer({ type: "reviews" })}>
+        <div className="kpi clickable" onClick={() => setReviewsOpen(true)}>
           <div className="lab">정합성 확인 대기</div>
           <div className="v" style={{ color: reviews.length ? "var(--accent)" : undefined }}>
             {reviews.length.toLocaleString()}
@@ -551,7 +635,13 @@ export default function App() {
       </div>
 
       {ui.view === "owner" ? (
-        <OwnerTable owners={pageOwners} companies={companies} onOpenCompany={openCompany} />
+        <OwnerTable
+          owners={pageOwners}
+          companies={companies}
+          state={ui}
+          onSort={onSort}
+          onOpenCompany={openCompany}
+        />
       ) : (
         <CustomerTable
           view={ui.view}

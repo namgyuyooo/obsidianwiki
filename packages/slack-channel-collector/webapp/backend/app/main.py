@@ -147,6 +147,27 @@ def update_company(canonical_key: str, body: CompanyProfileIn) -> dict:
     return {"ok": True, **result}
 
 
+class MergeIn(BaseModel):
+    keep_key: str
+    merge_keys: list[str]
+
+
+@app.get("/api/companies/duplicates")
+def duplicate_companies() -> dict:
+    with get_conn() as conn:
+        return {"groups": queries.find_duplicate_companies(conn)}
+
+
+@app.post("/api/companies/merge")
+def merge_companies(body: MergeIn) -> dict:
+    with get_conn() as conn:
+        try:
+            result = queries.merge_companies(conn, body.keep_key, body.merge_keys)
+        except KeyError:
+            raise HTTPException(status_code=404, detail="keep company not found")
+    return {"ok": True, **result}
+
+
 @app.get("/api/companies/search")
 def search_companies(q: str = Query(""), limit: int = Query(20)) -> dict:
     if not q.strip():

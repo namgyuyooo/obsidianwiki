@@ -28,6 +28,7 @@ export interface CompanyProfile {
   owner: string;
   memo: string;
   auto: boolean; // auto-estimated (frontend_auto_cinfo)
+  new?: boolean; // collected within last 24h
 }
 
 export interface ActivityComment {

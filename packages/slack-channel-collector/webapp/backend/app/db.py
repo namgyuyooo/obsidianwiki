@@ -50,6 +50,9 @@ def _run_migrations(conn: sqlite3.Connection) -> None:
         conn.execute("ALTER TABLE activities ADD COLUMN activity_type TEXT NOT NULL DEFAULT ''")
     if "next_action" not in act_cols:
         conn.execute("ALTER TABLE activities ADD COLUMN next_action TEXT NOT NULL DEFAULT ''")
+    # 수집 시각(collected_at): Slack 동기화로 새로 들어온 항목만 채움 → 'NEW' 24h 판정에 사용
+    if "collected_at" not in act_cols:
+        conn.execute("ALTER TABLE activities ADD COLUMN collected_at TEXT NOT NULL DEFAULT ''")
 
     # free-form tags per contact (distinct from canonical source channels)
     conn.execute(

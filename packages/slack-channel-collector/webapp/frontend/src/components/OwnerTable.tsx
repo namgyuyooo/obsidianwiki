@@ -1,4 +1,4 @@
-import type { CompanyProfile } from "../types";
+import type { CompanyProfile, UiState } from "../types";
 import type { OwnerGroup } from "../lib/domain";
 import { companyProfile } from "../lib/domain";
 import { IndustryBadge } from "./Badges";
@@ -7,22 +7,35 @@ import { IndustryBadge } from "./Badges";
 export function OwnerTable({
   owners,
   companies,
+  state,
+  onSort,
   onOpenCompany,
 }: {
   owners: OwnerGroup[];
   companies: Record<string, CompanyProfile>;
+  state: UiState;
+  onSort: (k: string) => void;
   onOpenCompany: (key: string) => void;
 }) {
+  const th = (k: string, label: string) => {
+    const arrow = state.sort === k ? (state.dir < 0 ? " ▾" : " ▴") : "";
+    return (
+      <th onClick={() => onSort(k)}>
+        {label}
+        {arrow}
+      </th>
+    );
+  };
   return (
     <table>
       <thead>
         <tr>
-          <th>내부 담당자</th>
-          <th>담당 회사</th>
-          <th>인원</th>
+          {th("owner", "내부 담당자")}
+          {th("companyCount", "담당 회사")}
+          {th("memberCount", "인원")}
           <th>업종 / 세부분야</th>
           <th>관심 솔루션</th>
-          <th>최근활동</th>
+          {th("lastActivity", "최근활동")}
         </tr>
       </thead>
       <tbody>
