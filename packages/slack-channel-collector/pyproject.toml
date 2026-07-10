@@ -1,0 +1,24 @@
+[build-system]
+requires = ["hatchling>=1.25"]
+build-backend = "hatchling.build"
+
+[project]
+name = "rtm-slack-channel-collector"
+version = "0.1.0"
+description = "Small Slack channel collector that periodically stores one channel as JSON."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "UNLICENSED" }
+authors = [
+  { name = "RTM" }
+]
+dependencies = []
+
+[project.scripts]
+rtm-slack-collect = "rtm_slack_channel_collector.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/rtm_slack_channel_collector"]
+
+[tool.hatch.build.targets.wheel.force-include]
+"src/rtm_slack_channel_collector/config/collector.env" = "rtm_slack_channel_collector/config/collector.env"

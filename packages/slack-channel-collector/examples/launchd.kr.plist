@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.rtm.slack-cross-team-sales-collector</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/absolute/path/to/python</string>
+    <string>-m</string>
+    <string>rtm_slack_channel_collector.cli</string>
+    <string>--json</string>
+  </array>
+  <key>WorkingDirectory</key>
+  <string>/absolute/path/to/packages/slack-channel-collector</string>
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>SLACK_BOT_TOKEN</key>
+    <string>xoxb-your-token</string>
+    <key>SLACK_COLLECT_OUTPUT_ROOT</key>
+    <string>/absolute/path/to/slack-json</string>
+    <key>SLACK_COLLECT_STATE_PATH</key>
+    <string>/absolute/path/to/slack-json/state.json</string>
+  </dict>
+  <key>StartCalendarInterval</key>
+  <dict>
+    <key>Hour</key>
+    <integer>0</integer>
+    <key>Minute</key>
+    <integer>0</integer>
+  </dict>
+  <key>StandardOutPath</key>
+  <string>/tmp/rtm-slack-cross-team-sales.out.log</string>
+  <key>StandardErrorPath</key>
+  <string>/tmp/rtm-slack-cross-team-sales.err.log</string>
+</dict>
+</plist>

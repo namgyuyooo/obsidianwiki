@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "RTM Slack GLM Extraction",
+  "type": "object",
+  "required": ["channel_id", "message_ts", "extractions"],
+  "properties": {
+    "channel_id": { "type": "string" },
+    "channel_name": { "type": "string" },
+    "message_ts": { "type": "string" },
+    "collected_at": { "type": "string" },
+    "raw_text": { "type": "string" },
+    "extractions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["kind", "confidence"],
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": ["lead", "activity", "company_update", "ignore"]
+          },
+          "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+          "evidence": { "type": "string" },
+          "contact": {
+            "type": "object",
+            "properties": {
+              "email": { "type": "string" },
+              "name": { "type": "string" },
+              "phone": { "type": "string" },
+              "department": { "type": "string" },
+              "title": { "type": "string" }
+            }
+          },
+          "company": {
+            "type": "object",
+            "properties": {
+              "name": { "type": "string" },
+              "industry": { "type": "string" },
+              "sub_industry": { "type": "string" },
+              "description": { "type": "string" }
+            }
+          },
+          "activity": {
+            "type": "object",
+            "properties": {
+              "occurred_at": { "type": "string" },
+              "source_type": { "type": "string" },
+              "solution_name": { "type": "string" },
+              "inquiry_text": { "type": "string" }
+            }
+          },
+          "review_required": { "type": "boolean" },
+          "review_reason": { "type": "string" }
+        }
+      }
+    }
+  }
+}

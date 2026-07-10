@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "obsidian/Equipment Health Manager.md",
+                "file": "obsidian/Wiki/Common/RTM_YNG_Evidence_Log_2026-04-21.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Equipment Health Manager"
+              "title": "RTM_YNG_Evidence_Log_2026-04-21"
             }
           }
         ]
@@ -78,7 +78,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 300
+    "width": 650.5
   },
   "right": {
     "id": "b0642cab6a1419a5",
@@ -183,34 +183,34 @@
       "bases:새 베이스 생성하기": false
     }
   },
-  "active": "935f71797bec8d5c",
+  "active": "2cdfac7d881e1e8d",
   "lastOpenFiles": [
-    "obsidian/Wiki/Common/RTM_YNG_탈레스_Trust_my_Tech_Submission_Body_Draft_2026-04-27.md",
-    "obsidian/Wiki/Common/RTM_YNG_탈레스_Trust_my_Tech_Submission_Draft_2026-04-27.md",
-    "obsidian/Wiki/Common/RTM_YNG_탈레스_Trust_my_Tech_Body_Draft_2026-04-27.md",
-    "obsidian/Wiki/Common/RTM_YNG_탈레스_Trust_my_Tech_Regeneration_Comparison_2026-04-27.md",
-    "obsidian/Wiki/Common/RTM_YNG_탈레스_Trust_my_Tech_Regenerated_Draft_2026-04-27.md",
-    "obsidian/Wiki/Common/RTM_YNG_탈레스_Trust_my_Tech_Validation_2026-04-27.md",
-    "obsidian/Wiki/Common/RTM_Government_RnD_Complete_Template.md",
-    "obsidian/Wiki/Common/RTM_GovRnD_2021_스마트공장_고도화2.md",
-    "obsidian/Wiki/Common/RTM_GovRnD_2021_산업디지털_전환_연대공급기업.md",
-    "obsidian/Wiki/Common/RTM_GovRnD_2022_엔업.md",
-    "obsidian/Wiki/Common/RTM_GovRnD_2022_AI바우처_2022.md",
-    "obsidian/Wiki/Common/RTM_GovRnD_2026_바이오시스_상생혁신.md",
-    "obsidian/Wiki/Common/RTM_GovRnD_2026_뿌리산업.md",
-    "obsidian/Wiki/Common/RTM_GovRnD_2026_xaas.md",
-    "obsidian/Wiki/Common/RTM_GovRnD_2025_자율제조_AI_Agent.md",
-    "obsidian/Wiki/Common/RTM_GovRnD_2026_인공지능_기술사업화_지원사업.md",
-    "obsidian/Wiki/Common/RTM_GovRnD_2026_PSK_디지털혁신중견기업육성사업.md",
-    "obsidian/Wiki/Common/RTM_GovRnD_2026_AI바우처.md",
-    "Wiki/SanupAI_RnD_Project/Project_Overview.md",
-    "obsidian/L1_memory/KoreaAlbac_Project.md",
-    "obsidian/Wiki/Common/RTM_GovRnD_2026_대학연스타트업_한양대.md",
-    "obsidian/Wiki/Common/RTM_GovRnD_2026_TMT2차.md",
-    "obsidian/Wiki/Common/RTM_GovRnD_2026_AI_응용제품_신속_상용화.md",
-    "obsidian/Wiki/Common/RTM_GovRnD_2026_산업현장_에이전트_연구개발.md",
-    "obsidian/Wiki/Common/RTM_Government_RnD_Folder_Coverage_Tracker.md",
-    "obsidian/Wiki/Common/RTM_Government_RnD_Folder_Candidate_Register.md",
+    "obsidian/Wiki/Slack_Kingdee_Project/hub.md",
+    "obsidian/Wiki/Slack_Kingdee_Project/Status.md",
+    "obsidian/Wiki/2023_221125_250423_hubsedexdemo_021006_00_v1_Project/Conflict_Register.md",
+    "obsidian/Wiki/Pixel_AIVoucher_Project/hub.md",
+    "obsidian/Wiki/Pixel_AIVoucher_Project/Conflict_Register.md",
+    "obsidian/Wiki/Pixel_AIVoucher_Project/Project_Overview.md",
+    "obsidian/Wiki/Pixel_AIVoucher_Project/Reference_Register.md",
+    "obsidian/Wiki/2023_221125_250423_hubsedexdemo_021006_00_v1_Project/Decisions.md",
+    "obsidian/Wiki/2023_221125_250423_hubsedexdemo_021006_00_v1_Project/Reference_Register.md",
+    "obsidian/Wiki/2023_221125_250423_hubsedexdemo_021006_00_v1_Project/Raw_Evidence_Index.md",
+    "obsidian/Wiki/2023_221125_250423_hubsedexdemo_021006_00_v1_Project/Project_Overview.md",
+    "obsidian/Wiki/2023_221125_250423_hubsedexdemo_021006_00_v1_Project/Customer_Followup.md",
+    "obsidian/Wiki/2023_221125_250423_hubsedexdemo_021006_00_v1_Project/Change_Log.md",
+    "obsidian/Wiki/2023_메카로_ant_hubble2_내부공유용_Project/Business_Flow.md",
+    "obsidian/Wiki/Slack_몽고식품_Project/Change_Log.md",
+    "obsidian/Wiki/Slack_몽고식품_Project/CEO_Brief.md",
+    "obsidian/Wiki/Slack_대덕전자_BSI_그룹_Project/Raw_Evidence_Index.md",
+    "obsidian/Wiki/Slack_대덕전자_BSI_그룹_Project/Conflict_Register.md",
+    "obsidian/Wiki/KumhoTire_FirstProduct_Xray_Project/PM_Action_Plan.md",
+    "obsidian/Wiki/KumhoTire_FirstProduct_Xray_Project/Evidence_Log.md",
+    "obsidian/Wiki/KumhoTire_FirstProduct_Xray_Project/Change_Log.md",
+    "obsidian/Wiki/아사히카세히_Account/Project_Relationships.md",
+    "obsidian/Wiki/아사히카세히_Account/PM_Action_Plan.md",
+    "obsidian/Wiki/아사히카세히_Account/Change_Log.md",
+    "obsidian/Wiki/아사히카세히_Account/Customer_Followup.md",
+    "obsidian/Wiki/아사히카세히_Project/Business_Flow.md",
     "Wiki/SanupAI_RnD_Project",
     "Wiki"
   ]

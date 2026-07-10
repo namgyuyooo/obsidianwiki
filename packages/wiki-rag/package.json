@@ -1,0 +1,27 @@
+{
+  "name": "@rtm/wiki-rag",
+  "version": "0.1.0",
+  "description": "Portable read-only RAG module for Obsidian-style Markdown wiki vaults.",
+  "type": "module",
+  "main": "./src/index.mjs",
+  "bin": {
+    "wiki-rag-server": "./src/server.mjs"
+  },
+  "files": [
+    "src",
+    "examples",
+    "README.md",
+    "PURPOSE.md",
+    "USAGE.md",
+    ".env.example"
+  ],
+  "scripts": {
+    "start": "node src/server.mjs",
+    "example": "node examples/basic-search.mjs",
+    "smoke": "node src/server.mjs --smoke"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "UNLICENSED"
+}
