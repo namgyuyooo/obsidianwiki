@@ -12,7 +12,7 @@ try:  # Python 3.11+
 except ImportError:  # Python 3.10 compatibility
     UTC = timezone.utc
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode
 from urllib.request import Request, urlopen
@@ -134,14 +134,33 @@ class SlackClient:
             time.sleep(self.min_interval_seconds - elapsed)
 
 
-def collect_once(config: CollectionConfig, dry_run: bool = False) -> dict[str, Any]:
+def collect_once(
+    config: CollectionConfig,
+    dry_run: bool = False,
+    on_progress: "Callable[[str], None] | None" = None,
+) -> dict[str, Any]:
+    def _p(msg: str) -> None:
+        if on_progress:
+            try:
+                on_progress(msg)
+            except Exception:  # noqa: BLE001 - progress must never break collection
+                pass
+
     client = SlackClient(config.token, config.api_min_interval_seconds)
     state = _load_state(config.state_path)
     channel = _resolve_channel(client, config)
+    _p(f"채널 확인 완료: #{channel.get('name', '?')} ({channel['id']})")
     oldest_ts, latest_ts, window_mode = _history_window(config, state, channel["id"])
-    messages, fetch_stats = _fetch_history(client, channel["id"], oldest_ts, latest_ts, config.limit, config.page_pause_seconds)
+    _p(f"히스토리 조회 시작 (mode={window_mode}, limit={config.limit or '무제한'})")
+    messages, fetch_stats = _fetch_history(
+        client, channel["id"], oldest_ts, latest_ts, config.limit,
+        config.page_pause_seconds, on_progress=_p,
+    )
+    _p(f"히스토리 {len(messages)}건 수집 · {fetch_stats.get('pages', 0)}페이지 → 정규화/스레드 시작")
     normalized_messages = []
-    for message in messages:
+    thread_fetches = 0
+    total = len(messages)
+    for idx, message in enumerate(messages, 1):
         normalized = _normalize_message(message, include_files=config.include_files)
         if config.include_threads and normalized.get("reply_count"):
             try:
@@ -149,9 +168,13 @@ def collect_once(config: CollectionConfig, dry_run: bool = False) -> dict[str, A
             except SlackApiError:
                 replies = []
             normalized["thread_replies"] = [_normalize_message(reply, include_files=config.include_files) for reply in replies]
+            thread_fetches += 1
+            if thread_fetches % 10 == 0:
+                _p(f"스레드 댓글 수집 중… {thread_fetches}건 (메시지 {idx}/{total})")
             if config.thread_pause_seconds > 0:
                 time.sleep(config.thread_pause_seconds)
         normalized_messages.append(normalized)
+    _p(f"정규화 완료 · 총 {len(normalized_messages)}건 (스레드 {thread_fetches}개)")
 
     now = datetime.now(tz=UTC)
     export_relpath = f"{now.astimezone(KST).strftime('%Y-%m-%d')}/{channel['name']}_{channel['id']}_{now.strftime('%Y-%m-%dT%H-%M-%SZ')}.json"
@@ -267,6 +290,7 @@ def _fetch_history(
     latest_ts: str,
     limit: int,
     page_pause_seconds: float,
+    on_progress: "Callable[[str], None] | None" = None,
 ) -> tuple[list[dict[str, Any]], dict[str, Any]]:
     cursor = ""
     messages: list[dict[str, Any]] = []
@@ -283,12 +307,24 @@ def _fetch_history(
         }
         if latest_ts:
             params["latest"] = latest_ts
-        payload = client.request("conversations.history", params)
+        try:
+            payload = client.request("conversations.history", params)
+        except SlackApiError as exc:
+            if exc.method == "conversations.history" and exc.error_code == "not_in_channel":
+                client.request("conversations.join", {"channel": channel_id}, max_retries=1)
+                payload = client.request("conversations.history", params)
+            else:
+                raise
         pages += 1
         batch = payload.get("messages", [])
         messages.extend(batch)
         final_has_more = bool(payload.get("has_more"))
         cursor = payload.get("response_metadata", {}).get("next_cursor", "")
+        if on_progress:
+            try:
+                on_progress(f"히스토리 {pages}페이지 · 누적 {len(messages)}건 수집")
+            except Exception:  # noqa: BLE001
+                pass
         if not cursor or not batch:
             break
         if page_pause_seconds > 0:

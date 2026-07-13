@@ -49,6 +49,7 @@ export interface Activity {
   em: string;
   nm: string;
   co: string;
+  cokey?: string; // company canonical key (robust matching across merges)
   it: string;
   iq: string;
   link: string; // Slack permalink
@@ -58,7 +59,7 @@ export interface Activity {
 export interface ChannelCfg {
   id: string;
   name: string;
-  strategy: "inbound" | "cross_team";
+  strategy: "inbound" | "cross_team" | "business_card";
   enabled: boolean;
 }
 
@@ -70,6 +71,9 @@ export interface SyncSettings {
   include_featpaper: boolean;
   require_review_for_new_company: boolean;
   glm_parse_cross_team: boolean;
+  slack_callback_enabled: boolean;
+  slack_callback_mode: "off" | "reaction" | "thread";
+  slack_callback_reaction: string;
   auto_sync_enabled: boolean;
   auto_sync_interval_minutes: number;
   channel_state: Record<string, number>;
@@ -94,6 +98,21 @@ export interface EntityContext {
   name: string;
   company_id: number | null;
   company: string;
+  domain_suggestion?: {
+    domain: string;
+    company_id: number | null;
+    company_key: string;
+    company_name: string;
+    confidence: number;
+    reason: string;
+    derived: boolean;
+    candidates: Array<{
+      company_id: number;
+      company_key: string;
+      company_name: string;
+      count: number;
+    }>;
+  };
 }
 
 export interface Review {

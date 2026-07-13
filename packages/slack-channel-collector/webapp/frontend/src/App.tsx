@@ -82,7 +82,10 @@ export default function App() {
   const [toast, setToast] = useState<{ msg: string; type: ToastType } | null>(null);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [syncing, setSyncing] = useState(false);
+  const [syncLog, setSyncLog] = useState<string[]>([]); // 실시간 진행 로그 (화면 표시)
+  const [progressLabel, setProgressLabel] = useState("작업 진행 로그");
   const [aiBusy, setAiBusy] = useState(false); // AI 동작 중복 방지 (한 번에 하나)
+  const [batchInferBusy, setBatchInferBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [settings, setSettings] = useState<SyncSettings | null>(null);
   const [glmConfigured, setGlmConfigured] = useState(false);
@@ -201,6 +204,7 @@ export default function App() {
   const pageOwners = owners.slice(start, start + ui.per);
   const kpiRow = useMemo(() => kpis(recs, companies), [recs, companies]);
   const sourceOptions = useMemo(() => buildSourceOptions(recs), [recs]);
+  const cardChannelId = (settings?.channels || []).find((c) => c.strategy === "business_card")?.id;
   const ownerOptions = useMemo(() => distinctOwners(companies), [companies]);
   const tagOptions = useMemo(() => distinctTags(recs), [recs]);
   const onSort = makeSortHandler(ui, setUi);
@@ -297,23 +301,29 @@ export default function App() {
     }
   };
 
-  const runSync = useCallback(async (backfill = false) => {
+  const runSync = useCallback(async (opts: { backfill?: boolean; onlyChannel?: string; label?: string } = {}) => {
+    const { backfill = false, onlyChannel, label } = opts;
     setSyncing(true);
     setAiBusy(true);
     showToast(
-      backfill ? "전체 히스토리 수집 시작… (백그라운드, 진행상황 콘솔)" : "슬랙 동기화 시작…",
+      label ? `${label} 시작…`
+      : backfill ? "전체 히스토리 수집 시작… (백그라운드, 진행상황 콘솔)"
+      : "슬랙 동기화 시작…",
       "loading"
     );
-    console.groupCollapsed("🔄 슬랙 동기화 로그 (실시간)");
+    console.group(`🔄 ${label || "슬랙 동기화"} 로그 (실시간)`);
+    setProgressLabel(`🔄 ${label || "슬랙 동기화"}`);
+    setSyncLog([`⏳ ${label || "슬랙 동기화"} 시작 요청 중…`]);
     let printed = 0;
     try {
-      await api.sync({ backfill });
-      // 백그라운드 작업 상태를 폴링하며 로그를 실시간 콘솔 출력
+      await api.sync({ backfill, onlyChannel });
+      // 백그라운드 작업 상태를 폴링하며 로그를 실시간 콘솔 + 화면 패널에 출력
       // eslint-disable-next-line no-constant-condition
       while (true) {
-        await new Promise((r) => setTimeout(r, 1500));
+        await new Promise((r) => setTimeout(r, 1200));
         const st = await api.syncStatus();
         for (; printed < st.logs.length; printed++) console.log(st.logs[printed]);
+        if (st.logs.length) setSyncLog(st.logs.slice(-40));
         const last = st.logs[st.logs.length - 1];
         if (last) showToast("🔄 " + last, "loading");
         if (!st.running) {
@@ -338,11 +348,74 @@ export default function App() {
     } finally {
       setSyncing(false);
       setAiBusy(false);
+      setTimeout(() => setSyncLog([]), 4000);
     }
   }, [showToast, loadCustomers, loadReviews]);
 
   // Note: periodic collection runs server-side (see backend scheduler), so it
   // keeps working even when no dashboard tab is open. No client interval here.
+
+  const runRecleanse = useCallback(async () => {
+    setAiBusy(true);
+    setSyncing(true);
+    showToast("전체 재클렌징 시작… (저장 원문 재파싱, 재수집 없음)", "loading");
+    console.group("♻️ 재클렌징 로그 (실시간)");
+    setProgressLabel("♻️ 전체 재클렌징");
+    setSyncLog(["⏳ 재클렌징 시작 요청 중…"]);
+    let printed = 0;
+    try {
+      await api.recleanse();
+      // eslint-disable-next-line no-constant-condition
+      while (true) {
+        await new Promise((r) => setTimeout(r, 1200));
+        const st = await api.syncStatus();
+        for (; printed < st.logs.length; printed++) console.log(st.logs[printed]);
+        if (st.logs.length) setSyncLog(st.logs.slice(-40));
+        const last = st.logs[st.logs.length - 1];
+        if (last) showToast("♻️ " + last, "loading");
+        if (!st.running) {
+          console.groupEnd();
+          const r = (st.result || {}) as Record<string, unknown> & { message?: string };
+          await Promise.all([loadCustomers(), loadReviews()]);
+          showToast("✅ " + (r.message || "재클렌징 완료"), "success", 6000);
+          break;
+        }
+      }
+    } catch (e) {
+      console.groupEnd();
+      showToast("⚠ 재클렌징 실패: " + (e instanceof Error ? e.message : e), "error");
+    } finally {
+      setAiBusy(false);
+      setSyncing(false);
+      setTimeout(() => setSyncLog([]), 4000);
+    }
+  }, [showToast, loadCustomers, loadReviews]);
+
+  // 단발성 외부 API(GLM/Slack) 작업의 진행상황을 동일 패널에 표시하는 헬퍼.
+  const withProgress = useCallback(
+    async <T,>(
+      label: string,
+      fn: (log: (m: string) => void) => Promise<T>
+    ): Promise<T | undefined> => {
+      setSyncing(true);
+      setProgressLabel(label);
+      const push = (m: string) => setSyncLog((prev) => [...prev, m].slice(-60));
+      setSyncLog([`⏳ ${label} 시작…`]);
+      const t0 = Date.now();
+      try {
+        const r = await fn(push);
+        push(`✅ 완료 (${((Date.now() - t0) / 1000).toFixed(1)}s)`);
+        return r;
+      } catch (e) {
+        push(`⚠ 실패: ${e instanceof Error ? e.message : e}`);
+        throw e;
+      } finally {
+        setSyncing(false);
+        setTimeout(() => setSyncLog([]), 4000);
+      }
+    },
+    []
+  );
 
   const saveSettings = async (patch: Partial<SyncSettings>) => {
     showToast("동기화 설정 저장 중…", "loading");
@@ -374,6 +447,20 @@ export default function App() {
     }
   };
 
+  const deleteCompany = async (key: string) => {
+    const nm = companies[key]?.name || key;
+    if (!confirm(`'${nm}' 회사를 삭제할까요? (담당자·활동은 연결만 해제, 되돌리기 가능)`)) return;
+    showToast(`회사 삭제 중… ${nm}`, "loading");
+    try {
+      await api.deleteCompany(key);
+      setDrawer(null);
+      await loadCustomers();
+      showToast(`✅ 회사 삭제됨 — ${nm} (변경 이력에서 되돌리기 가능)`, "success");
+    } catch (e) {
+      showToast("⚠ 삭제 실패: " + (e instanceof Error ? e.message : e), "error");
+    }
+  };
+
   const reassignActivity = async (id: number, company: string) => {
     showToast(`활동 재분류 중… → ${company}`, "loading");
     try {
@@ -401,13 +488,18 @@ export default function App() {
 
   const resolveUsers = async () => {
     showToast("슬랙 유저 이름 갱신 중…", "loading");
-    try {
+    await withProgress("👤 슬랙 유저 이름 갱신", async (log) => {
+      log("Slack users.list 호출 중… (페이지네이션)");
       const r = await api.resolveUsers();
-      showToast(r.ok ? `✅ 유저 이름 ${r.stored}명 갱신` : "⚠ " + (r.message || "실패"), r.ok ? "success" : "error");
-      if (r.ok) await loadCustomers();
-    } catch (e) {
-      showToast("⚠ 실패: " + (e instanceof Error ? e.message : e), "error");
-    }
+      if (r.ok) {
+        log(`유저 ${r.stored}명 저장`);
+        await loadCustomers();
+        showToast(`✅ 유저 이름 ${r.stored}명 갱신`, "success");
+      } else {
+        log(r.message || "실패");
+        showToast("⚠ " + (r.message || "실패"), "error");
+      }
+    }).catch((e) => showToast("⚠ 실패: " + (e instanceof Error ? e.message : e), "error"));
   };
 
   const saveTags = async (email: string, tags: string[]) => {
@@ -418,6 +510,36 @@ export default function App() {
       showToast(`✅ 태그 ${tags.length}개 저장\n${tags.map((t) => "#" + t).join(" ") || "(비움)"}`, "success");
     } catch (e) {
       showToast("⚠ 태그 저장 실패: " + (e instanceof Error ? e.message : e), "error");
+    }
+  };
+
+  const saveContact = async (email: string, fields: Record<string, string>) => {
+    showToast(`연락처 정보 저장 중… ${email}`, "loading");
+    try {
+      await api.updateContact(email, fields);
+      await loadCustomers();
+      const changed = Object.entries(fields)
+        .filter(([, v]) => String(v ?? "").trim())
+        .map(([k, v]) => `${({ name: "이름", company: "회사", department: "부서", title: "직급", phone: "연락처", status: "상태" } as Record<string, string>)[k] || k}: ${String(v).slice(0, 24)}`)
+        .join(" · ");
+      showToast(`✅ 연락처 저장됨\n${changed || "빈 값으로 정리됨"}`, "success");
+    } catch (e) {
+      showToast("⚠ 연락처 저장 실패: " + (e instanceof Error ? e.message : e), "error");
+    }
+  };
+
+  const deleteContact = async (email: string) => {
+    showToast(`연락처 삭제 중… ${email}`, "loading");
+    try {
+      const r = await api.deleteContact(email);
+      await loadCustomers();
+      setDrawer(null);
+      showToast(
+        `✅ 연락처 삭제됨\n활동 ${r.detached_activities}건은 증적으로 보존 · 리뷰 ${r.closed_reviews}건 정리`,
+        "success"
+      );
+    } catch (e) {
+      showToast("⚠ 연락처 삭제 실패: " + (e instanceof Error ? e.message : e), "error");
     }
   };
 
@@ -449,6 +571,30 @@ export default function App() {
     }
   };
 
+  const batchInferCompanies = async () => {
+    setBatchInferBusy(true);
+    showToast("✨ 회사 정보 일괄 자동추정 중…", "loading", 120000);
+    await withProgress("✨ 회사 정보 일괄 자동추정", async (log) => {
+      log("GLM에 회사 최대 30곳 업종/세부/설명 추정 요청 중…");
+      const r = await api.inferCompaniesBatch(30);
+      if (!r.ok) {
+        log(r.message || "사용 불가");
+        showToast("⚠ " + (r.message || "일괄 자동추정을 사용할 수 없습니다"), "error");
+        return;
+      }
+      log(`스캔 ${r.scanned} · 업데이트 ${r.updated} · 건너뜀 ${r.skipped}`);
+      if (r.errors?.length) log(`오류 ${r.errors.length}건: ${r.errors[0]}`);
+      await loadCustomers();
+      const err = r.errors?.length ? `\n오류 ${r.errors.length}건: ${r.errors[0]}` : "";
+      showToast(
+        `✅ 일괄 자동추정 완료\n스캔 ${r.scanned}곳 · 업데이트 ${r.updated}곳 · 건너뜀 ${r.skipped}곳${err}`,
+        "success",
+        8000
+      );
+    }).catch((e) => showToast("⚠ 일괄 자동추정 실패: " + (e instanceof Error ? e.message : e), "error"));
+    setBatchInferBusy(false);
+  };
+
   const runGlmSearch = async () => {
     const q = glmQuery.trim();
     if (!q) {
@@ -458,7 +604,17 @@ export default function App() {
     setAiBusy(true);
     showToast(`${glmConfigured ? "✨ AI" : "🔍 키워드"} 검색 중… "${q}"`, "loading");
     try {
-      const res = await api.glmSearch(q);
+      const res = await withProgress(
+        `${glmConfigured ? "✨ AI" : "🔍 키워드"} 검색`,
+        async (log) => {
+          log(`질의: "${q}"`);
+          log(glmConfigured ? "GLM으로 검색 조건 추출 중…" : "키워드 폴백 검색 중…");
+          const r = await api.glmSearch(q);
+          log(`${r.count}명 일치 (mode=${r.mode})`);
+          return r;
+        }
+      );
+      if (!res) return;
       setGlmEmails(new Set(res.emails));
       // 결과를 표에 그대로 보여주기 위해: 고객(개별) 뷰로 전환하고, 결과를 가릴 수 있는
       // 상태/컬럼 필터를 초기화 (검색 결과는 서버가 전체 상태 대상으로 계산함)
@@ -537,6 +693,7 @@ export default function App() {
           onInfer={inferCompany}
           onReassignActivity={reassignActivity}
           onReclassifyGlm={reclassifyGlm}
+          onDelete={deleteCompany}
           aiBusy={aiBusy}
         />
       );
@@ -551,6 +708,8 @@ export default function App() {
           onOpenCompany={openCompany}
           onLogActivity={(p) => logActivity(p)}
           onSaveTags={saveTags}
+          onSaveContact={saveContact}
+          onDeleteContact={deleteContact}
         />
       );
   } else if (drawer?.type === "addlead") {
@@ -564,6 +723,9 @@ export default function App() {
         glmConfigured={glmConfigured}
         onSave={saveSettings}
         onResolveUsers={resolveUsers}
+        onBatchInfer={batchInferCompanies}
+        batchInferBusy={batchInferBusy}
+        onRecleanse={runRecleanse}
       />
     );
   }
@@ -742,13 +904,23 @@ export default function App() {
           </button>
           <button
             className="btn"
-            onClick={() => runSync(true)}
+            onClick={() => runSync({ backfill: true })}
             disabled={aiBusy}
             title="과거부터 현재까지 전체 히스토리를 수집 (초기 1회)"
           >
             전체 히스토리 수집
           </button>
-          <button className="btn primary" onClick={() => runSync(false)} disabled={aiBusy}>
+          {cardChannelId && (
+            <button
+              className="btn"
+              onClick={() => runSync({ onlyChannel: cardChannelId, backfill: true, label: "명함 수집" })}
+              disabled={aiBusy}
+              title="#sales-명함 전체 이미지에서 명함 OCR 수집 (이미 반영된 명함은 UUID로 중복 제외)"
+            >
+              🪪 명함 수집
+            </button>
+          )}
+          <button className="btn primary" onClick={() => runSync({})} disabled={aiBusy}>
             {syncing ? "동기화 중…" : aiBusy ? "AI 작업 중…" : "슬랙 새 리드 동기화"}
           </button>
         </div>
@@ -930,6 +1102,21 @@ export default function App() {
         <div className={`toast ${toast.type}`}>
           {toast.type === "loading" && <span className="spin" />}
           <span>{toast.msg}</span>
+        </div>
+      )}
+
+      {syncLog.length > 0 && (
+        <div className="synclog">
+          <div className="synclog-head">
+            {syncing && <span className="spin" />}
+            <b>{progressLabel}</b>
+            <span className="hint">{syncing ? "실행 중…" : "완료"}</span>
+          </div>
+          <div className="synclog-body">
+            {[...syncLog].reverse().map((line, i) => (
+              <div className="synclog-line" key={syncLog.length - i}>{line}</div>
+            ))}
+          </div>
         </div>
       )}
 

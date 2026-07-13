@@ -297,7 +297,7 @@ export interface OwnerGroup {
   lastActivity: string;
 }
 
-const NO_OWNER = "(미지정)";
+const NO_OWNER = "내부담당 미지정";
 
 // Owner view: company groups bucketed under their internal owner.
 export function ownerGroups(

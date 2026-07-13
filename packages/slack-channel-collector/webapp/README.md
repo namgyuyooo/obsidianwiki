@@ -74,6 +74,8 @@ npm run dev              # http://localhost:5173  (/api 는 8765로 프록시됨
 | PUT | `/api/contacts/{email}/tags` | 태그 설정 |
 | POST | `/api/activities` | 영업 활동 기록(히스토리) 추가 |
 | POST | `/api/search/glm` | 자연어/키워드 검색 |
+| POST | `/api/search/semantic` | 임베딩 의미 검색 |
+| POST | `/api/embeddings/rebuild` | SQLite 임베딩 인덱스 재생성 |
 | POST | `/api/sync` | 슬랙 리드 동기화 (live collector 또는 export 파일) |
 
 ### 리뷰 처리 액션
@@ -108,6 +110,9 @@ Slack 원본 링크는 `RTM_SLACK_WORKSPACE_URL` + 채널/타임스탬프로 생
 - **#tf_cross_team_sales** (`C01L5SA4Y4C`, `cross_team`): 사람이 작성한 미팅/활동 템플릿
   (`[신규 리드]`/`[고객 활동]`/`[회사 정보 업데이트]`)을 파싱해 **활동 로그·회사정보**로 반영.
   `확인상태: 확인 필요/추정`이거나 새 회사면 자동 확정 대신 **정합성 확인 큐**로 보냅니다.
+- **#sales-명함** (`C0BGZKBLC4U`, `business_card`): 업로드된 명함 이미지 파일을
+  GLM-V OCR로 읽어 **회사·이름·직급·이메일·전화번호**를 추출하고 고객 DB에 반영합니다.
+  OCR 신뢰도가 낮거나 새 회사/불확실한 회사는 **정합성 확인 큐**로 보냅니다.
 
 `POST /api/sync`는 활성 채널을 각 전략으로 처리합니다(GLM 불필요, 템플릿/봇 포맷 직접 인식).
 입력은 (1) 라이브 collector(SLACK_BOT_TOKEN 필요) 또는 (2) export JSON 파일(`RTM_SLACK_EXPORT_FILE`
@@ -115,7 +120,23 @@ Slack 원본 링크는 `RTM_SLACK_WORKSPACE_URL` + 채널/타임스탬프로 생
 
 동기화 규칙·주기는 `⚙ 동기화 설정`(또는 `/api/settings`)에서 조정합니다: 채널, 수집 범위(시간),
 최근 N개만 수집(`sync_limit`, 0=증분), 소스별 포함 여부, 새 회사 자동등록 대신 검수 큐로 보내기,
-자동 동기화 주기(분).
+원본 스레드 수집 완료 콜백, 자동 동기화 주기(분).
+
+### Slack API 권한 요구사항
+
+Slack App의 **OAuth & Permissions**에서 Bot Token Scopes를 설정한 뒤 workspace에 재설치해야 합니다.
+
+- 수집 기본 권한: `channels:history`, `groups:history`, `channels:read`, `groups:read`
+- 스레드/댓글 수집: `channels:history`, `groups:history`
+- 명함 이미지 OCR: `files:read`
+- Slack 유저 목록 수집/멘션 이름 치환: `users:read`
+- Slack 유저 프로필 상세: `users.profile:read`
+- Slack 유저 이메일 수집: `users:read.email` (이메일이 필요할 때, `users:read`와 함께 요청)
+- 수집 완료 스레드 콜백: `chat:write`
+
+콜백은 Slack `chat.postMessage`에 `thread_ts`를 넣어 원본 메시지 스레드에 답글을 남깁니다.
+Bot token(`xoxb-...`) 또는 User token 모두 `chat:write`가 필요하며, 앱/봇이 대상 채널에 들어가 있어야 합니다.
+public 채널은 수집기가 `conversations.join`을 한 번 시도하지만, private 채널은 채널에서 앱을 직접 초대해야 합니다.
 
 ### 안정적 주기 수집
 
@@ -134,7 +155,12 @@ Slack 원본 링크는 `RTM_SLACK_WORKSPACE_URL` + 채널/타임스탬프로 생
 `GLM_API_URL`/`GLM_API_KEY`/`GLM_MODEL` 설정 시:
 
 - **자연어 검색**: 상단 검색바가 질의를 구조화 필터로 변환해 결과를 좁힙니다. 미설정 시 키워드 폴백.
+- **임베딩 의미 검색**: `GLM_EMBEDDING_MODEL`의 `/embeddings` 결과를 SQLite에 저장해
+  Elasticsearch 없이 회사/문의/활동 문맥을 의미 유사도로 찾습니다.
+  `POST /api/embeddings/rebuild` 또는 `backend/scripts/rebuild_embeddings.py`로 갱신합니다.
 - **회사 자동 추정**: 회사 상세의 `✨ GLM 추정`이 업종/세부분야/설명을 제안 → 검토 후 저장.
+- **명함 OCR**: `GLM_VISION_MODEL`(기본 `glm-5v-turbo`)이 Slack 명함 이미지를 읽어 연락처 필드로
+  정규화합니다. Z.AI 호환 엔드포인트 예시는 `GLM_API_URL=https://api.z.ai/api/paas/v4` 입니다.
 
 ## 이식·확장 기능
 

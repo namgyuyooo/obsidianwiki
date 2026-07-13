@@ -140,25 +140,81 @@ function CompanyLinker({ onPick }: { onPick: (c: CompanySearchItem) => void }) {
   );
 }
 
-// 정합성: 대상 연락처의 여러 필드를 직접 수정
-function ContactFieldEditor({ email, onSaved }: { email: string; onSaved?: () => void }) {
+interface ContactFieldValues {
+  name: string;
+  phone: string;
+  department: string;
+  title: string;
+  company: string;
+}
+
+function pickFirstString(...values: unknown[]): string {
+  for (const v of values) {
+    if (typeof v === "string" && v.trim()) return v.trim();
+  }
+  return "";
+}
+
+function firstObject(value: unknown): Record<string, unknown> {
+  if (Array.isArray(value) && value.length > 0 && typeof value[0] === "object" && value[0]) {
+    return value[0] as Record<string, unknown>;
+  }
+  if (typeof value === "object" && value) return value as Record<string, unknown>;
+  return {};
+}
+
+function nonPersonalCompany(value: unknown): string {
+  if (typeof value !== "string") return "";
+  const trimmed = value.trim();
+  return trimmed.startsWith("개인:") ? "" : trimmed;
+}
+
+function suggestedContactFields(r: Review): ContactFieldValues {
+  const payload = r.interpretation?.payload ?? {};
+  const contact = firstObject(payload.contacts);
+  const company = firstObject(payload.companies);
+  const current = r.entity_context;
+  const domainCompany = current?.domain_suggestion?.company_name;
+  const out: ContactFieldValues = {
+    name: pickFirstString(contact.name, current?.name),
+    phone: pickFirstString(contact.phone),
+    department: pickFirstString(contact.department),
+    title: pickFirstString(contact.title),
+    company: pickFirstString(company.name, domainCompany, nonPersonalCompany(current?.company)),
+  };
+  if (r.field_name === "name") out.name = r.proposed_value || out.name;
+  if (r.field_name === "phone") out.phone = r.proposed_value || out.phone;
+  if (r.field_name === "department") out.department = r.proposed_value || out.department;
+  if (r.field_name === "title") out.title = r.proposed_value || out.title;
+  if (["company", "company_name", "company_id"].includes(r.field_name)) {
+    out.company = r.proposed_value || out.company;
+  }
+  return out;
+}
+
+// 정합성: 대상 연락처의 여러 필드를 직접 반영하고 리뷰를 닫음
+function ContactFieldEditor({
+  initial,
+  onApply,
+}: {
+  initial: ContactFieldValues;
+  onApply: (fields: ContactFieldValues) => void;
+}) {
   const [open, setOpen] = useState(false);
-  const [f, setF] = useState({ name: "", phone: "", department: "", title: "", company: "" });
+  const [f, setF] = useState<ContactFieldValues>(initial);
   const [busy, setBusy] = useState(false);
   if (!open)
     return (
       <button className="btn ghost" style={{ marginTop: 6 }} onClick={() => setOpen(true)}>
-        ✎ 필드 직접 수정
+        ✎ 회사·이름·직급 바로 반영
       </button>
     );
   const upd = (k: keyof typeof f) => (v: string) => setF({ ...f, [k]: v });
   const save = async () => {
-    const fields = Object.fromEntries(Object.entries(f).filter(([, v]) => v.trim()));
-    if (Object.keys(fields).length === 0) return;
+    if (!Object.values(f).some((v) => v.trim())) return;
     setBusy(true);
     try {
-      await api.updateContact(email, fields as Record<string, string>);
-      onSaved?.();
+      onApply(f);
     } finally {
       setBusy(false);
       setOpen(false);
@@ -172,9 +228,9 @@ function ContactFieldEditor({ email, onSaved }: { email: string; onSaved?: () =>
       <div><label>직급</label><input value={f.title} onChange={(e) => upd("title")(e.target.value)} /></div>
       <div><label>휴대폰</label><input value={f.phone} onChange={(e) => upd("phone")(e.target.value)} /></div>
       <div className="full">
-        <button className="btn primary" disabled={busy} onClick={save}>필드 저장 후 승인</button>
+        <button className="btn primary" disabled={busy} onClick={save}>필드 반영 후 승인</button>
         <button className="btn ghost" style={{ marginLeft: 6 }} onClick={() => setOpen(false)}>취소</button>
-        <span className="hint" style={{ marginLeft: 6 }}>입력한 값만 반영됩니다</span>
+        <span className="hint" style={{ marginLeft: 6 }}>빈 값은 무시하고, 처리 후 대기열에서 사라집니다</span>
       </div>
     </div>
   );
@@ -192,10 +248,11 @@ function ReviewCard({
   // Prefill new-company name from the interpreted company name when available.
   const interpCompany =
     (r.interpretation?.payload?.company as { name?: string } | undefined)?.name || "";
+  const domainCompany = r.entity_context?.domain_suggestion?.company_name || "";
   const [newName, setNewName] = useState(
     r.entity_type === "company" && r.field_name === "name"
-      ? r.proposed_value || interpCompany
-      : interpCompany
+      ? r.proposed_value || interpCompany || domainCompany
+      : interpCompany || domainCompany
   );
 
   // Company reviews (a new/ambiguous company from GLM, or a contact missing its
@@ -233,6 +290,14 @@ function ReviewCard({
           <KeyVal
             k="대상"
             v={`${r.entity_context.name || "(이름 미상)"} / ${r.entity_context.email}`}
+          />
+        )}
+        {r.entity_context?.domain_suggestion && (
+          <KeyVal
+            k="이메일 도메인 제안"
+            v={`${r.entity_context.domain_suggestion.company_name} · @${r.entity_context.domain_suggestion.domain} · ${(
+              r.entity_context.domain_suggestion.confidence * 100
+            ).toFixed(0)}%`}
           />
         )}
         <KeyVal k="현재값" v={r.current_value || <i className="hint">(비어 있음)</i>} />
@@ -294,7 +359,10 @@ function ReviewCard({
 
       {/* contact multi-field editor (여러 필드 직접 수정) */}
       {r.entity_type === "contact" && r.entity_context && (
-        <ContactFieldEditor email={r.entity_context.email} onSaved={() => onResolve(r.id, { action: "approve" })} />
+        <ContactFieldEditor
+          initial={suggestedContactFields(r)}
+          onApply={(fields) => onResolve(r.id, { action: "apply_fields", fields: { ...fields } })}
+        />
       )}
 
       {/* generic field flows */}

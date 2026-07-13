@@ -31,8 +31,9 @@ export interface CompanySearchItem {
 }
 
 export interface ResolvePayload {
-  action: "approve" | "edit" | "reject" | "link_existing" | "register_new";
+  action: "approve" | "edit" | "reject" | "link_existing" | "register_new" | "apply_fields";
   value?: string;
+  fields?: Record<string, string>;
   company_key?: string;
   company_name?: string;
   company_fields?: Record<string, string>;
@@ -95,7 +96,7 @@ export const api = {
       method: "POST",
       body: JSON.stringify(payload),
     }),
-  sync: (opts?: { exportFile?: string; backfill?: boolean }) =>
+  sync: (opts?: { exportFile?: string; backfill?: boolean; onlyChannel?: string }) =>
     req<{ ok: boolean; running: boolean; started: boolean; message: string }>(
       "/api/sync",
       {
@@ -103,8 +104,16 @@ export const api = {
         body: JSON.stringify({
           export_file: opts?.exportFile ?? null,
           backfill: opts?.backfill ?? false,
+          only_channel: opts?.onlyChannel ?? null,
         }),
       }
+    ),
+  deleteCompany: (key: string) =>
+    req<{ ok: boolean }>(`/api/companies/${encodeURIComponent(key)}`, { method: "DELETE" }),
+  recleanse: () =>
+    req<{ ok: boolean; running: boolean; started: boolean; message: string }>(
+      "/api/recleanse",
+      { method: "POST" }
     ),
   syncStatus: () =>
     req<{
@@ -117,6 +126,11 @@ export const api = {
       method: "PUT",
       body: JSON.stringify(fields),
     }),
+  deleteContact: (email: string) =>
+    req<{ ok: boolean; detached_activities: number; closed_reviews: number }>(
+      `/api/contacts/${encodeURIComponent(email)}`,
+      { method: "DELETE" }
+    ),
   reassignActivities: (from_key: string, to_company: string) =>
     req<{ ok: boolean; moved: number }>("/api/companies/reassign", {
       method: "POST",
@@ -163,6 +177,18 @@ export const api = {
       `/api/companies/${encodeURIComponent(key)}/infer`,
       { method: "POST", body: JSON.stringify({ context }) }
     ),
+  inferCompaniesBatch: (limit = 30) =>
+    req<{
+      ok: boolean;
+      message?: string;
+      scanned: number;
+      updated: number;
+      skipped: number;
+      errors: string[];
+    }>("/api/companies/infer-batch", {
+      method: "POST",
+      body: JSON.stringify({ limit }),
+    }),
   slackMessages: (q = "", limit = 300) =>
     req<{ items: SlackRawMessage[] }>(
       `/api/slack/messages?limit=${limit}&q=${encodeURIComponent(q)}`
@@ -182,6 +208,11 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ channel_id, ts, archived }),
     }),
+  ocrCard: (channel_id: string, ts: string) =>
+    req<{ ok: boolean; message?: string; cards?: OcrCard[] }>(
+      "/api/slack/messages/ocr-card",
+      { method: "POST", body: JSON.stringify({ channel_id, ts }) }
+    ),
   resolveUsers: () =>
     req<{ ok: boolean; stored: number; message?: string }>("/api/slack/resolve-users", {
       method: "POST",
@@ -229,10 +260,36 @@ export interface ApplyRawPayload {
   occurred_at?: string;
 }
 
+export interface OcrCard {
+  file_name: string;
+  ok: boolean;
+  message?: string;
+  provider?: string;
+  confidence?: number;
+  evidence?: string;
+  fields?: {
+    company?: string;
+    name?: string;
+    email?: string;
+    department?: string;
+    title?: string;
+    phone?: string;
+  };
+}
+
 export interface SlackComment {
   text: string;
   permalink: string;
   user: string;
+}
+export interface SlackFile {
+  id: string;
+  name: string;
+  title: string;
+  mimetype: string;
+  filetype: string;
+  pretty_type: string;
+  size: number;
 }
 export interface SlackRawMessage {
   channel_id: string;
@@ -241,6 +298,7 @@ export interface SlackRawMessage {
   user: string;
   text: string;
   permalink: string;
+  files: SlackFile[];
   comments: SlackComment[];
   applied: boolean;
   applied_kind: string;

@@ -1,7 +1,19 @@
 import { useEffect, useState } from "react";
 import { api, type SlackRawMessage, type ApplyRawPayload } from "../lib/api";
 
-const ACT_TYPES = ["방문 미팅", "콜", "자료 요청", "견적 요청", "데모", "후속 확인", "문의", "메모"];
+const ACT_TYPES = ["방문 미팅", "콜", "자료 요청", "견적 요청", "데모", "후속 확인", "문의", "메모", "명함 수집"];
+const isImageFile = (f: { mimetype?: string; filetype?: string; name?: string }) => {
+  const m = (f.mimetype || "").toLowerCase();
+  const t = (f.filetype || "").toLowerCase();
+  const n = (f.name || "").toLowerCase();
+  return m.startsWith("image/") || ["jpg", "jpeg", "png", "webp"].includes(t) || /\.(jpe?g|png|webp)$/.test(n);
+};
+const fmtBytes = (n: number) => {
+  if (!n) return "";
+  if (n < 1024) return `${n} B`;
+  if (n < 1024 * 1024) return `${(n / 1024).toFixed(1)} KB`;
+  return `${(n / 1024 / 1024).toFixed(1)} MB`;
+};
 
 // 수집 원문 뷰어: 반영됨/미반영 탭. 미반영은 수정 후 DB 반영 가능. GLM 구조화는 부가 기능.
 export function RawMessagesPanel({
@@ -79,6 +91,40 @@ export function RawMessagesPanel({
     }
   };
 
+  // 명함 이미지 → vision OCR 추론 → 기존 반영 폼에 프리필 (사용자 확인 후 '반영하기')
+  const ocrCard = async (m: SlackRawMessage) => {
+    setEditTs(m.ts);
+    setForm({
+      channel_id: m.channel_id, ts: m.ts, company: "", email: "", name: "",
+      solution: "", activity_type: "명함 수집",
+      note: m.text || "", next_action: "", occurred_at: "",
+    });
+    onToast?.("🪪 명함 추론 중… (Vision OCR)", "loading");
+    try {
+      const r = await api.ocrCard(m.channel_id, m.ts);
+      const card = (r.cards || []).find((c) => c.ok && c.fields);
+      if (!r.ok || !card) {
+        const why = (r.cards || []).find((c) => c.message)?.message || r.message || "결과 없음";
+        onToast?.("⚠ 명함 추론 실패: " + why, "error");
+        return;
+      }
+      const fx = card.fields || {};
+      setForm((f) => f && {
+        ...f,
+        company: fx.company || "", email: fx.email || "", name: fx.name || "",
+        phone: fx.phone || "", department: fx.department || "", title: fx.title || "",
+        note: (card.evidence ? "명함 OCR: " + card.evidence + "\n" : "") + (m.text || ""),
+      });
+      const cnt = (r.cards || []).filter((c) => c.ok).length;
+      onToast?.(
+        `✅ 명함 추론 완료[${card.provider || "?"}] · 신뢰도 ${(card.confidence ?? 0).toFixed(2)}${cnt > 1 ? ` · ${cnt}장 중 1장 표시` : ""} — 확인 후 반영하세요`,
+        "success"
+      );
+    } catch (e) {
+      onToast?.("⚠ 명함 추론 실패: " + (e instanceof Error ? e.message : e), "error");
+    }
+  };
+
   const submit = async () => {
     if (!form) return;
     if (!form.company?.trim() && !(form.email && form.email.includes("@"))) {
@@ -125,6 +171,9 @@ export function RawMessagesPanel({
         <input type="search" placeholder="원문 검색…" value={q}
           onChange={(e) => setQ(e.target.value)} onKeyDown={(e) => e.key === "Enter" && load(q)} />
         <button className="btn" onClick={() => load(q)}>검색</button>
+        <button className="btn ghost" onClick={() => { setQ("jpg"); load("jpg"); }}>
+          명함 파일
+        </button>
       </div>
 
       {loading ? (
@@ -148,6 +197,11 @@ export function RawMessagesPanel({
                   )}
                 </div>
                 <span style={{ display: "flex", gap: 6 }}>
+                  {editTs !== m.ts && m.files.some(isImageFile) && (
+                    <button className="btn" onClick={() => ocrCard(m)} title="명함 이미지에서 연락처 추론 (Vision OCR)">
+                      🪪 명함 추론하기
+                    </button>
+                  )}
                   {!m.applied && !m.archived && editTs !== m.ts && (
                     <button className="btn primary" onClick={() => openApply(m)}>반영하기</button>
                   )}
@@ -162,6 +216,20 @@ export function RawMessagesPanel({
                 </span>
               </div>
               <div style={{ whiteSpace: "pre-wrap", fontSize: 12.5, marginTop: 4 }}>{m.text}</div>
+              {m.files.length > 0 && (
+                <div style={{ marginTop: 8, display: "grid", gap: 6 }}>
+                  <div className="hint">첨부파일 {m.files.length}</div>
+                  {m.files.map((f) => (
+                    <div key={f.id || f.name} className="pill" style={{ justifyContent: "space-between", gap: 10 }}>
+                      <span>
+                        <b>{f.name || f.title || f.id}</b>
+                        <span className="hint"> · {f.pretty_type || f.mimetype || f.filetype || "file"} {fmtBytes(f.size) ? `· ${fmtBytes(f.size)}` : ""}</span>
+                      </span>
+                      {m.permalink && <a href={m.permalink} target="_blank" rel="noreferrer">Slack에서 보기</a>}
+                    </div>
+                  ))}
+                </div>
+              )}
               {m.comments.length > 0 && (
                 <div style={{ marginTop: 6, borderLeft: "2px solid var(--line)", paddingLeft: 10 }}>
                   <div className="hint">💬 댓글 {m.comments.length} (스레드 연결)</div>
@@ -193,6 +261,18 @@ export function RawMessagesPanel({
                   <div>
                     <label>담당자 이름</label>
                     <input value={form.name} onChange={(e) => upd("name", e.target.value)} />
+                  </div>
+                  <div>
+                    <label>부서</label>
+                    <input value={form.department || ""} onChange={(e) => upd("department", e.target.value)} />
+                  </div>
+                  <div>
+                    <label>직급</label>
+                    <input value={form.title || ""} onChange={(e) => upd("title", e.target.value)} />
+                  </div>
+                  <div>
+                    <label>연락처</label>
+                    <input value={form.phone || ""} onChange={(e) => upd("phone", e.target.value)} />
                   </div>
                   <div>
                     <label>관심 솔루션</label>

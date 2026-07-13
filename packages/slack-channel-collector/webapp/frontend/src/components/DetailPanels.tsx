@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { Customer, CompanyProfile, Activity } from "../types";
 import type { CompanyGroup } from "../lib/domain";
 import { companyProfile, normInterest } from "../lib/domain";
@@ -19,6 +19,8 @@ export const ACTIVITY_TYPES = [
 function srcLabel(src: string): string {
   if (src === "relate") return "릴레잇 문의";
   if (src === "manual") return "수기 등록";
+  if (src === "cross_team") return "크로스팀 활동";
+  if (src === "business_card") return "명함 OCR";
   return "피트페이퍼 열람";
 }
 
@@ -83,7 +85,7 @@ function Timeline({ events, onReassign }: { events: Activity[]; onReassign?: (id
             (() => {
               // 슬랙 수집(릴레잇/피트페이퍼/크로스팀)은 원문 전체를 그대로 노출
               const isSlack =
-                !!e.link || ["relate", "featpaper", "cross_team"].includes(e.src);
+                !!e.link || ["relate", "featpaper", "cross_team", "business_card"].includes(e.src);
               return (
                 <div
                   style={{
@@ -243,6 +245,122 @@ function TagEditor({
   );
 }
 
+function ContactEditor({
+  contact,
+  onSave,
+  onDelete,
+}: {
+  contact: Customer;
+  onSave: (email: string, fields: Record<string, string>) => void | Promise<void>;
+  onDelete: (email: string) => void | Promise<void>;
+}) {
+  const [form, setForm] = useState({
+    name: contact.n || "",
+    company: contact.c || "",
+    department: contact.d || "",
+    title: contact.t || "",
+    phone: contact.p || "",
+    status: contact.st || "정상",
+  });
+  const [busy, setBusy] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+
+  useEffect(() => {
+    setForm({
+      name: contact.n || "",
+      company: contact.c || "",
+      department: contact.d || "",
+      title: contact.t || "",
+      phone: contact.p || "",
+      status: contact.st || "정상",
+    });
+  }, [contact.e, contact.n, contact.c, contact.d, contact.t, contact.p, contact.st]);
+
+  const upd = (k: keyof typeof form) => (v: string) => setForm({ ...form, [k]: v });
+  const save = async () => {
+    setBusy(true);
+    try {
+      await onSave(contact.e, form);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="field">
+      <div className="k">기본 정보 수정</div>
+      <div className="editgrid" style={{ marginTop: 8 }}>
+        <div className="full">
+          <label>이메일</label>
+          <input value={contact.e} readOnly />
+        </div>
+        <div>
+          <label>이름</label>
+          <input value={form.name} onChange={(e) => upd("name")(e.target.value)} />
+        </div>
+        <div>
+          <label>회사명</label>
+          <input value={form.company} onChange={(e) => upd("company")(e.target.value)} />
+        </div>
+        <div>
+          <label>부서</label>
+          <input value={form.department} onChange={(e) => upd("department")(e.target.value)} />
+        </div>
+        <div>
+          <label>직급</label>
+          <input value={form.title} onChange={(e) => upd("title")(e.target.value)} />
+        </div>
+        <div>
+          <label>휴대폰/연락처</label>
+          <input value={form.phone} onChange={(e) => upd("phone")(e.target.value)} />
+        </div>
+        <div>
+          <label>상태</label>
+          <select value={form.status} onChange={(e) => upd("status")(e.target.value)} style={{ width: "100%" }}>
+            {["정상", "내부", "테스트", "휴면", "수신거부"].map((s) => (
+              <option key={s} value={s}>
+                {s}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="full">
+          <button className="btn primary" disabled={busy} onClick={save}>
+            연락처 정보 저장
+          </button>
+          <button
+            className="btn ghost"
+            disabled={busy}
+            style={{ marginLeft: 6, color: "#b91c1c" }}
+            onClick={async () => {
+              if (!confirmDelete) {
+                setConfirmDelete(true);
+                return;
+              }
+              setBusy(true);
+              try {
+                await onDelete(contact.e);
+              } finally {
+                setBusy(false);
+              }
+            }}
+          >
+            {confirmDelete ? "정말 삭제" : "연락처 삭제"}
+          </button>
+          {confirmDelete && (
+            <button className="btn ghost" disabled={busy} style={{ marginLeft: 6 }} onClick={() => setConfirmDelete(false)}>
+              취소
+            </button>
+          )}
+          <div className="hint" style={{ marginTop: 4 }}>
+            삭제해도 기존 활동 원문은 타임라인 증적으로 보존됩니다.
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── company detail (with edit) ─────────────────────────────────────────────
 export function CompanyDetail({
   group,
@@ -253,6 +371,7 @@ export function CompanyDetail({
   onInfer,
   onReassignActivity,
   onReclassifyGlm,
+  onDelete,
   aiBusy,
 }: {
   group: CompanyGroup;
@@ -262,6 +381,7 @@ export function CompanyDetail({
   onLogActivity: (p: ActivityPayload) => void;
   onReassignActivity?: (id: number, company: string) => void;
   onReclassifyGlm?: (key: string) => void;
+  onDelete?: (key: string) => void;
   aiBusy?: boolean;
   onInfer: (key: string) => Promise<{
     industry?: string;
@@ -282,7 +402,12 @@ export function CompanyDetail({
   const evFor = (email: string) =>
     activities.filter((e) => e.em === email).sort((a, b) => b.dt.localeCompare(a.dt));
   const myEv = activities
-    .filter((e) => memberEmails.has(e.em) || (e.co && e.co === group.name))
+    .filter(
+      (e) =>
+        memberEmails.has(e.em) ||
+        (e.cokey && e.cokey === group.key) ||
+        (!e.cokey && e.co && e.co === group.name)
+    )
     .sort((a, b) => b.dt.localeCompare(a.dt))
     .slice(0, 50);
 
@@ -391,6 +516,15 @@ export function CompanyDetail({
           <button className="btn primary" onClick={() => onSave(group.key, form)}>
             회사 정보 저장
           </button>
+          {onDelete && (
+            <button
+              className="btn"
+              style={{ marginLeft: 6, color: "#dc2626", borderColor: "#f3b0b0" }}
+              onClick={() => onDelete(group.key)}
+            >
+              회사 삭제
+            </button>
+          )}
         </div>
       </div>
       <div className="field">
@@ -444,6 +578,8 @@ export function PersonDetail({
   onOpenCompany,
   onLogActivity,
   onSaveTags,
+  onSaveContact,
+  onDeleteContact,
 }: {
   contact: Customer;
   companies: Record<string, CompanyProfile>;
@@ -451,6 +587,8 @@ export function PersonDetail({
   onOpenCompany: (key: string) => void;
   onLogActivity: (p: ActivityPayload) => void;
   onSaveTags: (email: string, tags: string[]) => void;
+  onSaveContact: (email: string, fields: Record<string, string>) => void | Promise<void>;
+  onDeleteContact: (email: string) => void | Promise<void>;
 }) {
   const ci = companyProfile(companies, contact.ckey);
   const myEv = activities
@@ -486,6 +624,7 @@ export function PersonDetail({
           {contact.p ? " · " + contact.p : ""}
         </div>
       </div>
+      <ContactEditor contact={contact} onSave={onSaveContact} onDelete={onDeleteContact} />
       <div className="field">
         <div className="k">
           관심 솔루션 <span className="hint">(릴레잇 문의 + 피트페이퍼 열람 통합)</span>

@@ -14,7 +14,7 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
-from . import glm, queries, slack_sync
+from . import glm, queries, semantic, slack_sync, vision
 from .config import get_settings
 from .db import get_conn
 
@@ -42,9 +42,10 @@ class CompanyProfileIn(BaseModel):
 
 class ReviewResolveIn(BaseModel):
     action: str = Field(
-        "approve", pattern="^(approve|edit|reject|link_existing|register_new)$"
+        "approve", pattern="^(approve|edit|reject|link_existing|register_new|apply_fields)$"
     )
     value: str | None = None
+    fields: dict | None = None  # for apply_fields
     company_key: str | None = None  # for link_existing
     company_name: str | None = None  # for register_new
     company_fields: dict | None = None  # optional industry/sub_industry/description
@@ -58,6 +59,9 @@ class SyncSettingsIn(BaseModel):
     include_featpaper: bool | None = None
     require_review_for_new_company: bool | None = None
     glm_parse_cross_team: bool | None = None
+    slack_callback_enabled: bool | None = None
+    slack_callback_mode: str | None = None
+    slack_callback_reaction: str | None = None
     auto_sync_enabled: bool | None = None
     auto_sync_interval_minutes: int | None = None
 
@@ -66,6 +70,7 @@ class SyncIn(BaseModel):
     export_file: str | None = None
     limit: int | None = None  # collect only the most recent N messages
     backfill: bool = False  # force full history backfill for all channels
+    only_channel: str | None = None  # sync a single channel id (e.g. 명함)
 
 
 class LeadIn(BaseModel):
@@ -99,8 +104,22 @@ class GlmSearchIn(BaseModel):
     query: str
 
 
+class SemanticSearchIn(BaseModel):
+    query: str
+    limit: int = 30
+
+
 class InferIn(BaseModel):
     context: str = ""
+
+
+class BatchInferIn(BaseModel):
+    limit: int = 30
+    min_confidence: float = 0.45
+
+
+class EmbeddingRebuildIn(BaseModel):
+    limit: int = 0
 
 
 # ── read endpoints ─────────────────────────────────────────────────────────
@@ -185,6 +204,17 @@ def merge_companies(body: MergeIn) -> dict:
     return {"ok": True, **result}
 
 
+@app.delete("/api/companies/{canonical_key}")
+def delete_company(canonical_key: str) -> dict:
+    with get_conn() as conn:
+        queries.begin_change(conn, f"회사 삭제: {canonical_key}")
+        try:
+            result = queries.delete_company(conn, canonical_key)
+        except KeyError:
+            raise HTTPException(status_code=404, detail="company not found")
+    return {"ok": True, **result}
+
+
 @app.get("/api/companies/search")
 def search_companies(q: str = Query(""), limit: int = Query(20)) -> dict:
     if not q.strip():
@@ -203,6 +233,7 @@ def resolve_review(review_id: int, body: ReviewResolveIn) -> dict:
                 review_id,
                 body.action,
                 value=body.value,
+                fields=body.fields,
                 company_key=body.company_key,
                 company_name=body.company_name,
                 company_fields=body.company_fields,
@@ -240,6 +271,17 @@ def update_contact(email: str, body: ContactUpdateIn) -> dict:
         queries.begin_change(conn, f"연락처 수정: {email}")
         try:
             result = queries.update_contact(conn, email, body.model_dump())
+        except KeyError:
+            raise HTTPException(status_code=404, detail="contact not found")
+    return {"ok": True, **result}
+
+
+@app.delete("/api/contacts/{email}")
+def delete_contact(email: str) -> dict:
+    with get_conn() as conn:
+        queries.begin_change(conn, f"연락처 삭제: {email}")
+        try:
+            result = queries.delete_contact(conn, email)
         except KeyError:
             raise HTTPException(status_code=404, detail="contact not found")
     return {"ok": True, **result}
@@ -327,7 +369,15 @@ def log_activity(body: ActivityIn) -> dict:
 
 @app.get("/api/glm/status")
 def glm_status() -> dict:
-    return {"configured": glm.is_configured()}
+    cfg = glm.config()
+    vision_ok, vision_reason = vision.available()
+    return {
+        "configured": glm.is_configured(),
+        "embedding_model": cfg.get("embedding_model", ""),
+        "vision_provider": vision.provider(),
+        "vision_available": vision_ok,
+        "vision_reason": vision_reason,
+    }
 
 
 @app.post("/api/slack/resolve-users")
@@ -366,6 +416,18 @@ def audit_undo(batch: str) -> dict:
 def slack_messages(limit: int = Query(300), q: str = Query("")) -> dict:
     with get_conn() as conn:
         return {"items": queries.slack_messages(conn, limit=limit, q=q)}
+
+
+class OcrCardIn(BaseModel):
+    channel_id: str
+    ts: str
+
+
+@app.post("/api/slack/messages/ocr-card")
+def ocr_card(body: OcrCardIn) -> dict:
+    """수집 원문의 명함 이미지를 vision OCR로 추론(미리보기, DB 반영 없음)."""
+    with get_conn() as conn:
+        return slack_sync.ocr_message_cards(conn, body.channel_id, body.ts)
 
 
 class GlmExtractIn(BaseModel):
@@ -437,7 +499,33 @@ def glm_search(body: GlmSearchIn) -> dict:
     filters = glm.extract_search_filters(body.query)
     with get_conn() as conn:
         result = queries.search_by_filters(conn, filters)
-    return {"ok": True, "filters": filters, "mode": filters.get("_mode", "fallback"), **result}
+        semantic_result = (
+            semantic.search(conn, body.query, limit=30)
+            if glm.is_configured()
+            else {"ok": False, "items": [], "emails": []}
+        )
+    if semantic_result.get("ok") and semantic_result.get("emails"):
+        merged = sorted(set(result.get("emails", [])) | set(semantic_result.get("emails", [])))
+        result = {**result, "emails": merged, "count": len(merged)}
+    return {
+        "ok": True,
+        "filters": filters,
+        "mode": "hybrid" if semantic_result.get("ok") else filters.get("_mode", "fallback"),
+        "semantic": semantic_result,
+        **result,
+    }
+
+
+@app.post("/api/search/semantic")
+def semantic_search(body: SemanticSearchIn) -> dict:
+    with get_conn() as conn:
+        return semantic.search(conn, body.query, limit=body.limit)
+
+
+@app.post("/api/embeddings/rebuild")
+def rebuild_embeddings(body: EmbeddingRebuildIn = Body(default=EmbeddingRebuildIn())) -> dict:
+    with get_conn() as conn:
+        return semantic.rebuild(conn, limit=body.limit)
 
 
 @app.post("/api/companies/{canonical_key}/infer")
@@ -461,6 +549,95 @@ def infer_company(canonical_key: str, body: InferIn) -> dict:
     if co is None:
         raise HTTPException(status_code=404, detail="company not found")
     return {"ok": True, "result": glm.infer_company_profile(co["display_name"], context)}
+
+
+@app.post("/api/companies/infer-batch")
+def infer_companies_batch(body: BatchInferIn) -> dict:
+    """Fill blank company profile fields in bulk using GLM.
+
+    Existing human-entered fields are preserved. Personal placeholder companies
+    are skipped to avoid inventing account profiles for individual-only records.
+    """
+    if not glm.is_configured():
+        return {"ok": False, "message": "GLM이 설정되지 않았습니다 (GLM_API_URL/GLM_API_KEY).", "updated": 0}
+    limit = max(1, min(int(body.limit or 30), 100))
+    min_conf = max(0.0, min(float(body.min_confidence or 0.45), 1.0))
+    scanned = 0
+    updated = 0
+    skipped = 0
+    errors: list[str] = []
+    with get_conn() as conn:
+        queries.begin_change(conn, f"회사 일괄 자동추정 ({limit})")
+        rows = conn.execute(
+            """
+            SELECT canonical_key, display_name, industry, sub_industry, description
+            FROM companies
+            WHERE display_name NOT LIKE '개인:%'
+              AND display_name NOT IN ('(미분류)', '(회사 미상)', '미분류')
+              AND (
+                COALESCE(industry,'') = ''
+                OR COALESCE(sub_industry,'') = ''
+                OR COALESCE(description,'') = ''
+              )
+            ORDER BY
+              CASE WHEN COALESCE(industry,'') = '' THEN 0 ELSE 1 END,
+              display_name ASC
+            LIMIT ?
+            """,
+            (limit,),
+        ).fetchall()
+        for co in rows:
+            scanned += 1
+            ctx_rows = conn.execute(
+                """
+                SELECT ct.inquiry_summary FROM contacts ct
+                JOIN companies c ON c.id = ct.company_id
+                WHERE c.canonical_key = ? AND ct.inquiry_summary <> ''
+                ORDER BY ct.updated_at DESC
+                LIMIT 8
+                """,
+                (co["canonical_key"],),
+            ).fetchall()
+            context = "\n".join(r["inquiry_summary"] for r in ctx_rows)
+            try:
+                inferred = glm.infer_company_profile(co["display_name"], context)
+            except Exception as exc:  # noqa: BLE001
+                errors.append(f"{co['display_name']}: {exc}")
+                continue
+            if inferred.get("_mode") != "glm":
+                errors.append(f"{co['display_name']}: {inferred.get('message', 'GLM error')}")
+                continue
+            conf = float(inferred.get("confidence") or 0)
+            if conf < min_conf:
+                skipped += 1
+                continue
+            fields = {
+                "industry": co["industry"] or (inferred.get("industry") or ""),
+                "sub_industry": co["sub_industry"] or (inferred.get("sub_industry") or ""),
+                "description": co["description"] or (inferred.get("description") or ""),
+            }
+            fields = {k: str(v).strip() for k, v in fields.items() if str(v or "").strip()}
+            if not fields:
+                skipped += 1
+                continue
+            before = {
+                "industry": co["industry"] or "",
+                "sub_industry": co["sub_industry"] or "",
+                "description": co["description"] or "",
+            }
+            patch = {k: v for k, v in fields.items() if not before[k] and v}
+            if not patch:
+                skipped += 1
+                continue
+            queries.update_company_profile(conn, co["canonical_key"], patch, profile_source="glm_batch")
+            updated += 1
+    return {
+        "ok": True,
+        "scanned": scanned,
+        "updated": updated,
+        "skipped": skipped,
+        "errors": errors[:5],
+    }
 
 
 @app.get("/api/guide")
@@ -491,7 +668,7 @@ _sync_state: dict = {"running": False, "logs": [], "result": None, "started": 0.
 _sync_lock = threading.Lock()
 
 
-def _start_sync(export_file, limit, backfill, label="") -> bool:
+def _start_sync(export_file, limit, backfill, label="", only_channel=None) -> bool:
     """Start a sync in a background thread. Returns False if one is already running."""
     with _sync_lock:
         if _sync_state["running"]:
@@ -503,7 +680,8 @@ def _start_sync(export_file, limit, backfill, label="") -> bool:
     def _job() -> None:
         try:
             _sync_state["result"] = slack_sync.run_sync(
-                export_file=export_file, limit=limit, backfill=backfill, logs=logs
+                export_file=export_file, limit=limit, backfill=backfill,
+                only_channel=only_channel, logs=logs
             )
         except Exception as exc:  # noqa: BLE001
             logs.append(f"[sync] 오류: {exc}")
@@ -522,11 +700,36 @@ def sync(body: SyncIn | None = None) -> dict:
         body.limit if body else None,
         body.backfill if body else False,
         label="backfill" if (body and body.backfill) else "sync",
+        only_channel=body.only_channel if body else None,
     )
     if not started:
         return {"ok": True, "running": True, "started": False,
                 "message": "이미 동기화가 진행 중입니다. 진행 상황은 상태 폴링으로 확인하세요."}
     return {"ok": True, "running": True, "started": True, "message": "동기화를 시작했습니다"}
+
+
+@app.post("/api/recleanse")
+def recleanse() -> dict:
+    """저장된 원문에서 슬랙 활동을 재파싱(재수집 없음). sync와 같은 상태 폴링 사용."""
+    with _sync_lock:
+        if _sync_state["running"]:
+            return {"ok": True, "running": True, "started": False,
+                    "message": "작업이 진행 중입니다. 잠시 후 다시 시도하세요."}
+        _sync_state.update({"running": True, "logs": [], "result": None,
+                            "started": time.time(), "label": "recleanse"})
+    logs = _sync_state["logs"]
+
+    def _job() -> None:
+        try:
+            _sync_state["result"] = slack_sync.run_recleanse(logs=logs)
+        except Exception as exc:  # noqa: BLE001
+            logs.append(f"[recleanse] 오류: {exc}")
+            _sync_state["result"] = {"ok": False, "message": str(exc), "log": logs}
+        finally:
+            _sync_state["running"] = False
+
+    threading.Thread(target=_job, name="rtm-recleanse", daemon=True).start()
+    return {"ok": True, "running": True, "started": True, "message": "재클렌징을 시작했습니다"}
 
 
 @app.get("/api/sync/status")
@@ -591,4 +794,3 @@ if _settings.frontend_dist.exists():
         StaticFiles(directory=str(_settings.frontend_dist), html=True),
         name="frontend",
     )
-

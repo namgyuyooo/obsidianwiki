@@ -87,9 +87,10 @@ def _create_audit(conn: sqlite3.Connection) -> None:
 
 
 def _connect(db_path: Path) -> sqlite3.Connection:
-    conn = sqlite3.connect(db_path, timeout=10)
+    conn = sqlite3.connect(db_path, timeout=30)
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA foreign_keys = ON")
+    conn.execute("PRAGMA busy_timeout = 30000")
     return conn
 
 
@@ -144,6 +145,8 @@ def _run_migrations(conn: sqlite3.Connection) -> None:
         conn.execute("ALTER TABLE slack_raw_messages ADD COLUMN thread_ts TEXT NOT NULL DEFAULT ''")
     if "archived" not in raw_cols:
         conn.execute("ALTER TABLE slack_raw_messages ADD COLUMN archived INTEGER NOT NULL DEFAULT 0")
+    if "callback_sent_at" not in raw_cols:
+        conn.execute("ALTER TABLE slack_raw_messages ADD COLUMN callback_sent_at TEXT NOT NULL DEFAULT ''")
 
     conn.execute(
         "CREATE INDEX IF NOT EXISTS idx_contact_tags_tag ON contact_tags(tag)"
@@ -162,6 +165,19 @@ def _run_migrations(conn: sqlite3.Connection) -> None:
         )
         """
     )
+    user_cols = [r[1] for r in conn.execute("PRAGMA table_info(slack_users)")]
+    for col, ddl in {
+        "display_name": "TEXT NOT NULL DEFAULT ''",
+        "title": "TEXT NOT NULL DEFAULT ''",
+        "email": "TEXT NOT NULL DEFAULT ''",
+        "phone": "TEXT NOT NULL DEFAULT ''",
+        "status_text": "TEXT NOT NULL DEFAULT ''",
+        "status_emoji": "TEXT NOT NULL DEFAULT ''",
+        "image_72": "TEXT NOT NULL DEFAULT ''",
+        "profile_json": "TEXT NOT NULL DEFAULT '{}'",
+    }.items():
+        if col not in user_cols:
+            conn.execute(f"ALTER TABLE slack_users ADD COLUMN {col} {ddl}")
     # 유사 중복 "병합 안 함(무시)" 기록 — 다시 후보로 뜨지 않게
     conn.execute(
         "CREATE TABLE IF NOT EXISTS dup_dismissed "
@@ -170,6 +186,26 @@ def _run_migrations(conn: sqlite3.Connection) -> None:
     _create_audit(conn)
     conn.execute(
         "CREATE INDEX IF NOT EXISTS idx_activities_type ON activities(activity_type)"
+    )
+    conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS semantic_documents (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          entity_type TEXT NOT NULL,
+          entity_key TEXT NOT NULL,
+          title TEXT NOT NULL DEFAULT '',
+          text TEXT NOT NULL DEFAULT '',
+          text_hash TEXT NOT NULL DEFAULT '',
+          embedding_json TEXT NOT NULL DEFAULT '',
+          model TEXT NOT NULL DEFAULT '',
+          updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          UNIQUE(entity_type, entity_key)
+        )
+        """
+    )
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_semantic_documents_entity "
+        "ON semantic_documents(entity_type, entity_key)"
     )
 
 

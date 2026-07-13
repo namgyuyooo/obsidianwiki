@@ -93,6 +93,30 @@ def undo_batch(conn: sqlite3.Connection, batch: str) -> dict:
 UNKNOWN_KEY = "(회사 미상)"
 
 _MENTION_RE = re.compile(r"<@([UWB][A-Z0-9]+)>")
+_FREE_EMAIL_DOMAINS = {
+    "gmail.com",
+    "googlemail.com",
+    "naver.com",
+    "hanmail.net",
+    "daum.net",
+    "kakao.com",
+    "nate.com",
+    "paran.com",
+    "empal.com",
+    "dreamwiz.com",
+    "outlook.com",
+    "hotmail.com",
+    "live.com",
+    "msn.com",
+    "icloud.com",
+    "me.com",
+    "mac.com",
+    "yahoo.com",
+    "yahoo.co.kr",
+    "proton.me",
+    "protonmail.com",
+}
+_NON_COMPANY_NAMES = {"", UNKNOWN_KEY, "(미분류)", "미분류", "불명", "기타", "일반"}
 
 
 def load_user_map(conn: sqlite3.Connection) -> dict[str, str]:
@@ -110,6 +134,125 @@ def apply_user_names(text: str, usermap: dict[str, str]) -> str:
     if not text:
         return text
     return _MENTION_RE.sub(lambda m: "@" + usermap.get(m.group(1), m.group(1)), text)
+
+
+def _email_domain(email: str) -> str:
+    email = (email or "").strip().lower()
+    if "@" not in email:
+        return ""
+    domain = email.rsplit("@", 1)[-1].strip().strip(".")
+    if not re.fullmatch(r"[a-z0-9.-]+\.[a-z]{2,}", domain):
+        return ""
+    return domain
+
+
+def _is_business_email_domain(domain: str) -> bool:
+    domain = (domain or "").strip().lower()
+    if not domain or domain in _FREE_EMAIL_DOMAINS:
+        return False
+    parts = [p for p in domain.split(".") if p]
+    if len(parts) < 2:
+        return False
+    return not any(p in {"mail", "email", "smtp", "mx"} for p in parts[:1])
+
+
+def _domain_label(domain: str) -> str:
+    parts = [p for p in (domain or "").split(".") if p]
+    if len(parts) >= 3 and parts[-2] in {"co", "or", "go", "ac", "ne", "re"}:
+        return parts[-3]
+    return parts[0] if parts else ""
+
+
+def is_non_company_name(name: str) -> bool:
+    n = (name or "").strip()
+    if not n:
+        return True
+    folded = re.sub(r"\s+", "", n).lower()
+    if n in _NON_COMPANY_NAMES or folded in {"개인", "없음", "무", "미정", "모름", "테스트", "test", "asdf", "aaa", "ggg", "ss", "000", "123"}:
+        return True
+    if folded.isdigit():
+        return True
+    if re.fullmatch(r"[ㄱ-ㅎㅏ-ㅣ]+", n):
+        return True
+    if len(folded) <= 2 and not (n.isascii() and n.isupper()):
+        return True
+    if len(set(folded)) == 1 and len(folded) >= 2:
+        return True
+    return False
+
+
+def personal_company_name(email: str, name: str = "") -> str:
+    label = (name or "").strip()
+    if is_non_company_name(label):
+        label = (email or "").strip().lower()
+    return f"개인:{label}" if label else "개인:미상"
+
+
+def _company_domain_suggestion(
+    conn: sqlite3.Connection,
+    email: str,
+    *,
+    include_derived: bool = True,
+) -> dict | None:
+    domain = _email_domain(email)
+    if not _is_business_email_domain(domain):
+        return None
+
+    rows = conn.execute(
+        """
+        SELECT co.id, co.canonical_key, co.display_name, COUNT(*) AS n
+        FROM contacts ct
+        JOIN companies co ON co.id = ct.company_id
+        WHERE lower(substr(ct.email, instr(ct.email, '@') + 1)) = ?
+          AND COALESCE(co.display_name, '') NOT LIKE '개인:%'
+          AND COALESCE(co.display_name, '') NOT IN (?, ?, ?, ?, ?, ?, ?)
+        GROUP BY co.id, co.canonical_key, co.display_name
+        ORDER BY n DESC, co.display_name ASC
+        LIMIT 5
+        """,
+        (domain, "", UNKNOWN_KEY, "(미분류)", "미분류", "불명", "기타", "일반"),
+    ).fetchall()
+    candidates = [
+        {
+            "company_id": r["id"],
+            "company_key": r["canonical_key"],
+            "company_name": r["display_name"],
+            "count": r["n"],
+        }
+        for r in rows
+    ]
+    if candidates:
+        total = sum(c["count"] for c in candidates) or 1
+        top = candidates[0]
+        confidence = top["count"] / total
+        if len(candidates) == 1:
+            confidence = max(confidence, 0.82)
+        return {
+            "domain": domain,
+            "company_id": top["company_id"],
+            "company_key": top["company_key"],
+            "company_name": top["company_name"],
+            "confidence": round(min(0.97, confidence), 2),
+            "reason": f"업무용 이메일 도메인 @{domain}의 기존 연락처 매칭",
+            "candidates": candidates,
+            "derived": False,
+        }
+
+    if not include_derived:
+        return None
+    label = _domain_label(domain)
+    if not label:
+        return None
+    return {
+        "domain": domain,
+        "company_id": None,
+        "company_key": _norm_company_key(label),
+        "company_name": label,
+        "confidence": 0.35,
+        "reason": f"업무용 이메일 도메인 @{domain}에서 회사명 후보 추정",
+        "candidates": [],
+        "derived": True,
+    }
 
 
 def slack_permalink(channel_id: str, message_ts: str, raw_payload: str | None) -> str:
@@ -136,9 +279,11 @@ def slack_permalink(channel_id: str, message_ts: str, raw_payload: str | None) -
 # Two collection channels, each with its own strategy:
 #   - inbound   : #sales-inbound — 릴레잇/피트페이퍼 훅 → 신규 리드 파싱
 #   - cross_team: #tf_cross_team_sales — 미팅 일지/액션 템플릿 → 활동/회사정보 파싱
+#   - business_card: #sales-명함 — 명함 이미지 OCR(GLM-V) → 연락처/회사 업데이트
 DEFAULT_CHANNELS = [
     {"id": "C07RMMQC8GP", "name": "sales-inbound", "strategy": "inbound", "enabled": True},
     {"id": "C01L5SA4Y4C", "name": "tf_cross_team_sales", "strategy": "cross_team", "enabled": True},
+    {"id": "C0BGZKBLC4U", "name": "sales-명함", "strategy": "business_card", "enabled": True},
 ]
 
 DEFAULT_SYNC_SETTINGS: dict[str, Any] = {
@@ -149,6 +294,9 @@ DEFAULT_SYNC_SETTINGS: dict[str, Any] = {
     "include_featpaper": True,  # inbound: 피트페이퍼 열람/폼
     "require_review_for_new_company": False,  # 새 회사는 검수 큐로
     "glm_parse_cross_team": True,  # 결정적 파싱이 회사 못 찾으면 GLM으로 추출(적극 사용)
+    "slack_callback_enabled": False,  # legacy: callback_mode가 없으면 사용
+    "slack_callback_mode": "off",  # off | reaction | thread
+    "slack_callback_reaction": "database",
     "auto_sync_enabled": False,
     "auto_sync_interval_minutes": 30,
     "channel_state": {},  # {channel_id: last_synced_ts}
@@ -167,12 +315,22 @@ def get_sync_settings(conn: sqlite3.Connection) -> dict[str, Any]:
     row = conn.execute(
         "SELECT value FROM app_settings WHERE key = 'sync_rules'"
     ).fetchone()
-    settings = dict(DEFAULT_SYNC_SETTINGS)
+    settings = {
+        **DEFAULT_SYNC_SETTINGS,
+        "channels": [dict(ch) for ch in DEFAULT_CHANNELS],
+        "channel_state": {},
+    }
     if row is not None:
         try:
             settings.update(json.loads(row["value"]))
         except (ValueError, TypeError):
             pass
+    if not isinstance(settings.get("channels"), list):
+        settings["channels"] = [dict(ch) for ch in DEFAULT_CHANNELS]
+    by_id = {str(ch.get("id")): ch for ch in settings.get("channels", []) if isinstance(ch, dict)}
+    for default_ch in DEFAULT_CHANNELS:
+        if default_ch["id"] not in by_id:
+            settings.setdefault("channels", []).append(default_ch)
     return settings
 
 
@@ -242,9 +400,23 @@ def slack_messages(conn: sqlite3.Connection, limit: int = 300, q: str = "") -> l
         if is_reply(r):
             continue
         text = r["text"] or ""
-        if ql and ql not in text.lower():
-            continue
         payload = r["_payload"]
+        files = []
+        for f in payload.get("files", []) or []:
+            if not isinstance(f, dict):
+                continue
+            files.append({
+                "id": str(f.get("id") or ""),
+                "name": str(f.get("name") or f.get("title") or ""),
+                "title": str(f.get("title") or f.get("name") or ""),
+                "mimetype": str(f.get("mimetype") or ""),
+                "filetype": str(f.get("filetype") or ""),
+                "pretty_type": str(f.get("pretty_type") or ""),
+                "size": int(f.get("size") or 0),
+            })
+        file_text = " ".join(f"{f['name']} {f['title']} {f['mimetype']} {f['filetype']}" for f in files)
+        if ql and ql not in (text + " " + file_text).lower():
+            continue
         # 댓글: 부모 payload의 thread_replies + thread_ts로 연결된 별도 row 병합(중복 제거)
         comments: dict[str, dict] = {}
         for rep in payload.get("thread_replies", []) or []:
@@ -272,6 +444,7 @@ def slack_messages(conn: sqlite3.Connection, limit: int = 300, q: str = "") -> l
             "user": usermap.get(r["user_id"], r["user_id"]),
             "text": apply_user_names(text, usermap),
             "permalink": payload.get("permalink", ""),
+            "files": files,
             "comments": sorted(comments.values(), key=lambda c: c.get("text", "")),
             "applied": bool(r.get("applied")),
             "applied_kind": r.get("applied_kind") or "",
@@ -457,11 +630,13 @@ def activities(conn: sqlite3.Connection) -> list[dict]:
     """Sales-history events in the old ``evts`` shape plus type/next/link/comments."""
     rows = conn.execute(
         """
-        SELECT id, occurred_at, source_type, activity_type, next_action,
-               email_snapshot, name_snapshot, company_snapshot,
-               solution_name, inquiry_text, raw_payload
-        FROM activities
-        ORDER BY occurred_at DESC
+        SELECT a.id, a.occurred_at, a.source_type, a.activity_type, a.next_action,
+               a.email_snapshot, a.name_snapshot, a.company_snapshot,
+               a.solution_name, a.inquiry_text, a.raw_payload,
+               COALESCE(co.canonical_key, '') AS cokey
+        FROM activities a
+        LEFT JOIN companies co ON a.company_id = co.id
+        ORDER BY a.occurred_at DESC
         """
     ).fetchall()
     usermap = load_user_map(conn)
@@ -486,6 +661,7 @@ def activities(conn: sqlite3.Connection) -> list[dict]:
                 "em": r["email_snapshot"],
                 "nm": r["name_snapshot"],
                 "co": r["company_snapshot"],
+                "cokey": r["cokey"],
                 "it": r["solution_name"],
                 "iq": apply_user_names(r["inquiry_text"], usermap),
                 "link": link,
@@ -652,7 +828,11 @@ def reviews(conn: sqlite3.Connection, status: str) -> list[dict]:
                 (r["entity_id"],),
             ).fetchone()
             if ctx is not None:
-                item["entity_context"] = dict(ctx)
+                context = dict(ctx)
+                suggestion = _company_domain_suggestion(conn, context.get("email") or "")
+                if suggestion is not None:
+                    context["domain_suggestion"] = suggestion
+                item["entity_context"] = context
         result.append(item)
     return result
 
@@ -813,15 +993,30 @@ def find_duplicate_companies(conn: sqlite3.Connection, limit: int = 100) -> list
     return out[:limit]
 
 
+def delete_company(conn: sqlite3.Connection, canonical_key: str) -> dict:
+    """회사 삭제. 담당자·활동은 회사 연결만 해제(NULL)하고 데이터는 유지."""
+    row = conn.execute("SELECT id, display_name FROM companies WHERE canonical_key=?", (canonical_key,)).fetchone()
+    if row is None:
+        raise KeyError(canonical_key)
+    cid = row["id"]
+    c1 = conn.execute("UPDATE contacts SET company_id=NULL WHERE company_id=?", (cid,))
+    c2 = conn.execute("UPDATE activities SET company_id=NULL WHERE company_id=?", (cid,))
+    conn.execute("DELETE FROM company_aliases WHERE company_id=?", (cid,))
+    conn.execute("DELETE FROM companies WHERE id=?", (cid,))
+    return {"deleted": canonical_key, "name": row["display_name"],
+            "unlinked_contacts": c1.rowcount, "unlinked_activities": c2.rowcount}
+
+
 def merge_companies(conn: sqlite3.Connection, keep_key: str, merge_keys: list[str]) -> dict:
     """Merge ``merge_keys`` companies into ``keep_key``: reassign contacts and
     activities, register aliases, then delete the merged company rows."""
     keep = conn.execute(
-        "SELECT id FROM companies WHERE canonical_key = ?", (keep_key,)
+        "SELECT id, display_name FROM companies WHERE canonical_key = ?", (keep_key,)
     ).fetchone()
     if keep is None:
         raise KeyError(keep_key)
     keep_id = keep["id"]
+    keep_name = keep["display_name"]
     moved_contacts = moved_activities = 0
     for mk in merge_keys:
         if mk == keep_key:
@@ -836,8 +1031,10 @@ def merge_companies(conn: sqlite3.Connection, keep_key: str, merge_keys: list[st
             "UPDATE contacts SET company_id = ? WHERE company_id = ?", (keep_id, mid)
         )
         moved_contacts += cur.rowcount
+        # 활동 병합: company_id + company_snapshot(표시명)까지 keep으로 갱신
         cur = conn.execute(
-            "UPDATE activities SET company_id = ? WHERE company_id = ?", (keep_id, mid)
+            "UPDATE activities SET company_id = ?, company_snapshot = ? WHERE company_id = ?",
+            (keep_id, keep_name, mid),
         )
         moved_activities += cur.rowcount
         conn.execute(
@@ -878,7 +1075,10 @@ _COMPANY_COLUMNS = {"industry", "sub_industry", "description", "owner", "memo", 
 
 
 def update_company_profile(
-    conn: sqlite3.Connection, canonical_key: str, fields: dict[str, str]
+    conn: sqlite3.Connection,
+    canonical_key: str,
+    fields: dict[str, str],
+    profile_source: str = "user_edit",
 ) -> dict:
     row = conn.execute(
         "SELECT id FROM companies WHERE canonical_key = ?", (canonical_key,)
@@ -889,11 +1089,10 @@ def update_company_profile(
     if not updates:
         return {"updated": 0}
     sets = ", ".join(f"{k} = ?" for k in updates)
-    params = list(updates.values()) + [row["id"]]
     conn.execute(
         f"UPDATE companies SET {sets}, needs_review = 0, "
-        f"profile_source = 'user_edit', updated_at = CURRENT_TIMESTAMP WHERE id = ?",
-        params,
+        f"profile_source = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+        list(updates.values()) + [profile_source, row["id"]],
     )
     return {"updated": len(updates), "company_id": row["id"]}
 
@@ -901,15 +1100,56 @@ def update_company_profile(
 _CONTACT_COLUMNS = {"name", "phone", "department", "title", "status"}
 
 
+def _company_name_by_id(conn: sqlite3.Connection, company_id: int | None) -> str:
+    if company_id is None:
+        return ""
+    row = conn.execute(
+        "SELECT display_name FROM companies WHERE id = ?", (company_id,)
+    ).fetchone()
+    return row["display_name"] if row else ""
+
+
+def _is_personal_or_unassigned_company(name: str) -> bool:
+    n = (name or "").strip()
+    return n.startswith("개인:") or n in _NON_COMPANY_NAMES or is_non_company_name(n)
+
+
+def _set_contact_company(
+    conn: sqlite3.Connection,
+    contact_id: int,
+    company_id: int | None,
+    company_name: str,
+    *,
+    move_activities: bool = True,
+) -> None:
+    conn.execute(
+        "UPDATE contacts SET company_id=?, updated_at=CURRENT_TIMESTAMP WHERE id=?",
+        (company_id, contact_id),
+    )
+    if move_activities:
+        conn.execute(
+            """
+            UPDATE activities
+            SET company_id=?, company_snapshot=?
+            WHERE contact_id=?
+            """,
+            (company_id, company_name if company_id is not None else "", contact_id),
+        )
+
+
 def update_contact(conn: sqlite3.Connection, email: str, fields: dict) -> dict:
-    row = conn.execute("SELECT id FROM contacts WHERE email = ?", (email.lower(),)).fetchone()
+    row = conn.execute(
+        "SELECT id, company_id FROM contacts WHERE email = ?", (email.lower(),)
+    ).fetchone()
     if row is None:
         raise KeyError(email)
     updates = {k: v for k, v in fields.items() if k in _CONTACT_COLUMNS and v is not None}
     if fields.get("company") is not None:
         company = fields["company"].strip()
+        if company and is_non_company_name(company):
+            company = personal_company_name(email, fields.get("name") or "")
         cid = _upsert_company(conn, company) if company else None
-        conn.execute("UPDATE contacts SET company_id=?, updated_at=CURRENT_TIMESTAMP WHERE id=?", (cid, row["id"]))
+        _set_contact_company(conn, row["id"], cid, company, move_activities=True)
     if updates:
         sets = ", ".join(f"{k}=?" for k in updates)
         conn.execute(
@@ -917,6 +1157,42 @@ def update_contact(conn: sqlite3.Connection, email: str, fields: dict) -> dict:
             list(updates.values()) + [row["id"]],
         )
     return {"contact_id": row["id"], "updated": list(updates) + (["company"] if fields.get("company") is not None else [])}
+
+
+def delete_contact(conn: sqlite3.Connection, email: str) -> dict:
+    row = conn.execute(
+        "SELECT id, email, name FROM contacts WHERE email = ?", (email.lower(),)
+    ).fetchone()
+    if row is None:
+        raise KeyError(email)
+    activity_count = conn.execute(
+        "SELECT COUNT(*) AS n FROM activities WHERE contact_id = ?", (row["id"],)
+    ).fetchone()["n"]
+    review_count = conn.execute(
+        """
+        SELECT COUNT(*) AS n FROM consistency_reviews
+        WHERE entity_type='contact' AND entity_id=? AND status='pending'
+        """,
+        (row["id"],),
+    ).fetchone()["n"]
+    conn.execute(
+        """
+        UPDATE consistency_reviews
+        SET status='rejected',
+            resolution_note='contact deleted',
+            resolved_at=CURRENT_TIMESTAMP
+        WHERE entity_type='contact' AND entity_id=? AND status='pending'
+        """,
+        (row["id"],),
+    )
+    conn.execute("DELETE FROM contacts WHERE id = ?", (row["id"],))
+    return {
+        "contact_id": row["id"],
+        "email": row["email"],
+        "name": row["name"],
+        "detached_activities": activity_count,
+        "closed_reviews": review_count,
+    }
 
 
 def company_activities(conn: sqlite3.Connection, canonical_key: str, limit: int = 50) -> list[dict]:
@@ -990,6 +1266,7 @@ def resolve_review(
     review_id: int,
     action: str,
     value: str | None = None,
+    fields: dict | None = None,
     company_key: str | None = None,
     company_name: str | None = None,
     company_fields: dict | None = None,
@@ -1014,8 +1291,13 @@ def resolve_review(
         _close_review(conn, review_id, "approved", "registered", result.get("company_id"))
         return {"action": action, **result}
 
+    if action == "apply_fields":
+        result = _apply_review_fields(conn, review, fields or {})
+        _close_review(conn, review_id, "approved", "fields_applied")
+        return {"action": action, **result}
+
     if action not in {"approve", "edit"}:
-        raise ValueError("action must be approve, edit, reject, link_existing, or register_new")
+        raise ValueError("action must be approve, edit, reject, link_existing, register_new, or apply_fields")
 
     proposed = value if (action == "edit" and value is not None) else review["proposed_value"]
     _apply_review_value(conn, review, proposed)
@@ -1025,6 +1307,77 @@ def resolve_review(
         (proposed, review_id),
     )
     return {"action": action}
+
+
+def _apply_review_fields(
+    conn: sqlite3.Connection, review: sqlite3.Row, fields: dict
+) -> dict:
+    """Apply multiple basic fields from a review card in one transaction.
+
+    Used by the review queue when the user wants to reflect company/name/title
+    etc. directly from the raw/GLM interpretation, then close the review.
+    """
+    if review["entity_id"] is None:
+        raise ValueError("review has no entity to update")
+    cleaned = {
+        str(k): str(v).strip()
+        for k, v in (fields or {}).items()
+        if v is not None and str(v).strip() != ""
+    }
+    if not cleaned:
+        raise ValueError("fields required")
+
+    if review["entity_type"] == "contact":
+        row = conn.execute(
+            "SELECT id FROM contacts WHERE id = ?", (review["entity_id"],)
+        ).fetchone()
+        if row is None:
+            raise ValueError("contact not found")
+
+        contact_updates = {
+            k: cleaned[k]
+            for k in ("name", "phone", "department", "title", "status")
+            if k in cleaned
+        }
+        if contact_updates:
+            sets = ", ".join(f"{k}=?" for k in contact_updates)
+            conn.execute(
+                f"UPDATE contacts SET {sets}, updated_at=CURRENT_TIMESTAMP WHERE id=?",
+                list(contact_updates.values()) + [review["entity_id"]],
+            )
+
+        company_id = None
+        if cleaned.get("company"):
+            company_id = _upsert_company(conn, cleaned["company"])
+            _set_contact_company(conn, review["entity_id"], company_id, cleaned["company"], move_activities=True)
+        return {
+            "updated": sorted(list(contact_updates) + (["company"] if company_id else [])),
+            "company_id": company_id,
+        }
+
+    if review["entity_type"] == "company":
+        row = conn.execute(
+            "SELECT id FROM companies WHERE id = ?", (review["entity_id"],)
+        ).fetchone()
+        if row is None:
+            raise ValueError("company not found")
+        allowed = {
+            "display_name", "name", "industry", "sub_industry",
+            "description", "owner", "memo",
+        }
+        updates = {k: cleaned[k] for k in cleaned if k in allowed}
+        if "name" in updates and "display_name" not in updates:
+            updates["display_name"] = updates.pop("name")
+        if "display_name" in updates:
+            updates["canonical_key"] = _norm_company_key(updates["display_name"])
+        sets = ", ".join(f"{k}=?" for k in updates)
+        conn.execute(
+            f"UPDATE companies SET {sets}, needs_review=0, updated_at=CURRENT_TIMESTAMP WHERE id=?",
+            list(updates.values()) + [review["entity_id"]],
+        )
+        return {"updated": sorted(updates)}
+
+    raise ValueError("unsupported review entity type")
 
 
 def _close_review(
@@ -1055,10 +1408,7 @@ def _link_existing_company(
     if co is None:
         raise ValueError(f"company not found: {company_key}")
     if review["entity_type"] == "contact" and review["entity_id"] is not None:
-        conn.execute(
-            "UPDATE contacts SET company_id=?, updated_at=CURRENT_TIMESTAMP WHERE id=?",
-            (co["id"], review["entity_id"]),
-        )
+        _set_contact_company(conn, review["entity_id"], co["id"], co["display_name"], move_activities=True)
     return {"company_id": co["id"], "company_name": co["display_name"]}
 
 
@@ -1094,9 +1444,8 @@ def _register_new_company(
         )
         company_id = cur.lastrowid
     if review["entity_type"] == "contact" and review["entity_id"] is not None:
-        conn.execute(
-            "UPDATE contacts SET company_id=?, updated_at=CURRENT_TIMESTAMP WHERE id=?",
-            (company_id, review["entity_id"]),
+        _set_contact_company(
+            conn, review["entity_id"], company_id, company_name.strip(), move_activities=True
         )
     return {"company_id": company_id, "company_name": company_name.strip(), "created": not existing}
 
@@ -1177,11 +1526,20 @@ def apply_contact_event(
     if "@" not in email:
         raise ValueError("valid email required")
     company_name = (company or "").strip()
+    domain_suggestion = None
+    if is_non_company_name(company_name):
+        domain_suggestion = _company_domain_suggestion(
+            conn, email, include_derived=False
+        )
+        if domain_suggestion and domain_suggestion.get("confidence", 0) >= 0.72:
+            company_name = domain_suggestion["company_name"]
+        else:
+            company_name = personal_company_name(email, name)
     company_id = _upsert_company(conn, company_name) if company_name else None
     date_only = occurred_at[:10] if occurred_at else ""
 
     existing = conn.execute(
-        "SELECT id FROM contacts WHERE email = ?", (email,)
+        "SELECT id, company_id FROM contacts WHERE email = ?", (email,)
     ).fetchone()
 
     if existing is None:
@@ -1223,6 +1581,9 @@ def apply_contact_event(
             (name, company_id, department, title, _norm_phone(phone),
              date_only, inquiry, inquiry, contact_id),
         )
+        current_company = _company_name_by_id(conn, existing["company_id"])
+        if company_id is not None and _is_personal_or_unassigned_company(current_company):
+            _set_contact_company(conn, contact_id, company_id, company_name, move_activities=True)
         created = False
 
     _link_source(conn, contact_id, source_code)
@@ -1243,7 +1604,18 @@ def apply_contact_event(
         (
             occurred_at, source_code, activity_type, next_action, contact_id,
             company_id, email, name, company_name, interest, inquiry,
-            collected_at, json.dumps(raw_payload or {}, ensure_ascii=False),
+            collected_at,
+            json.dumps(
+                {
+                    **(raw_payload or {}),
+                    **(
+                        {"domain_company_suggestion": domain_suggestion}
+                        if domain_suggestion and not company
+                        else {}
+                    ),
+                },
+                ensure_ascii=False,
+            ),
         ),
     )
     return {"contact_id": contact_id, "created": created}

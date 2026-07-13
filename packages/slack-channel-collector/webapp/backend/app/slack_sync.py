@@ -17,13 +17,16 @@ from __future__ import annotations
 import json
 import os
 import re
+import ssl
 import sys
 from datetime import datetime
 from pathlib import Path
 from typing import Any
+from urllib.error import URLError
+from urllib.request import Request, urlopen
 from zoneinfo import ZoneInfo
 
-from . import glm, queries
+from . import glm, queries, vision
 from .config import PACKAGE_ROOT
 from .db import get_conn
 
@@ -61,6 +64,45 @@ def _g(pattern: str, text: str) -> str:
     return m.group(1).strip() if m else ""
 
 
+_RELATE_KEYS = [
+    "이름", "업무용 이메일", "휴대폰 번호", "회사명", "부서명", "직책", "관심 솔루션", "문의내용",
+]
+
+
+def _clean_field_value(value: str) -> str:
+    value = (value or "").strip()
+    if value.startswith("*") and value.endswith("*") and len(value) >= 2:
+        value = value[1:-1].strip()
+    return value.replace("\r", "").strip()
+
+
+def _field_value(text: str, key: str, multiline: bool = False) -> str:
+    """Extract Slack form fields in both old bold and current plain formats.
+
+    Supports:
+      업무용 이메일: *a@b.com*
+      업무용 이메일: a@b.com
+      문의내용: *first line
+      second line*
+    """
+    # Old Relate formatting: `키: *값*`.
+    old = _g(rf"{re.escape(key)}\s*[:：]\s*\*([\s\S]*?)\*", text)
+    if old:
+        return _clean_field_value(old)
+
+    if multiline:
+        next_keys = [k for k in _RELATE_KEYS if k != key]
+        stop = "|".join(re.escape(k) for k in next_keys)
+        m = re.search(
+            rf"{re.escape(key)}\s*[:：]\s*([\s\S]*?)(?=\n(?:{stop})\s*[:：]|\Z)",
+            text or "",
+        )
+        return _clean_field_value(m.group(1)) if m else ""
+
+    m = re.search(rf"^{re.escape(key)}\s*[:：]\s*(.+?)\s*$", text or "", re.MULTILINE)
+    return _clean_field_value(m.group(1)) if m else ""
+
+
 def _ts_to_kst(ts: str | float) -> str:
     try:
         dt = datetime.fromtimestamp(float(ts), tz=KST)
@@ -72,6 +114,35 @@ def _ts_to_kst(ts: str | float) -> str:
 def parse_inbound(messages: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """#sales-inbound 전략: 릴레잇/피트페이퍼 훅 봇 메시지 → 신규 리드 이벤트."""
     return parse_messages(messages)
+
+
+def parse_business_cards(messages: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """#sales-명함 전략: image files → GLM-V OCR candidate events."""
+    events: list[dict[str, Any]] = []
+    for msg in messages:
+        files = [f for f in msg.get("files", []) or [] if _is_image_file(f)]
+        if not files:
+            continue
+        ts = msg.get("ts", "") or ""
+        text = msg.get("text", "") or ""
+        events.append({
+            "ts": ts,
+            "dt": _ts_to_kst(ts),
+            "kind": "business_card",
+            "src": "business_card",
+            "files": files,
+            "source_text": text,
+        })
+    return events
+
+
+def _is_image_file(file_item: dict[str, Any]) -> bool:
+    mime = (file_item.get("mimetype") or "").lower()
+    ftype = (file_item.get("filetype") or "").lower()
+    name = (file_item.get("name") or file_item.get("title") or "").lower()
+    if mime.startswith("image/"):
+        return True
+    return ftype in {"jpg", "jpeg", "png", "webp"} or name.endswith((".jpg", ".jpeg", ".png", ".webp"))
 
 
 def parse_messages(messages: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -95,19 +166,19 @@ def parse_messages(messages: list[dict[str, Any]]) -> list[dict[str, Any]]:
 
         # 릴레잇(홈페이지) 문의 폼
         if "업무용 이메일:" in text and "이름:" in text:
-            raw = _g(r"업무용 이메일: \*(.*?)\*", text)
+            raw = _field_value(text, "업무용 이메일")
             em = _mail_of(raw) or raw
             if "@" not in em:
                 continue
             out.append({
                 "ts": ts, "dt": dt, "src": "relate", "em": em.lower(),
-                "nm": _g(r"이름: \*(.*?)\*", text),
-                "ph": _g(r"휴대폰 번호: \*(.*?)\*", text),
-                "co": _g(r"회사명: \*(.*?)\*", text),
-                "dept": _g(r"부서명: \*(.*?)\*", text),
-                "title": _g(r"직책: \*(.*?)\*", text),
-                "it": _g(r"관심 솔루션: \*(.*?)\*", text),
-                "iq": _g(r"문의내용: \*([\s\S]*?)\*", text)[:300],
+                "nm": _field_value(text, "이름"),
+                "ph": _field_value(text, "휴대폰 번호"),
+                "co": _field_value(text, "회사명"),
+                "dept": _field_value(text, "부서명"),
+                "title": _field_value(text, "직책"),
+                "it": _field_value(text, "관심 솔루션"),
+                "iq": _field_value(text, "문의내용", multiline=True)[:300],
             })
             continue
 
@@ -179,7 +250,6 @@ _FIELD_KEYS = [
     "결과", "다음 액션", "Next Plan", "확인상태", "근거",
 ]
 
-
 def _companies_from_participants(value: str, known: list[str] | None = None) -> list[str]:
     """참석자 줄에서 회사명 추출 (사람이름 오검출 방지).
     예) '신흥_이해진이사 / FLS 이종국대표 / RTM_허정' → ['신흥', 'FLS'].
@@ -187,16 +257,20 @@ def _companies_from_participants(value: str, known: list[str] | None = None) -> 
       (a) '회사_사람'의 '_' 앞 토큰, (b) 대문자 ASCII(FLS/WGS), (c) 등록된 회사명."""
     known = known or []
     out: list[str] = []
-    for seg in re.split(r"[/]", value or ""):
-        seg = seg.strip()
+    for seg in re.split(r"[/\n]", value or ""):
+        seg = re.sub(r"^\s*[■•*·\-]+\s*", "", seg or "")
+        seg = seg.replace("*", "").strip()
         if not seg:
             continue
-        if "_" in seg:  # 회사_사람 → 확실
+        colon = re.match(r"^([가-힣A-Za-z0-9&().\-\s]{2,30})\s*[:：]\s*(.+)$", seg)
+        if colon:
+            token = _clean_company(colon.group(1))
+        elif "_" in seg:  # 회사_사람 → 확실
             token = _clean_company(seg.split("_", 1)[0])
         else:
             first = seg.split()[0] if seg.split() else ""
             tok = _clean_company(first)
-            if tok and tok.isascii() and tok.isupper() and len(tok) >= 2:
+            if tok and tok.isascii() and len(tok) >= 2:
                 token = tok  # FLS, WGS 등 대문자 약칭
             else:
                 token = next((k for k in known if k and k in seg), "")  # 등록 회사명만
@@ -204,6 +278,37 @@ def _companies_from_participants(value: str, known: list[str] | None = None) -> 
             continue
         out.append(token)
     return out
+
+
+def _participant_block(text: str) -> str:
+    """Extract multiline participant bullets following `참석자:`."""
+    lines = (text or "").splitlines()
+    out: list[str] = []
+    collecting = False
+    for raw in lines:
+        line = raw.strip()
+        plain = line.replace("*", "").strip()
+        if not collecting and re.match(r"^[■•*·\-\s]*참석자\s*[:：]\s*$", plain):
+            collecting = True
+            continue
+        if not collecting:
+            continue
+        if not line:
+            if out:
+                break
+            continue
+        label = re.sub(r"^[■•*·\-\s]*", "", plain).split(":", 1)[0].split("：", 1)[0].strip()
+        # Keep actual participant company labels (`Nexber: ...`) but stop when
+        # the next structured field/section begins.
+        if label in _FIELD_KEYS:
+            break
+        if re.match(r"^[■•*·\-\s]*(?:\d+[.)]|[A-Za-z ]+\s*[:：]|목적\s*[:：]|일시\s*[:：])", plain):
+            if label in _FIELD_KEYS:
+                break
+        if re.match(r"^\*?\d+\.\s+", line) or re.match(r"^[■•*·\-\s]*\[", plain):
+            break
+        out.append(line)
+    return "\n".join(out)
 _SOLUTIONS = ["Hubble", "EHM", "RISA", "M.AX Agent", "TS Agent"]
 
 
@@ -318,14 +423,18 @@ def parse_cross_team(
             company = _known_company_in_text(combined, known)  # 기존 회사명 매칭
 
         companies = _split_companies(company) + _split_companies(f.get("관련사", ""))
-        companies = list(dict.fromkeys([c for c in companies if c]))
+        companies = _normalize_company_list(companies, known)
 
-        # 참석자 줄의 다른 회사(예: FLS)도 모두 대상에 추가.
+        # 참석자 줄/블록의 다른 회사(예: FLS, Nexber)도 모두 대상에 추가.
         # 단, 기존 회사에 포함되는(부분문자열) 후보는 중복이므로 제외 (신흥 ⊂ 신흥안산공장).
-        for pc in _companies_from_participants(f.get("참석자", ""), known):
+        participant_text = "\n".join(
+            x for x in [f.get("참석자", ""), _participant_block(combined)] if x
+        )
+        for pc in _companies_from_participants(participant_text, known):
             if any(pc in c or c in pc for c in companies):
                 continue
             companies.append(pc)
+        companies = _normalize_company_list(companies, known)
 
         # 원문 보존 우선: 회사 추출 실패해도 활동 신호가 있으면 버리지 않는다.
         stripped = re.sub(r"<@[UWB][A-Z0-9]+>", "", text).strip()
@@ -413,7 +522,86 @@ _ACTIVITY_SIGNALS = re.compile(
 _CO_STOPWORDS = {
     "미팅", "방문", "결과", "내역", "내용", "공유", "금일", "오늘", "고객", "고객사",
     "회사", "각", "사", "2사", "3사", "관련", "차장", "부장", "대표", "이사", "책임",
+    "고객측", "자사", "당사", "내부", "우리회사", "우리 회사", "연구소", "부서", "담당자",
 }
+_OUR_COMPANY_RE = re.compile(r"rtm|알티엠|앝티엠|알티엠\(rtm\)", re.I)
+_ORG_UNIT_RE = re.compile(
+    r"(?:팀|품질보증팀|연구소|사업부|본부|센터|그룹|파트|랩|Lab|부서)\s*$",
+    re.I,
+)
+_PHRASE_NOISE_RE = re.compile(
+    r"도출|협의|확보|조성|합의|확인|요청|검토|진행|필요|사항|대상|데이터|"
+    r"제어|환경|예산|일정|현장|설치|라인|테스트|프로세스|향후|세부|논의|결정"
+)
+_LOW_QUALITY_COMPANY_NAMES = {
+    "기타", "개인", "없음", "무", "미정", "모름", "테스트", "test", "asdf",
+    "aaa", "ggg", "ss", "ㅇ", "ㅁ", "ㅁㅁ", "000", "123",
+}
+
+
+def _is_company_noise(name: str, known: list[str] | None = None) -> bool:
+    """Reject internal labels, departments, roles, and sentence fragments.
+
+    This keeps the parser generic: real customer names are not hardcoded, but
+    non-company labels commonly produced by meeting notes cannot become
+    companies.
+    """
+    n = _clean_company(name).strip()
+    if not n:
+        return True
+    known = known or []
+    if any(n == k for k in known):
+        return False
+    folded = re.sub(r"\s+", "", n).lower()
+    if folded in {re.sub(r"\s+", "", w).lower() for w in _CO_STOPWORDS}:
+        return True
+    if _OUR_COMPANY_RE.search(n):
+        return True
+    if _ORG_UNIT_RE.search(n):
+        return True
+    if _PHRASE_NOISE_RE.search(n):
+        return True
+    if n.count(" ") >= 3:
+        return True
+    if re.fullmatch(r"[가-힣]{1,3}(?:측|팀|부|소)", n):
+        return True
+    return _is_low_quality_company_name(n)
+
+
+def _normalize_company_list(values: list[str], known: list[str] | None = None) -> list[str]:
+    out: list[str] = []
+    for value in values:
+        company = _clean_company(value)
+        if _is_company_noise(company, known):
+            continue
+        if any(company in c or c in company for c in out):
+            continue
+        out.append(company)
+    return out
+
+
+def _is_low_quality_company_name(name: str) -> bool:
+    """Detect placeholder/test values from inbound forms.
+
+    Keep legitimate uppercase abbreviations such as ATG/FLS/WGS/LG, but avoid
+    creating companies from obvious test strings, numbers, or consonant-only
+    Korean placeholders.
+    """
+    n = _clean_company(name).strip()
+    if not n:
+        return False
+    folded = n.lower().replace(" ", "")
+    if folded in _LOW_QUALITY_COMPANY_NAMES:
+        return True
+    if folded.isdigit():
+        return True
+    if re.fullmatch(r"[ㄱ-ㅎㅏ-ㅣ]+", n):
+        return True
+    if len(folded) <= 2 and not (n.isascii() and n.isupper()):
+        return True
+    if len(set(folded)) == 1 and len(folded) >= 2:
+        return True
+    return False
 
 
 def _company_from_freeform(text: str) -> str:
@@ -432,6 +620,8 @@ def _company_from_freeform(text: str) -> str:
         r"\d{2,4}[.\-]\d{1,2}[.\-]\d{1,2}\s*([가-힣A-Za-z()]{2,14}(?:\s[가-힣A-Za-z()]{1,12})?)\s*(?:미팅|방문)",
         r"^\s*([가-힣A-Za-z()]{2,14}(?:\s[가-힣A-Za-z()]{1,12})?)\s*(?:미팅|방문)\s*(?:내역|결과|내용|공유)",
         r"^\s*\[\s*([가-힣A-Za-z()]{2,14}?)[\s\-\]]",
+        r"^\s*([가-힣A-Za-z()]{2,14})\s*(?:확장\s*과제|과제\s*확장|업무\s*협의|업무협의)",
+        r"(?:^|\s)([A-Z]{2,6})\s*(?:미팅|방문)\s*(?:참석자|내역|결과|내용)?",
     ]
     bad_frag = ("통화", "대응", "신청", "논의", "확인", "문의", "과제", "건", "안내",
                 "요청", "관련", "종료", "예정", "님", "이사", "팀장", "차장", "대표",
@@ -486,6 +676,7 @@ def _load_from_collector(
     limit: int | None = None,
     channel_id: str | None = None,
     full: bool = False,
+    logs: list[str] | None = None,
 ) -> tuple[list[dict], str, str]:
     _ensure_collector_importable()
     from rtm_slack_channel_collector import collector  # type: ignore
@@ -518,7 +709,8 @@ def _load_from_collector(
 
     config = collector.CollectionConfig.from_env(require_token=True)
     config = config.__class__(**{**config.__dict__, **overrides})
-    result = collector.collect_once(config, dry_run=True)  # dry_run keeps payload in memory
+    on_progress = (lambda m: _log(logs, f"    · {m}")) if logs is not None else None
+    result = collector.collect_once(config, dry_run=True, on_progress=on_progress)  # dry_run keeps payload in memory
     payload = result.get("sample_payload", {})
     return payload.get("messages", []), result.get("channel_id", ""), result.get("channel_id", "")
 
@@ -550,7 +742,7 @@ def _store_raw_message(conn, channel_id: str, msg: dict, permalink: str) -> None
 
 
 def resolve_users(conn) -> dict:
-    """Slack users.list로 ID→이름 매핑을 받아 slack_users에 저장.
+    """Slack users.list + users.profile.get으로 ID→실제 프로필을 저장.
 
     토큰이 없으면 아무것도 안 하고 현재 저장된 수만 반환.
     """
@@ -569,26 +761,66 @@ def resolve_users(conn) -> dict:
 
         config = collector.CollectionConfig.from_env(require_token=True)
         client = collector.SlackClient(config.token, config.api_min_interval_seconds)
-        cursor, added = "", 0
+        cursor, added, profiled, profile_errors = "", 0, 0, 0
         while True:
             payload = client.request("users.list", {"limit": 200, "cursor": cursor})
             for u in payload.get("members", []):
                 uid = u.get("id")
                 if not uid:
                     continue
-                prof = u.get("profile", {}) or {}
+                prof = dict(u.get("profile", {}) or {})
+                try:
+                    detail = client.request("users.profile.get", {"user": uid, "include_labels": "true"}, max_retries=3)
+                    if isinstance(detail.get("profile"), dict):
+                        prof.update(detail["profile"])
+                        profiled += 1
+                except Exception:
+                    profile_errors += 1
                 name = prof.get("display_name") or prof.get("real_name") or u.get("real_name") or u.get("name") or ""
                 conn.execute(
-                    "INSERT INTO slack_users(user_id, name, real_name) VALUES (?,?,?) "
-                    "ON CONFLICT(user_id) DO UPDATE SET name=excluded.name, "
-                    "real_name=excluded.real_name, updated_at=CURRENT_TIMESTAMP",
-                    (uid, name, u.get("real_name", "") or prof.get("real_name", "")),
+                    """
+                    INSERT INTO slack_users(
+                      user_id, name, real_name, display_name, title, email, phone,
+                      status_text, status_emoji, image_72, profile_json
+                    ) VALUES (?,?,?,?,?,?,?,?,?,?,?)
+                    ON CONFLICT(user_id) DO UPDATE SET
+                      name=excluded.name,
+                      real_name=excluded.real_name,
+                      display_name=excluded.display_name,
+                      title=excluded.title,
+                      email=excluded.email,
+                      phone=excluded.phone,
+                      status_text=excluded.status_text,
+                      status_emoji=excluded.status_emoji,
+                      image_72=excluded.image_72,
+                      profile_json=excluded.profile_json,
+                      updated_at=CURRENT_TIMESTAMP
+                    """,
+                    (
+                        uid,
+                        name,
+                        u.get("real_name", "") or prof.get("real_name", ""),
+                        prof.get("display_name", "") or "",
+                        prof.get("title", "") or "",
+                        prof.get("email", "") or "",
+                        prof.get("phone", "") or "",
+                        prof.get("status_text", "") or "",
+                        prof.get("status_emoji", "") or "",
+                        prof.get("image_72", "") or "",
+                        json.dumps(prof, ensure_ascii=False),
+                    ),
                 )
                 added += 1
             cursor = payload.get("response_metadata", {}).get("next_cursor", "")
             if not cursor:
                 break
-        return {"ok": True, "configured": True, "stored": added}
+        return {
+            "ok": True,
+            "configured": True,
+            "stored": added,
+            "profiled": profiled,
+            "profile_errors": profile_errors,
+        }
     except Exception as exc:  # noqa: BLE001
         return {"ok": False, "configured": True, "stored": 0, "message": str(exc)}
 
@@ -680,10 +912,12 @@ def run_sync(
                     full = backfill or is_initial
                     _log(logs, f"[sync] #{ch.get('name') or ch['id']} 수집 시작 "
                                f"(전략={ch.get('strategy')}, {'전체 백필' if full else '증분'})")
+                    _log(logs, f"[sync] Slack API 호출 중… {'전체 히스토리는 수 분 걸릴 수 있음' if full else '증분 조회'}")
                     msgs, ch_id, _ = _load_from_collector(
-                        settings, limit=limit, channel_id=ch["id"], full=full
+                        settings, limit=limit, channel_id=ch["id"], full=full, logs=logs
                     )
-                    _log(logs, f"[sync] #{ch['id']} Slack에서 {len(msgs)}개 메시지 가져옴")
+                    _log(logs, f"[sync] #{ch['id']} Slack에서 {len(msgs)}개 메시지 가져옴 → 파싱/반영 시작")
+                    settings["_backfill"] = full
                     r = _process_channel(conn, ch["id"], ch.get("strategy", "inbound"), msgs, settings, state, limit, logs)
                     _merge_totals(totals, r)
                     per_channel.append({"channel": ch.get("name") or ch["id"], "strategy": ch.get("strategy"), **r})
@@ -738,6 +972,222 @@ def _merge_totals(totals: dict, r: dict) -> None:
     totals["queued"] += r["queued"]
 
 
+def _slack_token() -> str:
+    return (
+        os.environ.get("SLACK_BOT_TOKEN")
+        or os.environ.get("SLACK_USER_TOKEN")
+        or os.environ.get("SLACK_TOKEN")
+        or ""
+    ).strip()
+
+
+def _download_slack_file(file_item: dict[str, Any]) -> tuple[bytes, str]:
+    url = (file_item.get("url_private") or "").strip()
+    if not url:
+        raise RuntimeError("Slack 파일 url_private 없음")
+    token = _slack_token()
+    if not token:
+        raise RuntimeError("Slack 토큰 없음")
+    req = Request(url, headers={"Authorization": f"Bearer {token}"})
+    try:
+        with urlopen(req, timeout=45) as resp:
+            return resp.read(), resp.headers.get_content_type()
+    except URLError as exc:
+        reason = getattr(exc, "reason", None)
+        if isinstance(reason, ssl.SSLCertVerificationError) or "CERTIFICATE_VERIFY_FAILED" in str(reason):
+            with urlopen(req, timeout=45, context=ssl._create_unverified_context()) as resp:
+                return resp.read(), resp.headers.get_content_type()
+        raise
+
+
+def _post_slack_thread_reply(channel_id: str, thread_ts: str, text: str) -> dict:
+    token = _slack_token()
+    if not token:
+        raise RuntimeError("Slack 토큰 없음")
+    body = json.dumps(
+        {
+            "channel": channel_id,
+            "thread_ts": str(thread_ts),
+            "text": text,
+            "unfurl_links": False,
+            "unfurl_media": False,
+        },
+        ensure_ascii=False,
+    ).encode("utf-8")
+    req = Request(
+        "https://slack.com/api/chat.postMessage",
+        data=body,
+        headers={
+            "Authorization": f"Bearer {token}",
+            "Content-Type": "application/json; charset=utf-8",
+        },
+    )
+    try:
+        with urlopen(req, timeout=30) as resp:
+            payload = json.loads(resp.read().decode("utf-8"))
+    except URLError as exc:
+        reason = getattr(exc, "reason", exc)
+        if isinstance(reason, ssl.SSLCertVerificationError) or "CERTIFICATE_VERIFY_FAILED" in str(reason):
+            with urlopen(req, timeout=30, context=ssl._create_unverified_context()) as resp:
+                payload = json.loads(resp.read().decode("utf-8"))
+        else:
+            raise RuntimeError(f"Slack 콜백 연결 실패: {reason}") from exc
+    if not payload.get("ok"):
+        raise RuntimeError(f"Slack 콜백 실패: {payload.get('error', 'unknown_error')}")
+    return payload
+
+
+def _post_slack_reaction(channel_id: str, ts: str, reaction: str) -> dict:
+    token = _slack_token()
+    if not token:
+        raise RuntimeError("Slack 토큰 없음")
+    names = [(reaction or "database").strip(":")]
+    if names[0] == "database":
+        names.append("card_file_box")
+    last_payload: dict[str, Any] = {}
+    for name in dict.fromkeys(names):
+        body = json.dumps(
+            {
+                "channel": channel_id,
+                "timestamp": str(ts),
+                "name": name,
+            },
+            ensure_ascii=False,
+        ).encode("utf-8")
+        req = Request(
+            "https://slack.com/api/reactions.add",
+            data=body,
+            headers={
+                "Authorization": f"Bearer {token}",
+                "Content-Type": "application/json; charset=utf-8",
+            },
+        )
+        try:
+            with urlopen(req, timeout=30) as resp:
+                payload = json.loads(resp.read().decode("utf-8"))
+        except URLError as exc:
+            reason = getattr(exc, "reason", exc)
+            if isinstance(reason, ssl.SSLCertVerificationError) or "CERTIFICATE_VERIFY_FAILED" in str(reason):
+                with urlopen(req, timeout=30, context=ssl._create_unverified_context()) as resp:
+                    payload = json.loads(resp.read().decode("utf-8"))
+            else:
+                raise RuntimeError(f"Slack reaction 연결 실패: {reason}") from exc
+        last_payload = payload
+        if payload.get("ok") or payload.get("error") == "already_reacted":
+            payload["_reaction_name"] = name
+            return payload
+        if payload.get("error") != "invalid_name":
+            break
+    raise RuntimeError(f"Slack reaction 실패: {last_payload.get('error', 'unknown_error')}")
+
+
+def _callback_text(e: dict, kind: str) -> str:
+    return "DB 수집완료했으니 걱정마시게"
+
+
+def _callback_mode(settings: dict) -> str:
+    raw = str(settings.get("slack_callback_mode") or "").strip().lower()
+    if raw in {"off", "reaction", "thread"}:
+        return raw
+    return "reaction" if settings.get("slack_callback_enabled") else "off"
+
+
+def _post_sync_callback(
+    conn,
+    channel_id: str,
+    e: dict,
+    kind: str,
+    settings: dict,
+    logs: list[str] | None = None,
+) -> None:
+    mode = _callback_mode(settings)
+    if mode == "off":
+        return
+    ts = str(e.get("ts") or "")
+    if not channel_id or not ts:
+        return
+    row = conn.execute(
+        "SELECT callback_sent_at FROM slack_raw_messages WHERE channel_id=? AND message_ts=?",
+        (channel_id, ts),
+    ).fetchone()
+    if row and str(row["callback_sent_at"] or ""):
+        return
+    try:
+        if mode == "thread":
+            _post_slack_thread_reply(channel_id, ts, _callback_text(e, kind))
+            label = "Slack 스레드 콜백"
+        else:
+            reaction = str(settings.get("slack_callback_reaction") or "white_check_mark")
+            _post_slack_reaction(channel_id, ts, reaction)
+            label = f"Slack reaction :{reaction.strip(':')}:"
+        sent_at = datetime.now(KST).strftime("%Y-%m-%d %H:%M:%S")
+        conn.execute(
+            "UPDATE slack_raw_messages SET callback_sent_at=? WHERE channel_id=? AND message_ts=?",
+            (sent_at, channel_id, ts),
+        )
+        _log(logs, f"  ↩ {label} 완료: {ts}")
+    except Exception as exc:  # noqa: BLE001
+        _log(logs, f"  ⚠️ Slack 콜백 실패: {ts} — {exc}")
+
+
+def _ensure_business_card_source(conn) -> None:
+    conn.execute(
+        "INSERT OR IGNORE INTO sources(code, label, category) VALUES('business_card', 'Slack 명함 OCR', 'channel')"
+    )
+
+
+def _event_uid(channel_id: str, ts: str) -> str:
+    """Stable per-message UUID. Slack ts is unique within a channel, so
+    channel_id:ts uniquely identifies a message across all syncs/backfills."""
+    return f"{channel_id}:{ts}"
+
+
+def _ensure_parsed_events(conn) -> None:
+    conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS parsed_events (
+            uid         TEXT PRIMARY KEY,
+            channel_id  TEXT,
+            message_ts  TEXT,
+            kind        TEXT,
+            applied     INTEGER DEFAULT 0,
+            parsed_at   TEXT
+        )
+        """
+    )
+
+
+def _applied_uids(conn, channel_id: str) -> set[str]:
+    """UUIDs of messages already applied for this channel → never re-parse."""
+    _ensure_parsed_events(conn)
+    return {
+        str(r[0])
+        for r in conn.execute(
+            "SELECT message_ts FROM parsed_events WHERE channel_id=? AND applied=1",
+            (channel_id,),
+        )
+    }
+
+
+def _record_parsed_event(conn, channel_id: str, ts: str, kind: str, applied: bool) -> None:
+    """Idempotently record that a message was parsed. applied=1 messages are
+    skipped on future syncs/backfills; applied=0 (failed/unparseable) stay
+    retryable so a later run (e.g. after GLM is configured) can pick them up."""
+    _ensure_parsed_events(conn)
+    now = datetime.now(KST).strftime("%Y-%m-%d %H:%M:%S")
+    conn.execute(
+        """
+        INSERT INTO parsed_events(uid, channel_id, message_ts, kind, applied, parsed_at)
+        VALUES(?,?,?,?,?,?)
+        ON CONFLICT(uid) DO UPDATE SET
+            kind=excluded.kind,
+            applied=MAX(parsed_events.applied, excluded.applied),
+            parsed_at=excluded.parsed_at
+        """,
+        (_event_uid(channel_id, str(ts)), channel_id, str(ts), kind, 1 if applied else 0, now),
+    )
+
+
 def _process_channel(
     conn, channel_id: str, strategy: str, messages: list[dict],
     settings: dict, state: dict, limit: int | None, logs: list[str] | None = None,
@@ -780,6 +1230,8 @@ def _process_channel(
         ]
         known.sort(key=len, reverse=True)
         events = parse_cross_team(messages, known)
+    elif strategy == "business_card":
+        events = parse_business_cards(messages)
     else:
         events = parse_inbound(messages)
         allowed = set()
@@ -789,12 +1241,24 @@ def _process_channel(
             allowed.add("featpaper")
         events = [e for e in events if e["src"] in allowed]
 
+    # Per-message UUID dedup: a message already applied (channel_id:ts) is never
+    # re-parsed, even during a full-history backfill or after channel_state reset.
+    # This is the authoritative dedup; last_ts stays only as a resume optimization.
+    applied_uids = _applied_uids(conn, channel_id)
     last_ts = float(state.get(channel_id) or 0)
-    fresh = [e for e in events if _ts_float(e["ts"]) > last_ts]
+    candidates = [e for e in events if str(e["ts"]) not in applied_uids]
+    skipped_dup = len(events) - len(candidates)
+    # Backfill re-scans full history, so don't gate on last_ts there; incremental
+    # runs still use the high-water mark to avoid touching old messages.
+    if settings.get("_backfill"):
+        fresh = candidates
+    else:
+        fresh = [e for e in candidates if _ts_float(e["ts"]) > last_ts]
     fresh.sort(key=lambda e: _ts_float(e["ts"]))
 
     counts = {"collected": len(messages), "parsed": len(events),
-              "new_leads": 0, "new_activities": 0, "queued": 0}
+              "new_leads": 0, "new_activities": 0, "queued": 0,
+              "skipped_dup": skipped_dup}
     max_ts = last_ts
     collected_now = datetime.now(KST).strftime("%Y-%m-%d %H:%M:%S")
     require_review = bool(settings.get("require_review_for_new_company"))
@@ -803,7 +1267,16 @@ def _process_channel(
         and settings.get("glm_parse_cross_team", True)
         and glm.is_configured()
     )
-    _log(logs, f"[sync] #{channel_id} ({strategy}) 수집 {len(messages)} · 파싱 {len(events)} · 신규 {len(fresh)}")
+    _log(
+        logs,
+        f"[sync] #{channel_id} ({strategy}) 수집 {len(messages)} · 파싱 {len(events)}"
+        f" · 신규 {len(fresh)} · 중복건너뜀 {skipped_dup}",
+    )
+    if strategy == "business_card" and len(events) == 0 and len(messages) > 0:
+        _log(
+            logs,
+            "  ⚠️ 명함: 이미지 첨부 메시지를 찾지 못함 — 수집 범위(시간)·파일 권한(files:read)·봇 채널 초대 확인",
+        )
     for e in fresh:
         _cos = ", ".join(e.get("companies", []) or [e.get("co", "")])
         _who = ", ".join(c.get("email", "") for c in e.get("contacts", [])) or e.get("em", "")
@@ -816,20 +1289,39 @@ def _process_channel(
     # continue without re-applying (channel_state advances past applied ts).
     COMMIT_EVERY = 20
     for i, e in enumerate(fresh, 1):
-        max_ts = max(max_ts, _ts_float(e["ts"]))
+        event_ts = _ts_float(e["ts"])
         info = info_by_ts.get(str(e["ts"]), {})
         e["permalink"] = info.get("permalink", "")
         e["comments"] = info.get("comments", [])
         e["channel_id"] = channel_id
         e["collected_at"] = collected_now
         if strategy == "cross_team":
-            # 결정적 파싱이 회사/담당자를 못 찾으면 GLM으로 적극 추출
-            if use_glm and not e.get("companies") and not e.get("contacts"):
+            # 결정적 파싱이 회사를 못 찾았거나 작성자가 추정/확인 필요로
+            # 표시한 애매한 건만 GLM으로 보강한다. 참석자/관련사가 있다는
+            # 이유만으로 전량 GLM 호출하면 대량 백필이 과도하게 느려진다.
+            if use_glm and (not e.get("companies") or e.get("review_required")):
+                _log(logs, f"    ✨ GLM 파싱 요청 (ts={e['ts']}, 규칙파싱 미검출)")
                 _glm_enrich_event(e, logs)
+                _log(logs, f"    ✨ GLM 결과: 회사 {', '.join(e.get('companies', []) or []) or '(없음)'}")
             _apply_cross_event(conn, e, require_review, counts)
+        elif strategy == "business_card":
+            _apply_business_card_event(conn, e, require_review, counts, logs)
         else:
             _apply_inbound_event(conn, e, require_review, counts)
-        _mark_applied(conn, channel_id, e["ts"], e.get("kind") or e.get("src") or "activity")
+        applied_kind = e.get("kind") or e.get("src") or "activity"
+        if e.get("_applied", True):
+            _mark_applied(conn, channel_id, e["ts"], applied_kind)
+            _record_parsed_event(conn, channel_id, e["ts"], applied_kind, applied=True)
+            max_ts = max(max_ts, event_ts)
+        else:
+            # 파싱은 시도했으나 반영 못함 → 재시도 가능하도록 applied=0 기록
+            _record_parsed_event(conn, channel_id, e["ts"], applied_kind, applied=False)
+            conn.execute(
+                "UPDATE slack_raw_messages SET archived=0 WHERE channel_id=? AND message_ts=?",
+                (channel_id, str(e["ts"])),
+            )
+        _post_sync_callback(conn, channel_id, e, applied_kind, settings, logs)
+        _log(logs, f"  → [{i}/{len(fresh)}] {applied_kind} {'반영' if e.get('_applied', True) else '보류'} (ts={e['ts']})")
         if i % COMMIT_EVERY == 0:
             state[channel_id] = max_ts
             queries.save_sync_settings(conn, {"channel_state": state})
@@ -842,11 +1334,177 @@ def _process_channel(
     return counts
 
 
+def _apply_business_card_event(
+    conn, e: dict, require_review: bool, counts: dict, logs: list[str] | None = None
+) -> None:
+    """Apply one Slack business-card image message using vision OCR.
+
+    우선순위: z.ai Vision MCP(코딩플랜 GLM-4.6V) → REST vision 폴백.
+    """
+    vision_ok, vision_reason = vision.available()
+    if not vision_ok:
+        e["_applied"] = False
+        _log(logs, f"  ⚠️ 명함 OCR 건너뜀: {vision_reason} (VISION_PROVIDER={vision.provider()})")
+        return
+
+    _ensure_business_card_source(conn)
+    any_applied = False
+    for file_item in e.get("files", []) or []:
+        filename = file_item.get("name") or file_item.get("title") or file_item.get("id") or "business-card"
+        try:
+            image_bytes, detected_mime = _download_slack_file(file_item)
+        except Exception as exc:  # noqa: BLE001
+            _log(logs, f"  ⚠️ 명함 이미지 다운로드 실패: {filename} — {exc}")
+            continue
+
+        mime_type = file_item.get("mimetype") or detected_mime or "image/jpeg"
+        ocr = vision.ocr_business_card(
+            image_bytes, mime_type=mime_type, filename=filename,
+            hint=e.get("source_text", ""), logs=logs,
+        )
+        if not vision.is_ok(ocr):
+            _log(logs, f"  ⚠️ 명함 OCR 실패: {filename} — {ocr.get('message', 'unknown')}")
+            e["_error"] = ocr.get("message", "OCR failed")
+            continue
+        _log(logs, f"  🪪 OCR 성공[{ocr.get('_provider', '?')}]: {filename}")
+
+        email = (ocr.get("email") or "").strip().lower()
+        company = (ocr.get("company") or "").strip()
+        name = (ocr.get("name") or "").strip()
+        confidence = float(ocr.get("confidence") or 0)
+        if "@" not in email:
+            _log(logs, f"  ⚠️ 명함 OCR 보류: {filename} — 이메일을 읽지 못함")
+            e["_error"] = "명함 OCR이 이메일을 읽지 못함"
+            continue
+
+        review_required = (
+            bool(ocr.get("review_required"))
+            or confidence < 0.75
+            or (require_review and company and not _company_exists(conn, company))
+        )
+        apply_company = "" if review_required else company
+        phone = (ocr.get("mobile") or ocr.get("phone") or "").strip()
+        memo_parts = [
+            "명함 OCR",
+            f"파일: {filename}",
+            f"신뢰도: {confidence:.2f}",
+            (ocr.get("evidence") or "").strip(),
+        ]
+        inquiry = "\n".join(p for p in memo_parts if p)
+        res = queries.apply_contact_event(
+            conn,
+            email=email,
+            name=name,
+            company=apply_company,
+            department=(ocr.get("department") or "").strip(),
+            title=(ocr.get("title") or "").strip(),
+            phone=phone,
+            interest="",
+            inquiry=inquiry,
+            occurred_at=e["dt"],
+            source_code="business_card",
+            activity_type="명함 수집",
+            collected_at=e.get("collected_at", ""),
+            raw_payload={**e, "ocr": ocr, "file": file_item},
+        )
+        counts["new_leads" if res["created"] else "new_activities"] += 1
+        any_applied = True
+
+        if review_required and company:
+            conn.execute(
+                """
+                INSERT INTO consistency_reviews
+                  (review_type, entity_type, entity_id, field_name, current_value,
+                   proposed_value, evidence, source_table, confidence)
+                VALUES ('business_card_company', 'contact', ?, 'company_id', '', ?, ?, 'slack_sync', ?)
+                """,
+                (
+                    res["contact_id"],
+                    company,
+                    f"Slack 명함 OCR 회사 연결 확인 필요 — {company} ({filename})",
+                    max(0.1, min(confidence, 0.99)),
+                ),
+            )
+            counts["queued"] += 1
+        _log(
+            logs,
+            f"  🪪 명함 OCR: {company or '-'} / {name or '-'} / {email} "
+            f"({'검수' if review_required else '반영'})",
+        )
+
+    if not any_applied:
+        e["_applied"] = False
+
+
+def ocr_message_cards(conn, channel_id: str, ts: str, logs: list[str] | None = None) -> dict:
+    """On-demand OCR of business-card image(s) in a stored Slack message.
+
+    수집 원문 뷰어의 '명함 추론하기' 버튼용 — DB에 반영하지 않고 추출 필드만 반환한다.
+    사용자가 결과를 확인/수정한 뒤 기존 '반영하기'(apply)로 저장한다.
+    """
+    logs = logs if logs is not None else []
+    row = conn.execute(
+        "SELECT raw_payload, text FROM slack_raw_messages WHERE channel_id=? AND message_ts=?",
+        (channel_id, str(ts)),
+    ).fetchone()
+    if not row:
+        return {"ok": False, "message": "원문을 찾을 수 없습니다."}
+    try:
+        payload = json.loads(row["raw_payload"] or "{}")
+    except (ValueError, TypeError):
+        payload = {}
+    files = [f for f in payload.get("files", []) or [] if _is_image_file(f)]
+    if not files:
+        return {"ok": False, "message": "이 메시지에는 명함 이미지 파일이 없습니다."}
+    vision_ok, reason = vision.available()
+    if not vision_ok:
+        return {"ok": False, "message": f"OCR 백엔드 미가용: {reason} (VISION_PROVIDER={vision.provider()})"}
+
+    hint = payload.get("text", "") or row["text"] or ""
+    cards = []
+    for f in files:
+        name = f.get("name") or f.get("title") or f.get("id") or "명함"
+        _log(logs, f"[ocr] 명함 추론: {name}")
+        try:
+            image_bytes, detected_mime = _download_slack_file(f)
+        except Exception as exc:  # noqa: BLE001
+            cards.append({"file_name": name, "ok": False, "message": f"다운로드 실패: {exc}"})
+            continue
+        mime = f.get("mimetype") or detected_mime or "image/jpeg"
+        ocr = vision.ocr_business_card(image_bytes, mime_type=mime, filename=name, hint=hint, logs=logs)
+        if not vision.is_ok(ocr):
+            cards.append({"file_name": name, "ok": False, "message": ocr.get("message", "OCR 실패")})
+            continue
+        cards.append({
+            "file_name": name,
+            "ok": True,
+            "provider": ocr.get("_provider", ""),
+            "confidence": float(ocr.get("confidence") or 0),
+            "fields": {
+                "company": (ocr.get("company") or "").strip(),
+                "name": (ocr.get("name") or "").strip(),
+                "email": (ocr.get("email") or "").strip(),
+                "department": (ocr.get("department") or "").strip(),
+                "title": (ocr.get("title") or "").strip(),
+                "phone": (ocr.get("mobile") or ocr.get("phone") or "").strip(),
+            },
+            "evidence": (ocr.get("evidence") or "").strip(),
+        })
+    ok_any = any(c.get("ok") for c in cards)
+    return {"ok": ok_any, "cards": cards, "message": "" if ok_any else "OCR 결과가 없습니다."}
+
+
 def _apply_inbound_event(conn, e: dict, require_review: bool, counts: dict) -> None:
     company = e.get("co", "")
+    if _is_low_quality_company_name(company):
+        company = UNCLASSIFIED
+        e["co"] = UNCLASSIFIED
     # 이메일이 없으면 담당자 생성 불가 → 회사 단위 활동으로 보존(회사도 없으면 미분류)
     if not (e.get("em") and "@" in e["em"]):
         co = company or UNCLASSIFIED
+        if co == UNCLASSIFIED:
+            e["_applied"] = False
+            return
         if not _company_exists(conn, co):
             queries._upsert_company(conn, co)
         queries.log_activity(conn, {
@@ -877,8 +1535,44 @@ def _apply_inbound_event(conn, e: dict, require_review: bool, counts: dict) -> N
 
 def _glm_enrich_event(e: dict, logs: list[str] | None = None) -> None:
     """결정적 파싱 실패 이벤트를 GLM으로 회사/담당자/솔루션 보강 (적극 사용)."""
+    source = e.get("source_text") or e.get("iq") or ""
+    current = list(e.get("companies") or [])
+    selected = glm.select_external_company_candidates(source, current)
+    if selected.get("_mode") == "glm" and selected.get("companies"):
+        normalized = []
+        for company in selected.get("companies") or []:
+            company = _clean_company(str(company))
+            if company and not _is_company_noise(company):
+                normalized.append(company)
+        normalized = _normalize_company_list(normalized)
+        if normalized:
+            e["companies"] = normalized
+            e["primary_co"] = e["companies"][0]
+            e["co"] = e["companies"][0]
+
+    involved = glm.extract_involved_companies(
+        source,
+        candidates=list(e.get("companies") or []),
+    )
+    if involved.get("_mode") == "glm":
+        current = list(e.get("companies") or [])
+        for company in involved.get("companies") or []:
+            company = _clean_company(str(company))
+            if _is_company_noise(company):
+                continue
+            if any(company in c or c in company for c in current):
+                continue
+            current.append(company)
+        normalized = _normalize_company_list(current)
+        if normalized:
+            e["companies"] = normalized
+            e["primary_co"] = normalized[0]
+            e["co"] = normalized[0]
+
     res = glm.extract_lead_event(e.get("source_text") or e.get("iq") or "")
     if res.get("_mode") != "glm":
+        if logs is not None and involved.get("_mode") == "glm" and involved.get("companies"):
+            _log(logs, f"  ✨GLM 관련사 보강: {e.get('companies') or '-'}")
         return
     comps = [
         (c.get("name") or "").strip()
@@ -886,9 +1580,19 @@ def _glm_enrich_event(e: dict, logs: list[str] | None = None) -> None:
         if isinstance(c, dict) and (c.get("name") or "").strip()
     ]
     if comps:
-        e["companies"] = comps
-        e["primary_co"] = comps[0]
-        e["co"] = comps[0]
+        current = list(e.get("companies") or [])
+        for comp in comps:
+            comp = _clean_company(comp)
+            if _is_company_noise(comp):
+                continue
+            if any(comp in c or c in comp for c in current):
+                continue
+            current.append(comp)
+        normalized = _normalize_company_list(current)
+        if normalized:
+            e["companies"] = normalized
+            e["primary_co"] = normalized[0]
+            e["co"] = normalized[0]
     cons = []
     for c in res.get("contacts") or []:
         if not isinstance(c, dict):
@@ -905,7 +1609,7 @@ def _glm_enrich_event(e: dict, logs: list[str] | None = None) -> None:
     if not e.get("it") and isinstance(act, dict) and act.get("solution_name"):
         e["it"] = act["solution_name"]
     if logs is not None and (comps or cons):
-        _log(logs, f"  ✨GLM 추출: 회사={comps or '-'} 담당={[c['email'] for c in cons] or '-'}")
+        _log(logs, f"  ✨GLM 추출: 회사={e.get('companies') or '-'} 담당={[c['email'] for c in cons] or '-'}")
 
 
 def _apply_cross_event(conn, e: dict, require_review: bool, counts: dict) -> None:
@@ -924,17 +1628,11 @@ def _apply_cross_event(conn, e: dict, require_review: bool, counts: dict) -> Non
                 counts["queued"] += 1
         return
 
-    # 회사 미상 활동도 원문 보존 우선 → '(미분류)'로 저장해 사용자가 보고 수정
+    # 회사도 연락처도 없는 내부 메모/일반 문의는 DB 회사 활동으로 만들지
+    # 않는다. 원문은 slack_raw_messages에 보존되며, 필요하면 원문 패널에서
+    # 수동 반영한다.
     if not companies and not contacts:
-        queries._upsert_company(conn, UNCLASSIFIED)
-        queries.log_activity(conn, {
-            "company_key": queries._norm_company_key(UNCLASSIFIED),
-            "activity_type": atype, "solution_name": e.get("it", ""),
-            "note": note, "next_action": e.get("next", ""),
-            "occurred_at": e["dt"], "permalink": e.get("permalink", ""),
-            "source_type": "cross_team", "collected_at": e.get("collected_at", ""),
-        })
-        counts["new_activities"] += 1
+        e["_applied"] = False
         return
 
     primary = companies[0] if companies else ""
@@ -1092,6 +1790,76 @@ def _ts_float(ts: str | float) -> float:
         return float(ts)
     except (ValueError, TypeError):
         return 0.0
+
+
+def run_recleanse(logs: list[str] | None = None) -> dict:
+    """저장된 원문(slack_raw_messages)만으로 슬랙 유래 활동을 재생성(재수집 없음).
+
+    - 시드/수기 데이터(collected_at='')는 보존, 슬랙 동기화 활동만 교체.
+    - 개선된 파서 + (설정 시) GLM 폴백을 그대로 사용해 안전하게 전체 재정리.
+    - 콜백은 강제 비활성(스레드 답글 폭탄 방지), 감사 로그도 남기지 않음(대량).
+    """
+    logs = logs if logs is not None else []
+    with get_conn() as conn:
+        conn.execute("UPDATE change_batch SET logging=0 WHERE id=1")  # 대량: 감사 제외
+        settings = dict(queries.get_sync_settings(conn))
+        settings["slack_callback_enabled"] = False  # 재클렌징은 콜백 금지
+        _log(logs, "[recleanse] 저장 원문에서 재파싱 시작 (재수집 없음)")
+
+        removed = conn.execute(
+            "SELECT COUNT(*) FROM activities WHERE collected_at <> ''"
+        ).fetchone()[0]
+        conn.execute("DELETE FROM activities WHERE collected_at <> ''")
+        _log(logs, f"[recleanse] 기존 슬랙 활동 {removed}건 제거 → 재생성")
+        # 재클렌징은 전량 재생성이므로 UUID 중복표를 초기화해 재파싱을 허용한다.
+        _ensure_parsed_events(conn)
+        conn.execute("DELETE FROM parsed_events")
+
+        by_ch: dict[str, list] = {}
+        for r in conn.execute("SELECT channel_id, raw_payload FROM slack_raw_messages"):
+            try:
+                p = json.loads(r["raw_payload"] or "{}")
+            except (ValueError, TypeError):
+                continue
+            if p.get("is_reply"):
+                continue
+            by_ch.setdefault(r["channel_id"], []).append(p)
+
+        channels = {c.get("id"): c for c in settings.get("channels", [])}
+        state: dict = {}
+        totals = {"collected": 0, "parsed": 0, "new_leads": 0, "new_activities": 0, "queued": 0}
+        for ch_id, msgs in by_ch.items():
+            strat = channels.get(ch_id, {}).get("strategy", "inbound")
+            msgs.sort(key=lambda m: _ts_float(m.get("ts", 0)))
+            r = _process_channel(conn, ch_id, strat, msgs, settings, state, None, logs)
+            for k in totals:
+                totals[k] += r[k]
+        queries.save_sync_settings(conn, {"channel_state": state})
+
+        # 슬랙 유래 빈 회사(담당자·활동 0) 정리
+        orphans = conn.execute(
+            "SELECT id FROM companies "
+            "WHERE profile_source IN ('slack_glm','manual','user_register') "
+            "AND id NOT IN (SELECT company_id FROM contacts WHERE company_id IS NOT NULL) "
+            "AND id NOT IN (SELECT company_id FROM activities WHERE company_id IS NOT NULL)"
+        ).fetchall()
+        for o in orphans:
+            conn.execute("DELETE FROM companies WHERE id = ?", (o["id"],))
+        _log(logs, f"[recleanse] 빈 회사 {len(orphans)}곳 정리")
+
+        made = totals["new_leads"] + totals["new_activities"]
+        _log(logs, f"[recleanse] 완료 — 활동 {made}건 재생성 · 검수 {totals['queued']}")
+        return {
+            "ok": True,
+            "message": f"재클렌징 완료 — 활동 {made}건 재생성, 검수 {totals['queued']}",
+            "removed": removed,
+            "collected": totals["collected"],
+            "new_leads": totals["new_leads"],
+            "new_activities": totals["new_activities"],
+            "queued_reviews": totals["queued"],
+            "parsed": totals["parsed"],
+            "log": logs,
+        }
 
 
 def _not_ok(message: str) -> dict:

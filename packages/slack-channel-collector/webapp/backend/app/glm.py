@@ -7,20 +7,31 @@ fall back to deterministic behaviour, so the app degrades gracefully.
 """
 from __future__ import annotations
 
+import base64
 import json
 import os
 import re
 import ssl
+import time
 from typing import Any
-from urllib.error import URLError
+from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
 
 def config() -> dict[str, str]:
+    url = os.environ.get("GLM_API_URL", "").strip()
+    # z.ai '코딩 요금제' 엔드포인트(/api/coding/paas)는 비전 모델을 제공하지 않는다.
+    # 비전(명함 OCR)은 표준 엔드포인트(/api/paas)로 자동 전환하되, 명시적 override 우선.
+    vision_url = os.environ.get("GLM_VISION_API_URL", "").strip()
+    if not vision_url:
+        vision_url = url.replace("/api/coding/paas/", "/api/paas/") if "/api/coding/paas/" in url else url
     return {
-        "url": os.environ.get("GLM_API_URL", "").strip(),
+        "url": url,
         "key": os.environ.get("GLM_API_KEY", "").strip(),
         "model": os.environ.get("GLM_MODEL", "").strip() or "glm-4",
+        "vision_model": os.environ.get("GLM_VISION_MODEL", "").strip() or "glm-4.5v",
+        "vision_url": vision_url,
+        "embedding_model": os.environ.get("GLM_EMBEDDING_MODEL", "").strip() or "embedding-3",
     }
 
 
@@ -34,6 +45,15 @@ def _endpoint(url: str) -> str:
     if url.endswith("/chat/completions"):
         return url
     return f"{url}/chat/completions"
+
+
+def _embeddings_endpoint(url: str) -> str:
+    url = url.rstrip("/")
+    if url.endswith("/embeddings"):
+        return url
+    if url.endswith("/chat/completions"):
+        return url[: -len("/chat/completions")] + "/embeddings"
+    return f"{url}/embeddings"
 
 
 def chat(system: str, user: str, max_tokens: int = 4096) -> str:
@@ -59,12 +79,65 @@ def chat(system: str, user: str, max_tokens: int = 4096) -> str:
             "Content-Type": "application/json",
         },
     )
-    try:
-        with _urlopen(req, timeout=30) as resp:
-            payload = json.loads(resp.read().decode("utf-8"))
-    except URLError as exc:
-        raise RuntimeError(f"GLM 연결 실패: {getattr(exc, 'reason', exc)}") from exc
+    payload = _request_json(req, timeout=30)
     return payload["choices"][0]["message"]["content"]
+
+
+def chat_messages(
+    messages: list[dict[str, Any]], *, model: str | None = None,
+    max_tokens: int = 2048, base_url: str | None = None,
+) -> str:
+    c = config()
+    if not (c["url"] and c["key"]):
+        raise RuntimeError("GLM not configured")
+    body = json.dumps(
+        {
+            "model": model or c["model"],
+            "messages": messages,
+            "temperature": 0.0,
+            "max_tokens": max_tokens,
+            "thinking": {"type": "disabled"},
+        }
+    ).encode("utf-8")
+    req = Request(
+        _endpoint(base_url or c["url"]),
+        data=body,
+        headers={
+            "Authorization": f"Bearer {c['key']}",
+            "Content-Type": "application/json",
+        },
+    )
+    payload = _request_json(req, timeout=60)
+    return payload["choices"][0]["message"]["content"]
+
+
+def embed_texts(texts: list[str]) -> list[list[float]]:
+    """Return embeddings from an OpenAI-compatible /embeddings endpoint."""
+    c = config()
+    if not (c["url"] and c["key"]):
+        raise RuntimeError("GLM not configured")
+    clean = [str(t or "")[:6000] for t in texts]
+    body = json.dumps({"model": c["embedding_model"], "input": clean}).encode("utf-8")
+    req = Request(
+        _embeddings_endpoint(c["url"]),
+        data=body,
+        headers={
+            "Authorization": f"Bearer {c['key']}",
+            "Content-Type": "application/json",
+        },
+    )
+    payload = _request_json(req, timeout=60)
+    rows = payload.get("data") or []
+    rows = sorted(rows, key=lambda r: int(r.get("index", 0)))
+    vectors: list[list[float]] = []
+    for row in rows:
+        vec = row.get("embedding")
+        if not isinstance(vec, list):
+            raise RuntimeError("GLM embedding 응답 형식 오류")
+        vectors.append([float(x) for x in vec])
+    if len(vectors) != len(clean):
+        raise RuntimeError("GLM embedding 응답 개수 불일치")
+    return vectors
 
 
 def _urlopen(req: Request, timeout: int):
@@ -75,6 +148,30 @@ def _urlopen(req: Request, timeout: int):
         if isinstance(reason, ssl.SSLCertVerificationError) or "CERTIFICATE_VERIFY_FAILED" in str(reason):
             return urlopen(req, timeout=timeout, context=ssl._create_unverified_context())
         raise
+
+
+def _request_json(req: Request, timeout: int) -> dict[str, Any]:
+    last_exc: Exception | None = None
+    for attempt in range(3):
+        try:
+            with _urlopen(req, timeout=timeout) as resp:
+                return json.loads(resp.read().decode("utf-8"))
+        except HTTPError as exc:
+            last_exc = exc
+            if exc.code == 429 and attempt < 2:
+                wait_seconds = max(2, int(exc.headers.get("Retry-After", "3") if exc.headers else "3"))
+                time.sleep(wait_seconds)
+                continue
+            body = exc.read().decode("utf-8", errors="replace")
+            raise RuntimeError(f"GLM 연결 실패: HTTP {exc.code} {body[:200]}") from exc
+        except URLError as exc:
+            last_exc = exc
+            reason = getattr(exc, "reason", exc)
+            if "Too Many Requests" in str(reason) and attempt < 2:
+                time.sleep(3 + attempt * 3)
+                continue
+            raise RuntimeError(f"GLM 연결 실패: {reason}") from exc
+    raise RuntimeError(f"GLM 연결 실패: {last_exc}")
 
 
 def _json_from_text(text: str) -> dict[str, Any]:
@@ -148,6 +245,57 @@ EXTRACT_SYSTEM = (
     "- 원문에 없는 값은 절대 지어내지 말고 빈 문자열."
 )
 
+BUSINESS_CARD_SYSTEM = (
+    "너는 한국 B2B 영업팀의 명함 OCR/정규화 엔진이다. "
+    "명함 이미지에서 보이는 텍스트만 근거로 아래 JSON만 출력한다. 설명/코드펜스 금지.\n"
+    "{\n"
+    '  "company": "",\n'
+    '  "name": "",\n'
+    '  "department": "",\n'
+    '  "title": "",\n'
+    '  "email": "",\n'
+    '  "phone": "",\n'
+    '  "mobile": "",\n'
+    '  "website": "",\n'
+    '  "address": "",\n'
+    '  "memo": "",\n'
+    '  "confidence": 0.0,\n'
+    '  "review_required": true,\n'
+    '  "evidence": "읽힌 핵심 텍스트 1~3줄"\n'
+    "}\n"
+    "규칙:\n"
+    "- 회사명/이름/이메일/휴대폰/직급을 우선 추출한다.\n"
+    "- 이메일은 소문자로, 휴대폰/전화는 원문 숫자와 하이픈을 최대한 보존한다.\n"
+    "- 휴대폰 번호가 있으면 mobile에, 대표/사무실 번호는 phone에 넣는다.\n"
+    "- 불확실하거나 일부가 가려져 있으면 빈 문자열로 두고 confidence를 낮춘다.\n"
+    "- 원문에 없는 회사명/이름은 추측하지 않는다.\n"
+    "- 명함이 아니거나 읽을 수 없으면 confidence 0.2 이하, review_required true."
+)
+
+INVOLVED_COMPANIES_SYSTEM = (
+    "너는 RTM 영업 미팅 기록에서 관련 회사를 추출하는 정규화 엔진이다. "
+    "Slack 원문을 읽고 아래 JSON만 출력한다. 설명/코드펜스 금지.\n"
+    '{"companies":[],"confidence":0.0,"evidence":""}\n'
+    "규칙:\n"
+    "- 참석자, 관련사, 고객명, Next Steps에 등장한 외부 회사/파트너/고객사를 모두 companies에 넣는다.\n"
+    "- `참석자` 아래 `회사명: 사람명 직급` 형식의 콜론 앞 라벨은 외부 회사 후보로 우선 검토한다.\n"
+    "- 후보 회사 목록이 제공되면, 그중 외부 회사/파트너/고객사로 판단되는 항목은 누락하지 않는다.\n"
+    "- 알티엠, RTM, 우리회사, 내부 담당자는 제외한다.\n"
+    "- 사람 이름/직급/부서/제품명은 회사로 넣지 않는다.\n"
+    "- 영문 회사명은 원문 표기를 보존하되, 원문과 문맥상 통용 한국어명이 명확하면 한국어 표시명으로 정규화한다.\n"
+    "- 원문에 없는 회사는 지어내지 않는다.\n"
+    "- 중복/띄어쓰기 변형은 하나로 합친다."
+)
+
+COMPANY_CANDIDATE_SYSTEM = (
+    "너는 Slack 미팅 참석자 라벨 후보 중 외부 회사만 고르는 검수기다. "
+    "아래 JSON만 출력한다. 설명/코드펜스 금지.\n"
+    '{"companies":[],"confidence":0.0,"evidence":""}\n'
+    "후보 라벨 중 고객사, 파트너사, 협력사는 companies에 넣는다. "
+    "RTM, 알티엠, 우리회사, 내부 조직, 사람 이름, 직급, 제품명은 제외한다. "
+    "원문/후보에 없는 회사는 추가하지 않는다."
+)
+
 
 def extract_lead_event(text: str, hint: str = "") -> dict[str, Any]:
     """Slack 원문 → DB 반영 가능한 구조화 결과(GLM). 미설정/실패 시 _mode 표시."""
@@ -163,6 +311,90 @@ def extract_lead_event(text: str, hint: str = "") -> dict[str, Any]:
         return data
     except Exception as exc:  # noqa: BLE001
         return {"_mode": "error", "message": str(exc)}
+
+
+def extract_involved_companies(text: str, candidates: list[str] | None = None) -> dict[str, Any]:
+    """Slack meeting text -> all non-RTM involved companies."""
+    if not is_configured():
+        return {"_mode": "unavailable", "message": "GLM이 설정되지 않았습니다 (GLM_API_URL/GLM_API_KEY)."}
+    candidate_text = ""
+    if candidates:
+        candidate_text = "후보 회사 라벨:\n" + "\n".join(f"- {c}" for c in candidates if c) + "\n\n"
+    try:
+        data = _json_from_text(chat(INVOLVED_COMPANIES_SYSTEM, (candidate_text + text)[:9000], max_tokens=900))
+        comps = data.get("companies") if isinstance(data.get("companies"), list) else []
+        data["companies"] = [str(c).strip() for c in comps if str(c).strip()]
+        data["_mode"] = "glm"
+        return data
+    except Exception as exc:  # noqa: BLE001
+        return {"_mode": "error", "message": str(exc)}
+
+
+def select_external_company_candidates(text: str, candidates: list[str]) -> dict[str, Any]:
+    """Validate generic participant/company candidates with GLM."""
+    if not is_configured():
+        return {"_mode": "unavailable", "message": "GLM이 설정되지 않았습니다 (GLM_API_URL/GLM_API_KEY)."}
+    clean = [str(c).strip() for c in candidates if str(c).strip()]
+    if not clean:
+        return {"_mode": "glm", "companies": [], "confidence": 0.0}
+    user = (
+        "후보 라벨:\n"
+        + "\n".join(f"- {c}" for c in clean)
+        + "\n\n미팅 원문 일부:\n"
+        + text[:4000]
+    )
+    try:
+        data = _json_from_text(chat(COMPANY_CANDIDATE_SYSTEM, user, max_tokens=600))
+        comps = data.get("companies") if isinstance(data.get("companies"), list) else []
+        data["companies"] = [str(c).strip() for c in comps if str(c).strip()]
+        data["_mode"] = "glm"
+        return data
+    except Exception as exc:  # noqa: BLE001
+        return {"_mode": "error", "message": str(exc)}
+
+
+def extract_business_card_image(
+    image_bytes: bytes,
+    *,
+    mime_type: str = "image/jpeg",
+    filename: str = "",
+    hint: str = "",
+) -> dict[str, Any]:
+    """Business card image -> structured contact fields via GLM vision."""
+    if not is_configured():
+        return {"_mode": "unavailable", "message": "GLM이 설정되지 않았습니다 (GLM_API_URL/GLM_API_KEY)."}
+    if not image_bytes:
+        return {"_mode": "error", "message": "empty image"}
+    c = config()
+    encoded = base64.b64encode(image_bytes).decode("ascii")
+    data_url = f"data:{mime_type or 'image/jpeg'};base64,{encoded}"
+    user_text = "명함 이미지를 OCR해서 고객 DB 입력 필드로 추출해줘."
+    if filename:
+        user_text += f"\n파일명: {filename}"
+    if hint:
+        user_text += f"\nSlack 메시지/댓글 힌트:\n{hint[:1000]}"
+    try:
+        content = chat_messages(
+            [
+                {"role": "system", "content": BUSINESS_CARD_SYSTEM},
+                {
+                    "role": "user",
+                    "content": [
+                        {"type": "text", "text": user_text},
+                        {"type": "image_url", "image_url": {"url": data_url}},
+                    ],
+                },
+            ],
+            model=c["vision_model"],
+            max_tokens=1200,
+            base_url=c["vision_url"],
+        )
+        data = _json_from_text(content)
+        data["_mode"] = "glm"
+        data["_model"] = c["vision_model"]
+        return data
+    except Exception as exc:  # noqa: BLE001
+        return {"_mode": "error", "message": f"{c['vision_model']}@{c['vision_url']} — {exc}"}
 
 
 def infer_company_profile(name: str, context: str = "") -> dict[str, Any]:
