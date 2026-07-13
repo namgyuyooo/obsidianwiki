@@ -28,6 +28,7 @@ from .config import PACKAGE_ROOT
 from .db import get_conn
 
 KST = ZoneInfo("Asia/Seoul")
+UNCLASSIFIED = "(미분류)"  # 회사 추출 실패 활동 보존용 placeholder
 
 
 def _ensure_collector_importable() -> None:
@@ -39,7 +40,7 @@ def _ensure_collector_importable() -> None:
 
 
 # ── message parsing ──────────────────────────────────────────────────────────
-_EMAIL_RE = re.compile(r"[^\s<>|@]+@[^\s<>|@]+\.[^\s<>|@]+")
+_EMAIL_RE = re.compile(r"[^\s<>|@()（）,]+@[^\s<>|@()（）,]+\.[^\s<>|@()（）,]+")
 
 
 def _mail_of(text: str) -> str:
@@ -125,6 +126,25 @@ def parse_messages(messages: list[dict[str, Any]]) -> list[dict[str, Any]]:
                 "ph": _g(r"\*(?:휴대폰 번호|Phone)\*\n(?:<tel:)?([\d\-]+)", text),
                 "co": _g(r"\*(?:회사명|Company)\*\n(.+)", text),
                 "dept": "", "title": "", "it": doc, "iq": "",
+            })
+            continue
+
+        # 피트페이퍼 열람 알림 (영문): "EHM Brochure has been viewed"
+        if re.search(r"has been viewed|열람하였습니다|viewed the", text, re.I):
+            em = _mail_of(text)
+            doc_m = re.search(r"(.+?)\s+(?:Brochure|소개서)?\s*has been viewed", text, re.I)
+            doc = (doc_m.group(1).strip() if doc_m else "").splitlines()[-1] if doc_m else ""
+            # 상세 필드(있으면): 회사/이름/이메일
+            co = _g(r"(?:Company|회사명?)\s*[:：]\s*(.+)", text)
+            nm = _g(r"(?:Name|성함|이름)\s*[:：]\s*(.+)", text)
+            sol = next((s for s in _SOLUTIONS if s.lower() in text.lower()), "")
+            if not em and not co:
+                # 이메일·회사 정보가 전혀 없으면 리드로 만들지 않음(원문은 raw 보존)
+                continue
+            out.append({
+                "ts": ts, "dt": dt, "src": "featpaper", "em": (em or "").lower(),
+                "nm": nm, "ph": "", "co": co, "dept": "", "title": "",
+                "it": sol or doc, "iq": _clean_note(text)[:200],
             })
             continue
 
@@ -235,65 +255,74 @@ def parse_cross_team(messages: list[dict[str, Any]]) -> list[dict[str, Any]]:
     (확인상태=확인 필요/추정) 자동 확정 대신 검수 큐로 보낸다.
     """
     out: list[dict[str, Any]] = []
-    flat: list[dict[str, Any]] = []
+    # top-level 메시지 기준. 스레드 댓글은 '연결 정보'로 취급해 추출에 합치되(combined),
+    # 원문(source_text)은 부모 메시지, 댓글은 comments로 분리 보존한다.
     for msg in messages:
-        flat.append(msg)
-        for reply in msg.get("thread_replies", []) or []:
-            flat.append(reply)
-
-    for msg in flat:
         text = msg.get("text", "") or ""
         ts = msg.get("ts", "") or ""
         dt = _ts_to_kst(ts)
-        f = _fields(text)
+        replies = msg.get("thread_replies", []) or []
+        reply_text = "\n".join(r.get("text", "") for r in replies if r.get("text"))
+        combined = text + (("\n---(스레드)---\n" + reply_text) if reply_text else "")
+        f = _fields(combined)
 
-        # company: 회사명 / 고객명 (guide or real meeting-log format)
+        # company: 회사명 / 고객명 (guide or real meeting-log format), 실패 시 자유형식 추출
         company = f.get("회사명") or f.get("고객명") or ""
         if not company:
-            m = re.search(r"(?:고객명|회사명)\s*[:：]\s*(.+)", text)
+            m = re.search(r"(?:고객명|회사명)\s*[:：]\s*(.+)", combined)
             company = m.group(1).strip() if m else ""
         if not company:
-            continue  # not a customer entry — skip chatter/notices
+            company = _company_from_freeform(text) or _company_from_freeform(reply_text)
 
         companies = _split_companies(company) + _split_companies(f.get("관련사", ""))
         companies = list(dict.fromkeys([c for c in companies if c]))
 
+        # 원문 보존 우선: 회사 추출 실패해도 활동 신호가 있으면 버리지 않는다.
+        stripped = re.sub(r"<@[UWB][A-Z0-9]+>", "", text).strip()
+        is_activity = bool(_ACTIVITY_SIGNALS.search(combined)) and len(stripped) > 15
+        if not companies and not is_activity:
+            continue  # 순수 잡담/멘션만 → 활동으로 만들지 않음 (원문은 raw에 보존됨)
+
         confirm = f.get("확인상태", "")
         review_required = ("확인 필요" in confirm) or ("추정" in confirm)
-        occurred = _norm_date(
-            f.get("발생일시") or f.get("방문 일자") or f.get("방문일자") or "", dt
-        )
+        # 발생일시 필드 → 제목/본문의 날짜 → 메시지 ts 순으로 활동일 결정
+        date_raw = f.get("발생일시") or f.get("방문 일자") or f.get("방문일자") or ""
+        if not date_raw:
+            md = re.search(r"\d{4}[.\-]\d{1,2}[.\-]\d{1,2}", text)
+            date_raw = md.group(0) if md else ""
+        occurred = _norm_date(date_raw, dt)
 
-        # 관심 솔루션: 명시 필드 우선, 없으면 본문 키워드 감지
+        # 관심 솔루션: 명시 필드 우선, 없으면 본문+댓글 키워드 감지
         solution = f.get("관심 솔루션", "")
         if not solution:
-            hits = [s for s in _SOLUTIONS if s.lower() in text.lower()]
+            hits = [s for s in _SOLUTIONS if s.lower() in combined.lower()]
             solution = ", ".join(hits)
 
         next_action = f.get("다음 액션") or f.get("Next Plan") or ""
         if not next_action:
-            m = re.search(r"(?:Next Plan|다음\s*액션|다음\s*단계)\s*[:：]?\s*(.+)", text, re.I | re.S)
+            m = re.search(r"(?:Next Plan|다음\s*액션|다음\s*단계)\s*[:：]?\s*(.+)", combined, re.I | re.S)
             if m:
                 next_action = re.sub(r"\s+", " ", m.group(1)).strip()[:200]
 
         inquiry = f.get("활동내용") or f.get("문의내용") or f.get("방문 목적") or f.get("방문목적") or ""
         if not inquiry:
-            inquiry = _clean_note(text)  # meeting log → full cleaned note
+            inquiry = _clean_note(text)  # 원문(부모) 노트
 
         kind = "activity"
-        if "[신규 리드]" in text or text.lstrip().startswith("신규 리드"):
+        if "[신규 리드]" in combined or text.lstrip().startswith("신규 리드"):
             kind = "lead"
-        elif "회사 정보 업데이트" in text or "[회사 정보" in text:
+        elif "회사 정보 업데이트" in combined or "[회사 정보" in combined:
             kind = "company_update"
 
-        # 담당자: 구조화된 '고객 담당자:' 블록이 있을 때만 (미팅 로그는 회사 단위 활동)
-        contacts = _parse_contact_lines(text)
-        if not contacts and (f.get("이메일") or f.get("이름")):
-            em = _mail_of(f.get("이메일", ""))
-            contacts = [{
-                "name": f.get("이름", ""), "department": f.get("부서", ""),
-                "title": f.get("직급", ""), "email": em, "phone": f.get("휴대폰", ""),
-            }]
+        # 담당자: 본문+댓글에서 이메일/담당자 추출 (댓글에 연락처가 오는 경우 多)
+        contacts = _parse_contact_lines(combined)
+        if not contacts:
+            em = _mail_of(f.get("이메일", "")) or _mail_of(combined)
+            if em or f.get("이름"):
+                contacts = [{
+                    "name": f.get("이름", ""), "department": f.get("부서", ""),
+                    "title": f.get("직급", ""), "email": em, "phone": f.get("휴대폰", ""),
+                }]
         contacts = [c for c in contacts if c.get("email")]
 
         out.append({
@@ -301,7 +330,7 @@ def parse_cross_team(messages: list[dict[str, Any]]) -> list[dict[str, Any]]:
             "companies": companies, "primary_co": companies[0] if companies else "",
             "co": companies[0] if companies else "",
             "contacts": contacts, "it": solution, "iq": inquiry,
-            "source_text": text,  # 원문 그대로 보존 (활동기록에 출력)
+            "source_text": text,  # 원문(부모 메시지) 그대로 보존
             "next": next_action, "atype": f.get("활동유형", "") or "미팅/보고",
             "review_required": review_required,
             "industry": f.get("업종", ""), "sub_industry": f.get("세부분야", ""),
@@ -320,6 +349,49 @@ def _clean_company(name: str) -> str:
     if not n or re.search(r"https?://|www\.|@|\|", n) or len(n) > 40:
         return ""
     return n
+
+
+_ACTIVITY_SIGNALS = re.compile(
+    r"미팅|방문|참석자|논의|결과|견적|데모|문의|고객|회사명|고객명|"
+    r"Hubble|EHM|RISA|M\.AX|TS Agent|PoC|납품|발주|영업|상담|소개서"
+)
+_CO_STOPWORDS = {
+    "미팅", "방문", "결과", "내역", "내용", "공유", "금일", "오늘", "고객", "고객사",
+    "회사", "각", "사", "2사", "3사", "관련", "차장", "부장", "대표", "이사", "책임",
+}
+
+
+def _company_from_freeform(text: str) -> str:
+    """회사명 필드가 없을 때 제목/본문에서 회사명을 best-effort 추출.
+
+    예) '*2026.01.22 아사히카세히 미팅 결과*' → '아사히카세히'
+        '아사히 카세히 미팅 내역 공유드립니다' → '아사히 카세히'
+    """
+    head = "\n".join((text or "").splitlines()[:2])
+    head = re.sub(r"<@[UWB][A-Z0-9]+>", "", head)
+    head = re.sub(r"[:*_]|:[a-z_]+:", "", head)
+    # 보수적: 이름은 짧고(≤14자, 공백 0~1개) 동사/명사 조각이 아니어야 함.
+    patterns = [
+        r"\d{4}[.\-]\d{1,2}[.\-]\d{1,2}\s*([가-힣A-Za-z()]{2,14}(?:\s[가-힣A-Za-z()]{1,12})?)\s*(?:미팅|방문)",
+        r"^\s*([가-힣A-Za-z()]{2,14}(?:\s[가-힣A-Za-z()]{1,12})?)\s*(?:미팅|방문)\s*(?:내역|결과|내용|공유)",
+    ]
+    bad_frag = ("통화", "대응", "신청", "논의", "확인", "문의", "과제", "건", "안내", "요청", "관련")
+    for pat in patterns:
+        m = re.search(pat, head)
+        if not m:
+            continue
+        cand = _clean_company(m.group(1))
+        for w in _CO_STOPWORDS:
+            cand = re.sub(rf"\s*{re.escape(w)}\s*$", "", cand).strip()
+        if (
+            cand
+            and cand not in _CO_STOPWORDS
+            and 2 <= len(cand) <= 14
+            and cand.count(" ") <= 1
+            and not any(b in cand for b in bad_frag)
+        ):
+            return cand
+    return ""
 
 
 def _split_companies(value: str) -> list[str]:
@@ -345,8 +417,15 @@ def _load_from_export(path: Path) -> tuple[list[dict], str, str]:
     return payload.get("messages", []), channel_id, str(path)
 
 
+FULL_LOOKBACK_HOURS = 24 * 3650  # ~10 years → effectively "all history"
+FULL_LIMIT = 1_000_000  # paginate to exhaustion
+
+
 def _load_from_collector(
-    settings: dict, limit: int | None = None, channel_id: str | None = None
+    settings: dict,
+    limit: int | None = None,
+    channel_id: str | None = None,
+    full: bool = False,
 ) -> tuple[list[dict], str, str]:
     _ensure_collector_importable()
     from rtm_slack_channel_collector import collector  # type: ignore
@@ -356,16 +435,29 @@ def _load_from_collector(
         overrides["channel_id"] = channel_id
     elif settings.get("channel_id"):
         overrides["channel_id"] = settings["channel_id"]
-    if settings.get("lookback_hours"):
-        overrides["lookback_hours"] = int(settings["lookback_hours"])
+
+    lookback = int(settings.get("lookback_hours") or 24)
+    if full:
+        # 초기 전체 히스토리 백필: 시간 창을 사실상 무제한으로 넓히고 전량 수집
+        lookback = FULL_LOOKBACK_HOURS
+        if not limit:
+            limit = FULL_LIMIT
+        # collector가 자체 state 파일로 증분 동작해 최근 것만 가져오는 것을 방지:
+        # 존재하지 않는 임시 state 경로를 지정해 lookback 창 전체를 강제 수집.
+        import tempfile
+
+        tmp_state = Path(tempfile.gettempdir()) / f"rtm_backfill_state_{channel_id or 'ch'}.json"
+        if tmp_state.exists():
+            tmp_state.unlink()
+        overrides["state_path"] = tmp_state
     if limit:
-        # fetch the most recent N: cap the batch and widen the window so count,
-        # not time, is the limiting factor.
         overrides["limit"] = int(limit)
-        overrides["lookback_hours"] = max(int(settings.get("lookback_hours") or 0), 24 * 3650)
+        # count 기준으로 최신 N개를 가져오도록 시간 창을 넓힌다
+        lookback = max(lookback, FULL_LOOKBACK_HOURS)
+    overrides["lookback_hours"] = lookback
+
     config = collector.CollectionConfig.from_env(require_token=True)
-    if overrides:
-        config = config.__class__(**{**config.__dict__, **overrides})
+    config = config.__class__(**{**config.__dict__, **overrides})
     result = collector.collect_once(config, dry_run=True)  # dry_run keeps payload in memory
     payload = result.get("sample_payload", {})
     return payload.get("messages", []), result.get("channel_id", ""), result.get("channel_id", "")
@@ -378,12 +470,13 @@ def _store_raw_message(conn, channel_id: str, msg: dict, permalink: str) -> None
         return
     payload = dict(msg)
     payload["permalink"] = permalink
+    thread_ts = str(msg.get("thread_ts", "") or "")
     conn.execute(
         """
-        INSERT INTO slack_raw_messages(channel_id, message_ts, user_id, text, raw_payload)
-        VALUES (?, ?, ?, ?, ?)
+        INSERT INTO slack_raw_messages(channel_id, message_ts, user_id, text, raw_payload, thread_ts)
+        VALUES (?, ?, ?, ?, ?, ?)
         ON CONFLICT(channel_id, message_ts) DO UPDATE SET
-          text = excluded.text, raw_payload = excluded.raw_payload
+          text = excluded.text, raw_payload = excluded.raw_payload, thread_ts = excluded.thread_ts
         """,
         (
             channel_id,
@@ -391,7 +484,66 @@ def _store_raw_message(conn, channel_id: str, msg: dict, permalink: str) -> None
             str(msg.get("user", "")),
             msg.get("text", ""),
             json.dumps(payload, ensure_ascii=False),
+            thread_ts,
         ),
+    )
+
+
+def resolve_users(conn) -> dict:
+    """Slack users.list로 ID→이름 매핑을 받아 slack_users에 저장.
+
+    토큰이 없으면 아무것도 안 하고 현재 저장된 수만 반환.
+    """
+    has_token = bool(
+        os.environ.get("SLACK_BOT_TOKEN")
+        or os.environ.get("SLACK_USER_TOKEN")
+        or os.environ.get("SLACK_TOKEN")
+    )
+    if not has_token:
+        n = conn.execute("SELECT COUNT(*) FROM slack_users").fetchone()[0]
+        return {"ok": False, "configured": False, "stored": n,
+                "message": "SLACK 토큰이 없어 유저 이름을 가져올 수 없습니다."}
+    try:
+        _ensure_collector_importable()
+        from rtm_slack_channel_collector import collector  # type: ignore
+
+        config = collector.CollectionConfig.from_env(require_token=True)
+        client = collector.SlackClient(config.token, config.api_min_interval_seconds)
+        cursor, added = "", 0
+        while True:
+            payload = client.request("users.list", {"limit": 200, "cursor": cursor})
+            for u in payload.get("members", []):
+                uid = u.get("id")
+                if not uid:
+                    continue
+                prof = u.get("profile", {}) or {}
+                name = prof.get("display_name") or prof.get("real_name") or u.get("real_name") or u.get("name") or ""
+                conn.execute(
+                    "INSERT INTO slack_users(user_id, name, real_name) VALUES (?,?,?) "
+                    "ON CONFLICT(user_id) DO UPDATE SET name=excluded.name, "
+                    "real_name=excluded.real_name, updated_at=CURRENT_TIMESTAMP",
+                    (uid, name, u.get("real_name", "") or prof.get("real_name", "")),
+                )
+                added += 1
+            cursor = payload.get("response_metadata", {}).get("next_cursor", "")
+            if not cursor:
+                break
+        return {"ok": True, "configured": True, "stored": added}
+    except Exception as exc:  # noqa: BLE001
+        return {"ok": False, "configured": True, "stored": 0, "message": str(exc)}
+
+
+def _log(logs: list[str], msg: str) -> None:
+    """서버 콘솔 출력 + 응답에 담아 브라우저 콘솔에서도 볼 수 있게 수집."""
+    print(msg, flush=True)
+    logs.append(msg)
+
+
+def _mark_applied(conn, channel_id: str, ts: str, kind: str) -> None:
+    conn.execute(
+        "UPDATE slack_raw_messages SET applied=1, applied_kind=? "
+        "WHERE channel_id=? AND message_ts=?",
+        (kind, channel_id, str(ts)),
     )
 
 
@@ -400,6 +552,7 @@ def run_sync(
     export_file: str | None = None,
     limit: int | None = None,
     only_channel: str | None = None,
+    backfill: bool = False,
 ) -> dict:
     export_file = export_file or os.environ.get("RTM_SLACK_EXPORT_FILE", "").strip()
     has_token = bool(
@@ -409,6 +562,8 @@ def run_sync(
     )
 
     with get_conn() as conn:
+        # 대량 수집은 감사 로그에서 제외 (되돌리기는 backups/channel_state로)
+        conn.execute("UPDATE change_batch SET logging=0 WHERE id=1")
         settings = queries.get_sync_settings(conn)
         if limit is None:
             limit = int(settings.get("sync_limit") or 0) or None
@@ -417,6 +572,12 @@ def run_sync(
 
         totals = {"collected": 0, "parsed": 0, "new_leads": 0, "new_activities": 0, "queued": 0}
         per_channel = []
+        logs: list[str] = []
+        _log(logs, f"[sync] 시작 — backfill={backfill} limit={limit}")
+        if has_token and not export_file:
+            ru = resolve_users(conn)
+            if ru.get("ok"):
+                _log(logs, f"[sync] 유저 이름 매핑 {ru['stored']}명 갱신")
 
         try:
             if export_file:
@@ -424,12 +585,13 @@ def run_sync(
                 if not p.exists():
                     return _not_ok(f"export 파일을 찾을 수 없습니다: {p}")
                 messages, ch_id, source = _load_from_export(p)
+                _log(logs, f"[sync] export 로드: {source} ({len(messages)}개 메시지)")
                 # strategy = matching configured channel, else inbound
                 strat = next(
                     (c.get("strategy", "inbound") for c in channels if c.get("id") == ch_id),
                     "inbound",
                 )
-                r = _process_channel(conn, ch_id or "export", strat, messages, settings, state, limit)
+                r = _process_channel(conn, ch_id or "export", strat, messages, settings, state, limit, logs)
                 _merge_totals(totals, r)
                 per_channel.append({"channel": ch_id or source, "strategy": strat, **r})
             elif has_token:
@@ -439,8 +601,16 @@ def run_sync(
                 if not targets:
                     return _not_ok("활성화된 수집 채널이 없습니다. 동기화 설정을 확인하세요.")
                 for ch in targets:
-                    msgs, ch_id, _ = _load_from_collector(settings, limit=limit, channel_id=ch["id"])
-                    r = _process_channel(conn, ch["id"], ch.get("strategy", "inbound"), msgs, settings, state, limit)
+                    # 처음 보는 채널(=수집 이력 없음)은 전체 히스토리 백필
+                    is_initial = str(ch["id"]) not in state
+                    full = backfill or is_initial
+                    _log(logs, f"[sync] #{ch.get('name') or ch['id']} 수집 시작 "
+                               f"(전략={ch.get('strategy')}, {'전체 백필' if full else '증분'})")
+                    msgs, ch_id, _ = _load_from_collector(
+                        settings, limit=limit, channel_id=ch["id"], full=full
+                    )
+                    _log(logs, f"[sync] #{ch['id']} Slack에서 {len(msgs)}개 메시지 가져옴")
+                    r = _process_channel(conn, ch["id"], ch.get("strategy", "inbound"), msgs, settings, state, limit, logs)
                     _merge_totals(totals, r)
                     per_channel.append({"channel": ch.get("name") or ch["id"], "strategy": ch.get("strategy"), **r})
                 source = "collector"
@@ -456,11 +626,10 @@ def run_sync(
             return _not_ok(f"수집 실패: {exc}")
 
         queries.save_sync_settings(conn, {"channel_state": state})
-        print(
-            f"[sync] DONE collected={totals['collected']} parsed={totals['parsed']} "
-            f"leads={totals['new_leads']} activities={totals['new_activities']} "
-            f"queued={totals['queued']}",
-            flush=True,
+        _log(
+            logs,
+            f"[sync] 완료 — 수집 {totals['collected']} · 파싱 {totals['parsed']} · "
+            f"신규 {totals['new_leads']} · 활동 {totals['new_activities']} · 검수 {totals['queued']}",
         )
 
         parts = []
@@ -483,6 +652,7 @@ def run_sync(
             "queued_reviews": totals["queued"],
             "parsed": totals["parsed"],
             "channels": per_channel,
+            "log": logs,
         }
 
 
@@ -496,8 +666,9 @@ def _merge_totals(totals: dict, r: dict) -> None:
 
 def _process_channel(
     conn, channel_id: str, strategy: str, messages: list[dict],
-    settings: dict, state: dict, limit: int | None,
+    settings: dict, state: dict, limit: int | None, logs: list[str] | None = None,
 ) -> dict:
+    logs = logs if logs is not None else []
     if limit:
         messages = sorted(messages, key=lambda m: _ts_float(m.get("ts", 0)), reverse=True)[
             : int(limit)
@@ -514,7 +685,7 @@ def _process_channel(
         for rep in m.get("thread_replies", []) or []:
             rts = str(rep.get("ts", ""))
             rpl = queries.slack_permalink(channel_id, rts, None)
-            _store_raw_message(conn, channel_id, rep, rpl)
+            _store_raw_message(conn, channel_id, {**rep, "is_reply": True}, rpl)
             if rep.get("text"):
                 comments.append({"ts": rts, "text": rep.get("text", ""), "permalink": rpl})
         info_by_ts[ts] = {"permalink": pl, "comments": comments, "channel_id": channel_id}
@@ -540,20 +711,19 @@ def _process_channel(
     max_ts = last_ts
     collected_now = datetime.now(KST).strftime("%Y-%m-%d %H:%M:%S")
     require_review = bool(settings.get("require_review_for_new_company"))
-    print(
-        f"[sync] #{channel_id} ({strategy}) collected={len(messages)} "
-        f"parsed={len(events)} fresh={len(fresh)}",
-        flush=True,
-    )
+    _log(logs, f"[sync] #{channel_id} ({strategy}) 수집 {len(messages)} · 파싱 {len(events)} · 신규 {len(fresh)}")
     for e in fresh:
         _cos = ", ".join(e.get("companies", []) or [e.get("co", "")])
         _who = ", ".join(c.get("email", "") for c in e.get("contacts", [])) or e.get("em", "")
-        print(
-            f"  [{e.get('dt','')}] {e.get('kind', e.get('src',''))} | 회사: {_cos or '-'}"
+        _log(
+            logs,
+            f"  [{e.get('dt','')[:16]}] {e.get('kind', e.get('src',''))} | 회사: {_cos or '(미분류)'}"
             f" | 담당: {_who or '-'} | 솔루션: {e.get('it','') or '-'}",
-            flush=True,
         )
-    for e in fresh:
+    # Resumable: commit progress every N events so an interrupted backfill can
+    # continue without re-applying (channel_state advances past applied ts).
+    COMMIT_EVERY = 20
+    for i, e in enumerate(fresh, 1):
         max_ts = max(max_ts, _ts_float(e["ts"]))
         info = info_by_ts.get(str(e["ts"]), {})
         e["permalink"] = info.get("permalink", "")
@@ -564,13 +734,34 @@ def _process_channel(
             _apply_cross_event(conn, e, require_review, counts)
         else:
             _apply_inbound_event(conn, e, require_review, counts)
+        _mark_applied(conn, channel_id, e["ts"], e.get("kind") or e.get("src") or "activity")
+        if i % COMMIT_EVERY == 0:
+            state[channel_id] = max_ts
+            queries.save_sync_settings(conn, {"channel_state": state})
+            conn.commit()
+            _log(logs, f"  … 진행 저장 {i}/{len(fresh)} (재개 지점 ts={max_ts:.0f})")
 
     state[channel_id] = max_ts
+    queries.save_sync_settings(conn, {"channel_state": state})
+    conn.commit()
     return counts
 
 
 def _apply_inbound_event(conn, e: dict, require_review: bool, counts: dict) -> None:
     company = e.get("co", "")
+    # 이메일이 없으면 담당자 생성 불가 → 회사 단위 활동으로 보존(회사도 없으면 미분류)
+    if not (e.get("em") and "@" in e["em"]):
+        co = company or UNCLASSIFIED
+        if not _company_exists(conn, co):
+            queries._upsert_company(conn, co)
+        queries.log_activity(conn, {
+            "company_key": queries._norm_company_key(co),
+            "activity_type": e.get("src", "featpaper"), "solution_name": e.get("it", ""),
+            "note": e.get("iq", ""), "occurred_at": e["dt"],
+            "source_type": e.get("src", "featpaper"), "collected_at": e.get("collected_at", ""),
+        })
+        counts["new_activities"] += 1
+        return
     known = _company_exists(conn, company) if company else True
     if require_review and company and not known:
         _apply_without_company_then_review(conn, e, e.get("src", "inbound"))
@@ -603,6 +794,19 @@ def _apply_cross_event(conn, e: dict, require_review: bool, counts: dict) -> Non
             if co:
                 _company_update_review(conn, e, co)
                 counts["queued"] += 1
+        return
+
+    # 회사 미상 활동도 원문 보존 우선 → '(미분류)'로 저장해 사용자가 보고 수정
+    if not companies and not contacts:
+        queries._upsert_company(conn, UNCLASSIFIED)
+        queries.log_activity(conn, {
+            "company_key": queries._norm_company_key(UNCLASSIFIED),
+            "activity_type": atype, "solution_name": e.get("it", ""),
+            "note": note, "next_action": e.get("next", ""),
+            "occurred_at": e["dt"], "permalink": e.get("permalink", ""),
+            "source_type": "cross_team", "collected_at": e.get("collected_at", ""),
+        })
+        counts["new_activities"] += 1
         return
 
     primary = companies[0] if companies else ""
@@ -763,6 +967,7 @@ def _ts_float(ts: str | float) -> float:
 
 
 def _not_ok(message: str) -> dict:
+    print(f"[sync] 중단 — {message}", flush=True)
     return {
         "ok": False,
         "configured": False,
@@ -771,4 +976,6 @@ def _not_ok(message: str) -> dict:
         "new_activities": 0,
         "queued_reviews": 0,
         "parsed": 0,
+        "collected": 0,
+        "log": [f"[sync] 중단 — {message}"],
     }

@@ -29,6 +29,9 @@ export interface CompanyProfile {
   memo: string;
   auto: boolean; // auto-estimated (frontend_auto_cinfo)
   new?: boolean; // collected within last 24h
+  act_count?: number; // activities attached to this company
+  act_last?: string; // last activity date
+  contact_count?: number;
 }
 
 export interface ActivityComment {

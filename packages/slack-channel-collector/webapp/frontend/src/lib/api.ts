@@ -95,10 +95,16 @@ export const api = {
       method: "POST",
       body: JSON.stringify(payload),
     }),
-  sync: (exportFile?: string) =>
+  sync: (opts?: { exportFile?: string; backfill?: boolean }) =>
     req<{ ok: boolean; configured: boolean; message: string; new_leads?: number }>(
       "/api/sync",
-      { method: "POST", body: JSON.stringify({ export_file: exportFile ?? null }) }
+      {
+        method: "POST",
+        body: JSON.stringify({
+          export_file: opts?.exportFile ?? null,
+          backfill: opts?.backfill ?? false,
+        }),
+      }
     ),
   setTags: (email: string, tags: string[]) =>
     req<{ ok: boolean; tags: string[] }>(
@@ -127,6 +133,34 @@ export const api = {
       `/api/companies/${encodeURIComponent(key)}/infer`,
       { method: "POST", body: JSON.stringify({ context }) }
     ),
+  slackMessages: (q = "", limit = 300) =>
+    req<{ items: SlackRawMessage[] }>(
+      `/api/slack/messages?limit=${limit}&q=${encodeURIComponent(q)}`
+    ),
+  glmExtract: (text: string, hint = "") =>
+    req<{ ok: boolean; result: Record<string, unknown> }>("/api/glm/extract", {
+      method: "POST",
+      body: JSON.stringify({ text, hint }),
+    }),
+  applyRawMessage: (payload: ApplyRawPayload) =>
+    req<{ ok: boolean; created?: boolean }>("/api/slack/messages/apply", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  archiveMessage: (channel_id: string, ts: string, archived = true) =>
+    req<{ ok: boolean }>("/api/slack/messages/archive", {
+      method: "POST",
+      body: JSON.stringify({ channel_id, ts, archived }),
+    }),
+  resolveUsers: () =>
+    req<{ ok: boolean; stored: number; message?: string }>("/api/slack/resolve-users", {
+      method: "POST",
+    }),
+  listAudit: () => req<{ items: AuditBatch[] }>("/api/audit"),
+  undoBatch: (batch: string) =>
+    req<{ ok: boolean; undone: number }>(`/api/audit/${encodeURIComponent(batch)}/undo`, {
+      method: "POST",
+    }),
   duplicates: () =>
     req<{ groups: DuplicateGroup[] }>("/api/companies/duplicates"),
   mergeCompanies: (keep_key: string, merge_keys: string[]) =>
@@ -135,6 +169,48 @@ export const api = {
       { method: "POST", body: JSON.stringify({ keep_key, merge_keys }) }
     ),
 };
+
+export interface AuditBatch {
+  batch: string;
+  label: string;
+  at: string;
+  changes: number;
+  undone: boolean;
+}
+
+export interface ApplyRawPayload {
+  channel_id: string;
+  ts: string;
+  company?: string;
+  email?: string;
+  name?: string;
+  phone?: string;
+  department?: string;
+  title?: string;
+  solution?: string;
+  activity_type?: string;
+  note?: string;
+  next_action?: string;
+  occurred_at?: string;
+}
+
+export interface SlackComment {
+  text: string;
+  permalink: string;
+  user: string;
+}
+export interface SlackRawMessage {
+  channel_id: string;
+  ts: string;
+  when: string;
+  user: string;
+  text: string;
+  permalink: string;
+  comments: SlackComment[];
+  applied: boolean;
+  applied_kind: string;
+  archived: boolean;
+}
 
 export interface DuplicateCompany {
   id: number;

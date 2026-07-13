@@ -125,6 +125,46 @@ INFER_SYSTEM = (
 )
 
 
+# DB 스키마(slack_glm_extraction.schema.json)에 그대로 매핑되는 구조화 추출 프롬프트.
+EXTRACT_SYSTEM = (
+    "너는 RTM 영업 Slack 메시지를 고객 DB에 넣기 위한 구조화 추출기다. "
+    "메시지(및 스레드 댓글)를 읽고 아래 JSON 스키마로만 출력한다. 설명/코드펜스 금지.\n"
+    "{\n"
+    '  "kind": "lead|activity|company_update|ignore",\n'
+    '  "confidence": 0.0,\n'
+    '  "evidence": "판단 근거가 된 원문 인용(1~2줄)",\n'
+    '  "companies": [{"name":"", "industry":"", "sub_industry":"", "description":""}],\n'
+    '  "contacts": [{"email":"", "name":"", "phone":"", "department":"", "title":""}],\n'
+    '  "activity": {"occurred_at":"YYYY-MM-DD HH:MM", "activity_type":"방문 미팅|콜|견적|데모|자료요청|후속확인|문의", "solution_name":"", "inquiry_text":"", "next_action":""},\n'
+    '  "review_required": true\n'
+    "}\n"
+    "규칙:\n"
+    "- 회사가 여러 곳이면 companies 배열에 모두. 주 고객사를 첫 번째로.\n"
+    "- 참석자/담당자는 contacts 배열에. 이메일 없으면 email은 빈 문자열.\n"
+    "- solution_name은 Hubble/EHM/RISA/M.AX Agent/TS Agent/기타 중에서만.\n"
+    "- 날짜는 본문에서 찾아 YYYY-MM-DD HH:MM. 시간 없으면 00:00.\n"
+    "- 값이 불확실하거나 기존 DB와 충돌 가능하면 review_required=true, confidence를 낮게.\n"
+    "- 잡담/단순알림이면 kind=ignore.\n"
+    "- 원문에 없는 값은 절대 지어내지 말고 빈 문자열."
+)
+
+
+def extract_lead_event(text: str, hint: str = "") -> dict[str, Any]:
+    """Slack 원문 → DB 반영 가능한 구조화 결과(GLM). 미설정/실패 시 _mode 표시."""
+    if not is_configured():
+        return {"_mode": "unavailable", "message": "GLM이 설정되지 않았습니다 (GLM_API_URL/GLM_API_KEY)."}
+    user = text if not hint else f"[참고: {hint}]\n{text}"
+    try:
+        data = _json_from_text(chat(EXTRACT_SYSTEM, user[:6000], max_tokens=900))
+        data.setdefault("companies", [])
+        data.setdefault("contacts", [])
+        data.setdefault("activity", {})
+        data["_mode"] = "glm"
+        return data
+    except Exception as exc:  # noqa: BLE001
+        return {"_mode": "error", "message": str(exc)}
+
+
 def infer_company_profile(name: str, context: str = "") -> dict[str, Any]:
     if not is_configured():
         return {"_mode": "unavailable", "message": "GLM이 설정되지 않았습니다 (GLM_API_URL/GLM_API_KEY)."}

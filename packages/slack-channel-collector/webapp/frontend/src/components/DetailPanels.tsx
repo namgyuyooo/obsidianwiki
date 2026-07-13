@@ -61,23 +61,28 @@ function Timeline({ events }: { events: Activity[] }) {
             )}
           </div>
           {e.it && <div>{normInterest(e.it)}</div>}
-          {e.iq && (
-            <div
-              style={{
-                whiteSpace: "pre-wrap",
-                marginTop: 2,
-                background: "#f9fafb",
-                border: "1px solid var(--line)",
-                borderRadius: 6,
-                padding: "6px 8px",
-                maxHeight: 260,
-                overflow: "auto",
-                fontSize: 12,
-              }}
-            >
-              {e.iq}
-            </div>
-          )}
+          {e.iq &&
+            (() => {
+              // 슬랙 수집(릴레잇/피트페이퍼/크로스팀)은 원문 전체를 그대로 노출
+              const isSlack =
+                !!e.link || ["relate", "featpaper", "cross_team"].includes(e.src);
+              return (
+                <div
+                  style={{
+                    whiteSpace: "pre-wrap",
+                    marginTop: 2,
+                    background: "#f9fafb",
+                    border: "1px solid var(--line)",
+                    borderRadius: 6,
+                    padding: "6px 8px",
+                    ...(isSlack ? {} : { maxHeight: 260, overflow: "auto" }),
+                    fontSize: 12,
+                  }}
+                >
+                  {e.iq}
+                </div>
+              );
+            })()}
           {e.next && <div className="hint">▶ 다음 액션: {e.next}</div>}
           {e.comments && e.comments.length > 0 && (
             <div className="hint" style={{ marginTop: 3 }}>
@@ -225,12 +230,14 @@ export function CompanyDetail({
   onSave,
   onLogActivity,
   onInfer,
+  aiBusy,
 }: {
   group: CompanyGroup;
   companies: Record<string, CompanyProfile>;
   activities: Activity[];
   onSave: (key: string, fields: Record<string, string>) => void;
   onLogActivity: (p: ActivityPayload) => void;
+  aiBusy?: boolean;
   onInfer: (key: string) => Promise<{
     industry?: string;
     sub_industry?: string;
@@ -239,6 +246,7 @@ export function CompanyDetail({
 }) {
   const ci = companyProfile(companies, group.key);
   const [form, setForm] = useState({
+    display_name: ci.name,
     industry: ci.ind,
     sub_industry: ci.sub,
     description: ci.desc,
@@ -271,12 +279,22 @@ export function CompanyDetail({
         <SourceBadges sources={group.s} />
       </div>
       <div className="editgrid">
+        <div className="full">
+          <label>회사명</label>
+          <input
+            type="text"
+            value={form.display_name}
+            placeholder="회사명"
+            onChange={(e) => upd("display_name")(e.target.value)}
+          />
+        </div>
         <div>
           <label>
             업종 {ci.auto && !ci.owner ? <span className="badge b-auto">자동 추정</span> : null}
             <button
               className="btn ghost"
               style={{ fontSize: 11, padding: "1px 6px", marginLeft: 6 }}
+              disabled={aiBusy}
               onClick={async () => {
                 const r = await onInfer(group.key);
                 if (r)

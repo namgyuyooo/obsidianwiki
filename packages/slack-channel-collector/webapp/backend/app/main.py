@@ -10,6 +10,7 @@ import time
 
 from fastapi import Body, FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
@@ -31,6 +32,7 @@ app.add_middleware(
 
 # ── request models ───────────────────────────────────────────────────────────
 class CompanyProfileIn(BaseModel):
+    display_name: str | None = None
     industry: str | None = None
     sub_industry: str | None = None
     description: str | None = None
@@ -62,6 +64,7 @@ class SyncSettingsIn(BaseModel):
 class SyncIn(BaseModel):
     export_file: str | None = None
     limit: int | None = None  # collect only the most recent N messages
+    backfill: bool = False  # force full history backfill for all channels
 
 
 class LeadIn(BaseModel):
@@ -133,6 +136,7 @@ def reviews(status: str = Query("pending")) -> dict:
 @app.put("/api/companies/{canonical_key}")
 def update_company(canonical_key: str, body: CompanyProfileIn) -> dict:
     fields = {
+        "display_name": body.display_name,
         "industry": body.industry,
         "sub_industry": body.sub_industry,
         "description": body.description,
@@ -140,6 +144,7 @@ def update_company(canonical_key: str, body: CompanyProfileIn) -> dict:
         "memo": body.memo,
     }
     with get_conn() as conn:
+        queries.begin_change(conn, f"회사 정보 수정: {canonical_key}")
         try:
             result = queries.update_company_profile(conn, canonical_key, fields)
         except KeyError:
@@ -161,6 +166,7 @@ def duplicate_companies() -> dict:
 @app.post("/api/companies/merge")
 def merge_companies(body: MergeIn) -> dict:
     with get_conn() as conn:
+        queries.begin_change(conn, f"회사 병합 → {body.keep_key} ({len(body.merge_keys)}곳)")
         try:
             result = queries.merge_companies(conn, body.keep_key, body.merge_keys)
         except KeyError:
@@ -179,6 +185,7 @@ def search_companies(q: str = Query(""), limit: int = Query(20)) -> dict:
 @app.post("/api/reviews/{review_id}/resolve")
 def resolve_review(review_id: int, body: ReviewResolveIn) -> dict:
     with get_conn() as conn:
+        queries.begin_change(conn, f"정합성 처리 #{review_id} ({body.action})")
         try:
             result = queries.resolve_review(
                 conn,
@@ -199,6 +206,7 @@ def resolve_review(review_id: int, body: ReviewResolveIn) -> dict:
 @app.post("/api/leads")
 def add_lead(body: LeadIn = Body(...)) -> dict:
     with get_conn() as conn:
+        queries.begin_change(conn, f"리드 추가: {body.email}")
         try:
             result = queries.add_lead(conn, body.model_dump())
         except ValueError as exc:
@@ -221,6 +229,7 @@ def log_activity(body: ActivityIn) -> dict:
     if not body.email and not body.company_key:
         raise HTTPException(status_code=400, detail="email or company_key required")
     with get_conn() as conn:
+        queries.begin_change(conn, f"활동 기록: {body.email or body.company_key}")
         try:
             result = queries.log_activity(conn, body.model_dump())
         except KeyError:
@@ -231,6 +240,108 @@ def log_activity(body: ActivityIn) -> dict:
 @app.get("/api/glm/status")
 def glm_status() -> dict:
     return {"configured": glm.is_configured()}
+
+
+@app.post("/api/slack/resolve-users")
+def resolve_users() -> dict:
+    with get_conn() as conn:
+        return slack_sync.resolve_users(conn)
+
+
+class ArchiveIn(BaseModel):
+    channel_id: str
+    ts: str
+    archived: bool = True
+
+
+@app.post("/api/slack/messages/archive")
+def archive_message(body: ArchiveIn) -> dict:
+    with get_conn() as conn:
+        queries.set_raw_archived(conn, body.channel_id, body.ts, body.archived)
+    return {"ok": True}
+
+
+@app.get("/api/audit")
+def audit_list(limit: int = Query(50)) -> dict:
+    with get_conn() as conn:
+        return {"items": queries.list_audit(conn, limit)}
+
+
+@app.post("/api/audit/{batch}/undo")
+def audit_undo(batch: str) -> dict:
+    with get_conn() as conn:
+        result = queries.undo_batch(conn, batch)
+    return {"ok": True, **result}
+
+
+@app.get("/api/slack/messages")
+def slack_messages(limit: int = Query(300), q: str = Query("")) -> dict:
+    with get_conn() as conn:
+        return {"items": queries.slack_messages(conn, limit=limit, q=q)}
+
+
+class GlmExtractIn(BaseModel):
+    text: str
+    hint: str = ""
+
+
+@app.post("/api/glm/extract")
+def glm_extract(body: GlmExtractIn) -> dict:
+    """Slack 원문을 DB 스키마에 맞춰 GLM으로 구조화(미리보기/검수용)."""
+    return {"ok": True, "result": glm.extract_lead_event(body.text, body.hint)}
+
+
+class ApplyRawIn(BaseModel):
+    channel_id: str
+    ts: str
+    company: str = ""
+    email: str = ""
+    name: str = ""
+    phone: str = ""
+    department: str = ""
+    title: str = ""
+    solution: str = ""
+    activity_type: str = "고객 활동"
+    note: str = ""
+    next_action: str = ""
+    occurred_at: str = ""
+
+
+@app.post("/api/slack/messages/apply")
+def apply_raw_message(body: ApplyRawIn) -> dict:
+    """미반영 원문을 사용자가 수정한 값으로 DB에 반영(활동/리드 생성)."""
+    from datetime import datetime
+    from zoneinfo import ZoneInfo
+
+    now = datetime.now(ZoneInfo("Asia/Seoul")).strftime("%Y-%m-%d %H:%M:%S")
+    occurred = body.occurred_at or now
+    with get_conn() as conn:
+        queries.begin_change(conn, f"원문 반영: {body.company or body.email}")
+        result: dict = {}
+        if body.email and "@" in body.email:
+            result = queries.apply_contact_event(
+                conn, email=body.email, name=body.name, company=body.company,
+                department=body.department, title=body.title, phone=body.phone,
+                interest=body.solution, inquiry=body.note, occurred_at=occurred,
+                source_code="cross_team", activity_type=body.activity_type,
+                next_action=body.next_action, collected_at=now,
+            )
+        elif body.company.strip():
+            queries._upsert_company(conn, body.company.strip())
+            result = queries.log_activity(conn, {
+                "company_key": queries._norm_company_key(body.company),
+                "activity_type": body.activity_type, "solution_name": body.solution,
+                "note": body.note, "next_action": body.next_action,
+                "occurred_at": occurred, "source_type": "cross_team", "collected_at": now,
+            })
+        else:
+            raise HTTPException(status_code=400, detail="company 또는 email 중 하나는 필요합니다")
+        conn.execute(
+            "UPDATE slack_raw_messages SET applied=1, applied_kind='manual' "
+            "WHERE channel_id=? AND message_ts=?",
+            (body.channel_id, body.ts),
+        )
+    return {"ok": True, **result}
 
 
 @app.post("/api/search/glm")
@@ -292,6 +403,7 @@ def sync(body: SyncIn | None = None) -> dict:
     return slack_sync.run_sync(
         export_file=body.export_file if body else None,
         limit=body.limit if body else None,
+        backfill=body.backfill if body else False,
     )
 
 
@@ -337,6 +449,14 @@ def _stop_scheduler() -> None:
 # `./run.sh` serves both the API and the UI. Mounted last so /api/* routes win.
 # `html=True` serves index.html at "/" and for directory requests.
 if _settings.frontend_dist.exists():
+    _index_file = _settings.frontend_dist / "index.html"
+
+    # Serve index.html with no-cache so a rebuilt UI is picked up on refresh
+    # (hashed asset files under /assets can cache forever).
+    @app.get("/")
+    def _index() -> FileResponse:
+        return FileResponse(_index_file, headers={"Cache-Control": "no-cache"})
+
     app.mount(
         "/",
         StaticFiles(directory=str(_settings.frontend_dist), html=True),

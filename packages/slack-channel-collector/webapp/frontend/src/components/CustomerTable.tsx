@@ -56,6 +56,41 @@ function CompanyRows({
     )
   );
 
+  // 담당자 없이 활동만 있는 회사 → 한 줄로 표시 (활동 수/최근활동 노출)
+  if (g.members.length === 0) {
+    return (
+      <tr className="mrow">
+        <td
+          className="row"
+          style={{ borderRight: "1px solid var(--line)", cursor: "pointer" }}
+          onClick={() => onOpenCompany(g.key)}
+        >
+          <b>{g.name}</b>
+          {g.isNew && <span className="badge b-new"> NEW</span>}
+        </td>
+        <td colSpan={6} className="hint">담당자 없음 · 활동 {g.a}건 (회사 클릭 → 상세/타임라인)</td>
+        <td
+          className="row"
+          style={{ cursor: "pointer" }}
+          onClick={() => onOpenCompany(g.key)}
+        >
+          {ci.ind ? <IndustryBadge ind={ci.ind} sub={ci.sub} /> : <span className="hint" style={{ color: "var(--accent)" }}>＋ 입력</span>}
+        </td>
+        <td>
+          <input type="text" list="owners" defaultValue={ci.owner} placeholder="담당 지정" style={{ width: 90 }}
+            onClick={(e) => e.stopPropagation()}
+            onBlur={(e) => { if (e.target.value.trim() !== ci.owner) onSaveField(g.key, "owner", e.target.value.trim()); }} />
+        </td>
+        <td>
+          <input type="text" defaultValue={ci.memo} placeholder="메모 입력" style={{ width: 150 }}
+            onClick={(e) => e.stopPropagation()}
+            onBlur={(e) => { if (e.target.value.trim() !== ci.memo) onSaveField(g.key, "memo", e.target.value.trim()); }} />
+        </td>
+        <td>{g.l}</td>
+      </tr>
+    );
+  }
+
   return (
     <>
       {flat.map((f, ix) => {
@@ -191,12 +226,36 @@ function PersonRow({
   );
 }
 
+function FilterInput({
+  col,
+  colFilters,
+  onColFilter,
+}: {
+  col: string;
+  colFilters: Record<string, string>;
+  onColFilter: (k: string, v: string) => void;
+}) {
+  return (
+    <th>
+      <input
+        type="text"
+        placeholder="필터"
+        value={colFilters[col] || ""}
+        onClick={(e) => e.stopPropagation()}
+        onChange={(e) => onColFilter(col, e.target.value)}
+      />
+    </th>
+  );
+}
+
 export function CustomerTable({
   view,
   groups,
   persons,
   companies,
   state,
+  colFilters,
+  onColFilter,
   onSort,
   onOpenCompany,
   onOpenPerson,
@@ -207,12 +266,17 @@ export function CustomerTable({
   persons: Customer[];
   companies: Record<string, CompanyProfile>;
   state: UiState;
+  colFilters: Record<string, string>;
+  onColFilter: (k: string, v: string) => void;
   onSort: (k: string) => void;
   onOpenCompany: (key: string) => void;
   onOpenPerson: (email: string) => void;
   onSaveField: (key: string, field: "owner" | "memo", value: string) => void;
 }) {
   const sortProps = { state, onSort };
+  const fi = (col: string) => (
+    <FilterInput col={col} colFilters={colFilters} onColFilter={onColFilter} />
+  );
   if (view === "company") {
     return (
       <table>
@@ -229,6 +293,19 @@ export function CustomerTable({
             <th>내부 담당자</th>
             <th>영업 메모</th>
             <SortableTh k="l" label="최근활동" {...sortProps} />
+          </tr>
+          <tr className="filterrow">
+            {fi("company")}
+            {fi("dept")}
+            {fi("name")}
+            {fi("email")}
+            {fi("phone")}
+            {fi("interest")}
+            {fi("source")}
+            {fi("industry")}
+            {fi("owner")}
+            <th></th>
+            <th></th>
           </tr>
         </thead>
         <tbody>
@@ -268,6 +345,18 @@ export function CustomerTable({
           <th>소스</th>
           <SortableTh k="l" label="최근활동" {...sortProps} />
           <SortableTh k="a" label="활동" {...sortProps} />
+        </tr>
+        <tr className="filterrow">
+          {fi("company")}
+          {fi("name")}
+          {fi("title")}
+          {fi("industry")}
+          {fi("email")}
+          {fi("phone")}
+          {fi("interest")}
+          {fi("source")}
+          <th></th>
+          <th></th>
         </tr>
       </thead>
       <tbody>

@@ -11,11 +11,105 @@ from __future__ import annotations
 import json
 import re
 import sqlite3
+import uuid
 from typing import Any
 
 from .config import get_settings
+from .db import AUDIT_SPECS
+
+
+def begin_change(conn: sqlite3.Connection, label: str) -> str:
+    """이후의 모든 DB 변경을 하나의 배치로 change_log에 기록하도록 표시."""
+    batch = uuid.uuid4().hex[:12]
+    conn.execute(
+        "UPDATE change_batch SET batch=?, label=?, logging=1 WHERE id=1",
+        (batch, label),
+    )
+    return batch
+
+
+def list_audit(conn: sqlite3.Connection, limit: int = 50) -> list[dict]:
+    rows = conn.execute(
+        """
+        SELECT batch, label,
+               MIN(created_at) AS at, COUNT(*) AS changes,
+               SUM(CASE WHEN undone=1 THEN 1 ELSE 0 END) AS undone_ct
+        FROM change_log
+        WHERE batch <> ''
+        GROUP BY batch, label
+        ORDER BY MAX(id) DESC
+        LIMIT ?
+        """,
+        (limit,),
+    ).fetchall()
+    out = []
+    for r in rows:
+        out.append({
+            "batch": r["batch"],
+            "label": r["label"],
+            "at": r["at"],
+            "changes": r["changes"],
+            "undone": r["undone_ct"] == r["changes"] and r["changes"] > 0,
+        })
+    return out
+
+
+def undo_batch(conn: sqlite3.Connection, batch: str) -> dict:
+    """배치의 모든 변경을 역순으로 되돌린다 (원상복구). 되돌리기 자체는 기록하지 않음."""
+    rows = conn.execute(
+        "SELECT * FROM change_log WHERE batch=? AND undone=0 ORDER BY id DESC",
+        (batch,),
+    ).fetchall()
+    if not rows:
+        return {"undone": 0}
+    conn.execute("UPDATE change_batch SET logging=0 WHERE id=1")  # 되돌리기는 로깅 제외
+    n = 0
+    try:
+        for r in rows:
+            table = r["table_name"]
+            cols = AUDIT_SPECS.get(table)
+            if not cols:
+                continue
+            if r["op"] == "INSERT":
+                conn.execute(f"DELETE FROM {table} WHERE id=?", (r["row_pk"],))
+            elif r["op"] == "DELETE":
+                data = json.loads(r["old_json"] or "{}")
+                placeholders = ",".join("?" for _ in cols)
+                conn.execute(
+                    f"INSERT OR REPLACE INTO {table} ({','.join(cols)}) VALUES ({placeholders})",
+                    [data.get(c) for c in cols],
+                )
+            elif r["op"] == "UPDATE":
+                data = json.loads(r["old_json"] or "{}")
+                sets = ",".join(f"{c}=?" for c in cols if c != "id")
+                params = [data.get(c) for c in cols if c != "id"] + [r["row_pk"]]
+                conn.execute(f"UPDATE {table} SET {sets} WHERE id=?", params)
+            conn.execute("UPDATE change_log SET undone=1 WHERE id=?", (r["id"],))
+            n += 1
+    finally:
+        conn.execute("UPDATE change_batch SET logging=1 WHERE id=1")
+    return {"undone": n, "batch": batch}
 
 UNKNOWN_KEY = "(회사 미상)"
+
+_MENTION_RE = re.compile(r"<@([UWB][A-Z0-9]+)>")
+
+
+def load_user_map(conn: sqlite3.Connection) -> dict[str, str]:
+    try:
+        return {
+            r["user_id"]: (r["name"] or r["real_name"] or r["user_id"])
+            for r in conn.execute("SELECT user_id, name, real_name FROM slack_users")
+        }
+    except sqlite3.Error:
+        return {}
+
+
+def apply_user_names(text: str, usermap: dict[str, str]) -> str:
+    """<@U..> 멘션을 @이름으로 치환 (매핑 없으면 원형 유지)."""
+    if not text:
+        return text
+    return _MENTION_RE.sub(lambda m: "@" + usermap.get(m.group(1), m.group(1)), text)
 
 
 def slack_permalink(channel_id: str, message_ts: str, raw_payload: str | None) -> str:
@@ -104,6 +198,94 @@ def save_sync_settings(conn: sqlite3.Connection, patch: dict[str, Any]) -> dict[
         (json.dumps(current, ensure_ascii=False),),
     )
     return current
+
+
+def slack_messages(conn: sqlite3.Connection, limit: int = 300, q: str = "") -> list[dict]:
+    """모든 수집 원문(부모 메시지)을 최신순으로 반환 — 파싱 성공 여부와 무관하게 출력.
+
+    스레드 댓글은 부모 payload의 thread_replies에서 꺼내 comments로 붙인다.
+    (댓글 자체 row는 is_reply 표시로 최상위 목록에서 제외)
+    """
+    from datetime import datetime
+    from zoneinfo import ZoneInfo
+
+    usermap = load_user_map(conn)
+    rows = [dict(r) for r in conn.execute(
+        """
+        SELECT channel_id, message_ts, user_id, text, raw_payload, thread_ts,
+               applied, applied_kind, archived
+        FROM slack_raw_messages
+        ORDER BY CAST(message_ts AS REAL) DESC
+        LIMIT 3000
+        """
+    ).fetchall()]
+    for r in rows:
+        try:
+            r["_payload"] = json.loads(r["raw_payload"] or "{}")
+        except (ValueError, TypeError):
+            r["_payload"] = {}
+
+    # 수집 당시 알 수 있는 스레드 관계(thread_ts)로 댓글을 부모에 연결
+    def is_reply(r: dict) -> bool:
+        tt = r.get("thread_ts") or ""
+        return bool(r["_payload"].get("is_reply")) or (tt and tt != r["message_ts"])
+
+    replies_by_parent: dict[str, list] = {}
+    for r in rows:
+        if is_reply(r):
+            replies_by_parent.setdefault(r.get("thread_ts") or "", []).append(r)
+
+    ql = q.strip().lower()
+    out = []
+    for r in rows:
+        if is_reply(r):
+            continue
+        text = r["text"] or ""
+        if ql and ql not in text.lower():
+            continue
+        payload = r["_payload"]
+        # 댓글: 부모 payload의 thread_replies + thread_ts로 연결된 별도 row 병합(중복 제거)
+        comments: dict[str, dict] = {}
+        for rep in payload.get("thread_replies", []) or []:
+            if rep.get("text"):
+                comments[str(rep.get("ts", ""))] = {
+                    "text": apply_user_names(rep.get("text", ""), usermap),
+                    "permalink": rep.get("permalink", ""),
+                    "user": usermap.get(rep.get("user", ""), rep.get("user", "")),
+                }
+        for rep in replies_by_parent.get(r["message_ts"], []):
+            comments[rep["message_ts"]] = {
+                "text": apply_user_names(rep["text"] or "", usermap),
+                "permalink": rep["_payload"].get("permalink", ""),
+                "user": usermap.get(rep["user_id"], rep["user_id"]),
+            }
+        try:
+            dt = datetime.fromtimestamp(float(r["message_ts"]), tz=ZoneInfo("Asia/Seoul"))
+            when = dt.strftime("%Y-%m-%d %H:%M")
+        except (ValueError, TypeError, OSError):
+            when = r["message_ts"]
+        out.append({
+            "channel_id": r["channel_id"],
+            "ts": r["message_ts"],
+            "when": when,
+            "user": usermap.get(r["user_id"], r["user_id"]),
+            "text": apply_user_names(text, usermap),
+            "permalink": payload.get("permalink", ""),
+            "comments": sorted(comments.values(), key=lambda c: c.get("text", "")),
+            "applied": bool(r.get("applied")),
+            "applied_kind": r.get("applied_kind") or "",
+            "archived": bool(r.get("archived")),
+        })
+        if len(out) >= limit:
+            break
+    return out
+
+
+def set_raw_archived(conn: sqlite3.Connection, channel_id: str, ts: str, archived: bool) -> None:
+    conn.execute(
+        "UPDATE slack_raw_messages SET archived=? WHERE channel_id=? AND message_ts=?",
+        (1 if archived else 0, channel_id, str(ts)),
+    )
 
 
 def summary(conn: sqlite3.Connection) -> dict[str, int]:
@@ -229,14 +411,28 @@ def customers(conn: sqlite3.Connection) -> dict[str, Any]:
             }
         )
 
+    # 회사별 활동 수/최근활동 (담당자 없이 회사 단위로만 쌓인 활동도 표시하기 위해)
+    act_by_company: dict[int, tuple[int, str]] = {}
+    for cid, n, last in conn.execute(
+        "SELECT company_id, COUNT(*), MAX(occurred_at) FROM activities "
+        "WHERE company_id IS NOT NULL GROUP BY company_id"
+    ):
+        act_by_company[cid] = (n, last or "")
+    contact_count_by_company: dict[int, int] = {}
+    for coid, n in conn.execute(
+        "SELECT company_id, COUNT(*) FROM contacts WHERE company_id IS NOT NULL GROUP BY company_id"
+    ):
+        contact_count_by_company[coid] = n
+
     companies = {}
     for co in conn.execute(
         """
-        SELECT canonical_key, display_name, industry, sub_industry,
+        SELECT id, canonical_key, display_name, industry, sub_industry,
                description, owner, memo, profile_source, needs_review
         FROM companies
         """
     ):
+        act_n, act_last = act_by_company.get(co["id"], (0, ""))
         companies[co["canonical_key"]] = {
             "key": co["canonical_key"],
             "name": co["display_name"],
@@ -248,6 +444,9 @@ def customers(conn: sqlite3.Connection) -> dict[str, Any]:
             "auto": co["profile_source"] == "frontend_auto_cinfo"
             and bool(co["industry"] or co["description"]),
             "new": co["canonical_key"] in new_company_keys,
+            "act_count": act_n,
+            "act_last": act_last,
+            "contact_count": contact_count_by_company.get(co["id"], 0),
         }
 
     return {"items": items, "companies": companies}
@@ -264,6 +463,7 @@ def activities(conn: sqlite3.Connection) -> list[dict]:
         ORDER BY occurred_at DESC
         """
     ).fetchall()
+    usermap = load_user_map(conn)
     out = []
     for r in rows:
         link = ""
@@ -285,7 +485,7 @@ def activities(conn: sqlite3.Connection) -> list[dict]:
                 "nm": r["name_snapshot"],
                 "co": r["company_snapshot"],
                 "it": r["solution_name"],
-                "iq": r["inquiry_text"],
+                "iq": apply_user_names(r["inquiry_text"], usermap),
                 "link": link,
                 "comments": comments,
             }
@@ -629,7 +829,7 @@ def search_companies(conn: sqlite3.Connection, q: str, limit: int = 20) -> list[
 
 # ── write paths ────────────────────────────────────────────────────────────
 
-_COMPANY_COLUMNS = {"industry", "sub_industry", "description", "owner", "memo"}
+_COMPANY_COLUMNS = {"industry", "sub_industry", "description", "owner", "memo", "display_name"}
 
 
 def update_company_profile(

@@ -8,12 +8,16 @@ export function OwnerTable({
   owners,
   companies,
   state,
+  colFilters,
+  onColFilter,
   onSort,
   onOpenCompany,
 }: {
   owners: OwnerGroup[];
   companies: Record<string, CompanyProfile>;
   state: UiState;
+  colFilters: Record<string, string>;
+  onColFilter: (k: string, v: string) => void;
   onSort: (k: string) => void;
   onOpenCompany: (key: string) => void;
 }) {
@@ -36,6 +40,42 @@ export function OwnerTable({
           <th>업종 / 세부분야</th>
           <th>관심 솔루션</th>
           {th("lastActivity", "최근활동")}
+        </tr>
+        <tr className="filterrow">
+          <th>
+            <input
+              type="text"
+              placeholder="담당자 필터"
+              value={colFilters.owner || ""}
+              onChange={(e) => onColFilter("owner", e.target.value)}
+            />
+          </th>
+          <th>
+            <input
+              type="text"
+              placeholder="회사 필터"
+              value={colFilters.company || ""}
+              onChange={(e) => onColFilter("company", e.target.value)}
+            />
+          </th>
+          <th></th>
+          <th>
+            <input
+              type="text"
+              placeholder="업종 필터"
+              value={colFilters.industry || ""}
+              onChange={(e) => onColFilter("industry", e.target.value)}
+            />
+          </th>
+          <th>
+            <input
+              type="text"
+              placeholder="솔루션 필터"
+              value={colFilters.interest || ""}
+              onChange={(e) => onColFilter("interest", e.target.value)}
+            />
+          </th>
+          <th></th>
         </tr>
       </thead>
       <tbody>

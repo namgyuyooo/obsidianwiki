@@ -16,6 +16,75 @@ from .config import get_settings
 
 _migrated = False
 
+# 감사/되돌리기 대상 테이블과 컬럼 (트리거가 이 컬럼들을 json으로 기록)
+AUDIT_SPECS: dict[str, list[str]] = {
+    "companies": [
+        "id", "canonical_key", "display_name", "industry", "sub_industry",
+        "description", "owner", "memo", "profile_source", "profile_confidence",
+        "needs_review", "created_at", "updated_at",
+    ],
+    "contacts": [
+        "id", "email", "name", "company_id", "department", "title", "phone",
+        "status", "is_subscribed", "first_seen", "last_seen", "activity_count",
+        "inquiry_summary", "seed_source", "created_at", "updated_at",
+    ],
+    "activities": [
+        "id", "occurred_at", "source_type", "activity_type", "next_action",
+        "contact_id", "company_id", "email_snapshot", "name_snapshot",
+        "company_snapshot", "solution_name", "inquiry_text", "collected_at",
+        "raw_payload", "confidence", "created_at",
+    ],
+    "consistency_reviews": [
+        "id", "review_type", "entity_type", "entity_id", "field_name",
+        "current_value", "proposed_value", "evidence", "source_table",
+        "source_id", "confidence", "status", "requested_at", "resolved_at",
+        "resolved_by", "resolution_note",
+    ],
+}
+
+
+def _create_audit(conn: sqlite3.Connection) -> None:
+    conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS change_log (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          batch TEXT NOT NULL, label TEXT NOT NULL DEFAULT '',
+          table_name TEXT NOT NULL, op TEXT NOT NULL, row_pk INTEGER,
+          old_json TEXT, new_json TEXT,
+          created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          undone INTEGER NOT NULL DEFAULT 0
+        )
+        """
+    )
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_change_batch ON change_log(batch)")
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS change_batch "
+        "(id INTEGER PRIMARY KEY CHECK(id=1), batch TEXT NOT NULL DEFAULT '', "
+        "label TEXT NOT NULL DEFAULT '', logging INTEGER NOT NULL DEFAULT 0)"
+    )
+    conn.execute("INSERT OR IGNORE INTO change_batch(id, batch, label, logging) VALUES (1,'','',0)")
+    for table, cols in AUDIT_SPECS.items():
+        old_obj = "json_object(" + ",".join(f"'{c}',OLD.{c}" for c in cols) + ")"
+        new_obj = "json_object(" + ",".join(f"'{c}',NEW.{c}" for c in cols) + ")"
+        conn.execute(
+            f"CREATE TRIGGER IF NOT EXISTS trg_{table}_ins AFTER INSERT ON {table} BEGIN "
+            f"INSERT INTO change_log(batch,label,table_name,op,row_pk,old_json,new_json) "
+            f"SELECT batch,label,'{table}','INSERT',NEW.id,NULL,{new_obj} "
+            f"FROM change_batch WHERE logging=1; END;"
+        )
+        conn.execute(
+            f"CREATE TRIGGER IF NOT EXISTS trg_{table}_upd AFTER UPDATE ON {table} BEGIN "
+            f"INSERT INTO change_log(batch,label,table_name,op,row_pk,old_json,new_json) "
+            f"SELECT batch,label,'{table}','UPDATE',OLD.id,{old_obj},{new_obj} "
+            f"FROM change_batch WHERE logging=1; END;"
+        )
+        conn.execute(
+            f"CREATE TRIGGER IF NOT EXISTS trg_{table}_del AFTER DELETE ON {table} BEGIN "
+            f"INSERT INTO change_log(batch,label,table_name,op,row_pk,old_json,new_json) "
+            f"SELECT batch,label,'{table}','DELETE',OLD.id,{old_obj},NULL "
+            f"FROM change_batch WHERE logging=1; END;"
+        )
+
 
 def _connect(db_path: Path) -> sqlite3.Connection:
     conn = sqlite3.connect(db_path, timeout=10)
@@ -65,9 +134,35 @@ def _run_migrations(conn: sqlite3.Connection) -> None:
         )
         """
     )
+    # 원문 → DB 반영 표시 (파싱되어 활동/리드/리뷰로 들어갔는지)
+    raw_cols = [r[1] for r in conn.execute("PRAGMA table_info(slack_raw_messages)")]
+    if "applied" not in raw_cols:
+        conn.execute("ALTER TABLE slack_raw_messages ADD COLUMN applied INTEGER NOT NULL DEFAULT 0")
+    if "applied_kind" not in raw_cols:
+        conn.execute("ALTER TABLE slack_raw_messages ADD COLUMN applied_kind TEXT NOT NULL DEFAULT ''")
+    if "thread_ts" not in raw_cols:
+        conn.execute("ALTER TABLE slack_raw_messages ADD COLUMN thread_ts TEXT NOT NULL DEFAULT ''")
+    if "archived" not in raw_cols:
+        conn.execute("ALTER TABLE slack_raw_messages ADD COLUMN archived INTEGER NOT NULL DEFAULT 0")
+
     conn.execute(
         "CREATE INDEX IF NOT EXISTS idx_contact_tags_tag ON contact_tags(tag)"
     )
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_raw_thread ON slack_raw_messages(thread_ts)"
+    )
+    # Slack 유저 ID → 이름 매핑 (멘션 <@U..>을 이름으로 치환)
+    conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS slack_users (
+          user_id TEXT PRIMARY KEY,
+          name TEXT NOT NULL DEFAULT '',
+          real_name TEXT NOT NULL DEFAULT '',
+          updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+        )
+        """
+    )
+    _create_audit(conn)
     conn.execute(
         "CREATE INDEX IF NOT EXISTS idx_activities_type ON activities(activity_type)"
     )

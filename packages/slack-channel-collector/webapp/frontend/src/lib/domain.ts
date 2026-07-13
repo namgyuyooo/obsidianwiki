@@ -42,16 +42,48 @@ export function companyProfile(
   );
 }
 
+export type ColFilters = Record<string, string>;
+
+function matchColFilters(
+  r: Customer,
+  companies: Record<string, CompanyProfile>,
+  cf: ColFilters
+): boolean {
+  for (const [k, raw] of Object.entries(cf)) {
+    const val = (raw || "").trim().toLowerCase();
+    if (!val) continue;
+    const ci = companyProfile(companies, r.ckey);
+    let hay = "";
+    switch (k) {
+      case "company": hay = r.c + " " + ci.name; break;
+      case "name": hay = r.n; break;
+      case "title": hay = r.t; break;
+      case "email": hay = r.e; break;
+      case "phone": hay = r.p; break;
+      case "dept": hay = r.d; break;
+      case "industry": hay = ci.ind + " " + ci.sub; break;
+      case "interest": hay = r.i.join(" "); break;
+      case "source": hay = r.s.join(" ") + " " + (r.tags || []).join(" "); break;
+      case "owner": hay = ci.owner; break;
+      default: hay = "";
+    }
+    if (!hay.toLowerCase().includes(val)) return false;
+  }
+  return true;
+}
+
 export function filtered(
   recs: Customer[],
   companies: Record<string, CompanyProfile>,
   state: UiState,
-  restrictEmails?: Set<string> | null
+  restrictEmails?: Set<string> | null,
+  colFilters?: ColFilters | null
 ): Customer[] {
   const q = state.q.toLowerCase();
   return recs
     .filter((r) => {
       if (restrictEmails && !restrictEmails.has(r.e)) return false;
+      if (colFilters && !matchColFilters(r, companies, colFilters)) return false;
       if (state.status && r.st !== state.status) return false;
       if (state.src === "multi") {
         if (r.s.length < 2) return false;
@@ -108,10 +140,11 @@ export function companyGroups(
   recs: Customer[],
   companies: Record<string, CompanyProfile>,
   state: UiState,
-  restrictEmails?: Set<string> | null
+  restrictEmails?: Set<string> | null,
+  colFilters?: ColFilters | null
 ): CompanyGroup[] {
   const map: Record<string, CompanyGroup> = {};
-  for (const r of filtered(recs, companies, state, restrictEmails)) {
+  for (const r of filtered(recs, companies, state, restrictEmails, colFilters)) {
     const key = r.ckey || UNKNOWN_KEY;
     if (!map[key]) {
       map[key] = {
@@ -141,6 +174,31 @@ export function companyGroups(
   // company flagged NEW by backend (recent company-level activity)
   for (const g of Object.values(map)) {
     if (companies[g.key]?.new) g.isNew = true;
+  }
+
+  // 담당자(연락처) 없이 활동만 있는 회사도 회사 뷰에 표시 (cross_team 미팅 로그 등)
+  if (!restrictEmails) {
+    const ql = state.q.toLowerCase();
+    for (const [key, co] of Object.entries(companies)) {
+      if (map[key]) continue; // 이미 연락처로 표시됨
+      if (!co.act_count) continue; // 활동 없는 회사는 제외
+      if (state.owner && co.owner !== state.owner) continue;
+      const cf = colFilters || {};
+      if (cf.company && !`${co.name} ${key}`.toLowerCase().includes(cf.company.toLowerCase())) continue;
+      if (cf.owner && !(co.owner || "").toLowerCase().includes(cf.owner.toLowerCase())) continue;
+      if (cf.industry && !`${co.ind} ${co.sub}`.toLowerCase().includes(cf.industry.toLowerCase())) continue;
+      if (ql && !`${co.name} ${co.ind} ${co.sub} ${co.desc}`.toLowerCase().includes(ql)) continue;
+      map[key] = {
+        key,
+        name: co.name,
+        members: [],
+        i: [],
+        s: [],
+        l: co.act_last || "",
+        a: co.act_count || 0,
+        isNew: !!co.new,
+      };
+    }
   }
   const arr = Object.values(map);
   arr.forEach((g) => g.members.sort((a, b) => b.l.localeCompare(a.l)));
@@ -246,9 +304,10 @@ export function ownerGroups(
   recs: Customer[],
   companies: Record<string, CompanyProfile>,
   state: UiState,
-  restrictEmails?: Set<string> | null
+  restrictEmails?: Set<string> | null,
+  colFilters?: ColFilters | null
 ): OwnerGroup[] {
-  const cg = companyGroups(recs, companies, state, restrictEmails);
+  const cg = companyGroups(recs, companies, state, restrictEmails, colFilters);
   const map: Record<string, CompanyGroup[]> = {};
   for (const g of cg) {
     const owner = companyProfile(companies, g.key).owner || NO_OWNER;

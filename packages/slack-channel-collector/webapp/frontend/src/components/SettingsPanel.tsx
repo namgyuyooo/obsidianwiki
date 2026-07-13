@@ -5,10 +5,12 @@ export function SettingsPanel({
   settings,
   glmConfigured,
   onSave,
+  onResolveUsers,
 }: {
   settings: SyncSettings;
   glmConfigured: boolean;
   onSave: (patch: Partial<SyncSettings>) => void;
+  onResolveUsers?: () => void;
 }) {
   const [f, setF] = useState<SyncSettings>(settings);
   const upd = <K extends keyof SyncSettings>(k: K, v: SyncSettings[K]) =>
@@ -120,6 +122,14 @@ export function SettingsPanel({
             ? "GLM이 연결되어 자연어 검색·자동 추정을 사용할 수 있습니다."
             : "GLM 미설정 — 검색은 키워드 폴백으로 동작합니다. GLM_API_URL / GLM_API_KEY를 설정하면 자연어 검색과 회사 자동 추정이 활성화됩니다."}
         </div>
+      </div>
+
+      <div className="field">
+        <div className="k">슬랙 유저 이름</div>
+        <div className="v hint">멘션 <code>&lt;@U…&gt;</code>을 실제 이름으로 보이게 하려면 유저 목록을 갱신하세요.</div>
+        <button className="btn" style={{ marginTop: 4 }} onClick={() => onResolveUsers?.()}>
+          슬랙 유저 이름 갱신
+        </button>
       </div>
 
       <button className="btn primary" onClick={() => onSave(f)}>

@@ -33,6 +33,8 @@ import { ReviewPanel } from "./components/ReviewPanel";
 import { GuidePanel } from "./components/GuidePanel";
 import { SettingsPanel } from "./components/SettingsPanel";
 import { DuplicatesPanel } from "./components/DuplicatesPanel";
+import { RawMessagesPanel } from "./components/RawMessagesPanel";
+import { AuditPanel } from "./components/AuditPanel";
 
 const UI_KEY = "rtm-db-ui";
 
@@ -79,13 +81,17 @@ export default function App() {
   const [toast, setToast] = useState<{ msg: string; type: ToastType } | null>(null);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [syncing, setSyncing] = useState(false);
+  const [aiBusy, setAiBusy] = useState(false); // AI 동작 중복 방지 (한 번에 하나)
   const [error, setError] = useState<string | null>(null);
   const [settings, setSettings] = useState<SyncSettings | null>(null);
   const [glmConfigured, setGlmConfigured] = useState(false);
   const [glmEmails, setGlmEmails] = useState<Set<string> | null>(null);
   const [glmQuery, setGlmQuery] = useState("");
+  const [colFilters, setColFilters] = useState<Record<string, string>>({});
   const [reviewsOpen, setReviewsOpen] = useState(false); // 정합성 확인: 모달 아닌 전체 창
   const [dupOpen, setDupOpen] = useState(false); // 유사 중복 병합 창
+  const [rawOpen, setRawOpen] = useState(false); // Slack 원문 뷰어 창
+  const [auditOpen, setAuditOpen] = useState(false); // 변경 이력/되돌리기 창
 
   const showToast = useCallback(
     (msg: string, type: ToastType = "info", ms = 4500) => {
@@ -141,17 +147,21 @@ export default function App() {
   const companies: Record<string, CompanyProfile> = data?.companies ?? {};
 
   const groups = useMemo(
-    () => companyGroups(recs, companies, ui, glmEmails),
-    [recs, companies, ui, glmEmails]
+    () => companyGroups(recs, companies, ui, glmEmails, colFilters),
+    [recs, companies, ui, glmEmails, colFilters]
   );
   const persons = useMemo(
-    () => filtered(recs, companies, ui, glmEmails),
-    [recs, companies, ui, glmEmails]
+    () => filtered(recs, companies, ui, glmEmails, colFilters),
+    [recs, companies, ui, glmEmails, colFilters]
   );
   const owners = useMemo(
-    () => ownerGroups(recs, companies, ui, glmEmails),
-    [recs, companies, ui, glmEmails]
+    () => ownerGroups(recs, companies, ui, glmEmails, colFilters),
+    [recs, companies, ui, glmEmails, colFilters]
   );
+  const onColFilter = (k: string, v: string) => {
+    setColFilters((prev) => ({ ...prev, [k]: v }));
+    setUi({ page: 0 });
+  };
   const total =
     ui.view === "company" ? groups.length : ui.view === "owner" ? owners.length : persons.length;
   const start = ui.page * ui.per;
@@ -176,6 +186,7 @@ export default function App() {
           ...prev.companies,
           [key]: {
             ...co,
+            name: fields.display_name ?? co.name,
             ind: fields.industry ?? co.ind,
             sub: fields.sub_industry ?? co.sub,
             desc: fields.description ?? co.desc,
@@ -255,11 +266,20 @@ export default function App() {
     }
   };
 
-  const runSync = useCallback(async () => {
+  const runSync = useCallback(async (backfill = false) => {
     setSyncing(true);
-    showToast("슬랙 동기화 중… (채널 수집·파싱)", "loading");
+    setAiBusy(true);
+    showToast(
+      backfill ? "전체 히스토리 수집 중… (과거~현재, 시간이 걸릴 수 있어요)" : "슬랙 동기화 중… (최신 항목)",
+      "loading"
+    );
     try {
-      const res = await api.sync();
+      const res = await api.sync({ backfill });
+      // 상세 수집 로그를 브라우저 콘솔에 출력
+      const log = (res as unknown as { log?: string[] }).log || [];
+      console.groupCollapsed(`🔄 슬랙 동기화 로그 (${log.length}줄)`);
+      log.forEach((line) => console.log(line));
+      console.groupEnd();
       if (res.ok) {
         await Promise.all([loadCustomers(), loadReviews()]);
         const r = res as unknown as Record<string, number>;
@@ -275,6 +295,7 @@ export default function App() {
       showToast("⚠ 동기화 실패: " + (e instanceof Error ? e.message : e), "error");
     } finally {
       setSyncing(false);
+      setAiBusy(false);
     }
   }, [showToast, loadCustomers, loadReviews]);
 
@@ -282,53 +303,82 @@ export default function App() {
   // keeps working even when no dashboard tab is open. No client interval here.
 
   const saveSettings = async (patch: Partial<SyncSettings>) => {
+    showToast("동기화 설정 저장 중…", "loading");
     try {
       const next = await api.saveSettings(patch);
       setSettings(next);
-      showToast("설정 저장됨");
+      const enabled = next.channels.filter((c) => c.enabled).map((c) => "#" + c.name).join(", ");
+      showToast(
+        `✅ 설정 저장됨\n채널: ${enabled || "없음"} · 자동 ${next.auto_sync_enabled ? next.auto_sync_interval_minutes + "분" : "off"}`,
+        "success"
+      );
       setDrawer(null);
     } catch (e) {
-      showToast("⚠ 설정 저장 실패: " + (e instanceof Error ? e.message : e));
+      showToast("⚠ 설정 저장 실패: " + (e instanceof Error ? e.message : e), "error");
     }
   };
 
   const logActivity = async (payload: ActivityPayload, companyKey?: string) => {
+    showToast(`활동 기록 저장 중… ${payload.activity_type || ""}`, "loading");
     try {
       await api.logActivity({ ...payload, company_key: companyKey });
       await loadCustomers();
-      showToast("활동 기록 저장됨");
+      showToast(
+        `✅ 활동 기록 저장\n${payload.activity_type || "활동"}${payload.email ? " · " + payload.email : ""}${payload.next_action ? "\n다음: " + payload.next_action : ""}`,
+        "success"
+      );
     } catch (e) {
-      showToast("⚠ 기록 실패: " + (e instanceof Error ? e.message : e));
+      showToast("⚠ 기록 실패: " + (e instanceof Error ? e.message : e), "error");
+    }
+  };
+
+  const resolveUsers = async () => {
+    showToast("슬랙 유저 이름 갱신 중…", "loading");
+    try {
+      const r = await api.resolveUsers();
+      showToast(r.ok ? `✅ 유저 이름 ${r.stored}명 갱신` : "⚠ " + (r.message || "실패"), r.ok ? "success" : "error");
+      if (r.ok) await loadCustomers();
+    } catch (e) {
+      showToast("⚠ 실패: " + (e instanceof Error ? e.message : e), "error");
     }
   };
 
   const saveTags = async (email: string, tags: string[]) => {
+    showToast("태그 저장 중…", "loading");
     try {
       await api.setTags(email, tags);
       await loadCustomers();
-      showToast("태그 저장됨");
+      showToast(`✅ 태그 ${tags.length}개 저장\n${tags.map((t) => "#" + t).join(" ") || "(비움)"}`, "success");
     } catch (e) {
-      showToast("⚠ 태그 저장 실패: " + (e instanceof Error ? e.message : e));
+      showToast("⚠ 태그 저장 실패: " + (e instanceof Error ? e.message : e), "error");
     }
   };
 
   const inferCompany = async (key: string) => {
+    setAiBusy(true);
+    showToast(`✨ GLM 업종 추정 중… ${companies[key]?.name || key}`, "loading");
     try {
       const res = await api.inferCompany(key);
       const r = res.result as Record<string, string>;
       if (r._mode === "unavailable" || r._mode === "error") {
-        showToast("⚠ " + (r.message || "GLM 추정을 사용할 수 없습니다"));
+        showToast("⚠ " + (r.message || "GLM 추정을 사용할 수 없습니다"), "error");
         return null;
       }
-      showToast("GLM 추정 완료 — 검토 후 저장하세요");
+      showToast(
+        `✅ GLM 추정 완료 — 검토 후 저장\n업종: ${r.industry || "-"} · 세부: ${r.sub_industry || "-"}`,
+        "success",
+        6000
+      );
       return {
         industry: r.industry || "",
         sub_industry: r.sub_industry || "",
         description: r.description || "",
       };
     } catch (e) {
-      showToast("⚠ GLM 추정 실패: " + (e instanceof Error ? e.message : e));
+      showToast("⚠ GLM 추정 실패: " + (e instanceof Error ? e.message : e), "error");
       return null;
+    } finally {
+      setAiBusy(false);
     }
   };
 
@@ -338,15 +388,30 @@ export default function App() {
       setGlmEmails(null);
       return;
     }
+    setAiBusy(true);
+    showToast(`${glmConfigured ? "✨ AI" : "🔍 키워드"} 검색 중… "${q}"`, "loading");
     try {
       const res = await api.glmSearch(q);
       setGlmEmails(new Set(res.emails));
-      setUi({ page: 0 });
+      // 결과를 표에 그대로 보여주기 위해: 고객(개별) 뷰로 전환하고, 결과를 가릴 수 있는
+      // 상태/컬럼 필터를 초기화 (검색 결과는 서버가 전체 상태 대상으로 계산함)
+      setColFilters({});
+      setUi({ page: 0, view: "person", status: "" });
+      const filt = res.filters as Record<string, unknown>;
+      const crit = ["industries", "interests", "sources", "keywords"]
+        .map((k) => (Array.isArray(filt[k]) && (filt[k] as unknown[]).length ? `${k}:${(filt[k] as unknown[]).join("/")}` : ""))
+        .filter(Boolean).join(" · ");
       showToast(
-        `${res.mode === "glm" ? "GLM" : "키워드"} 검색 — ${res.count}명 일치`
+        res.count > 0
+          ? `✅ ${res.mode === "glm" ? "AI" : "키워드"} 검색 — ${res.count}명 일치 (고객 뷰에 표시)${crit ? "\n" + crit : ""}`
+          : `ⓘ 일치하는 결과가 없습니다${crit ? "\n조건: " + crit : ""}`,
+        res.count > 0 ? "success" : "info",
+        6000
       );
     } catch (e) {
-      showToast("⚠ 검색 실패: " + (e instanceof Error ? e.message : e));
+      showToast("⚠ 검색 실패: " + (e instanceof Error ? e.message : e), "error");
+    } finally {
+      setAiBusy(false);
     }
   };
 
@@ -403,6 +468,7 @@ export default function App() {
           onSave={saveCompanyProfile}
           onLogActivity={(p) => logActivity(p, g.key)}
           onInfer={inferCompany}
+          aiBusy={aiBusy}
         />
       );
   } else if (drawer?.type === "person") {
@@ -424,7 +490,12 @@ export default function App() {
     drawerBody = <GuidePanel markdown={guide} />;
   } else if (drawer?.type === "settings" && settings) {
     drawerBody = (
-      <SettingsPanel settings={settings} glmConfigured={glmConfigured} onSave={saveSettings} />
+      <SettingsPanel
+        settings={settings}
+        glmConfigured={glmConfigured}
+        onSave={saveSettings}
+        onResolveUsers={resolveUsers}
+      />
     );
   }
   const wideDrawer =
@@ -442,6 +513,42 @@ export default function App() {
   }
   if (!data) return <div className="loading">불러오는 중…</div>;
 
+  // 변경 이력/되돌리기: 전체 창
+  if (auditOpen) {
+    return (
+      <div style={{ maxWidth: 900, margin: "0 auto" }}>
+        <div className="topbar">
+          <button className="btn" onClick={() => { setAuditOpen(false); loadCustomers(); }}>← 대시보드로</button>
+        </div>
+        <AuditPanel onToast={(m, t) => showToast(m, t)} onChanged={() => { loadCustomers(); loadReviews(); }} />
+        {toast && (
+          <div className={`toast ${toast.type}`}>
+            {toast.type === "loading" && <span className="spin" />}
+            <span>{toast.msg}</span>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // Slack 원문 뷰어: 전체 창
+  if (rawOpen) {
+    return (
+      <div style={{ maxWidth: 980, margin: "0 auto" }}>
+        <div className="topbar">
+          <button className="btn" onClick={() => { setRawOpen(false); loadCustomers(); }}>← 대시보드로</button>
+        </div>
+        <RawMessagesPanel glmConfigured={glmConfigured} onToast={(m, t) => showToast(m, t)} />
+        {toast && (
+          <div className={`toast ${toast.type}`}>
+            {toast.type === "loading" && <span className="spin" />}
+            <span>{toast.msg}</span>
+          </div>
+        )}
+      </div>
+    );
+  }
+
   // 유사 중복 병합: 전체 창
   if (dupOpen) {
     return (
@@ -458,12 +565,18 @@ export default function App() {
           </button>
         </div>
         <DuplicatesPanel
+          onToast={(m, t) => showToast(m, t)}
           onDone={() => {
             setDupOpen(false);
             loadCustomers();
           }}
         />
-        {toast && <div className="toast">{toast}</div>}
+        {toast && (
+          <div className={`toast ${toast.type}`}>
+            {toast.type === "loading" && <span className="spin" />}
+            <span>{toast.msg}</span>
+          </div>
+        )}
       </div>
     );
   }
@@ -481,7 +594,12 @@ export default function App() {
           </button>
         </div>
         <ReviewPanel reviews={reviews} onResolve={resolveReview} />
-        {toast && <div className="toast">{toast}</div>}
+        {toast && (
+          <div className={`toast ${toast.type}`}>
+            {toast.type === "loading" && <span className="spin" />}
+            <span>{toast.msg}</span>
+          </div>
+        )}
       </div>
     );
   }
@@ -505,8 +623,14 @@ export default function App() {
           <button className="btn" onClick={() => setDrawer({ type: "settings" })}>
             ⚙ 동기화 설정
           </button>
+          <button className="btn" onClick={() => setRawOpen(true)}>
+            📥 슬랙 원문
+          </button>
           <button className="btn" onClick={() => setDupOpen(true)}>
             🔗 유사 중복
+          </button>
+          <button className="btn" onClick={() => setAuditOpen(true)}>
+            ↩ 변경 이력
           </button>
           <button className="btn" onClick={() => setReviewsOpen(true)}>
             정합성 확인
@@ -522,8 +646,16 @@ export default function App() {
           <button className="btn" onClick={exportCsv}>
             CSV 내보내기
           </button>
-          <button className="btn primary" onClick={runSync} disabled={syncing}>
-            {syncing ? "동기화 중…" : "슬랙 새 리드 동기화"}
+          <button
+            className="btn"
+            onClick={() => runSync(true)}
+            disabled={aiBusy}
+            title="과거부터 현재까지 전체 히스토리를 수집 (초기 1회)"
+          >
+            전체 히스토리 수집
+          </button>
+          <button className="btn primary" onClick={() => runSync(false)} disabled={aiBusy}>
+            {syncing ? "동기화 중…" : aiBusy ? "AI 작업 중…" : "슬랙 새 리드 동기화"}
           </button>
         </div>
       </div>
@@ -624,8 +756,8 @@ export default function App() {
           onKeyDown={(e) => e.key === "Enter" && runGlmSearch()}
           style={{ flex: 1, minWidth: 240 }}
         />
-        <button className="btn primary" onClick={runGlmSearch}>
-          {glmConfigured ? "✨ AI 검색" : "🔍 스마트 검색"}
+        <button className="btn primary" onClick={runGlmSearch} disabled={aiBusy}>
+          {aiBusy ? "AI 작업 중…" : glmConfigured ? "✨ AI 검색" : "🔍 스마트 검색"}
         </button>
         {glmEmails && (
           <button className="btn" onClick={clearGlmSearch}>
@@ -639,6 +771,8 @@ export default function App() {
           owners={pageOwners}
           companies={companies}
           state={ui}
+          colFilters={colFilters}
+          onColFilter={onColFilter}
           onSort={onSort}
           onOpenCompany={openCompany}
         />
@@ -649,6 +783,8 @@ export default function App() {
           persons={pagePersons}
           companies={companies}
           state={ui}
+          colFilters={colFilters}
+          onColFilter={onColFilter}
           onSort={onSort}
           onOpenCompany={openCompany}
           onOpenPerson={openPerson}
@@ -680,7 +816,12 @@ export default function App() {
         <div>{drawerBody}</div>
       </div>
 
-      {toast && <div className="toast">{toast}</div>}
+      {toast && (
+        <div className={`toast ${toast.type}`}>
+          {toast.type === "loading" && <span className="spin" />}
+          <span>{toast.msg}</span>
+        </div>
+      )}
 
       <datalist id="owners">
         {["이건영", "허정", "유남규", "김홍철", "이영주", "이욱", "박진우", "최동현"].map((o) => (
