@@ -18,12 +18,30 @@ from .config import get_settings
 from .db import AUDIT_SPECS
 
 
-def begin_change(conn: sqlite3.Connection, label: str) -> str:
+def begin_change(
+    conn: sqlite3.Connection,
+    label: str,
+    actor: Any | None = None,
+    *,
+    source: str = "manual",
+    reason: str = "",
+) -> str:
     """이후의 모든 DB 변경을 하나의 배치로 change_log에 기록하도록 표시."""
     batch = uuid.uuid4().hex[:12]
     conn.execute(
-        "UPDATE change_batch SET batch=?, label=?, logging=1 WHERE id=1",
-        (batch, label),
+        """
+        UPDATE change_batch
+        SET batch=?, label=?, logging=1, actor_user_id=?, actor_email=?, source=?, reason=?
+        WHERE id=1
+        """,
+        (
+            batch,
+            label,
+            getattr(actor, "user_id", None),
+            getattr(actor, "email", "") if actor else "",
+            source,
+            reason,
+        ),
     )
     return batch
 
@@ -32,6 +50,8 @@ def list_audit(conn: sqlite3.Connection, limit: int = 50) -> list[dict]:
     rows = conn.execute(
         """
         SELECT batch, label,
+               COALESCE(MAX(actor_email), '') AS actor_email,
+               COALESCE(MAX(source), '') AS source,
                MIN(created_at) AS at, COUNT(*) AS changes,
                SUM(CASE WHEN undone=1 THEN 1 ELSE 0 END) AS undone_ct
         FROM change_log
@@ -47,6 +67,8 @@ def list_audit(conn: sqlite3.Connection, limit: int = 50) -> list[dict]:
         out.append({
             "batch": r["batch"],
             "label": r["label"],
+            "actor_email": r["actor_email"],
+            "source": r["source"],
             "at": r["at"],
             "changes": r["changes"],
             "undone": r["undone_ct"] == r["changes"] and r["changes"] > 0,

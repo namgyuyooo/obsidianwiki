@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { api, type AuditBatch } from "../lib/api";
+import { api, type AuditBatch, type JobRun } from "../lib/api";
 
 // 변경 이력 / 되돌리기: 사용자가 데이터에 가한 변경을 배치 단위로 원상복구.
 export function AuditPanel({
@@ -10,13 +10,16 @@ export function AuditPanel({
   onChanged?: () => void;
 }) {
   const [items, setItems] = useState<AuditBatch[]>([]);
+  const [jobs, setJobs] = useState<JobRun[]>([]);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState<string | null>(null);
 
   const load = async () => {
     setLoading(true);
     try {
-      setItems((await api.listAudit()).items);
+      const [audit, jobRuns] = await Promise.all([api.listAudit(), api.listJobs()]);
+      setItems(audit.items);
+      setJobs(jobRuns.items);
     } finally {
       setLoading(false);
     }
@@ -53,6 +56,8 @@ export function AuditPanel({
           <thead>
             <tr>
               <th>시각</th>
+              <th>사용자</th>
+              <th>출처</th>
               <th>작업</th>
               <th>변경 수</th>
               <th>되돌리기</th>
@@ -62,6 +67,8 @@ export function AuditPanel({
             {items.map((b) => (
               <tr key={b.batch}>
                 <td className="hint">{b.at}</td>
+                <td className="hint">{b.actor_email || "-"}</td>
+                <td className="hint">{b.source || "-"}</td>
                 <td>{b.label}</td>
                 <td>{b.changes}</td>
                 <td>
@@ -73,6 +80,35 @@ export function AuditPanel({
                     </button>
                   )}
                 </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+      <h2 style={{ marginTop: 24 }}>작업 실행 이력</h2>
+      {jobs.length === 0 ? (
+        <div className="empty">기록된 작업 실행이 없습니다</div>
+      ) : (
+        <table style={{ marginTop: 12 }}>
+          <thead>
+            <tr>
+              <th>시각</th>
+              <th>작업</th>
+              <th>상태</th>
+              <th>사용자</th>
+              <th>범위</th>
+              <th>결과</th>
+            </tr>
+          </thead>
+          <tbody>
+            {jobs.map((j) => (
+              <tr key={j.id}>
+                <td className="hint">{j.started_at}</td>
+                <td>{j.job_type}</td>
+                <td>{j.status}</td>
+                <td className="hint">{j.actor_email || "-"}</td>
+                <td className="hint">{j.target_scope || "-"}</td>
+                <td className="hint">{j.error_message || j.result_summary || j.input_summary || "-"}</td>
               </tr>
             ))}
           </tbody>

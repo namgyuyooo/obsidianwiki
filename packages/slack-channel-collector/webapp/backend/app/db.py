@@ -49,6 +49,8 @@ def _create_audit(conn: sqlite3.Connection) -> None:
         CREATE TABLE IF NOT EXISTS change_log (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
           batch TEXT NOT NULL, label TEXT NOT NULL DEFAULT '',
+          actor_user_id INTEGER, actor_email TEXT NOT NULL DEFAULT '',
+          source TEXT NOT NULL DEFAULT 'manual', reason TEXT NOT NULL DEFAULT '',
           table_name TEXT NOT NULL, op TEXT NOT NULL, row_pk INTEGER,
           old_json TEXT, new_json TEXT,
           created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -57,31 +59,54 @@ def _create_audit(conn: sqlite3.Connection) -> None:
         """
     )
     conn.execute("CREATE INDEX IF NOT EXISTS idx_change_batch ON change_log(batch)")
+    log_cols = [r[1] for r in conn.execute("PRAGMA table_info(change_log)")]
+    for col, ddl in {
+        "actor_user_id": "INTEGER",
+        "actor_email": "TEXT NOT NULL DEFAULT ''",
+        "source": "TEXT NOT NULL DEFAULT 'manual'",
+        "reason": "TEXT NOT NULL DEFAULT ''",
+    }.items():
+        if col not in log_cols:
+            conn.execute(f"ALTER TABLE change_log ADD COLUMN {col} {ddl}")
     conn.execute(
         "CREATE TABLE IF NOT EXISTS change_batch "
         "(id INTEGER PRIMARY KEY CHECK(id=1), batch TEXT NOT NULL DEFAULT '', "
-        "label TEXT NOT NULL DEFAULT '', logging INTEGER NOT NULL DEFAULT 0)"
+        "label TEXT NOT NULL DEFAULT '', logging INTEGER NOT NULL DEFAULT 0, "
+        "actor_user_id INTEGER, actor_email TEXT NOT NULL DEFAULT '', "
+        "source TEXT NOT NULL DEFAULT 'manual', reason TEXT NOT NULL DEFAULT '')"
     )
+    batch_cols = [r[1] for r in conn.execute("PRAGMA table_info(change_batch)")]
+    for col, ddl in {
+        "actor_user_id": "INTEGER",
+        "actor_email": "TEXT NOT NULL DEFAULT ''",
+        "source": "TEXT NOT NULL DEFAULT 'manual'",
+        "reason": "TEXT NOT NULL DEFAULT ''",
+    }.items():
+        if col not in batch_cols:
+            conn.execute(f"ALTER TABLE change_batch ADD COLUMN {col} {ddl}")
     conn.execute("INSERT OR IGNORE INTO change_batch(id, batch, label, logging) VALUES (1,'','',0)")
     for table, cols in AUDIT_SPECS.items():
+        conn.execute(f"DROP TRIGGER IF EXISTS trg_{table}_ins")
+        conn.execute(f"DROP TRIGGER IF EXISTS trg_{table}_upd")
+        conn.execute(f"DROP TRIGGER IF EXISTS trg_{table}_del")
         old_obj = "json_object(" + ",".join(f"'{c}',OLD.{c}" for c in cols) + ")"
         new_obj = "json_object(" + ",".join(f"'{c}',NEW.{c}" for c in cols) + ")"
         conn.execute(
             f"CREATE TRIGGER IF NOT EXISTS trg_{table}_ins AFTER INSERT ON {table} BEGIN "
-            f"INSERT INTO change_log(batch,label,table_name,op,row_pk,old_json,new_json) "
-            f"SELECT batch,label,'{table}','INSERT',NEW.id,NULL,{new_obj} "
+            f"INSERT INTO change_log(batch,label,actor_user_id,actor_email,source,reason,table_name,op,row_pk,old_json,new_json) "
+            f"SELECT batch,label,actor_user_id,actor_email,source,reason,'{table}','INSERT',NEW.id,NULL,{new_obj} "
             f"FROM change_batch WHERE logging=1; END;"
         )
         conn.execute(
             f"CREATE TRIGGER IF NOT EXISTS trg_{table}_upd AFTER UPDATE ON {table} BEGIN "
-            f"INSERT INTO change_log(batch,label,table_name,op,row_pk,old_json,new_json) "
-            f"SELECT batch,label,'{table}','UPDATE',OLD.id,{old_obj},{new_obj} "
+            f"INSERT INTO change_log(batch,label,actor_user_id,actor_email,source,reason,table_name,op,row_pk,old_json,new_json) "
+            f"SELECT batch,label,actor_user_id,actor_email,source,reason,'{table}','UPDATE',OLD.id,{old_obj},{new_obj} "
             f"FROM change_batch WHERE logging=1; END;"
         )
         conn.execute(
             f"CREATE TRIGGER IF NOT EXISTS trg_{table}_del AFTER DELETE ON {table} BEGIN "
-            f"INSERT INTO change_log(batch,label,table_name,op,row_pk,old_json,new_json) "
-            f"SELECT batch,label,'{table}','DELETE',OLD.id,{old_obj},NULL "
+            f"INSERT INTO change_log(batch,label,actor_user_id,actor_email,source,reason,table_name,op,row_pk,old_json,new_json) "
+            f"SELECT batch,label,actor_user_id,actor_email,source,reason,'{table}','DELETE',OLD.id,{old_obj},NULL "
             f"FROM change_batch WHERE logging=1; END;"
         )
 
@@ -253,13 +278,13 @@ def _run_migrations(conn: sqlite3.Connection) -> None:
         "manager": [
             "data.read", "data.write", "data.delete", "slack.raw.read",
             "slack.raw.apply", "sync.run", "ai.infer.one", "ai.vision.ocr",
-            "audit.rollback",
+            "review.resolve", "audit.read", "audit.rollback",
         ],
         "admin": [
             "data.read", "data.write", "data.delete", "slack.raw.read",
             "slack.raw.apply", "sync.run", "sync.backfill", "sync.configure",
             "ai.infer.one", "ai.infer.batch", "ai.vision.ocr",
-            "ai.embedding.rebuild", "audit.rollback", "settings.update",
+            "ai.embedding.rebuild", "review.resolve", "audit.read", "audit.rollback", "settings.update",
         ],
         "system": [
             "data.read", "data.write", "slack.raw.read", "slack.raw.apply",

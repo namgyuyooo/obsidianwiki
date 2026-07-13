@@ -254,6 +254,7 @@ export const api = {
       method: "POST",
     }),
   listAudit: () => req<{ items: AuditBatch[] }>("/api/audit"),
+  listJobs: () => req<{ items: JobRun[] }>("/api/jobs"),
   undoBatch: (batch: string) =>
     req<{ ok: boolean; undone: number }>(`/api/audit/${encodeURIComponent(batch)}/undo`, {
       method: "POST",
@@ -275,9 +276,24 @@ export const api = {
 export interface AuditBatch {
   batch: string;
   label: string;
+  actor_email: string;
+  source: string;
   at: string;
   changes: number;
   undone: boolean;
+}
+
+export interface JobRun {
+  id: number;
+  job_type: string;
+  status: string;
+  actor_email: string;
+  target_scope: string;
+  input_summary: string;
+  result_summary: string;
+  error_message: string;
+  started_at: string;
+  finished_at: string;
 }
 
 export interface ApplyRawPayload {

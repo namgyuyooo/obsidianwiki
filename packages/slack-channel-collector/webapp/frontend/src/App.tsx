@@ -171,6 +171,10 @@ export default function App() {
 
   const recs = data?.items ?? [];
   const companies: Record<string, CompanyProfile> = data?.companies ?? {};
+  const can = useCallback(
+    (permission: string) => Boolean(currentUser?.permissions.includes(permission)),
+    [currentUser]
+  );
 
   const groups = useMemo(
     () => companyGroups(recs, companies, ui, glmEmails, colFilters),
@@ -907,44 +911,56 @@ export default function App() {
           <button className="btn" onClick={() => setDrawer({ type: "guide" })}>
             📝 작성 가이드
           </button>
-          <button className="btn" onClick={() => setDrawer({ type: "settings" })}>
-            ⚙ 동기화 설정
-          </button>
-          <button className="btn" onClick={() => setRawOpen(true)}>
-            📥 슬랙 원문
-          </button>
+          {can("sync.configure") && (
+            <button className="btn" onClick={() => setDrawer({ type: "settings" })}>
+              ⚙ 동기화 설정
+            </button>
+          )}
+          {can("slack.raw.read") && (
+            <button className="btn" onClick={() => setRawOpen(true)}>
+              📥 슬랙 원문
+            </button>
+          )}
           <button className="btn" onClick={() => setDupOpen(true)}>
             🔗 유사 중복
           </button>
           <button className="btn" onClick={() => setUnclOpen(true)}>
             🗂 미분류 처리
           </button>
-          <button className="btn" onClick={() => setAuditOpen(true)}>
-            ↩ 변경 이력
-          </button>
-          <button className="btn" onClick={() => setReviewsOpen(true)}>
-            정합성 확인
-            {reviews.length > 0 && (
-              <span className="badge b-status" style={{ marginLeft: 4 }}>
-                {reviews.length}
-              </span>
-            )}
-          </button>
-          <button className="btn" onClick={() => setDrawer({ type: "addlead" })}>
-            ＋ 리드 직접 추가
-          </button>
+          {can("audit.read") && (
+            <button className="btn" onClick={() => setAuditOpen(true)}>
+              ↩ 변경 이력
+            </button>
+          )}
+          {can("review.resolve") && (
+            <button className="btn" onClick={() => setReviewsOpen(true)}>
+              정합성 확인
+              {reviews.length > 0 && (
+                <span className="badge b-status" style={{ marginLeft: 4 }}>
+                  {reviews.length}
+                </span>
+              )}
+            </button>
+          )}
+          {can("data.write") && (
+            <button className="btn" onClick={() => setDrawer({ type: "addlead" })}>
+              ＋ 리드 직접 추가
+            </button>
+          )}
           <button className="btn" onClick={exportCsv}>
             CSV 내보내기
           </button>
-          <button
-            className="btn"
-            onClick={() => runSync({ backfill: true })}
-            disabled={aiBusy}
-            title="과거부터 현재까지 전체 히스토리를 수집 (초기 1회)"
-          >
-            전체 히스토리 수집
-          </button>
-          {cardChannelId && (
+          {can("sync.backfill") && (
+            <button
+              className="btn"
+              onClick={() => runSync({ backfill: true })}
+              disabled={aiBusy}
+              title="과거부터 현재까지 전체 히스토리를 수집 (초기 1회)"
+            >
+              전체 히스토리 수집
+            </button>
+          )}
+          {cardChannelId && can("sync.backfill") && (
             <button
               className="btn"
               onClick={() => runSync({ onlyChannel: cardChannelId, backfill: true, label: "명함 수집" })}
@@ -954,9 +970,11 @@ export default function App() {
               🪪 명함 수집
             </button>
           )}
-          <button className="btn primary" onClick={() => runSync({})} disabled={aiBusy}>
-            {syncing ? "동기화 중…" : aiBusy ? "AI 작업 중…" : "슬랙 새 리드 동기화"}
-          </button>
+          {can("sync.run") && (
+            <button className="btn primary" onClick={() => runSync({})} disabled={aiBusy}>
+              {syncing ? "동기화 중…" : aiBusy ? "AI 작업 중…" : "슬랙 새 리드 동기화"}
+            </button>
+          )}
         </div>
       </div>
 
@@ -967,7 +985,10 @@ export default function App() {
             <div className="v">{kp.v.toLocaleString()}</div>
           </div>
         ))}
-        <div className="kpi clickable" onClick={() => setReviewsOpen(true)}>
+        <div
+          className={`kpi ${can("review.resolve") ? "clickable" : ""}`}
+          onClick={() => can("review.resolve") && setReviewsOpen(true)}
+        >
           <div className="lab">정합성 확인 대기</div>
           <div className="v" style={{ color: reviews.length ? "var(--accent)" : undefined }}>
             {reviews.length.toLocaleString()}

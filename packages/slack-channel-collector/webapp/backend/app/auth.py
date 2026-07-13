@@ -226,6 +226,33 @@ def update_user(conn: sqlite3.Connection, user_id: int, patch: dict) -> dict:
     return dict(row)
 
 
+def list_jobs(conn: sqlite3.Connection, limit: int = 80) -> list[dict]:
+    return [
+        {
+            "id": r["id"],
+            "job_type": r["job_type"],
+            "status": r["status"],
+            "actor_email": r["actor_email"],
+            "target_scope": r["target_scope"],
+            "input_summary": r["input_summary"],
+            "result_summary": r["result_summary"],
+            "error_message": r["error_message"],
+            "started_at": r["started_at"],
+            "finished_at": r["finished_at"],
+        }
+        for r in conn.execute(
+            """
+            SELECT id, job_type, status, actor_email, target_scope, input_summary,
+                   result_summary, error_message, started_at, finished_at
+            FROM job_runs
+            ORDER BY id DESC
+            LIMIT ?
+            """,
+            (limit,),
+        )
+    ]
+
+
 def require_permission(
     conn: sqlite3.Connection,
     request: Request,

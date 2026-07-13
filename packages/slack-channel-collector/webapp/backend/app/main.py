@@ -30,6 +30,12 @@ app.add_middleware(
 )
 
 
+def _guard_change(conn, request: Request, permission: str, label: str, *, source: str = "manual"):
+    actor = auth.require_permission(conn, request, permission)
+    queries.begin_change(conn, label, actor=actor, source=source)
+    return actor
+
+
 # ── request models ───────────────────────────────────────────────────────────
 class CompanyProfileIn(BaseModel):
     display_name: str | None = None
@@ -212,7 +218,7 @@ def reviews(status: str = Query("pending")) -> dict:
 
 # ── write endpoints ──────────────────────────────────────────────────────────
 @app.put("/api/companies/{canonical_key}")
-def update_company(canonical_key: str, body: CompanyProfileIn) -> dict:
+def update_company(request: Request, canonical_key: str, body: CompanyProfileIn) -> dict:
     fields = {
         "display_name": body.display_name,
         "industry": body.industry,
@@ -222,7 +228,7 @@ def update_company(canonical_key: str, body: CompanyProfileIn) -> dict:
         "memo": body.memo,
     }
     with get_conn() as conn:
-        queries.begin_change(conn, f"회사 정보 수정: {canonical_key}")
+        _guard_change(conn, request, "data.write", f"회사 정보 수정: {canonical_key}")
         try:
             result = queries.update_company_profile(conn, canonical_key, fields)
         except KeyError:
@@ -246,15 +252,16 @@ class DismissDupIn(BaseModel):
 
 
 @app.post("/api/companies/dismiss-duplicate")
-def dismiss_duplicate(body: DismissDupIn) -> dict:
+def dismiss_duplicate(request: Request, body: DismissDupIn) -> dict:
     with get_conn() as conn:
+        auth.require_permission(conn, request, "data.write")
         return {"ok": True, **queries.dismiss_duplicate(conn, body.keys)}
 
 
 @app.post("/api/companies/merge")
-def merge_companies(body: MergeIn) -> dict:
+def merge_companies(request: Request, body: MergeIn) -> dict:
     with get_conn() as conn:
-        queries.begin_change(conn, f"회사 병합 → {body.keep_key} ({len(body.merge_keys)}곳)")
+        _guard_change(conn, request, "data.delete", f"회사 병합 → {body.keep_key} ({len(body.merge_keys)}곳)")
         try:
             result = queries.merge_companies(conn, body.keep_key, body.merge_keys)
         except KeyError:
@@ -263,9 +270,9 @@ def merge_companies(body: MergeIn) -> dict:
 
 
 @app.delete("/api/companies/{canonical_key}")
-def delete_company(canonical_key: str) -> dict:
+def delete_company(request: Request, canonical_key: str) -> dict:
     with get_conn() as conn:
-        queries.begin_change(conn, f"회사 삭제: {canonical_key}")
+        _guard_change(conn, request, "data.delete", f"회사 삭제: {canonical_key}")
         try:
             result = queries.delete_company(conn, canonical_key)
         except KeyError:
@@ -282,9 +289,9 @@ def search_companies(q: str = Query(""), limit: int = Query(20)) -> dict:
 
 
 @app.post("/api/reviews/{review_id}/resolve")
-def resolve_review(review_id: int, body: ReviewResolveIn) -> dict:
+def resolve_review(request: Request, review_id: int, body: ReviewResolveIn) -> dict:
     with get_conn() as conn:
-        queries.begin_change(conn, f"정합성 처리 #{review_id} ({body.action})")
+        _guard_change(conn, request, "review.resolve", f"정합성 처리 #{review_id} ({body.action})")
         try:
             result = queries.resolve_review(
                 conn,
@@ -304,9 +311,9 @@ def resolve_review(review_id: int, body: ReviewResolveIn) -> dict:
 
 
 @app.post("/api/leads")
-def add_lead(body: LeadIn = Body(...)) -> dict:
+def add_lead(request: Request, body: LeadIn = Body(...)) -> dict:
     with get_conn() as conn:
-        queries.begin_change(conn, f"리드 추가: {body.email}")
+        _guard_change(conn, request, "data.write", f"리드 추가: {body.email}")
         try:
             result = queries.add_lead(conn, body.model_dump())
         except ValueError as exc:
@@ -324,9 +331,9 @@ class ContactUpdateIn(BaseModel):
 
 
 @app.put("/api/contacts/{email}")
-def update_contact(email: str, body: ContactUpdateIn) -> dict:
+def update_contact(request: Request, email: str, body: ContactUpdateIn) -> dict:
     with get_conn() as conn:
-        queries.begin_change(conn, f"연락처 수정: {email}")
+        _guard_change(conn, request, "data.write", f"연락처 수정: {email}")
         try:
             result = queries.update_contact(conn, email, body.model_dump())
         except KeyError:
@@ -335,9 +342,9 @@ def update_contact(email: str, body: ContactUpdateIn) -> dict:
 
 
 @app.delete("/api/contacts/{email}")
-def delete_contact(email: str) -> dict:
+def delete_contact(request: Request, email: str) -> dict:
     with get_conn() as conn:
-        queries.begin_change(conn, f"연락처 삭제: {email}")
+        _guard_change(conn, request, "data.delete", f"연락처 삭제: {email}")
         try:
             result = queries.delete_contact(conn, email)
         except KeyError:
@@ -361,9 +368,9 @@ def unclassified() -> dict:
 
 
 @app.post("/api/activities/{activity_id}/reassign")
-def reassign_one_activity(activity_id: int, body: ActivityReassignIn) -> dict:
+def reassign_one_activity(request: Request, activity_id: int, body: ActivityReassignIn) -> dict:
     with get_conn() as conn:
-        queries.begin_change(conn, f"활동 재분류 #{activity_id} → {body.company}")
+        _guard_change(conn, request, "data.write", f"활동 재분류 #{activity_id} → {body.company}")
         try:
             result = queries.reassign_activity(conn, activity_id, body.company)
         except ValueError as exc:
@@ -380,7 +387,7 @@ def reclassify_glm(request: Request, canonical_key: str) -> dict:
     with get_conn() as conn:
         actor = auth.require_permission(conn, request, "ai.infer.one")
         job_id = auth.record_job_start(conn, "glm_reclassify", actor, target_scope=canonical_key)
-        queries.begin_change(conn, f"GLM 재분류: {canonical_key}")
+        queries.begin_change(conn, f"GLM 재분류: {canonical_key}", actor=actor, source="glm_infer")
         try:
             acts = queries.company_activities(conn, canonical_key, limit=30)
             for a in acts:
@@ -399,9 +406,9 @@ def reclassify_glm(request: Request, canonical_key: str) -> dict:
 
 
 @app.post("/api/companies/reassign")
-def reassign_activities(body: ReassignIn) -> dict:
+def reassign_activities(request: Request, body: ReassignIn) -> dict:
     with get_conn() as conn:
-        queries.begin_change(conn, f"활동 재분류: {body.from_key} → {body.to_company}")
+        _guard_change(conn, request, "data.write", f"활동 재분류: {body.from_key} → {body.to_company}")
         try:
             result = queries.reassign_activities(conn, body.from_key, body.to_company)
         except KeyError:
@@ -410,8 +417,9 @@ def reassign_activities(body: ReassignIn) -> dict:
 
 
 @app.put("/api/contacts/{email}/tags")
-def set_tags(email: str, body: TagsIn) -> dict:
+def set_tags(request: Request, email: str, body: TagsIn) -> dict:
     with get_conn() as conn:
+        auth.require_permission(conn, request, "data.write")
         try:
             result = queries.set_contact_tags(conn, email, body.tags)
         except KeyError:
@@ -420,11 +428,11 @@ def set_tags(email: str, body: TagsIn) -> dict:
 
 
 @app.post("/api/activities")
-def log_activity(body: ActivityIn) -> dict:
+def log_activity(request: Request, body: ActivityIn) -> dict:
     if not body.email and not body.company_key:
         raise HTTPException(status_code=400, detail="email or company_key required")
     with get_conn() as conn:
-        queries.begin_change(conn, f"활동 기록: {body.email or body.company_key}")
+        _guard_change(conn, request, "data.write", f"활동 기록: {body.email or body.company_key}")
         try:
             result = queries.log_activity(conn, body.model_dump())
         except KeyError:
@@ -467,9 +475,17 @@ def archive_message(request: Request, body: ArchiveIn) -> dict:
 
 
 @app.get("/api/audit")
-def audit_list(limit: int = Query(50)) -> dict:
+def audit_list(request: Request, limit: int = Query(50)) -> dict:
     with get_conn() as conn:
+        auth.require_permission(conn, request, "audit.read")
         return {"items": queries.list_audit(conn, limit)}
+
+
+@app.get("/api/jobs")
+def job_list(request: Request, limit: int = Query(80)) -> dict:
+    with get_conn() as conn:
+        auth.require_permission(conn, request, "audit.read")
+        return {"items": auth.list_jobs(conn, limit)}
 
 
 @app.post("/api/audit/{batch}/undo")
@@ -481,8 +497,9 @@ def audit_undo(request: Request, batch: str) -> dict:
 
 
 @app.get("/api/slack/messages")
-def slack_messages(limit: int = Query(300), q: str = Query("")) -> dict:
+def slack_messages(request: Request, limit: int = Query(300), q: str = Query("")) -> dict:
     with get_conn() as conn:
+        auth.require_permission(conn, request, "slack.raw.read")
         return {"items": queries.slack_messages(conn, limit=limit, q=q)}
 
 
@@ -554,8 +571,8 @@ def apply_raw_message(request: Request, body: ApplyRawIn) -> dict:
     now = datetime.now(ZoneInfo("Asia/Seoul")).strftime("%Y-%m-%d %H:%M:%S")
     occurred = body.occurred_at or now
     with get_conn() as conn:
-        auth.require_permission(conn, request, "slack.raw.apply")
-        queries.begin_change(conn, f"원문 반영: {body.company or body.email}")
+        actor = auth.require_permission(conn, request, "slack.raw.apply")
+        queries.begin_change(conn, f"원문 반영: {body.company or body.email}", actor=actor, source="slack_raw_apply")
         result: dict = {}
         if body.email and "@" in body.email:
             result = queries.apply_contact_event(
@@ -678,7 +695,7 @@ def infer_companies_batch(request: Request, body: BatchInferIn) -> dict:
     with get_conn() as conn:
         actor = auth.require_permission(conn, request, "ai.infer.batch")
         job_id = auth.record_job_start(conn, "glm_batch_infer", actor, target_scope=f"limit={limit}")
-        queries.begin_change(conn, f"회사 일괄 자동추정 ({limit})")
+        queries.begin_change(conn, f"회사 일괄 자동추정 ({limit})", actor=actor, source="glm_batch")
         rows = conn.execute(
             """
             SELECT canonical_key, display_name, industry, sub_industry, description
