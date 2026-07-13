@@ -207,6 +207,95 @@ def _run_migrations(conn: sqlite3.Connection) -> None:
         "CREATE INDEX IF NOT EXISTS idx_semantic_documents_entity "
         "ON semantic_documents(entity_type, entity_key)"
     )
+    conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS auth_users (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          email TEXT NOT NULL UNIQUE,
+          name TEXT NOT NULL DEFAULT '',
+          password_hash TEXT NOT NULL DEFAULT '',
+          role TEXT NOT NULL DEFAULT 'viewer',
+          status TEXT NOT NULL DEFAULT 'active',
+          created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          last_login_at TEXT NOT NULL DEFAULT ''
+        )
+        """
+    )
+    auth_user_cols = [r[1] for r in conn.execute("PRAGMA table_info(auth_users)")]
+    if "password_hash" not in auth_user_cols:
+        conn.execute("ALTER TABLE auth_users ADD COLUMN password_hash TEXT NOT NULL DEFAULT ''")
+    conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS auth_api_tokens (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          user_id INTEGER NOT NULL REFERENCES auth_users(id) ON DELETE CASCADE,
+          label TEXT NOT NULL DEFAULT '',
+          token_hash TEXT NOT NULL UNIQUE,
+          created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          last_used_at TEXT NOT NULL DEFAULT '',
+          revoked_at TEXT NOT NULL DEFAULT ''
+        )
+        """
+    )
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_auth_tokens_hash ON auth_api_tokens(token_hash)")
+    conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS auth_role_permissions (
+          role TEXT NOT NULL,
+          permission TEXT NOT NULL,
+          PRIMARY KEY (role, permission)
+        )
+        """
+    )
+    role_perms = {
+        "viewer": ["data.read"],
+        "editor": ["data.read", "data.write", "slack.raw.read"],
+        "manager": [
+            "data.read", "data.write", "data.delete", "slack.raw.read",
+            "slack.raw.apply", "sync.run", "ai.infer.one", "ai.vision.ocr",
+            "audit.rollback",
+        ],
+        "admin": [
+            "data.read", "data.write", "data.delete", "slack.raw.read",
+            "slack.raw.apply", "sync.run", "sync.backfill", "sync.configure",
+            "ai.infer.one", "ai.infer.batch", "ai.vision.ocr",
+            "ai.embedding.rebuild", "audit.rollback", "settings.update",
+        ],
+        "system": [
+            "data.read", "data.write", "slack.raw.read", "slack.raw.apply",
+            "sync.run", "ai.infer.one", "ai.vision.ocr",
+        ],
+    }
+    for role, perms in role_perms.items():
+        for perm in perms:
+            conn.execute(
+                "INSERT OR IGNORE INTO auth_role_permissions(role, permission) VALUES(?, ?)",
+                (role, perm),
+            )
+    conn.execute(
+        """
+        INSERT OR IGNORE INTO auth_users(email, name, role, status)
+        VALUES('system.slack_sync@local', 'System Slack Sync', 'system', 'active')
+        """
+    )
+    conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS job_runs (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          job_type TEXT NOT NULL,
+          status TEXT NOT NULL DEFAULT 'started',
+          requested_by INTEGER,
+          actor_email TEXT NOT NULL DEFAULT '',
+          target_scope TEXT NOT NULL DEFAULT '',
+          input_summary TEXT NOT NULL DEFAULT '',
+          result_summary TEXT NOT NULL DEFAULT '',
+          error_message TEXT NOT NULL DEFAULT '',
+          started_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          finished_at TEXT NOT NULL DEFAULT ''
+        )
+        """
+    )
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_job_runs_type ON job_runs(job_type, started_at)")
 
 
 @contextmanager

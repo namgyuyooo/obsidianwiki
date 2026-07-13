@@ -79,6 +79,23 @@ export interface SyncSettings {
   channel_state: Record<string, number>;
 }
 
+export interface AuthUser {
+  id: number | null;
+  email: string;
+  role: string;
+  permissions: string[];
+}
+
+export interface AdminUser {
+  id: number;
+  email: string;
+  name: string;
+  role: string;
+  status: string;
+  created_at: string;
+  last_login_at: string;
+}
+
 export interface RawSource {
   text: string;
   channel_id: string;

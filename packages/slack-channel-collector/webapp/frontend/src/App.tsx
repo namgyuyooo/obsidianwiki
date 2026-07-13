@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type {
   Activity,
+  AuthUser,
   CompanyProfile,
   CustomersResponse,
   Review,
@@ -9,6 +10,7 @@ import type {
 } from "./types";
 import {
   api,
+  apiAuth,
   type ActivityPayload,
   type LeadPayload,
   type ResolvePayload,
@@ -36,6 +38,7 @@ import { DuplicatesPanel } from "./components/DuplicatesPanel";
 import { RawMessagesPanel } from "./components/RawMessagesPanel";
 import { AuditPanel } from "./components/AuditPanel";
 import { UnclassifiedPanel } from "./components/UnclassifiedPanel";
+import { AuthPanel } from "./components/AuthPanel";
 
 const UI_KEY = "rtm-db-ui";
 
@@ -69,6 +72,7 @@ type Drawer =
   | { type: "reviews" }
   | { type: "guide" }
   | { type: "settings" }
+  | { type: "auth" }
   | null;
 
 export default function App() {
@@ -88,6 +92,8 @@ export default function App() {
   const [batchInferBusy, setBatchInferBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [settings, setSettings] = useState<SyncSettings | null>(null);
+  const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
+  const [hasOpsKey, setHasOpsKey] = useState(() => Boolean(apiAuth.get()));
   const [glmConfigured, setGlmConfigured] = useState(false);
   const [glmEmails, setGlmEmails] = useState<Set<string> | null>(null);
   const [glmQuery, setGlmQuery] = useState("");
@@ -149,6 +155,19 @@ export default function App() {
       }
     })();
   }, [loadCustomers, loadReviews]);
+
+  useEffect(() => {
+    if (!apiAuth.get()) return;
+    api.me()
+      .then((res) => {
+        setCurrentUser(res.user);
+        setHasOpsKey(true);
+      })
+      .catch(() => {
+        setCurrentUser(null);
+        setHasOpsKey(false);
+      });
+  }, []);
 
   const recs = data?.items ?? [];
   const companies: Record<string, CompanyProfile> = data?.companies ?? {};
@@ -728,9 +747,21 @@ export default function App() {
         onRecleanse={runRecleanse}
       />
     );
+  } else if (drawer?.type === "auth") {
+    drawerBody = (
+      <AuthPanel
+        user={currentUser}
+        onUser={(u) => {
+          setCurrentUser(u);
+          setHasOpsKey(Boolean(apiAuth.get()));
+        }}
+        onClose={() => setDrawer(null)}
+      />
+    );
   }
   const wideDrawer =
-    drawer?.type === "reviews" || drawer?.type === "guide" || drawer?.type === "settings";
+    drawer?.type === "reviews" || drawer?.type === "guide" ||
+    drawer?.type === "settings" || drawer?.type === "auth";
 
   if (error) {
     return (
@@ -870,6 +901,9 @@ export default function App() {
           </div>
         </div>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          <button className={`btn ${hasOpsKey ? "primary" : ""}`} onClick={() => setDrawer({ type: "auth" })}>
+            {currentUser ? `🔐 ${currentUser.role}` : hasOpsKey ? "🔐 인증 확인" : "🔐 로그인"}
+          </button>
           <button className="btn" onClick={() => setDrawer({ type: "guide" })}>
             📝 작성 가이드
           </button>

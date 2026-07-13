@@ -8,13 +8,13 @@ from __future__ import annotations
 import threading
 import time
 
-from fastapi import Body, FastAPI, HTTPException, Query
+from fastapi import Body, FastAPI, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
-from . import glm, queries, semantic, slack_sync, vision
+from . import auth, glm, queries, semantic, slack_sync, vision
 from .config import get_settings
 from .db import get_conn
 
@@ -122,10 +122,68 @@ class EmbeddingRebuildIn(BaseModel):
     limit: int = 0
 
 
+class LoginIn(BaseModel):
+    email: str = ""
+    password: str = ""
+    api_key: str = ""
+
+
+class AuthUserIn(BaseModel):
+    email: str
+    name: str = ""
+    role: str = "viewer"
+    password: str = ""
+
+
+class AuthUserPatchIn(BaseModel):
+    name: str | None = None
+    role: str | None = None
+    status: str | None = None
+    password: str | None = None
+
+
 # ── read endpoints ─────────────────────────────────────────────────────────
 @app.get("/api/health")
 def health() -> dict:
     return {"ok": True, "db": str(_settings.db_path)}
+
+
+@app.post("/api/auth/login")
+def login(body: LoginIn, request: Request) -> dict:
+    with get_conn() as conn:
+        if body.api_key.strip():
+            actor = auth.actor_from_token(conn, body.api_key.strip())
+            return {"ok": True, "token": body.api_key.strip(), "user": auth.actor_payload(actor)}
+        actor, token = auth.login_password(conn, body.email, body.password)
+    return {"ok": True, "token": token, "user": auth.actor_payload(actor)}
+
+
+@app.get("/api/auth/me")
+def me(request: Request) -> dict:
+    with get_conn() as conn:
+        actor = auth.current_actor(conn, request)
+        return {"ok": True, "user": auth.actor_payload(actor)}
+
+
+@app.get("/api/admin/users")
+def admin_users(request: Request) -> dict:
+    with get_conn() as conn:
+        auth.require_permission(conn, request, "settings.update")
+        return {"items": auth.list_users(conn), "roles": auth.role_permissions(conn)}
+
+
+@app.post("/api/admin/users")
+def admin_create_user(request: Request, body: AuthUserIn) -> dict:
+    with get_conn() as conn:
+        auth.require_permission(conn, request, "settings.update")
+        return {"ok": True, "user": auth.create_user(conn, **body.model_dump())}
+
+
+@app.patch("/api/admin/users/{user_id}")
+def admin_update_user(request: Request, user_id: int, body: AuthUserPatchIn) -> dict:
+    with get_conn() as conn:
+        auth.require_permission(conn, request, "settings.update")
+        return {"ok": True, "user": auth.update_user(conn, user_id, body.model_dump(exclude_none=True))}
 
 
 @app.get("/api/summary")
@@ -314,22 +372,29 @@ def reassign_one_activity(activity_id: int, body: ActivityReassignIn) -> dict:
 
 
 @app.post("/api/companies/{canonical_key}/reclassify-glm")
-def reclassify_glm(canonical_key: str) -> dict:
+def reclassify_glm(request: Request, canonical_key: str) -> dict:
     """해당 회사(예: 미분류) 활동들을 GLM으로 회사 재추출해 개별 재분류."""
     if not glm.is_configured():
         return {"ok": False, "message": "GLM이 설정되지 않았습니다 (GLM_API_URL/GLM_API_KEY).", "moved": 0}
     moved = 0
     with get_conn() as conn:
+        actor = auth.require_permission(conn, request, "ai.infer.one")
+        job_id = auth.record_job_start(conn, "glm_reclassify", actor, target_scope=canonical_key)
         queries.begin_change(conn, f"GLM 재분류: {canonical_key}")
-        acts = queries.company_activities(conn, canonical_key, limit=30)
-        for a in acts:
-            if not a["text"]:
-                continue
-            res = glm.extract_lead_event(a["text"])
-            comp = (res.get("companies") or [{}])[0].get("name", "") if isinstance(res.get("companies"), list) else ""
-            if comp and comp.strip():
-                queries.reassign_activity(conn, a["id"], comp.strip())
-                moved += 1
+        try:
+            acts = queries.company_activities(conn, canonical_key, limit=30)
+            for a in acts:
+                if not a["text"]:
+                    continue
+                res = glm.extract_lead_event(a["text"])
+                comp = (res.get("companies") or [{}])[0].get("name", "") if isinstance(res.get("companies"), list) else ""
+                if comp and comp.strip():
+                    queries.reassign_activity(conn, a["id"], comp.strip())
+                    moved += 1
+            auth.record_job_finish(conn, job_id, "success", result_summary=f"moved={moved}")
+        except Exception as exc:
+            auth.record_job_finish(conn, job_id, "failed", error_message=str(exc))
+            raise
     return {"ok": True, "moved": moved, "scanned": len(acts)}
 
 
@@ -381,8 +446,9 @@ def glm_status() -> dict:
 
 
 @app.post("/api/slack/resolve-users")
-def resolve_users() -> dict:
+def resolve_users(request: Request) -> dict:
     with get_conn() as conn:
+        auth.require_permission(conn, request, "sync.run")
         return slack_sync.resolve_users(conn)
 
 
@@ -393,8 +459,9 @@ class ArchiveIn(BaseModel):
 
 
 @app.post("/api/slack/messages/archive")
-def archive_message(body: ArchiveIn) -> dict:
+def archive_message(request: Request, body: ArchiveIn) -> dict:
     with get_conn() as conn:
+        auth.require_permission(conn, request, "slack.raw.apply")
         queries.set_raw_archived(conn, body.channel_id, body.ts, body.archived)
     return {"ok": True}
 
@@ -406,8 +473,9 @@ def audit_list(limit: int = Query(50)) -> dict:
 
 
 @app.post("/api/audit/{batch}/undo")
-def audit_undo(batch: str) -> dict:
+def audit_undo(request: Request, batch: str) -> dict:
     with get_conn() as conn:
+        auth.require_permission(conn, request, "audit.rollback")
         result = queries.undo_batch(conn, batch)
     return {"ok": True, **result}
 
@@ -424,10 +492,21 @@ class OcrCardIn(BaseModel):
 
 
 @app.post("/api/slack/messages/ocr-card")
-def ocr_card(body: OcrCardIn) -> dict:
+def ocr_card(request: Request, body: OcrCardIn) -> dict:
     """수집 원문의 명함 이미지를 vision OCR로 추론(미리보기, DB 반영 없음)."""
     with get_conn() as conn:
-        return slack_sync.ocr_message_cards(conn, body.channel_id, body.ts)
+        actor = auth.require_permission(conn, request, "ai.vision.ocr")
+        job_id = auth.record_job_start(
+            conn, "vision_ocr", actor,
+            target_scope=f"{body.channel_id}:{body.ts}",
+        )
+        try:
+            result = slack_sync.ocr_message_cards(conn, body.channel_id, body.ts)
+            auth.record_job_finish(conn, job_id, "success", result_summary=str(result.get("message", "완료")))
+            return result
+        except Exception as exc:
+            auth.record_job_finish(conn, job_id, "failed", error_message=str(exc))
+            raise
 
 
 class GlmExtractIn(BaseModel):
@@ -436,9 +515,18 @@ class GlmExtractIn(BaseModel):
 
 
 @app.post("/api/glm/extract")
-def glm_extract(body: GlmExtractIn) -> dict:
+def glm_extract(request: Request, body: GlmExtractIn) -> dict:
     """Slack 원문을 DB 스키마에 맞춰 GLM으로 구조화(미리보기/검수용)."""
-    return {"ok": True, "result": glm.extract_lead_event(body.text, body.hint)}
+    with get_conn() as conn:
+        actor = auth.require_permission(conn, request, "ai.infer.one")
+        job_id = auth.record_job_start(conn, "glm_extract", actor, input_summary=body.hint[:120])
+        try:
+            result = glm.extract_lead_event(body.text, body.hint)
+            auth.record_job_finish(conn, job_id, "success")
+        except Exception as exc:
+            auth.record_job_finish(conn, job_id, "failed", error_message=str(exc))
+            raise
+    return {"ok": True, "result": result}
 
 
 class ApplyRawIn(BaseModel):
@@ -458,7 +546,7 @@ class ApplyRawIn(BaseModel):
 
 
 @app.post("/api/slack/messages/apply")
-def apply_raw_message(body: ApplyRawIn) -> dict:
+def apply_raw_message(request: Request, body: ApplyRawIn) -> dict:
     """미반영 원문을 사용자가 수정한 값으로 DB에 반영(활동/리드 생성)."""
     from datetime import datetime
     from zoneinfo import ZoneInfo
@@ -466,6 +554,7 @@ def apply_raw_message(body: ApplyRawIn) -> dict:
     now = datetime.now(ZoneInfo("Asia/Seoul")).strftime("%Y-%m-%d %H:%M:%S")
     occurred = body.occurred_at or now
     with get_conn() as conn:
+        auth.require_permission(conn, request, "slack.raw.apply")
         queries.begin_change(conn, f"원문 반영: {body.company or body.email}")
         result: dict = {}
         if body.email and "@" in body.email:
@@ -495,7 +584,9 @@ def apply_raw_message(body: ApplyRawIn) -> dict:
 
 
 @app.post("/api/search/glm")
-def glm_search(body: GlmSearchIn) -> dict:
+def glm_search(request: Request, body: GlmSearchIn) -> dict:
+    with get_conn() as conn:
+        auth.require_permission(conn, request, "ai.infer.one")
     filters = glm.extract_search_filters(body.query)
     with get_conn() as conn:
         result = queries.search_by_filters(conn, filters)
@@ -523,15 +614,25 @@ def semantic_search(body: SemanticSearchIn) -> dict:
 
 
 @app.post("/api/embeddings/rebuild")
-def rebuild_embeddings(body: EmbeddingRebuildIn = Body(default=EmbeddingRebuildIn())) -> dict:
+def rebuild_embeddings(request: Request, body: EmbeddingRebuildIn = Body(default=EmbeddingRebuildIn())) -> dict:
     with get_conn() as conn:
-        return semantic.rebuild(conn, limit=body.limit)
+        actor = auth.require_permission(conn, request, "ai.embedding.rebuild")
+        job_id = auth.record_job_start(conn, "embedding_rebuild", actor, target_scope=f"limit={body.limit}")
+        try:
+            result = semantic.rebuild(conn, limit=body.limit)
+            auth.record_job_finish(conn, job_id, "success", result_summary=str(result.get("message", "완료")))
+            return result
+        except Exception as exc:
+            auth.record_job_finish(conn, job_id, "failed", error_message=str(exc))
+            raise
 
 
 @app.post("/api/companies/{canonical_key}/infer")
-def infer_company(canonical_key: str, body: InferIn) -> dict:
+def infer_company(request: Request, canonical_key: str, body: InferIn) -> dict:
     context = body.context
     with get_conn() as conn:
+        actor = auth.require_permission(conn, request, "ai.infer.one")
+        job_id = auth.record_job_start(conn, "glm_company_infer", actor, target_scope=canonical_key)
         # gather light context from the company's contacts/inquiries if none given
         if not context:
             rows = conn.execute(
@@ -548,11 +649,19 @@ def infer_company(canonical_key: str, body: InferIn) -> dict:
         ).fetchone()
     if co is None:
         raise HTTPException(status_code=404, detail="company not found")
-    return {"ok": True, "result": glm.infer_company_profile(co["display_name"], context)}
+    try:
+        result = glm.infer_company_profile(co["display_name"], context)
+        with get_conn() as conn:
+            auth.record_job_finish(conn, job_id, "success")
+    except Exception as exc:
+        with get_conn() as conn:
+            auth.record_job_finish(conn, job_id, "failed", error_message=str(exc))
+        raise
+    return {"ok": True, "result": result}
 
 
 @app.post("/api/companies/infer-batch")
-def infer_companies_batch(body: BatchInferIn) -> dict:
+def infer_companies_batch(request: Request, body: BatchInferIn) -> dict:
     """Fill blank company profile fields in bulk using GLM.
 
     Existing human-entered fields are preserved. Personal placeholder companies
@@ -567,6 +676,8 @@ def infer_companies_batch(body: BatchInferIn) -> dict:
     skipped = 0
     errors: list[str] = []
     with get_conn() as conn:
+        actor = auth.require_permission(conn, request, "ai.infer.batch")
+        job_id = auth.record_job_start(conn, "glm_batch_infer", actor, target_scope=f"limit={limit}")
         queries.begin_change(conn, f"회사 일괄 자동추정 ({limit})")
         rows = conn.execute(
             """
@@ -631,6 +742,7 @@ def infer_companies_batch(body: BatchInferIn) -> dict:
                 continue
             queries.update_company_profile(conn, co["canonical_key"], patch, profile_source="glm_batch")
             updated += 1
+        auth.record_job_finish(conn, job_id, "success", result_summary=f"updated={updated}, skipped={skipped}")
     return {
         "ok": True,
         "scanned": scanned,
@@ -656,8 +768,9 @@ def get_settings_endpoint() -> dict:
 
 
 @app.put("/api/settings")
-def put_settings(body: SyncSettingsIn) -> dict:
+def put_settings(request: Request, body: SyncSettingsIn) -> dict:
     with get_conn() as conn:
+        auth.require_permission(conn, request, "sync.configure")
         return queries.save_sync_settings(
             conn, body.model_dump(exclude_none=True)
         )
@@ -668,7 +781,7 @@ _sync_state: dict = {"running": False, "logs": [], "result": None, "started": 0.
 _sync_lock = threading.Lock()
 
 
-def _start_sync(export_file, limit, backfill, label="", only_channel=None) -> bool:
+def _start_sync(export_file, limit, backfill, label="", only_channel=None, job_id: int | None = None) -> bool:
     """Start a sync in a background thread. Returns False if one is already running."""
     with _sync_lock:
         if _sync_state["running"]:
@@ -683,9 +796,18 @@ def _start_sync(export_file, limit, backfill, label="", only_channel=None) -> bo
                 export_file=export_file, limit=limit, backfill=backfill,
                 only_channel=only_channel, logs=logs
             )
+            if job_id:
+                with get_conn() as conn:
+                    auth.record_job_finish(
+                        conn, job_id, "success",
+                        result_summary=str(_sync_state["result"].get("message", "완료")),
+                    )
         except Exception as exc:  # noqa: BLE001
             logs.append(f"[sync] 오류: {exc}")
             _sync_state["result"] = {"ok": False, "message": str(exc), "log": logs}
+            if job_id:
+                with get_conn() as conn:
+                    auth.record_job_finish(conn, job_id, "failed", error_message=str(exc))
         finally:
             _sync_state["running"] = False
 
@@ -694,25 +816,43 @@ def _start_sync(export_file, limit, backfill, label="", only_channel=None) -> bo
 
 
 @app.post("/api/sync")
-def sync(body: SyncIn | None = None) -> dict:
+def sync(request: Request, body: SyncIn | None = None) -> dict:
+    backfill = body.backfill if body else False
+    with get_conn() as conn:
+        actor = auth.require_permission(conn, request, "sync.backfill" if backfill else "sync.run")
+        job_id = auth.record_job_start(
+            conn,
+            "slack_backfill" if backfill else "slack_sync",
+            actor,
+            target_scope=body.only_channel if body and body.only_channel else "enabled_channels",
+            input_summary=f"backfill={backfill}",
+        )
     started = _start_sync(
         body.export_file if body else None,
         body.limit if body else None,
-        body.backfill if body else False,
-        label="backfill" if (body and body.backfill) else "sync",
+        backfill,
+        label="backfill" if backfill else "sync",
         only_channel=body.only_channel if body else None,
+        job_id=job_id,
     )
     if not started:
+        with get_conn() as conn:
+            auth.record_job_finish(conn, job_id, "cancelled", result_summary="already running")
         return {"ok": True, "running": True, "started": False,
                 "message": "이미 동기화가 진행 중입니다. 진행 상황은 상태 폴링으로 확인하세요."}
     return {"ok": True, "running": True, "started": True, "message": "동기화를 시작했습니다"}
 
 
 @app.post("/api/recleanse")
-def recleanse() -> dict:
+def recleanse(request: Request) -> dict:
     """저장된 원문에서 슬랙 활동을 재파싱(재수집 없음). sync와 같은 상태 폴링 사용."""
+    with get_conn() as conn:
+        actor = auth.require_permission(conn, request, "sync.backfill")
+        job_id = auth.record_job_start(conn, "slack_recleanse", actor, target_scope="all_raw_messages")
     with _sync_lock:
         if _sync_state["running"]:
+            with get_conn() as conn:
+                auth.record_job_finish(conn, job_id, "cancelled", result_summary="already running")
             return {"ok": True, "running": True, "started": False,
                     "message": "작업이 진행 중입니다. 잠시 후 다시 시도하세요."}
         _sync_state.update({"running": True, "logs": [], "result": None,
@@ -722,9 +862,16 @@ def recleanse() -> dict:
     def _job() -> None:
         try:
             _sync_state["result"] = slack_sync.run_recleanse(logs=logs)
+            with get_conn() as conn:
+                auth.record_job_finish(
+                    conn, job_id, "success",
+                    result_summary=str(_sync_state["result"].get("message", "완료")),
+                )
         except Exception as exc:  # noqa: BLE001
             logs.append(f"[recleanse] 오류: {exc}")
             _sync_state["result"] = {"ok": False, "message": str(exc), "log": logs}
+            with get_conn() as conn:
+                auth.record_job_finish(conn, job_id, "failed", error_message=str(exc))
         finally:
             _sync_state["running"] = False
 

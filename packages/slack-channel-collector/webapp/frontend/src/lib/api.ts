@@ -5,15 +5,33 @@ import type {
   Review,
   Summary,
   Activity,
+  AdminUser,
+  AuthUser,
   SyncSettings,
 } from "../types";
 
 const BASE = import.meta.env.VITE_API_BASE ?? "";
+const AUTH_KEY = "rtm-ops-api-key";
+
+export const apiAuth = {
+  get: () => localStorage.getItem(AUTH_KEY) || "",
+  set: (value: string) => {
+    const v = value.trim();
+    if (v) localStorage.setItem(AUTH_KEY, v);
+    else localStorage.removeItem(AUTH_KEY);
+  },
+};
 
 async function req<T>(path: string, init?: RequestInit): Promise<T> {
+  const apiKey = apiAuth.get();
+  const headers = {
+    "Content-Type": "application/json",
+    ...(apiKey ? { "X-RTM-API-Key": apiKey } : {}),
+    ...(init?.headers || {}),
+  };
   const res = await fetch(`${BASE}${path}`, {
-    headers: { "Content-Type": "application/json" },
     ...init,
+    headers,
   });
   if (!res.ok) {
     const detail = await res.text().catch(() => "");
@@ -71,6 +89,24 @@ export interface GlmSearchResult {
 }
 
 export const api = {
+  login: (payload: { email?: string; password?: string; api_key?: string }) =>
+    req<{ ok: boolean; token: string; user: AuthUser }>("/api/auth/login", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  me: () => req<{ ok: boolean; user: AuthUser }>("/api/auth/me"),
+  adminUsers: () =>
+    req<{ items: AdminUser[]; roles: Record<string, string[]> }>("/api/admin/users"),
+  createAdminUser: (payload: { email: string; name?: string; role: string; password?: string }) =>
+    req<{ ok: boolean; user: AdminUser }>("/api/admin/users", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  updateAdminUser: (id: number, patch: Partial<AdminUser> & { password?: string }) =>
+    req<{ ok: boolean; user: AdminUser }>(`/api/admin/users/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(patch),
+    }),
   summary: () => req<Summary>("/api/summary"),
   customers: () => req<CustomersResponse>("/api/customers"),
   activities: () => req<{ items: Activity[] }>("/api/activities"),
