@@ -23,7 +23,7 @@ from pathlib import Path
 from typing import Any
 from zoneinfo import ZoneInfo
 
-from . import queries
+from . import glm, queries
 from .config import PACKAGE_ROOT
 from .db import get_conn
 
@@ -134,9 +134,9 @@ def parse_messages(messages: list[dict[str, Any]]) -> list[dict[str, Any]]:
             em = _mail_of(text)
             doc_m = re.search(r"(.+?)\s+(?:Brochure|소개서)?\s*has been viewed", text, re.I)
             doc = (doc_m.group(1).strip() if doc_m else "").splitlines()[-1] if doc_m else ""
-            # 상세 필드(있으면): 회사/이름/이메일
-            co = _g(r"(?:Company|회사명?)\s*[:：]\s*(.+)", text)
-            nm = _g(r"(?:Name|성함|이름)\s*[:：]\s*(.+)", text)
+            # 상세 필드(있으면): 회사/이름/이메일 — 구분자(·|(줄바꿈)에서 끊음
+            co = _g(r"(?:Company|회사명?)\s*[:：]\s*([^·|\n(]+)", text)
+            nm = _g(r"(?:Name|성함|이름)\s*[:：]\s*([^·|\n(]+)", text)
             sol = next((s for s in _SOLUTIONS if s.lower() in text.lower()), "")
             if not em and not co:
                 # 이메일·회사 정보가 전혀 없으면 리드로 만들지 않음(원문은 raw 보존)
@@ -173,11 +173,37 @@ def parse_messages(messages: list[dict[str, Any]]) -> list[dict[str, Any]]:
 
 # ── cross-team meeting-log strategy ──────────────────────────────────────────
 _FIELD_KEYS = [
-    "발생일시", "유입경로", "회사명", "고객명", "관련사", "업종", "세부분야", "회사설명",
-    "이름", "부서", "직급", "이메일", "휴대폰", "관심 솔루션", "활동유형",
+    "발생일시", "유입경로", "회사명", "고객명", "관련사", "참석자", "업종", "세부분야",
+    "회사설명", "이름", "부서", "직급", "이메일", "휴대폰", "관심 솔루션", "활동유형",
     "방문 일자", "방문일자", "방문 목적", "방문목적", "문의내용", "활동내용",
     "결과", "다음 액션", "Next Plan", "확인상태", "근거",
 ]
+
+
+def _companies_from_participants(value: str, known: list[str] | None = None) -> list[str]:
+    """참석자 줄에서 회사명 추출 (사람이름 오검출 방지).
+    예) '신흥_이해진이사 / FLS 이종국대표 / RTM_허정' → ['신흥', 'FLS'].
+    각 '/' 세그먼트에서 회사로 인정하는 경우만:
+      (a) '회사_사람'의 '_' 앞 토큰, (b) 대문자 ASCII(FLS/WGS), (c) 등록된 회사명."""
+    known = known or []
+    out: list[str] = []
+    for seg in re.split(r"[/]", value or ""):
+        seg = seg.strip()
+        if not seg:
+            continue
+        if "_" in seg:  # 회사_사람 → 확실
+            token = _clean_company(seg.split("_", 1)[0])
+        else:
+            first = seg.split()[0] if seg.split() else ""
+            tok = _clean_company(first)
+            if tok and tok.isascii() and tok.isupper() and len(tok) >= 2:
+                token = tok  # FLS, WGS 등 대문자 약칭
+            else:
+                token = next((k for k in known if k and k in seg), "")  # 등록 회사명만
+        if not token or token in _CO_STOPWORDS or re.search(r"rtm|알티엠", token, re.I):
+            continue
+        out.append(token)
+    return out
 _SOLUTIONS = ["Hubble", "EHM", "RISA", "M.AX Agent", "TS Agent"]
 
 
@@ -248,12 +274,27 @@ def _parse_contact_lines(text: str) -> list[dict[str, str]]:
     return contacts
 
 
-def parse_cross_team(messages: list[dict[str, Any]]) -> list[dict[str, Any]]:
+def _known_company_in_text(text: str, known: list[str]) -> str:
+    """본문에 이미 등록된 회사명이 있으면 반환(가장 긴 이름 우선). ASCII는 단어경계."""
+    for name in known:
+        if name.isascii():
+            if re.search(r"(?<![A-Za-z0-9])" + re.escape(name) + r"(?![A-Za-z0-9])", text, re.I):
+                return name
+        elif name in text:
+            return name
+    return ""
+
+
+def parse_cross_team(
+    messages: list[dict[str, Any]], known: list[str] | None = None
+) -> list[dict[str, Any]]:
     """#tf_cross_team_sales 전략: 사람이 작성한 미팅/활동 템플릿 → 이벤트.
 
-    event kinds: lead / activity / company_update. `review_required`가 True면
-    (확인상태=확인 필요/추정) 자동 확정 대신 검수 큐로 보낸다.
+    known: 이미 등록된 회사명 목록(긴 것 우선). 필드/제목에서 회사를 못 찾으면
+    본문에 등장하는 기존 회사명으로 매칭해 미분류를 줄인다.
+    event kinds: lead / activity / company_update.
     """
+    known = known or []
     out: list[dict[str, Any]] = []
     # top-level 메시지 기준. 스레드 댓글은 '연결 정보'로 취급해 추출에 합치되(combined),
     # 원문(source_text)은 부모 메시지, 댓글은 comments로 분리 보존한다.
@@ -273,9 +314,18 @@ def parse_cross_team(messages: list[dict[str, Any]]) -> list[dict[str, Any]]:
             company = m.group(1).strip() if m else ""
         if not company:
             company = _company_from_freeform(text) or _company_from_freeform(reply_text)
+        if not company and known:
+            company = _known_company_in_text(combined, known)  # 기존 회사명 매칭
 
         companies = _split_companies(company) + _split_companies(f.get("관련사", ""))
         companies = list(dict.fromkeys([c for c in companies if c]))
+
+        # 참석자 줄의 다른 회사(예: FLS)도 모두 대상에 추가.
+        # 단, 기존 회사에 포함되는(부분문자열) 후보는 중복이므로 제외 (신흥 ⊂ 신흥안산공장).
+        for pc in _companies_from_participants(f.get("참석자", ""), known):
+            if any(pc in c or c in pc for c in companies):
+                continue
+            companies.append(pc)
 
         # 원문 보존 우선: 회사 추출 실패해도 활동 신호가 있으면 버리지 않는다.
         stripped = re.sub(r"<@[UWB][A-Z0-9]+>", "", text).strip()
@@ -344,7 +394,12 @@ def _clean_company(name: str) -> str:
     n = re.sub(r"<[^>]*>", "", name or "")          # <http...|..> / <@U..>
     n = re.sub(r"\((?=[^)]*(?:https?://|www\.|@|\|))[^)]*\)", "", n)  # (url) parenthetical
     n = re.sub(r"\(\s*\)", "", n)                    # empty parens left over
-    n = n.replace("*", "").strip().strip(" .,-·")
+    # 콜론/별표/구분자 제거, 전체가 괄호로 감싸졌으면 벗김(균형 괄호는 유지)
+    n = n.replace("*", "").strip().strip(" .,-·:：")
+    if n.startswith("(") and n.endswith(")"):
+        n = n[1:-1].strip()
+    if n.startswith("[") and n.endswith("]"):
+        n = n[1:-1].strip()
     # reject leftovers that are clearly not a company name
     if not n or re.search(r"https?://|www\.|@|\|", n) or len(n) > 40:
         return ""
@@ -370,12 +425,17 @@ def _company_from_freeform(text: str) -> str:
     head = "\n".join((text or "").splitlines()[:2])
     head = re.sub(r"<@[UWB][A-Z0-9]+>", "", head)
     head = re.sub(r"[:*_]|:[a-z_]+:", "", head)
-    # 보수적: 이름은 짧고(≤14자, 공백 0~1개) 동사/명사 조각이 아니어야 함.
+    # 고정밀만: 날짜+회사+미팅/방문, '회사 미팅 결과', 대괄호 제목.
+    # (사람이름/조각 오검출을 막기 위해 '○○ 방문/보고' 같은 느슨한 패턴은 쓰지 않음.
+    #  등록된 회사명 매칭은 별도 _known_company_in_text가 담당.)
     patterns = [
-        r"\d{4}[.\-]\d{1,2}[.\-]\d{1,2}\s*([가-힣A-Za-z()]{2,14}(?:\s[가-힣A-Za-z()]{1,12})?)\s*(?:미팅|방문)",
+        r"\d{2,4}[.\-]\d{1,2}[.\-]\d{1,2}\s*([가-힣A-Za-z()]{2,14}(?:\s[가-힣A-Za-z()]{1,12})?)\s*(?:미팅|방문)",
         r"^\s*([가-힣A-Za-z()]{2,14}(?:\s[가-힣A-Za-z()]{1,12})?)\s*(?:미팅|방문)\s*(?:내역|결과|내용|공유)",
+        r"^\s*\[\s*([가-힣A-Za-z()]{2,14}?)[\s\-\]]",
     ]
-    bad_frag = ("통화", "대응", "신청", "논의", "확인", "문의", "과제", "건", "안내", "요청", "관련")
+    bad_frag = ("통화", "대응", "신청", "논의", "확인", "문의", "과제", "건", "안내",
+                "요청", "관련", "종료", "예정", "님", "이사", "팀장", "차장", "대표",
+                "부장", "과장", "책임", "매니저", "실무자")
     for pat in patterns:
         m = re.search(pat, head)
         if not m:
@@ -539,6 +599,18 @@ def _log(logs: list[str], msg: str) -> None:
     logs.append(msg)
 
 
+def _is_uninformative_notice(text: str) -> bool:
+    """'EHM Brochure has been viewed'처럼 회사/사람/이메일 없는 열람 알림 → 반영 불가."""
+    t = text or ""
+    viewed = bool(re.search(r"has been viewed|열람", t, re.I))
+    if not viewed:
+        return False
+    has_email = "@" in t or "mailto:" in t
+    has_company = bool(re.search(r"(회사명|고객명|Company)\s*[:：]", t, re.I))
+    # 짧고 식별정보 없으면 반영 불가로 간주
+    return not has_email and not has_company and len(t.strip()) < 200
+
+
 def _mark_applied(conn, channel_id: str, ts: str, kind: str) -> None:
     conn.execute(
         "UPDATE slack_raw_messages SET applied=1, applied_kind=? "
@@ -553,6 +625,7 @@ def run_sync(
     limit: int | None = None,
     only_channel: str | None = None,
     backfill: bool = False,
+    logs: list[str] | None = None,
 ) -> dict:
     export_file = export_file or os.environ.get("RTM_SLACK_EXPORT_FILE", "").strip()
     has_token = bool(
@@ -572,7 +645,8 @@ def run_sync(
 
         totals = {"collected": 0, "parsed": 0, "new_leads": 0, "new_activities": 0, "queued": 0}
         per_channel = []
-        logs: list[str] = []
+        if logs is None:
+            logs = []
         _log(logs, f"[sync] 시작 — backfill={backfill} limit={limit}")
         if has_token and not export_file:
             ru = resolve_users(conn)
@@ -681,6 +755,12 @@ def _process_channel(
         has_pl = bool(m.get("permalink"))
         pl = queries.slack_permalink(channel_id, ts, json.dumps(m) if has_pl else None)
         _store_raw_message(conn, channel_id, m, pl)
+        # 정보 없는 열람 알림은 반영 불가 → 자동 아카이브 (미반영 목록 정리)
+        if _is_uninformative_notice(m.get("text", "")):
+            conn.execute(
+                "UPDATE slack_raw_messages SET archived=1 WHERE channel_id=? AND message_ts=? AND applied=0",
+                (channel_id, str(m.get("ts", ""))),
+            )
         comments = []
         for rep in m.get("thread_replies", []) or []:
             rts = str(rep.get("ts", ""))
@@ -692,7 +772,14 @@ def _process_channel(
 
     # parse by strategy
     if strategy == "cross_team":
-        events = parse_cross_team(messages)
+        known = [
+            r[0] for r in conn.execute(
+                "SELECT display_name FROM companies WHERE LENGTH(display_name)>=3"
+            )
+            if r[0] and "미분류" not in r[0] and not re.search(r"rtm|알티엠", r[0], re.I)
+        ]
+        known.sort(key=len, reverse=True)
+        events = parse_cross_team(messages, known)
     else:
         events = parse_inbound(messages)
         allowed = set()
@@ -711,6 +798,11 @@ def _process_channel(
     max_ts = last_ts
     collected_now = datetime.now(KST).strftime("%Y-%m-%d %H:%M:%S")
     require_review = bool(settings.get("require_review_for_new_company"))
+    use_glm = (
+        strategy == "cross_team"
+        and settings.get("glm_parse_cross_team", True)
+        and glm.is_configured()
+    )
     _log(logs, f"[sync] #{channel_id} ({strategy}) 수집 {len(messages)} · 파싱 {len(events)} · 신규 {len(fresh)}")
     for e in fresh:
         _cos = ", ".join(e.get("companies", []) or [e.get("co", "")])
@@ -731,6 +823,9 @@ def _process_channel(
         e["channel_id"] = channel_id
         e["collected_at"] = collected_now
         if strategy == "cross_team":
+            # 결정적 파싱이 회사/담당자를 못 찾으면 GLM으로 적극 추출
+            if use_glm and not e.get("companies") and not e.get("contacts"):
+                _glm_enrich_event(e, logs)
             _apply_cross_event(conn, e, require_review, counts)
         else:
             _apply_inbound_event(conn, e, require_review, counts)
@@ -778,6 +873,39 @@ def _apply_inbound_event(conn, e: dict, require_review: bool, counts: dict) -> N
         collected_at=e.get("collected_at", ""), raw_payload=e,
     )
     counts["new_leads" if res["created"] else "new_activities"] += 1
+
+
+def _glm_enrich_event(e: dict, logs: list[str] | None = None) -> None:
+    """결정적 파싱 실패 이벤트를 GLM으로 회사/담당자/솔루션 보강 (적극 사용)."""
+    res = glm.extract_lead_event(e.get("source_text") or e.get("iq") or "")
+    if res.get("_mode") != "glm":
+        return
+    comps = [
+        (c.get("name") or "").strip()
+        for c in (res.get("companies") or [])
+        if isinstance(c, dict) and (c.get("name") or "").strip()
+    ]
+    if comps:
+        e["companies"] = comps
+        e["primary_co"] = comps[0]
+        e["co"] = comps[0]
+    cons = []
+    for c in res.get("contacts") or []:
+        if not isinstance(c, dict):
+            continue
+        em = (c.get("email") or "").strip().lower()
+        if "@" in em:
+            cons.append({
+                "email": em, "name": c.get("name", ""), "phone": c.get("phone", ""),
+                "department": c.get("department", ""), "title": c.get("title", ""),
+            })
+    if cons:
+        e["contacts"] = cons
+    act = res.get("activity") or {}
+    if not e.get("it") and isinstance(act, dict) and act.get("solution_name"):
+        e["it"] = act["solution_name"]
+    if logs is not None and (comps or cons):
+        _log(logs, f"  ✨GLM 추출: 회사={comps or '-'} 담당={[c['email'] for c in cons] or '-'}")
 
 
 def _apply_cross_event(conn, e: dict, require_review: bool, counts: dict) -> None:

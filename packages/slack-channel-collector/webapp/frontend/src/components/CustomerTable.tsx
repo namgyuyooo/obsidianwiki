@@ -27,16 +27,30 @@ function SortableTh({
 function CompanyRows({
   g,
   companies,
+  selected,
+  onToggleSelect,
   onOpenCompany,
   onOpenPerson,
   onSaveField,
 }: {
   g: CompanyGroup;
   companies: Record<string, CompanyProfile>;
+  selected: Set<string>;
+  onToggleSelect: (key: string) => void;
   onOpenCompany: (key: string) => void;
   onOpenPerson: (email: string) => void;
   onSaveField: (key: string, field: "owner" | "memo", value: string) => void;
 }) {
+  const checkbox = (
+    <input
+      type="checkbox"
+      checked={selected.has(g.key)}
+      onClick={(e) => e.stopPropagation()}
+      onChange={() => onToggleSelect(g.key)}
+      style={{ marginRight: 6 }}
+      title="병합 대상 선택"
+    />
+  );
   const ci = companyProfile(companies, g.key);
   const n = g.members.length;
 
@@ -65,6 +79,7 @@ function CompanyRows({
           style={{ borderRight: "1px solid var(--line)", cursor: "pointer" }}
           onClick={() => onOpenCompany(g.key)}
         >
+          {checkbox}
           <b>{g.name}</b>
           {g.isNew && <span className="badge b-new"> NEW</span>}
         </td>
@@ -105,6 +120,7 @@ function CompanyRows({
                 style={{ borderRight: "1px solid var(--line)", cursor: "pointer" }}
                 onClick={() => onOpenCompany(g.key)}
               >
+                {checkbox}
                 <b>{g.name}</b>
                 {g.isNew && <span className="badge b-new"> NEW</span>}
               </td>
@@ -257,6 +273,8 @@ export function CustomerTable({
   colFilters,
   onColFilter,
   onSort,
+  selected,
+  onToggleSelect,
   onOpenCompany,
   onOpenPerson,
   onSaveField,
@@ -269,6 +287,8 @@ export function CustomerTable({
   colFilters: Record<string, string>;
   onColFilter: (k: string, v: string) => void;
   onSort: (k: string) => void;
+  selected: Set<string>;
+  onToggleSelect: (key: string) => void;
   onOpenCompany: (key: string) => void;
   onOpenPerson: (email: string) => void;
   onSaveField: (key: string, field: "owner" | "memo", value: string) => void;
@@ -315,6 +335,8 @@ export function CustomerTable({
                 key={g.key}
                 g={g}
                 companies={companies}
+                selected={selected}
+                onToggleSelect={onToggleSelect}
                 onOpenCompany={onOpenCompany}
                 onOpenPerson={onOpenPerson}
                 onSaveField={onSaveField}

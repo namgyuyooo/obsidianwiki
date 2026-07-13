@@ -35,6 +35,7 @@ import { SettingsPanel } from "./components/SettingsPanel";
 import { DuplicatesPanel } from "./components/DuplicatesPanel";
 import { RawMessagesPanel } from "./components/RawMessagesPanel";
 import { AuditPanel } from "./components/AuditPanel";
+import { UnclassifiedPanel } from "./components/UnclassifiedPanel";
 
 const UI_KEY = "rtm-db-ui";
 
@@ -88,10 +89,13 @@ export default function App() {
   const [glmEmails, setGlmEmails] = useState<Set<string> | null>(null);
   const [glmQuery, setGlmQuery] = useState("");
   const [colFilters, setColFilters] = useState<Record<string, string>>({});
+  const [selectedCos, setSelectedCos] = useState<Set<string>>(new Set());
+  const [mergeKeep, setMergeKeep] = useState("");
   const [reviewsOpen, setReviewsOpen] = useState(false); // 정합성 확인: 모달 아닌 전체 창
   const [dupOpen, setDupOpen] = useState(false); // 유사 중복 병합 창
   const [rawOpen, setRawOpen] = useState(false); // Slack 원문 뷰어 창
   const [auditOpen, setAuditOpen] = useState(false); // 변경 이력/되돌리기 창
+  const [unclOpen, setUnclOpen] = useState(false); // 미분류 처리 창
 
   const showToast = useCallback(
     (msg: string, type: ToastType = "info", ms = 4500) => {
@@ -161,6 +165,33 @@ export default function App() {
   const onColFilter = (k: string, v: string) => {
     setColFilters((prev) => ({ ...prev, [k]: v }));
     setUi({ page: 0 });
+  };
+  const toggleSelectCo = (key: string) => {
+    setSelectedCos((prev) => {
+      const n = new Set(prev);
+      n.has(key) ? n.delete(key) : n.add(key);
+      if (!mergeKeep && n.size) setMergeKeep([...n][0]);
+      return n;
+    });
+  };
+  const clearSelection = () => {
+    setSelectedCos(new Set());
+    setMergeKeep("");
+  };
+  const mergeSelected = async () => {
+    const keys = [...selectedCos];
+    if (keys.length < 2) return;
+    const keep = selectedCos.has(mergeKeep) ? mergeKeep : keys[0];
+    const others = keys.filter((k) => k !== keep);
+    showToast(`회사 병합 중… ${others.length}곳 → ${companies[mergeKeep]?.name || mergeKeep}`, "loading");
+    try {
+      const r = await api.mergeCompanies(mergeKeep, others);
+      await loadCustomers();
+      clearSelection();
+      showToast(`✅ 병합 완료 → ${companies[mergeKeep]?.name || mergeKeep}\n담당자 ${r.moved_contacts}·활동 ${r.moved_activities} 이관 (변경 이력에서 되돌리기 가능)`, "success", 6000);
+    } catch (e) {
+      showToast("⚠ 병합 실패: " + (e instanceof Error ? e.message : e), "error");
+    }
   };
   const total =
     ui.view === "company" ? groups.length : ui.view === "owner" ? owners.length : persons.length;
@@ -270,28 +301,39 @@ export default function App() {
     setSyncing(true);
     setAiBusy(true);
     showToast(
-      backfill ? "전체 히스토리 수집 중… (과거~현재, 시간이 걸릴 수 있어요)" : "슬랙 동기화 중… (최신 항목)",
+      backfill ? "전체 히스토리 수집 시작… (백그라운드, 진행상황 콘솔)" : "슬랙 동기화 시작…",
       "loading"
     );
+    console.groupCollapsed("🔄 슬랙 동기화 로그 (실시간)");
+    let printed = 0;
     try {
-      const res = await api.sync({ backfill });
-      // 상세 수집 로그를 브라우저 콘솔에 출력
-      const log = (res as unknown as { log?: string[] }).log || [];
-      console.groupCollapsed(`🔄 슬랙 동기화 로그 (${log.length}줄)`);
-      log.forEach((line) => console.log(line));
-      console.groupEnd();
-      if (res.ok) {
-        await Promise.all([loadCustomers(), loadReviews()]);
-        const r = res as unknown as Record<string, number>;
-        showToast(
-          `✅ ${res.message}\n수집 ${r.collected ?? 0} · 신규 ${r.new_leads ?? 0} · 활동 ${r.new_activities ?? 0} · 검수 ${r.queued_reviews ?? 0}`,
-          "success",
-          6000
-        );
-      } else {
-        showToast("ⓘ " + res.message, "info", 6000);
+      await api.sync({ backfill });
+      // 백그라운드 작업 상태를 폴링하며 로그를 실시간 콘솔 출력
+      // eslint-disable-next-line no-constant-condition
+      while (true) {
+        await new Promise((r) => setTimeout(r, 1500));
+        const st = await api.syncStatus();
+        for (; printed < st.logs.length; printed++) console.log(st.logs[printed]);
+        const last = st.logs[st.logs.length - 1];
+        if (last) showToast("🔄 " + last, "loading");
+        if (!st.running) {
+          console.groupEnd();
+          const r = (st.result || {}) as Record<string, unknown> & { message?: string };
+          await Promise.all([loadCustomers(), loadReviews()]);
+          if (r.ok === false) {
+            showToast("ⓘ " + (r.message || "동기화 종료"), "info", 6000);
+          } else {
+            showToast(
+              `✅ ${r.message || "동기화 완료"}\n수집 ${r.collected ?? 0} · 신규 ${r.new_leads ?? 0} · 활동 ${r.new_activities ?? 0} · 검수 ${r.queued_reviews ?? 0}`,
+              "success",
+              6000
+            );
+          }
+          break;
+        }
       }
     } catch (e) {
+      console.groupEnd();
       showToast("⚠ 동기화 실패: " + (e instanceof Error ? e.message : e), "error");
     } finally {
       setSyncing(false);
@@ -329,6 +371,31 @@ export default function App() {
       );
     } catch (e) {
       showToast("⚠ 기록 실패: " + (e instanceof Error ? e.message : e), "error");
+    }
+  };
+
+  const reassignActivity = async (id: number, company: string) => {
+    showToast(`활동 재분류 중… → ${company}`, "loading");
+    try {
+      await api.reassignActivity(id, company);
+      await loadCustomers();
+      showToast(`✅ 활동을 '${company}'로 이동`, "success");
+    } catch (e) {
+      showToast("⚠ 재분류 실패: " + (e instanceof Error ? e.message : e), "error");
+    }
+  };
+
+  const reclassifyGlm = async (key: string) => {
+    setAiBusy(true);
+    showToast("✨ GLM 자동 재분류 중… (원문에서 회사 추출)", "loading");
+    try {
+      const r = await api.reclassifyGlm(key);
+      await loadCustomers();
+      showToast(r.ok ? `✅ ${r.moved}건 재분류` : "ⓘ " + (r.message || "GLM 필요"), r.ok ? "success" : "info", 6000);
+    } catch (e) {
+      showToast("⚠ 재분류 실패: " + (e instanceof Error ? e.message : e), "error");
+    } finally {
+      setAiBusy(false);
     }
   };
 
@@ -468,6 +535,8 @@ export default function App() {
           onSave={saveCompanyProfile}
           onLogActivity={(p) => logActivity(p, g.key)}
           onInfer={inferCompany}
+          onReassignActivity={reassignActivity}
+          onReclassifyGlm={reclassifyGlm}
           aiBusy={aiBusy}
         />
       );
@@ -512,6 +581,28 @@ export default function App() {
     );
   }
   if (!data) return <div className="loading">불러오는 중…</div>;
+
+  // 미분류 처리: 전체 창
+  if (unclOpen) {
+    return (
+      <div style={{ maxWidth: 900, margin: "0 auto" }}>
+        <div className="topbar">
+          <button className="btn" onClick={() => { setUnclOpen(false); loadCustomers(); }}>← 대시보드로</button>
+        </div>
+        <UnclassifiedPanel
+          glmConfigured={glmConfigured}
+          onToast={(m, t) => showToast(m, t)}
+          onChanged={loadCustomers}
+        />
+        {toast && (
+          <div className={`toast ${toast.type}`}>
+            {toast.type === "loading" && <span className="spin" />}
+            <span>{toast.msg}</span>
+          </div>
+        )}
+      </div>
+    );
+  }
 
   // 변경 이력/되돌리기: 전체 창
   if (auditOpen) {
@@ -628,6 +719,9 @@ export default function App() {
           </button>
           <button className="btn" onClick={() => setDupOpen(true)}>
             🔗 유사 중복
+          </button>
+          <button className="btn" onClick={() => setUnclOpen(true)}>
+            🗂 미분류 처리
           </button>
           <button className="btn" onClick={() => setAuditOpen(true)}>
             ↩ 변경 이력
@@ -766,6 +860,20 @@ export default function App() {
         )}
       </div>
 
+      {ui.view === "company" && selectedCos.size >= 2 && (
+        <div className="controls" style={{ background: "var(--accent-soft)", padding: "8px 10px", borderRadius: 8 }}>
+          <b>{selectedCos.size}곳 선택됨</b>
+          <span className="hint">남길 회사:</span>
+          <select value={mergeKeep} onChange={(e) => setMergeKeep(e.target.value)}>
+            {[...selectedCos].map((k) => (
+              <option key={k} value={k}>{companies[k]?.name || k}</option>
+            ))}
+          </select>
+          <button className="btn primary" onClick={mergeSelected}>선택한 회사 병합</button>
+          <button className="btn" onClick={clearSelection}>선택 해제</button>
+        </div>
+      )}
+
       {ui.view === "owner" ? (
         <OwnerTable
           owners={pageOwners}
@@ -786,6 +894,8 @@ export default function App() {
           colFilters={colFilters}
           onColFilter={onColFilter}
           onSort={onSort}
+          selected={selectedCos}
+          onToggleSelect={toggleSelectCo}
           onOpenCompany={openCompany}
           onOpenPerson={openPerson}
           onSaveField={saveCompanyField}

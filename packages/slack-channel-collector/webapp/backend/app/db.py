@@ -162,6 +162,11 @@ def _run_migrations(conn: sqlite3.Connection) -> None:
         )
         """
     )
+    # 유사 중복 "병합 안 함(무시)" 기록 — 다시 후보로 뜨지 않게
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS dup_dismissed "
+        "(signature TEXT PRIMARY KEY, created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)"
+    )
     _create_audit(conn)
     conn.execute(
         "CREATE INDEX IF NOT EXISTS idx_activities_type ON activities(activity_type)"

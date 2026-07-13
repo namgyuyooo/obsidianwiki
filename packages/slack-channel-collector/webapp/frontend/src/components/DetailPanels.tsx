@@ -35,7 +35,25 @@ function nowStamp(): string {
   );
 }
 
-function Timeline({ events }: { events: Activity[] }) {
+function ReassignInline({ id, onReassign }: { id: number; onReassign: (id: number, c: string) => void }) {
+  const [open, setOpen] = useState(false);
+  const [v, setV] = useState("");
+  if (!open)
+    return (
+      <button className="btn ghost" style={{ fontSize: 10.5, padding: "0 5px" }} onClick={() => setOpen(true)}>
+        ↪ 회사 지정
+      </button>
+    );
+  return (
+    <span style={{ display: "inline-flex", gap: 4 }}>
+      <input value={v} placeholder="회사명" onChange={(e) => setV(e.target.value)} style={{ width: 110, fontSize: 11 }} />
+      <button className="btn" style={{ fontSize: 10.5, padding: "0 6px" }}
+        onClick={() => { if (v.trim()) { onReassign(id, v.trim()); setOpen(false); } }}>이동</button>
+    </span>
+  );
+}
+
+function Timeline({ events, onReassign }: { events: Activity[]; onReassign?: (id: number, c: string) => void }) {
   if (!events.length)
     return (
       <div className="tl">
@@ -84,6 +102,9 @@ function Timeline({ events }: { events: Activity[] }) {
               );
             })()}
           {e.next && <div className="hint">▶ 다음 액션: {e.next}</div>}
+          {onReassign && e.id != null && (
+            <div style={{ marginTop: 2 }}><ReassignInline id={e.id} onReassign={onReassign} /></div>
+          )}
           {e.comments && e.comments.length > 0 && (
             <div className="hint" style={{ marginTop: 3 }}>
               💬 댓글 {e.comments.length}
@@ -230,6 +251,8 @@ export function CompanyDetail({
   onSave,
   onLogActivity,
   onInfer,
+  onReassignActivity,
+  onReclassifyGlm,
   aiBusy,
 }: {
   group: CompanyGroup;
@@ -237,6 +260,8 @@ export function CompanyDetail({
   activities: Activity[];
   onSave: (key: string, fields: Record<string, string>) => void;
   onLogActivity: (p: ActivityPayload) => void;
+  onReassignActivity?: (id: number, company: string) => void;
+  onReclassifyGlm?: (key: string) => void;
   aiBusy?: boolean;
   onInfer: (key: string) => Promise<{
     industry?: string;
@@ -278,6 +303,14 @@ export function CompanyDetail({
         {group.members.length}명 · 관심: {group.i.join(", ") || "—"} ·{" "}
         <SourceBadges sources={group.s} />
       </div>
+      {group.name.includes("미분류") && onReclassifyGlm && (
+        <div className="field">
+          <button className="btn" disabled={aiBusy} onClick={() => onReclassifyGlm(group.key)}>
+            ✨ GLM 자동 재분류 (원문에서 회사 추출)
+          </button>
+          <span className="hint"> 또는 아래 활동별 "↪ 회사 지정"으로 직접 이동</span>
+        </div>
+      )}
       <div className="editgrid">
         <div className="full">
           <label>회사명</label>
@@ -397,7 +430,7 @@ export function CompanyDetail({
 
       <div className="field">
         <div className="k">전체 타임라인</div>
-        <Timeline events={myEv} />
+        <Timeline events={myEv} onReassign={onReassignActivity} />
       </div>
     </>
   );

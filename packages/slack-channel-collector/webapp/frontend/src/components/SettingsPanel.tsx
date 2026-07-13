@@ -108,6 +108,14 @@ export function SettingsPanel({
         <label className="hint" style={{ display: "block", margin: "6px 0" }}>
           <input
             type="checkbox"
+            checked={f.glm_parse_cross_team}
+            onChange={(e) => upd("glm_parse_cross_team", e.target.checked)}
+          />{" "}
+          GLM 적극 사용 — 규칙 파싱이 회사를 못 찾으면 GLM으로 추출 (토큰 사용)
+        </label>
+        <label className="hint" style={{ display: "block", margin: "6px 0" }}>
+          <input
+            type="checkbox"
             checked={f.auto_sync_enabled}
             onChange={(e) => upd("auto_sync_enabled", e.target.checked)}
           />{" "}

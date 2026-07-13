@@ -148,6 +148,7 @@ DEFAULT_SYNC_SETTINGS: dict[str, Any] = {
     "include_relate": True,  # inbound: 릴레잇(홈페이지) 리드
     "include_featpaper": True,  # inbound: 피트페이퍼 열람/폼
     "require_review_for_new_company": False,  # 새 회사는 검수 큐로
+    "glm_parse_cross_team": True,  # 결정적 파싱이 회사 못 찾으면 GLM으로 추출(적극 사용)
     "auto_sync_enabled": False,
     "auto_sync_interval_minutes": 30,
     "channel_state": {},  # {channel_id: last_synced_ts}
@@ -456,7 +457,7 @@ def activities(conn: sqlite3.Connection) -> list[dict]:
     """Sales-history events in the old ``evts`` shape plus type/next/link/comments."""
     rows = conn.execute(
         """
-        SELECT occurred_at, source_type, activity_type, next_action,
+        SELECT id, occurred_at, source_type, activity_type, next_action,
                email_snapshot, name_snapshot, company_snapshot,
                solution_name, inquiry_text, raw_payload
         FROM activities
@@ -477,6 +478,7 @@ def activities(conn: sqlite3.Connection) -> list[dict]:
             pass
         out.append(
             {
+                "id": r["id"],
                 "dt": r["occurred_at"],
                 "src": r["source_type"],
                 "atype": r["activity_type"],
@@ -708,12 +710,14 @@ def _dup_fingerprint(name: str) -> str:
     'CTR Robotics' and 'CTR 로보틱스' land together.
     """
     n = (name or "").lower()
-    n = re.sub(r"\(주\)|㈜|주식회사|co\.?,?\s*ltd\.?|inc\.?|corp\.?", "", n)
+    n = re.sub(r"\(주\)|㈜|주식회사|\(株\)|co\.?,?\s*ltd\.?|inc\.?|corp\.?|ltd\.?", "", n)
     repl = {
         "로보틱스": "robotics", "로보틱": "robot", "테크놀로지": "technology",
-        "테크": "tech", "시스템즈": "systems", "시스템": "system",
-        "솔루션즈": "solutions", "솔루션": "solution", "일렉트로닉스": "electronics",
-        "코리아": "korea", "글로벌": "global",
+        "테크놀러지": "technology", "테크": "tech", "시스템즈": "systems",
+        "시스템": "system", "솔루션즈": "solutions", "솔루션": "solution",
+        "일렉트로닉스": "electronics", "일렉트릭": "electric", "코리아": "korea",
+        "글로벌": "global", "인터내셔널": "international", "컴퍼니": "company",
+        "그룹": "group", "홀딩스": "holdings", "인더스트리": "industry",
     }
     for k, v in repl.items():
         n = n.replace(k, v)
@@ -722,9 +726,35 @@ def _dup_fingerprint(name: str) -> str:
     return n
 
 
+def _levenshtein(a: str, b: str) -> int:
+    if a == b:
+        return 0
+    if not a or not b:
+        return len(a) + len(b)
+    prev = list(range(len(b) + 1))
+    for i, ca in enumerate(a, 1):
+        cur = [i]
+        for j, cb in enumerate(b, 1):
+            cur.append(min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (ca != cb)))
+        prev = cur
+    return prev[-1]
+
+
+def _dup_signature(members: list[dict]) -> str:
+    return ",".join(sorted(m["canonical_key"] for m in members))
+
+
+def dismiss_duplicate(conn: sqlite3.Connection, keys: list[str]) -> dict:
+    sig = ",".join(sorted(keys))
+    conn.execute("INSERT OR IGNORE INTO dup_dismissed(signature) VALUES (?)", (sig,))
+    return {"dismissed": sig}
+
+
 def find_duplicate_companies(conn: sqlite3.Connection, limit: int = 100) -> list[dict]:
     """Group companies whose fingerprints collide or where one name contains
-    the other — candidate near-duplicates for merge review."""
+    the other — candidate near-duplicates for merge review. '병합 안 함'으로
+    무시된 조합은 제외한다."""
+    dismissed = {r[0] for r in conn.execute("SELECT signature FROM dup_dismissed")}
     rows = conn.execute(
         """
         SELECT co.id, co.canonical_key, co.display_name, co.industry,
@@ -765,6 +795,21 @@ def find_duplicate_companies(conn: sqlite3.Connection, limit: int = 100) -> list
                     [ca, cb], key=lambda m: (-m["contact_count"], m["id"])
                 )})
                 seen.add(ca["id"]); seen.add(cb["id"])
+
+    # 편집거리 1 (오타/한 글자 차이) — 짧은 이름은 오검출 방지 위해 len>=5
+    near = [(c["fp"], c) for c in companies if c["fp"] and c["id"] not in seen and len(c["fp"]) >= 5]
+    for i in range(len(near)):
+        for j in range(i + 1, len(near)):
+            a, ca = near[i]
+            b, cb = near[j]
+            if ca["id"] in seen or cb["id"] in seen:
+                continue
+            if abs(len(a) - len(b)) <= 1 and _levenshtein(a, b) == 1:
+                out.append({"key": a, "companies": sorted(
+                    [ca, cb], key=lambda m: (-m["contact_count"], m["id"])
+                )})
+                seen.add(ca["id"]); seen.add(cb["id"])
+    out = [g for g in out if _dup_signature(g["companies"]) not in dismissed]
     return out[:limit]
 
 
@@ -851,6 +896,93 @@ def update_company_profile(
         params,
     )
     return {"updated": len(updates), "company_id": row["id"]}
+
+
+_CONTACT_COLUMNS = {"name", "phone", "department", "title", "status"}
+
+
+def update_contact(conn: sqlite3.Connection, email: str, fields: dict) -> dict:
+    row = conn.execute("SELECT id FROM contacts WHERE email = ?", (email.lower(),)).fetchone()
+    if row is None:
+        raise KeyError(email)
+    updates = {k: v for k, v in fields.items() if k in _CONTACT_COLUMNS and v is not None}
+    if fields.get("company") is not None:
+        company = fields["company"].strip()
+        cid = _upsert_company(conn, company) if company else None
+        conn.execute("UPDATE contacts SET company_id=?, updated_at=CURRENT_TIMESTAMP WHERE id=?", (cid, row["id"]))
+    if updates:
+        sets = ", ".join(f"{k}=?" for k in updates)
+        conn.execute(
+            f"UPDATE contacts SET {sets}, updated_at=CURRENT_TIMESTAMP WHERE id=?",
+            list(updates.values()) + [row["id"]],
+        )
+    return {"contact_id": row["id"], "updated": list(updates) + (["company"] if fields.get("company") is not None else [])}
+
+
+def company_activities(conn: sqlite3.Connection, canonical_key: str, limit: int = 50) -> list[dict]:
+    """특정 회사(예: 미분류)의 활동 목록 (id + 원문) — 개별 재분류용."""
+    co = conn.execute("SELECT id FROM companies WHERE canonical_key=?", (canonical_key,)).fetchone()
+    if co is None:
+        return []
+    rows = conn.execute(
+        "SELECT id, occurred_at, inquiry_text FROM activities WHERE company_id=? "
+        "ORDER BY occurred_at DESC LIMIT ?",
+        (co["id"], limit),
+    ).fetchall()
+    return [{"id": r["id"], "dt": r["occurred_at"], "text": r["inquiry_text"]} for r in rows]
+
+
+def unclassified_suggestions(conn: sqlite3.Connection, limit: int = 100) -> list[dict]:
+    """(미분류) 활동 목록 + 원문에서 기존 회사명 자동 감지 제안(결정적)."""
+    co = conn.execute("SELECT id FROM companies WHERE canonical_key=?", (_norm_company_key("(미분류)"),)).fetchone()
+    if co is None:
+        return []
+    # 매칭 후보: 기존 회사 display_name (3자 이상, 미분류 제외) — 긴 이름 우선
+    known = [
+        (r["display_name"], r["canonical_key"])
+        for r in conn.execute(
+            "SELECT display_name, canonical_key FROM companies WHERE LENGTH(display_name)>=3"
+        )
+        if r["display_name"] and "미분류" not in r["display_name"]
+    ]
+    known.sort(key=lambda x: -len(x[0]))
+    rows = conn.execute(
+        "SELECT id, occurred_at, inquiry_text FROM activities WHERE company_id=? "
+        "ORDER BY occurred_at DESC LIMIT ?",
+        (co["id"], limit),
+    ).fetchall()
+    out = []
+    for r in rows:
+        text = r["inquiry_text"] or ""
+        suggestion = ""
+        for name, _key in known:
+            if name in text:
+                suggestion = name
+                break
+        out.append({"id": r["id"], "dt": r["occurred_at"], "text": text, "suggestion": suggestion})
+    return out
+
+
+def reassign_activity(conn: sqlite3.Connection, activity_id: int, company: str) -> dict:
+    """단일 활동을 지정 회사로 이동 (회사 없으면 생성)."""
+    company = (company or "").strip()
+    if not company:
+        raise ValueError("company required")
+    to_id = _upsert_company(conn, company)
+    cur = conn.execute("UPDATE activities SET company_id=?, company_snapshot=? WHERE id=?",
+                       (to_id, company, activity_id))
+    return {"moved": cur.rowcount, "company_id": to_id, "company": company}
+
+
+def reassign_activities(conn: sqlite3.Connection, from_key: str, to_company: str) -> dict:
+    """(미분류) 등 한 회사의 활동을 다른 회사로 재분류(이동)."""
+    src = conn.execute("SELECT id FROM companies WHERE canonical_key=?", (from_key,)).fetchone()
+    if src is None:
+        raise KeyError(from_key)
+    to_id = _upsert_company(conn, to_company.strip())
+    cur = conn.execute("UPDATE activities SET company_id=? WHERE company_id=?", (to_id, src["id"]))
+    conn.execute("UPDATE contacts SET company_id=? WHERE company_id=?", (to_id, src["id"]))
+    return {"moved": cur.rowcount, "to_company": to_company.strip()}
 
 
 def resolve_review(

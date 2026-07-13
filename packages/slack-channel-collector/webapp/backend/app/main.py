@@ -57,6 +57,7 @@ class SyncSettingsIn(BaseModel):
     include_relate: bool | None = None
     include_featpaper: bool | None = None
     require_review_for_new_company: bool | None = None
+    glm_parse_cross_team: bool | None = None
     auto_sync_enabled: bool | None = None
     auto_sync_interval_minutes: int | None = None
 
@@ -163,6 +164,16 @@ def duplicate_companies() -> dict:
         return {"groups": queries.find_duplicate_companies(conn)}
 
 
+class DismissDupIn(BaseModel):
+    keys: list[str]
+
+
+@app.post("/api/companies/dismiss-duplicate")
+def dismiss_duplicate(body: DismissDupIn) -> dict:
+    with get_conn() as conn:
+        return {"ok": True, **queries.dismiss_duplicate(conn, body.keys)}
+
+
 @app.post("/api/companies/merge")
 def merge_companies(body: MergeIn) -> dict:
     with get_conn() as conn:
@@ -211,6 +222,83 @@ def add_lead(body: LeadIn = Body(...)) -> dict:
             result = queries.add_lead(conn, body.model_dump())
         except ValueError as exc:
             raise HTTPException(status_code=400, detail=str(exc))
+    return {"ok": True, **result}
+
+
+class ContactUpdateIn(BaseModel):
+    name: str | None = None
+    phone: str | None = None
+    department: str | None = None
+    title: str | None = None
+    status: str | None = None
+    company: str | None = None
+
+
+@app.put("/api/contacts/{email}")
+def update_contact(email: str, body: ContactUpdateIn) -> dict:
+    with get_conn() as conn:
+        queries.begin_change(conn, f"연락처 수정: {email}")
+        try:
+            result = queries.update_contact(conn, email, body.model_dump())
+        except KeyError:
+            raise HTTPException(status_code=404, detail="contact not found")
+    return {"ok": True, **result}
+
+
+class ReassignIn(BaseModel):
+    from_key: str
+    to_company: str
+
+
+class ActivityReassignIn(BaseModel):
+    company: str
+
+
+@app.get("/api/unclassified")
+def unclassified() -> dict:
+    with get_conn() as conn:
+        return {"items": queries.unclassified_suggestions(conn)}
+
+
+@app.post("/api/activities/{activity_id}/reassign")
+def reassign_one_activity(activity_id: int, body: ActivityReassignIn) -> dict:
+    with get_conn() as conn:
+        queries.begin_change(conn, f"활동 재분류 #{activity_id} → {body.company}")
+        try:
+            result = queries.reassign_activity(conn, activity_id, body.company)
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=str(exc))
+    return {"ok": True, **result}
+
+
+@app.post("/api/companies/{canonical_key}/reclassify-glm")
+def reclassify_glm(canonical_key: str) -> dict:
+    """해당 회사(예: 미분류) 활동들을 GLM으로 회사 재추출해 개별 재분류."""
+    if not glm.is_configured():
+        return {"ok": False, "message": "GLM이 설정되지 않았습니다 (GLM_API_URL/GLM_API_KEY).", "moved": 0}
+    moved = 0
+    with get_conn() as conn:
+        queries.begin_change(conn, f"GLM 재분류: {canonical_key}")
+        acts = queries.company_activities(conn, canonical_key, limit=30)
+        for a in acts:
+            if not a["text"]:
+                continue
+            res = glm.extract_lead_event(a["text"])
+            comp = (res.get("companies") or [{}])[0].get("name", "") if isinstance(res.get("companies"), list) else ""
+            if comp and comp.strip():
+                queries.reassign_activity(conn, a["id"], comp.strip())
+                moved += 1
+    return {"ok": True, "moved": moved, "scanned": len(acts)}
+
+
+@app.post("/api/companies/reassign")
+def reassign_activities(body: ReassignIn) -> dict:
+    with get_conn() as conn:
+        queries.begin_change(conn, f"활동 재분류: {body.from_key} → {body.to_company}")
+        try:
+            result = queries.reassign_activities(conn, body.from_key, body.to_company)
+        except KeyError:
+            raise HTTPException(status_code=404, detail="source company not found")
     return {"ok": True, **result}
 
 
@@ -398,20 +486,61 @@ def put_settings(body: SyncSettingsIn) -> dict:
         )
 
 
+# ── background sync job (long backfills run without blocking the request) ────
+_sync_state: dict = {"running": False, "logs": [], "result": None, "started": 0.0, "label": ""}
+_sync_lock = threading.Lock()
+
+
+def _start_sync(export_file, limit, backfill, label="") -> bool:
+    """Start a sync in a background thread. Returns False if one is already running."""
+    with _sync_lock:
+        if _sync_state["running"]:
+            return False
+        _sync_state.update({"running": True, "logs": [], "result": None,
+                            "started": time.time(), "label": label})
+    logs = _sync_state["logs"]
+
+    def _job() -> None:
+        try:
+            _sync_state["result"] = slack_sync.run_sync(
+                export_file=export_file, limit=limit, backfill=backfill, logs=logs
+            )
+        except Exception as exc:  # noqa: BLE001
+            logs.append(f"[sync] 오류: {exc}")
+            _sync_state["result"] = {"ok": False, "message": str(exc), "log": logs}
+        finally:
+            _sync_state["running"] = False
+
+    threading.Thread(target=_job, name="rtm-sync", daemon=True).start()
+    return True
+
+
 @app.post("/api/sync")
 def sync(body: SyncIn | None = None) -> dict:
-    return slack_sync.run_sync(
-        export_file=body.export_file if body else None,
-        limit=body.limit if body else None,
-        backfill=body.backfill if body else False,
+    started = _start_sync(
+        body.export_file if body else None,
+        body.limit if body else None,
+        body.backfill if body else False,
+        label="backfill" if (body and body.backfill) else "sync",
     )
+    if not started:
+        return {"ok": True, "running": True, "started": False,
+                "message": "이미 동기화가 진행 중입니다. 진행 상황은 상태 폴링으로 확인하세요."}
+    return {"ok": True, "running": True, "started": True, "message": "동기화를 시작했습니다"}
+
+
+@app.get("/api/sync/status")
+def sync_status() -> dict:
+    """진행 중 동기화의 실시간 로그·결과를 폴링으로 제공."""
+    return {
+        "running": _sync_state["running"],
+        "logs": _sync_state["logs"],
+        "result": _sync_state["result"],
+        "started": _sync_state["started"],
+    }
 
 
 # ── background scheduler (reliable periodic collection) ──────────────────────
-# Runs independently of any open dashboard tab. Checks every minute and syncs
-# when auto_sync_enabled and the configured interval has elapsed. For 24/7
-# reliability across restarts, also consider the collector's OS scheduler
-# (cron / launchd) documented in packages/slack-channel-collector/USAGE.md.
 _sched_stop = threading.Event()
 _last_auto_run = 0.0
 
@@ -426,10 +555,10 @@ def _scheduler_loop() -> None:
                 continue
             interval = max(1, int(s.get("auto_sync_interval_minutes") or 30)) * 60
             now = time.time()
-            if now - _last_auto_run >= interval:
+            if now - _last_auto_run >= interval and not _sync_state["running"]:
                 _last_auto_run = now
-                result = slack_sync.run_sync()
-                print(f"[auto-sync] {result.get('message')}", flush=True)
+                if _start_sync(None, None, False, label="auto"):
+                    print("[auto-sync] 시작", flush=True)
         except Exception as exc:  # noqa: BLE001 - never let the loop die
             print(f"[auto-sync] error: {exc}", flush=True)
 

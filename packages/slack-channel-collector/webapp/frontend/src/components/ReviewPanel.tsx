@@ -140,6 +140,46 @@ function CompanyLinker({ onPick }: { onPick: (c: CompanySearchItem) => void }) {
   );
 }
 
+// 정합성: 대상 연락처의 여러 필드를 직접 수정
+function ContactFieldEditor({ email, onSaved }: { email: string; onSaved?: () => void }) {
+  const [open, setOpen] = useState(false);
+  const [f, setF] = useState({ name: "", phone: "", department: "", title: "", company: "" });
+  const [busy, setBusy] = useState(false);
+  if (!open)
+    return (
+      <button className="btn ghost" style={{ marginTop: 6 }} onClick={() => setOpen(true)}>
+        ✎ 필드 직접 수정
+      </button>
+    );
+  const upd = (k: keyof typeof f) => (v: string) => setF({ ...f, [k]: v });
+  const save = async () => {
+    const fields = Object.fromEntries(Object.entries(f).filter(([, v]) => v.trim()));
+    if (Object.keys(fields).length === 0) return;
+    setBusy(true);
+    try {
+      await api.updateContact(email, fields as Record<string, string>);
+      onSaved?.();
+    } finally {
+      setBusy(false);
+      setOpen(false);
+    }
+  };
+  return (
+    <div className="editgrid" style={{ marginTop: 8 }}>
+      <div><label>이름</label><input value={f.name} onChange={(e) => upd("name")(e.target.value)} /></div>
+      <div><label>회사명</label><input value={f.company} onChange={(e) => upd("company")(e.target.value)} /></div>
+      <div><label>부서</label><input value={f.department} onChange={(e) => upd("department")(e.target.value)} /></div>
+      <div><label>직급</label><input value={f.title} onChange={(e) => upd("title")(e.target.value)} /></div>
+      <div><label>휴대폰</label><input value={f.phone} onChange={(e) => upd("phone")(e.target.value)} /></div>
+      <div className="full">
+        <button className="btn primary" disabled={busy} onClick={save}>필드 저장 후 승인</button>
+        <button className="btn ghost" style={{ marginLeft: 6 }} onClick={() => setOpen(false)}>취소</button>
+        <span className="hint" style={{ marginLeft: 6 }}>입력한 값만 반영됩니다</span>
+      </div>
+    </div>
+  );
+}
+
 function ReviewCard({
   r,
   onResolve,
@@ -250,6 +290,11 @@ function ReviewCard({
             </>
           )}
         </div>
+      )}
+
+      {/* contact multi-field editor (여러 필드 직접 수정) */}
+      {r.entity_type === "contact" && r.entity_context && (
+        <ContactFieldEditor email={r.entity_context.email} onSaved={() => onResolve(r.id, { action: "approve" })} />
       )}
 
       {/* generic field flows */}

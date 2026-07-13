@@ -10,7 +10,21 @@ webapp/
   frontend/   Vite + React + TS — 대시보드 UI
 ```
 
-## 빠른 시작
+## 가장 빠른 실행 (권장)
+
+```bash
+cd webapp
+./run.sh                 # 준비(venv·의존성·프론트 빌드) 후 http://127.0.0.1:8765
+./run.sh --rebuild       # 프론트엔드 강제 재빌드
+./run.sh --dev           # 백엔드(:8765) + Vite 개발서버(:5173)
+./run.sh 9000            # 포트 지정
+```
+
+`run.sh`가 백엔드 venv 생성·의존성 설치, `.env` 로드(Slack 토큰·GLM 키), 프론트엔드 빌드,
+그리고 API+UI 통합 서빙까지 한 번에 처리합니다. 백엔드 코드/프론트 변경 후에도 그냥 다시
+`./run.sh`(프론트 바뀌면 `--rebuild`)만 하면 됩니다.
+
+## 빠른 시작 (수동)
 
 먼저 DB가 있어야 합니다 (`packages/customer-db` 참고):
 

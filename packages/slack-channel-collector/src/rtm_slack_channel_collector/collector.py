@@ -343,13 +343,75 @@ def _normalize_channel(channel: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+_TEXT_KEYS = ("text", "value", "title", "pretext", "fallback", "alt_text", "footer", "author_name")
+
+
+def _flatten_rich_text(message: dict[str, Any]) -> str:
+    """봇 메시지(피트페이퍼 등)의 내용은 본문 대신 blocks/attachments/files에 들어있다.
+    사람이 읽을 수 있는 문자열(text/value/title/fallback/버튼·링크 텍스트/파일명 등)을
+    구조를 재귀적으로 훑어 순서대로 수집한다. URL/ID 잡음은 최소화."""
+    parts: list[str] = []
+    seen: set[str] = set()
+
+    def _add(s: Any) -> None:
+        if not isinstance(s, str):
+            return
+        v = s.strip()
+        if not v or v in seen:
+            return
+        # 순수 URL/멘션만이면 스킵
+        if v.startswith("http") and " " not in v:
+            return
+        seen.add(v)
+        parts.append(v)
+
+    def _walk(obj: Any) -> None:
+        if isinstance(obj, dict):
+            # Slack text object {type, text}
+            for k in _TEXT_KEYS:
+                val = obj.get(k)
+                if isinstance(val, str):
+                    _add(val)
+                elif isinstance(val, dict):
+                    _add(val.get("text"))
+            # attachment fields: title/value 쌍은 라벨\n값 형태로
+            for fld in obj.get("fields", []) or []:
+                if isinstance(fld, dict):
+                    t = (fld.get("title") or "").strip()
+                    val = fld.get("text") or fld.get("value") or ""
+                    if t and val:
+                        _add(f"*{t}*\n{val}")
+            # 파일명 (첨부 브로슈어 등)
+            for f in obj.get("files", []) or []:
+                if isinstance(f, dict):
+                    _add(f.get("title") or f.get("name"))
+            # 하위 구조 재귀
+            for key in ("blocks", "elements", "attachments", "accessory"):
+                if key in obj:
+                    _walk(obj[key])
+        elif isinstance(obj, list):
+            for item in obj:
+                _walk(item)
+
+    _walk({"blocks": message.get("blocks"), "attachments": message.get("attachments"),
+           "files": message.get("files")})
+    return "\n".join(parts)
+
+
 def _normalize_message(message: dict[str, Any], include_files: bool = True) -> dict[str, Any]:
+    base_text = message.get("text", "") or ""
+    rich = _flatten_rich_text(message)
+    # 원문 text가 비어있거나 짧으면 rich를 합쳐 실제 내용을 보존
+    if rich and rich not in base_text:
+        text = (base_text + "\n" + rich).strip() if base_text.strip() else rich
+    else:
+        text = base_text
     normalized = {
         "ts": message.get("ts"),
         "type": message.get("type"),
         "subtype": message.get("subtype"),
         "user": message.get("user") or message.get("bot_id") or "",
-        "text": message.get("text", ""),
+        "text": text,
         "thread_ts": message.get("thread_ts", ""),
         "reply_count": message.get("reply_count", 0),
         "reply_users": message.get("reply_users", []),

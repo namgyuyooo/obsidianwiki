@@ -41,6 +41,7 @@ export interface ActivityComment {
 }
 
 export interface Activity {
+  id?: number;
   dt: string;
   src: string; // relate | featpaper | manual
   atype: string; // sales-touch type (방문/콜/견적/데모…)
@@ -68,6 +69,7 @@ export interface SyncSettings {
   include_relate: boolean;
   include_featpaper: boolean;
   require_review_for_new_company: boolean;
+  glm_parse_cross_team: boolean;
   auto_sync_enabled: boolean;
   auto_sync_interval_minutes: number;
   channel_state: Record<string, number>;

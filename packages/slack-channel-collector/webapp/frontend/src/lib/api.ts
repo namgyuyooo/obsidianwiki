@@ -96,7 +96,7 @@ export const api = {
       body: JSON.stringify(payload),
     }),
   sync: (opts?: { exportFile?: string; backfill?: boolean }) =>
-    req<{ ok: boolean; configured: boolean; message: string; new_leads?: number }>(
+    req<{ ok: boolean; running: boolean; started: boolean; message: string }>(
       "/api/sync",
       {
         method: "POST",
@@ -105,6 +105,36 @@ export const api = {
           backfill: opts?.backfill ?? false,
         }),
       }
+    ),
+  syncStatus: () =>
+    req<{
+      running: boolean;
+      logs: string[];
+      result: (Record<string, unknown> & { message?: string }) | null;
+    }>("/api/sync/status"),
+  updateContact: (email: string, fields: Record<string, string>) =>
+    req<{ ok: boolean }>(`/api/contacts/${encodeURIComponent(email)}`, {
+      method: "PUT",
+      body: JSON.stringify(fields),
+    }),
+  reassignActivities: (from_key: string, to_company: string) =>
+    req<{ ok: boolean; moved: number }>("/api/companies/reassign", {
+      method: "POST",
+      body: JSON.stringify({ from_key, to_company }),
+    }),
+  reassignActivity: (id: number, company: string) =>
+    req<{ ok: boolean }>(`/api/activities/${id}/reassign`, {
+      method: "POST",
+      body: JSON.stringify({ company }),
+    }),
+  unclassified: () =>
+    req<{ items: { id: number; dt: string; text: string; suggestion: string }[] }>(
+      "/api/unclassified"
+    ),
+  reclassifyGlm: (key: string) =>
+    req<{ ok: boolean; moved: number; message?: string }>(
+      `/api/companies/${encodeURIComponent(key)}/reclassify-glm`,
+      { method: "POST" }
     ),
   setTags: (email: string, tags: string[]) =>
     req<{ ok: boolean; tags: string[] }>(
@@ -163,6 +193,11 @@ export const api = {
     }),
   duplicates: () =>
     req<{ groups: DuplicateGroup[] }>("/api/companies/duplicates"),
+  dismissDuplicate: (keys: string[]) =>
+    req<{ ok: boolean }>("/api/companies/dismiss-duplicate", {
+      method: "POST",
+      body: JSON.stringify({ keys }),
+    }),
   mergeCompanies: (keep_key: string, merge_keys: string[]) =>
     req<{ ok: boolean; moved_contacts: number; moved_activities: number }>(
       "/api/companies/merge",

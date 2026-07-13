@@ -174,6 +174,16 @@ export function DuplicatesPanel({
                 >
                   {busy === g.key ? "병합 중…" : "이 회사로 병합"}
                 </button>
+                <button
+                  className="btn ghost"
+                  onClick={async () => {
+                    await api.dismissDuplicate(g.companies.map((c) => c.canonical_key));
+                    setGroups((prev) => prev.filter((x) => x.key !== g.key));
+                    onToast?.("병합 안 함으로 표시 (다시 추천되지 않음)", "success");
+                  }}
+                >
+                  병합 안 함
+                </button>
                 <span className="hint">남길 회사: {keep[g.key]}</span>
               </div>
             </div>
