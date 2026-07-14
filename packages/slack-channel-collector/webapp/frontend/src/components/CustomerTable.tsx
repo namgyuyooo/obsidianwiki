@@ -48,7 +48,7 @@ function CompanyRows({
       onClick={(e) => e.stopPropagation()}
       onChange={() => onToggleSelect(g.key)}
       style={{ marginRight: 6 }}
-      title="병합 대상 선택"
+      title="선택 (병합·삭제 대상)"
     />
   );
   const ci = companyProfile(companies, g.key);

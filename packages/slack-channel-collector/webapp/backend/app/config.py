@@ -44,6 +44,10 @@ class Settings:
         # Slack collector wiring (optional). When unset, /api/sync returns a
         # friendly "not configured" response instead of failing.
         self.slack_channel_id = os.environ.get("RTM_SLACK_CHANNEL_ID", "").strip()
+        # 명함 이미지는 이 전용 채널에서만 OCR/검수 대상으로 취급한다.
+        self.business_card_channel_id = os.environ.get(
+            "RTM_BUSINESS_CARD_CHANNEL_ID", "C0BGZKBLC4U"
+        ).strip()
         self.slack_export_dir = os.environ.get("RTM_SLACK_EXPORT_DIR", "").strip()
         # Workspace base used to build permalinks to the original Slack message,
         # e.g. "https://rtm.slack.com". Trailing slash is trimmed.

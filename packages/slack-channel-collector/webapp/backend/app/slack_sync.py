@@ -17,17 +17,18 @@ from __future__ import annotations
 import json
 import os
 import re
+import sqlite3
 import ssl
 import sys
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any
 from urllib.error import URLError
 from urllib.request import Request, urlopen
 from zoneinfo import ZoneInfo
 
-from . import glm, queries, vision
-from .config import PACKAGE_ROOT
+from . import glm, queries, vision, secret_store
+from .config import PACKAGE_ROOT, get_settings
 from .db import get_conn
 
 KST = ZoneInfo("Asia/Seoul")
@@ -701,13 +702,14 @@ def _load_from_collector(
         if tmp_state.exists():
             tmp_state.unlink()
         overrides["state_path"] = tmp_state
-    if limit:
+    if limit and strategy != "business_card":
         overrides["limit"] = int(limit)
         # count 기준으로 최신 N개를 가져오도록 시간 창을 넓힌다
         lookback = max(lookback, FULL_LOOKBACK_HOURS)
     overrides["lookback_hours"] = lookback
 
-    config = collector.CollectionConfig.from_env(require_token=True)
+    config = collector.CollectionConfig.from_env(require_token=False)
+    config = config.__class__(**{**config.__dict__, "token": _slack_token()})
     config = config.__class__(**{**config.__dict__, **overrides})
     on_progress = (lambda m: _log(logs, f"    · {m}")) if logs is not None else None
     result = collector.collect_once(config, dry_run=True, on_progress=on_progress)  # dry_run keeps payload in memory
@@ -746,11 +748,7 @@ def resolve_users(conn) -> dict:
 
     토큰이 없으면 아무것도 안 하고 현재 저장된 수만 반환.
     """
-    has_token = bool(
-        os.environ.get("SLACK_BOT_TOKEN")
-        or os.environ.get("SLACK_USER_TOKEN")
-        or os.environ.get("SLACK_TOKEN")
-    )
+    has_token = bool(_slack_token())
     if not has_token:
         n = conn.execute("SELECT COUNT(*) FROM slack_users").fetchone()[0]
         return {"ok": False, "configured": False, "stored": n,
@@ -759,7 +757,8 @@ def resolve_users(conn) -> dict:
         _ensure_collector_importable()
         from rtm_slack_channel_collector import collector  # type: ignore
 
-        config = collector.CollectionConfig.from_env(require_token=True)
+        config = collector.CollectionConfig.from_env(require_token=False)
+        config = config.__class__(**{**config.__dict__, "token": _slack_token()})
         client = collector.SlackClient(config.token, config.api_min_interval_seconds)
         cursor, added, profiled, profile_errors = "", 0, 0, 0
         while True:
@@ -825,6 +824,18 @@ def resolve_users(conn) -> dict:
         return {"ok": False, "configured": True, "stored": 0, "message": str(exc)}
 
 
+def _slack_users_refresh_due(conn, hours: int = 24) -> bool:
+    """전체 Slack 프로필 갱신은 비싸므로 하루 한 번만 실행한다."""
+    row = conn.execute("SELECT MAX(updated_at) FROM slack_users").fetchone()
+    if not row or not row[0]:
+        return True
+    try:
+        last = datetime.strptime(str(row[0])[:19], "%Y-%m-%d %H:%M:%S").replace(tzinfo=KST)
+        return datetime.now(KST) - last >= timedelta(hours=max(1, hours))
+    except ValueError:
+        return True
+
+
 def _log(logs: list[str], msg: str) -> None:
     """서버 콘솔 출력 + 응답에 담아 브라우저 콘솔에서도 볼 수 있게 수집."""
     print(msg, flush=True)
@@ -852,6 +863,26 @@ def _mark_applied(conn, channel_id: str, ts: str, kind: str) -> None:
 
 
 # ── entrypoint ───────────────────────────────────────────────────────────────
+def _sync_targets(channels: list[dict], only_channel: str | None = None) -> list[dict]:
+    """전체/예약 실행 대상. 명함 전용 채널은 비활성 표시여도 반드시 포함."""
+    targets = [
+        {
+            **c,
+            "enabled": True,
+            "strategy": "business_card"
+            if queries.is_business_card_channel(c.get("id", ""))
+            else c.get("strategy", "inbound"),
+        }
+        for c in channels
+        if c.get("id") and (
+            c.get("enabled", True) or queries.is_business_card_channel(c.get("id", ""))
+        )
+    ]
+    if only_channel:
+        targets = [c for c in targets if c["id"] == only_channel]
+    return targets
+
+
 def run_sync(
     export_file: str | None = None,
     limit: int | None = None,
@@ -860,108 +891,114 @@ def run_sync(
     logs: list[str] | None = None,
 ) -> dict:
     export_file = export_file or os.environ.get("RTM_SLACK_EXPORT_FILE", "").strip()
-    has_token = bool(
-        os.environ.get("SLACK_BOT_TOKEN")
-        or os.environ.get("SLACK_USER_TOKEN")
-        or os.environ.get("SLACK_TOKEN")
-    )
+    has_token = bool(_slack_token())
+    if logs is None:
+        logs = []
 
+    # ── Phase 0: 설정·상태를 짧게 읽고 커넥션을 즉시 닫는다 ──────────────────────
     with get_conn() as conn:
-        # 대량 수집은 감사 로그에서 제외 (되돌리기는 backups/channel_state로)
-        conn.execute("UPDATE change_batch SET logging=0 WHERE id=1")
         settings = queries.get_sync_settings(conn)
-        if limit is None:
-            limit = int(settings.get("sync_limit") or 0) or None
-        channels = settings.get("channels", [])
-        state = dict(settings.get("channel_state") or {})
+        card_only = bool(only_channel and queries.is_business_card_channel(only_channel))
+        users_refresh_due = (
+            has_token and not export_file and not card_only and _slack_users_refresh_due(conn)
+        )
+    if limit is None:
+        limit = int(settings.get("sync_limit") or 0) or None
+    channels = settings.get("channels", [])
+    state = dict(settings.get("channel_state") or {})
+    totals = {"collected": 0, "parsed": 0, "new_leads": 0, "new_activities": 0, "queued": 0}
+    per_channel = []
+    _log(logs, f"[sync] 시작 — backfill={backfill} limit={limit}")
 
-        totals = {"collected": 0, "parsed": 0, "new_leads": 0, "new_activities": 0, "queued": 0}
-        per_channel = []
-        if logs is None:
-            logs = []
-        _log(logs, f"[sync] 시작 — backfill={backfill} limit={limit}")
-        if has_token and not export_file:
+    # ── Phase 1: Slack에서 메모리(JSON)로만 수집한다. DB 커넥션을 열지 않는다 ────
+    # (수집은 수 분 걸리는 네트워크 작업 — 이 동안 DB를 붙잡으면 WAL 경합/디스크 I/O
+    #  오류로 서버 전체가 불안정해진다. 그래서 "수집 → JSON 완료 → 단일 DB 세션" 순서.)
+    collected: list[tuple[str, str, list, str, bool]] = []  # (ch_id, strategy, msgs, label, full)
+    source = "collector"
+    try:
+        if export_file:
+            p = Path(export_file).expanduser()
+            if not p.exists():
+                return _not_ok(f"export 파일을 찾을 수 없습니다: {p}")
+            messages, ch_id, source = _load_from_export(p)
+            _log(logs, f"[sync] export 로드: {source} ({len(messages)}개 메시지)")
+            strat = next(
+                (c.get("strategy", "inbound") for c in channels if c.get("id") == ch_id),
+                "inbound",
+            )
+            collected.append((ch_id or "export", strat, messages, ch_id or source, False))
+        elif has_token:
+            targets = _sync_targets(channels, only_channel)
+            if not targets:
+                return _not_ok("활성화된 수집 채널이 없습니다. 동기화 설정을 확인하세요.")
+            for ch in targets:
+                is_initial = str(ch["id"]) not in state  # 처음 보는 채널은 전체 백필
+                full = backfill or is_initial
+                _log(logs, f"[sync] #{ch.get('name') or ch['id']} 수집 시작 "
+                           f"(전략={ch.get('strategy')}, {'전체 백필' if full else '증분'})")
+                _log(logs, f"[sync] Slack API 호출 중… {'전체 히스토리는 수 분 걸릴 수 있음' if full else '증분 조회'}")
+                msgs, ch_id, _ = _load_from_collector(
+                    settings, limit=limit, channel_id=ch["id"], full=full, logs=logs
+                )
+                _log(logs, f"[sync] #{ch['id']} Slack에서 {len(msgs)}개 메시지 수집")
+                collected.append((ch["id"], ch.get("strategy", "inbound"), msgs, ch.get("name") or ch["id"], full))
+        else:
+            return _not_ok(
+                "Slack 동기화가 아직 설정되지 않았습니다. "
+                "SLACK_BOT_TOKEN을 설정하거나, 테스트용으로 RTM_SLACK_EXPORT_FILE에 "
+                "수집 export JSON 경로를 지정하세요."
+            )
+    except ImportError as exc:
+        return _not_ok(f"수집 모듈을 불러올 수 없습니다: {exc}")
+    except Exception as exc:  # noqa: BLE001 - surface any collector error to UI
+        return _not_ok(f"수집 실패: {exc}")
+
+    total_msgs = sum(len(m) for _, _, m, _, _ in collected)
+    _log(logs, f"[sync] 수집 완료 — 총 {total_msgs}개 메시지 → 단일 DB 세션으로 반영 시작")
+
+    # ── Phase 2: 단일 DB 세션에서 일괄 반영하고 커넥션을 닫는다 ──────────────────
+    with get_conn() as conn:
+        conn.execute("UPDATE change_batch SET logging=0 WHERE id=1")  # 대량: 감사 제외
+        conn.commit()
+        if users_refresh_due:
             ru = resolve_users(conn)
             if ru.get("ok"):
                 _log(logs, f"[sync] 유저 이름 매핑 {ru['stored']}명 갱신")
-
-        try:
-            if export_file:
-                p = Path(export_file).expanduser()
-                if not p.exists():
-                    return _not_ok(f"export 파일을 찾을 수 없습니다: {p}")
-                messages, ch_id, source = _load_from_export(p)
-                _log(logs, f"[sync] export 로드: {source} ({len(messages)}개 메시지)")
-                # strategy = matching configured channel, else inbound
-                strat = next(
-                    (c.get("strategy", "inbound") for c in channels if c.get("id") == ch_id),
-                    "inbound",
-                )
-                r = _process_channel(conn, ch_id or "export", strat, messages, settings, state, limit, logs)
-                _merge_totals(totals, r)
-                per_channel.append({"channel": ch_id or source, "strategy": strat, **r})
-            elif has_token:
-                targets = [c for c in channels if c.get("enabled", True) and c.get("id")]
-                if only_channel:
-                    targets = [c for c in targets if c["id"] == only_channel]
-                if not targets:
-                    return _not_ok("활성화된 수집 채널이 없습니다. 동기화 설정을 확인하세요.")
-                for ch in targets:
-                    # 처음 보는 채널(=수집 이력 없음)은 전체 히스토리 백필
-                    is_initial = str(ch["id"]) not in state
-                    full = backfill or is_initial
-                    _log(logs, f"[sync] #{ch.get('name') or ch['id']} 수집 시작 "
-                               f"(전략={ch.get('strategy')}, {'전체 백필' if full else '증분'})")
-                    _log(logs, f"[sync] Slack API 호출 중… {'전체 히스토리는 수 분 걸릴 수 있음' if full else '증분 조회'}")
-                    msgs, ch_id, _ = _load_from_collector(
-                        settings, limit=limit, channel_id=ch["id"], full=full, logs=logs
-                    )
-                    _log(logs, f"[sync] #{ch['id']} Slack에서 {len(msgs)}개 메시지 가져옴 → 파싱/반영 시작")
-                    settings["_backfill"] = full
-                    r = _process_channel(conn, ch["id"], ch.get("strategy", "inbound"), msgs, settings, state, limit, logs)
-                    _merge_totals(totals, r)
-                    per_channel.append({"channel": ch.get("name") or ch["id"], "strategy": ch.get("strategy"), **r})
-                source = "collector"
-            else:
-                return _not_ok(
-                    "Slack 동기화가 아직 설정되지 않았습니다. "
-                    "SLACK_BOT_TOKEN을 설정하거나, 테스트용으로 RTM_SLACK_EXPORT_FILE에 "
-                    "수집 export JSON 경로를 지정하세요."
-                )
-        except ImportError as exc:
-            return _not_ok(f"수집 모듈을 불러올 수 없습니다: {exc}")
-        except Exception as exc:  # noqa: BLE001 - surface any collector error to UI
-            return _not_ok(f"수집 실패: {exc}")
-
+            conn.commit()
+        for cid, strategy, msgs, label, full in collected:
+            settings["_backfill"] = full
+            r = _process_channel(conn, cid, strategy, msgs, settings, state, limit, logs)
+            _merge_totals(totals, r)
+            per_channel.append({"channel": label, "strategy": strategy, **r})
+            conn.commit()  # 채널별 반영 후 즉시 커밋 → 잠금 보유 최소화
         queries.save_sync_settings(conn, {"channel_state": state})
-        _log(
-            logs,
-            f"[sync] 완료 — 수집 {totals['collected']} · 파싱 {totals['parsed']} · "
-            f"신규 {totals['new_leads']} · 활동 {totals['new_activities']} · 검수 {totals['queued']}",
-        )
 
-        parts = []
-        if totals["new_leads"]:
-            parts.append(f"신규 리드 {totals['new_leads']}건")
-        if totals["new_activities"]:
-            parts.append(f"활동 {totals['new_activities']}건")
-        if totals["queued"]:
-            parts.append(f"검수 대기 {totals['queued']}건")
-        msg = " · ".join(parts) if parts else "새 항목 없음 — 최신 상태입니다"
-
-        return {
-            "ok": True,
-            "configured": True,
-            "source": source,
-            "message": f"동기화 완료 — {msg}",
-            "collected": totals["collected"],
-            "new_leads": totals["new_leads"],
-            "new_activities": totals["new_activities"],
-            "queued_reviews": totals["queued"],
-            "parsed": totals["parsed"],
-            "channels": per_channel,
-            "log": logs,
-        }
+    _log(
+        logs,
+        f"[sync] 완료 — 수집 {totals['collected']} · 파싱 {totals['parsed']} · "
+        f"신규 {totals['new_leads']} · 활동 {totals['new_activities']} · 검수 {totals['queued']}",
+    )
+    parts = []
+    if totals["new_leads"]:
+        parts.append(f"신규 리드 {totals['new_leads']}건")
+    if totals["new_activities"]:
+        parts.append(f"활동 {totals['new_activities']}건")
+    if totals["queued"]:
+        parts.append(f"검수 대기 {totals['queued']}건")
+    msg = " · ".join(parts) if parts else "새 항목 없음 — 최신 상태입니다"
+    return {
+        "ok": True,
+        "configured": True,
+        "source": source,
+        "message": f"동기화 완료 — {msg}",
+        "collected": totals["collected"],
+        "new_leads": totals["new_leads"],
+        "new_activities": totals["new_activities"],
+        "queued_reviews": totals["queued"],
+        "parsed": totals["parsed"],
+        "channels": per_channel,
+        "log": logs,
+    }
 
 
 def _merge_totals(totals: dict, r: dict) -> None:
@@ -973,12 +1010,48 @@ def _merge_totals(totals: dict, r: dict) -> None:
 
 
 def _slack_token() -> str:
+    try:
+        conn = sqlite3.connect(get_settings().db_path)
+        row = conn.execute(
+            "SELECT value FROM app_runtime_settings WHERE key='slack.bot_token'"
+        ).fetchone()
+        conn.close()
+        if row is not None:
+            return secret_store.decrypt(str(row[0])).strip()
+    except (sqlite3.Error, OSError):
+        pass
     return (
         os.environ.get("SLACK_BOT_TOKEN")
         or os.environ.get("SLACK_USER_TOKEN")
         or os.environ.get("SLACK_TOKEN")
         or ""
     ).strip()
+
+
+def test_connection() -> dict[str, str]:
+    token = _slack_token()
+    if not token:
+        raise RuntimeError("Slack Bot Token을 먼저 저장해 주세요")
+    req = Request("https://slack.com/api/auth.test", headers={"Authorization": f"Bearer {token}"})
+    try:
+        with urlopen(req, timeout=20) as resp:
+            payload = json.loads(resp.read().decode("utf-8"))
+    except URLError as exc:
+        reason = getattr(exc, "reason", exc)
+        if isinstance(reason, ssl.SSLCertVerificationError) or "CERTIFICATE_VERIFY_FAILED" in str(reason):
+            with urlopen(req, timeout=20, context=ssl._create_unverified_context()) as resp:
+                payload = json.loads(resp.read().decode("utf-8"))
+        else:
+            raise RuntimeError(f"Slack 연결 실패: {reason}") from exc
+    if not payload.get("ok"):
+        raise RuntimeError(str(payload.get("error") or "Slack 인증 실패"))
+    return {
+        "team": str(payload.get("team") or ""),
+        "team_id": str(payload.get("team_id") or ""),
+        "user": str(payload.get("user") or ""),
+        "user_id": str(payload.get("user_id") or ""),
+        "url": str(payload.get("url") or ""),
+    }
 
 
 def _download_slack_file(file_item: dict[str, Any]) -> tuple[bytes, str]:
@@ -1100,7 +1173,9 @@ def _post_sync_callback(
     settings: dict,
     logs: list[str] | None = None,
 ) -> None:
-    mode = _callback_mode(settings)
+    is_business_card = kind in {"business_card", "business_card_manual"} or e.get("kind") == "business_card"
+    # 명함 수집 완료 표시는 일반 콜백 설정과 무관하게 항상 이모지로 남긴다.
+    mode = "reaction" if is_business_card else _callback_mode(settings)
     if mode == "off":
         return
     ts = str(e.get("ts") or "")
@@ -1117,7 +1192,11 @@ def _post_sync_callback(
             _post_slack_thread_reply(channel_id, ts, _callback_text(e, kind))
             label = "Slack 스레드 콜백"
         else:
-            reaction = str(settings.get("slack_callback_reaction") or "white_check_mark")
+            reaction = (
+                "white_check_mark"
+                if is_business_card
+                else str(settings.get("slack_callback_reaction") or "white_check_mark")
+            )
             _post_slack_reaction(channel_id, ts, reaction)
             label = f"Slack reaction :{reaction.strip(':')}:"
         sent_at = datetime.now(KST).strftime("%Y-%m-%d %H:%M:%S")
@@ -1128,6 +1207,30 @@ def _post_sync_callback(
         _log(logs, f"  ↩ {label} 완료: {ts}")
     except Exception as exc:  # noqa: BLE001
         _log(logs, f"  ⚠️ Slack 콜백 실패: {ts} — {exc}")
+
+
+def _retry_business_card_callbacks(
+    conn, channel_id: str, settings: dict, logs: list[str] | None = None, limit: int = 50
+) -> int:
+    """반영은 끝났지만 Slack 이모지가 실패/누락된 명함을 다음 주기에 재시도."""
+    rows = conn.execute(
+        """
+        SELECT message_ts FROM slack_raw_messages
+        WHERE channel_id=? AND applied=1 AND callback_sent_at=''
+          AND applied_kind IN ('business_card','business_card_manual')
+        ORDER BY CAST(message_ts AS REAL) ASC LIMIT ?
+        """,
+        (channel_id, max(1, min(limit, 200))),
+    ).fetchall()
+    for row in rows:
+        _post_sync_callback(
+            conn, channel_id, {"ts": str(row["message_ts"]), "kind": "business_card"},
+            "business_card", settings, logs,
+        )
+        conn.commit()
+    if rows:
+        _log(logs, f"[sync] 명함 완료 이모지 누락 {len(rows)}건 재확인")
+    return len(rows)
 
 
 def _ensure_business_card_source(conn) -> None:
@@ -1193,6 +1296,47 @@ def _process_channel(
     settings: dict, state: dict, limit: int | None, logs: list[str] | None = None,
 ) -> dict:
     logs = logs if logs is not None else []
+    if strategy == "business_card" and not queries.is_business_card_channel(channel_id):
+        _log(
+            logs,
+            f"[sync] #{channel_id} 명함 수집 차단 — 전용 채널 "
+            f"#{get_settings().business_card_channel_id}만 허용",
+        )
+        return {
+            "collected": 0, "parsed": 0, "new_leads": 0, "new_activities": 0,
+            "queued": 0, "skipped_dup": 0,
+        }
+    if strategy == "business_card":
+        # Slack 증분 조회 범위 밖으로 밀린 실패/대기 명함도 DB 원문에서 다시 큐에
+        # 합친다. 따라서 장기간 오류나 서버 재시작 뒤에도 다음 예약 실행이 이어받는다.
+        known_ts = {str(m.get("ts") or "") for m in messages}
+        queued_rows = conn.execute(
+            """
+            SELECT message_ts, raw_payload
+            FROM slack_raw_messages
+            WHERE channel_id=? AND applied=0 AND archived=0
+            ORDER BY CAST(message_ts AS REAL) ASC
+            LIMIT 5000
+            """,
+            (channel_id,),
+        ).fetchall()
+        recovered = 0
+        for row in queued_rows:
+            ts = str(row["message_ts"] or "")
+            if not ts or ts in known_ts:
+                continue
+            try:
+                payload = json.loads(row["raw_payload"] or "{}")
+            except (ValueError, TypeError):
+                continue
+            if not any(_is_image_file(f) for f in payload.get("files", []) or [] if isinstance(f, dict)):
+                continue
+            payload["ts"] = ts
+            messages.append(payload)
+            known_ts.add(ts)
+            recovered += 1
+        if recovered:
+            _log(logs, f"[sync] 명함 영속 큐에서 {recovered}개 메시지 복구")
     if limit:
         messages = sorted(messages, key=lambda m: _ts_float(m.get("ts", 0)), reverse=True)[
             : int(limit)
@@ -1250,11 +1394,17 @@ def _process_channel(
     skipped_dup = len(events) - len(candidates)
     # Backfill re-scans full history, so don't gate on last_ts there; incremental
     # runs still use the high-water mark to avoid touching old messages.
-    if settings.get("_backfill"):
+    if settings.get("_backfill") or strategy == "business_card":
         fresh = candidates
     else:
         fresh = [e for e in candidates if _ts_float(e["ts"]) > last_ts]
     fresh.sort(key=lambda e: _ts_float(e["ts"]))
+    if strategy == "business_card":
+        # 예산은 메시지가 아니라 이미지 장수 기준이며 이벤트 사이에 공유된다.
+        settings["_business_card_budget"] = max(
+            1, min(int(settings.get("business_card_batch_size") or 10), 100)
+        )
+    card_budget_box = {"remaining": int(settings.get("_business_card_budget") or 0)}
 
     counts = {"collected": len(messages), "parsed": len(events),
               "new_leads": 0, "new_activities": 0, "queued": 0,
@@ -1295,6 +1445,8 @@ def _process_channel(
         e["comments"] = info.get("comments", [])
         e["channel_id"] = channel_id
         e["collected_at"] = collected_now
+        if strategy == "business_card":
+            e["_budget_box"] = card_budget_box
         if strategy == "cross_team":
             # 결정적 파싱이 회사를 못 찾았거나 작성자가 추정/확인 필요로
             # 표시한 애매한 건만 GLM으로 보강한다. 참석자/관련사가 있다는
@@ -1320,7 +1472,9 @@ def _process_channel(
                 "UPDATE slack_raw_messages SET archived=0 WHERE channel_id=? AND message_ts=?",
                 (channel_id, str(e["ts"])),
             )
-        _post_sync_callback(conn, channel_id, e, applied_kind, settings, logs)
+        if e.get("_applied", True):
+            conn.commit()  # Slack API 대기 중 DB 쓰기 잠금을 보유하지 않는다.
+            _post_sync_callback(conn, channel_id, e, applied_kind, settings, logs)
         _log(logs, f"  → [{i}/{len(fresh)}] {applied_kind} {'반영' if e.get('_applied', True) else '보류'} (ts={e['ts']})")
         if i % COMMIT_EVERY == 0:
             state[channel_id] = max_ts
@@ -1330,6 +1484,28 @@ def _process_channel(
 
     state[channel_id] = max_ts
     queries.save_sync_settings(conn, {"channel_state": state})
+    if strategy == "business_card":
+        initial_budget = int(settings.get("_business_card_budget") or 0)
+        counts["card_processed"] = initial_budget - int(card_budget_box.get("remaining") or 0)
+        queue_row = conn.execute(
+            """
+            SELECT
+              SUM(CASE WHEN archived=0 AND status IN ('pending','processing','error','parsed') THEN 1 ELSE 0 END) AS pending,
+              SUM(CASE WHEN archived=0 AND status='error' THEN 1 ELSE 0 END) AS retrying
+            FROM slack_card_items WHERE channel_id=?
+            """,
+            (channel_id,),
+        ).fetchone()
+        counts["card_pending"] = int(queue_row["pending"] or 0)
+        counts["card_retrying"] = int(queue_row["retrying"] or 0)
+        _log(
+            logs,
+            f"[sync] 명함 큐 — 이번 실행 {counts['card_processed']}장 · "
+            f"남은 대기 {counts['card_pending']}장 · 재시도 {counts['card_retrying']}장",
+        )
+        counts["card_callback_checked"] = _retry_business_card_callbacks(
+            conn, channel_id, settings, logs
+        )
     conn.commit()
     return counts
 
@@ -1341,20 +1517,85 @@ def _apply_business_card_event(
 
     우선순위: z.ai Vision MCP(코딩플랜 GLM-4.6V) → REST vision 폴백.
     """
+    _ensure_business_card_source(conn)
+    channel_id = str(e.get("channel_id") or "")
+    message_ts = str(e.get("ts") or "")
+    files = e.get("files", []) or []
+    for file_item in files:
+        file_id = str(file_item.get("id") or "")
+        if file_id:
+            conn.execute(
+                """
+                INSERT OR IGNORE INTO slack_card_items
+                  (channel_id, message_ts, file_id, file_name, status)
+                VALUES(?, ?, ?, ?, 'pending')
+                """,
+                (channel_id, message_ts, file_id,
+                 file_item.get("name") or file_item.get("title") or file_id),
+            )
+    conn.commit()
+
     vision_ok, vision_reason = vision.available()
     if not vision_ok:
         e["_applied"] = False
         _log(logs, f"  ⚠️ 명함 OCR 건너뜀: {vision_reason} (VISION_PROVIDER={vision.provider()})")
         return
 
-    _ensure_business_card_source(conn)
-    any_applied = False
-    for file_item in e.get("files", []) or []:
+    for file_item in files:
+        file_id = str(file_item.get("id") or "")
         filename = file_item.get("name") or file_item.get("title") or file_item.get("id") or "business-card"
+        state = conn.execute(
+            "SELECT status, archived, attempts, next_retry_at FROM slack_card_items "
+            "WHERE channel_id=? AND message_ts=? AND file_id=?",
+            (channel_id, message_ts, file_id),
+        ).fetchone()
+        if state and (state["archived"] or state["status"] == "applied"):
+            continue
+        now = datetime.now(KST)
+        if state and state["next_retry_at"]:
+            try:
+                if datetime.strptime(state["next_retry_at"], "%Y-%m-%d %H:%M:%S").replace(tzinfo=KST) > now:
+                    _log(logs, f"  ⏳ 명함 재시도 대기: {filename} ({state['next_retry_at']})")
+                    continue
+            except ValueError:
+                pass
+        budget = int(e.get("_business_card_budget", 0) or 0)
+        # _process_channel이 settings에 둔 공유 예산을 이벤트에 전달한다.
+        budget_box = e.get("_budget_box")
+        if isinstance(budget_box, dict):
+            budget = int(budget_box.get("remaining", 0))
+        if budget <= 0:
+            _log(logs, f"  ⏸ 명함 OCR 주기 처리량 도달 — 다음 주기에 계속: {filename}")
+            continue
+        attempts = int(state["attempts"] if state else 0) + 1
+        conn.execute(
+            "UPDATE slack_card_items SET status='processing', attempts=?, last_error='', "
+            "next_retry_at='', updated_at=CURRENT_TIMESTAMP "
+            "WHERE channel_id=? AND message_ts=? AND file_id=?",
+            (attempts, channel_id, message_ts, file_id),
+        )
+        conn.commit()  # 네트워크 추론 중 DB 쓰기 잠금을 보유하지 않는다.
+        if isinstance(budget_box, dict):
+            budget_box["remaining"] = budget - 1
+        else:
+            e["_business_card_budget"] = budget - 1
+        _log(logs, f"  🔄 명함 순차 처리: {filename} (시도 {attempts})")
+
+        def mark_error(message: str) -> None:
+            delay_minutes = min(60, 2 ** min(attempts, 6))
+            retry_at = (datetime.now(KST) + timedelta(minutes=delay_minutes)).strftime("%Y-%m-%d %H:%M:%S")
+            conn.execute(
+                "UPDATE slack_card_items SET status='error', last_error=?, next_retry_at=?, "
+                "updated_at=CURRENT_TIMESTAMP WHERE channel_id=? AND message_ts=? AND file_id=?",
+                (message[:500], retry_at, channel_id, message_ts, file_id),
+            )
+            conn.commit()
+
         try:
             image_bytes, detected_mime = _download_slack_file(file_item)
         except Exception as exc:  # noqa: BLE001
             _log(logs, f"  ⚠️ 명함 이미지 다운로드 실패: {filename} — {exc}")
+            mark_error(f"다운로드 실패: {exc}")
             continue
 
         mime_type = file_item.get("mimetype") or detected_mime or "image/jpeg"
@@ -1365,6 +1606,7 @@ def _apply_business_card_event(
         if not vision.is_ok(ocr):
             _log(logs, f"  ⚠️ 명함 OCR 실패: {filename} — {ocr.get('message', 'unknown')}")
             e["_error"] = ocr.get("message", "OCR failed")
+            mark_error(str(e["_error"]))
             continue
         _log(logs, f"  🪪 OCR 성공[{ocr.get('_provider', '?')}]: {filename}")
 
@@ -1375,6 +1617,7 @@ def _apply_business_card_event(
         if "@" not in email:
             _log(logs, f"  ⚠️ 명함 OCR 보류: {filename} — 이메일을 읽지 못함")
             e["_error"] = "명함 OCR이 이메일을 읽지 못함"
+            mark_error(str(e["_error"]))
             continue
 
         review_required = (
@@ -1408,7 +1651,13 @@ def _apply_business_card_event(
             raw_payload={**e, "ocr": ocr, "file": file_item},
         )
         counts["new_leads" if res["created"] else "new_activities"] += 1
-        any_applied = True
+        conn.execute(
+            "UPDATE slack_card_items SET status='applied', ocr_json=?, applied_at=CURRENT_TIMESTAMP, "
+            "last_error='', next_retry_at='', updated_at=CURRENT_TIMESTAMP "
+            "WHERE channel_id=? AND message_ts=? AND file_id=?",
+            (json.dumps(ocr, ensure_ascii=False), channel_id, message_ts, file_id),
+        )
+        conn.commit()
 
         if review_required and company:
             conn.execute(
@@ -1432,11 +1681,28 @@ def _apply_business_card_event(
             f"({'검수' if review_required else '반영'})",
         )
 
-    if not any_applied:
-        e["_applied"] = False
+    active_ids = [str(f.get("id") or "") for f in files if str(f.get("id") or "")]
+    applied_count = 0
+    if active_ids:
+        placeholders = ",".join("?" for _ in active_ids)
+        applied_count = int(conn.execute(
+            f"SELECT COUNT(*) FROM slack_card_items WHERE channel_id=? AND message_ts=? "
+            f"AND archived=0 AND status='applied' AND file_id IN ({placeholders})",
+            [channel_id, message_ts, *active_ids],
+        ).fetchone()[0])
+        archived_count = int(conn.execute(
+            f"SELECT COUNT(*) FROM slack_card_items WHERE channel_id=? AND message_ts=? "
+            f"AND archived=1 AND file_id IN ({placeholders})",
+            [channel_id, message_ts, *active_ids],
+        ).fetchone()[0])
+    else:
+        archived_count = 0
+    e["_applied"] = bool(active_ids) and applied_count + archived_count >= len(active_ids)
 
 
-def ocr_message_cards(conn, channel_id: str, ts: str, logs: list[str] | None = None) -> dict:
+def ocr_message_cards(
+    conn, channel_id: str, ts: str, logs: list[str] | None = None, file_id: str = ""
+) -> dict:
     """On-demand OCR of business-card image(s) in a stored Slack message.
 
     수집 원문 뷰어의 '명함 추론하기' 버튼용 — DB에 반영하지 않고 추출 필드만 반환한다.
@@ -1454,6 +1720,8 @@ def ocr_message_cards(conn, channel_id: str, ts: str, logs: list[str] | None = N
     except (ValueError, TypeError):
         payload = {}
     files = [f for f in payload.get("files", []) or [] if _is_image_file(f)]
+    if file_id:
+        files = [f for f in files if str(f.get("id") or "") == str(file_id)]
     if not files:
         return {"ok": False, "message": "이 메시지에는 명함 이미지 파일이 없습니다."}
     vision_ok, reason = vision.available()
@@ -1464,18 +1732,20 @@ def ocr_message_cards(conn, channel_id: str, ts: str, logs: list[str] | None = N
     cards = []
     for f in files:
         name = f.get("name") or f.get("title") or f.get("id") or "명함"
+        current_file_id = str(f.get("id") or "")
         _log(logs, f"[ocr] 명함 추론: {name}")
         try:
             image_bytes, detected_mime = _download_slack_file(f)
         except Exception as exc:  # noqa: BLE001
-            cards.append({"file_name": name, "ok": False, "message": f"다운로드 실패: {exc}"})
+            cards.append({"file_id": current_file_id, "file_name": name, "ok": False, "message": f"다운로드 실패: {exc}"})
             continue
         mime = f.get("mimetype") or detected_mime or "image/jpeg"
         ocr = vision.ocr_business_card(image_bytes, mime_type=mime, filename=name, hint=hint, logs=logs)
         if not vision.is_ok(ocr):
-            cards.append({"file_name": name, "ok": False, "message": ocr.get("message", "OCR 실패")})
+            cards.append({"file_id": current_file_id, "file_name": name, "ok": False, "message": ocr.get("message", "OCR 실패")})
             continue
-        cards.append({
+        card = {
+            "file_id": current_file_id,
             "file_name": name,
             "ok": True,
             "provider": ocr.get("_provider", ""),
@@ -1489,9 +1759,45 @@ def ocr_message_cards(conn, channel_id: str, ts: str, logs: list[str] | None = N
                 "phone": (ocr.get("mobile") or ocr.get("phone") or "").strip(),
             },
             "evidence": (ocr.get("evidence") or "").strip(),
-        })
+            "rotation": int(ocr.get("_rotation") or 0),
+        }
+        cards.append(card)
+        if current_file_id:
+            conn.execute(
+                """
+                INSERT INTO slack_card_items(channel_id, message_ts, file_id, file_name, status, ocr_json)
+                VALUES(?, ?, ?, ?, 'parsed', ?)
+                ON CONFLICT(channel_id, message_ts, file_id) DO UPDATE SET
+                  file_name=excluded.file_name,
+                  status=CASE WHEN slack_card_items.status='applied' THEN 'applied' ELSE 'parsed' END,
+                  ocr_json=excluded.ocr_json, updated_at=CURRENT_TIMESTAMP
+                """,
+                (channel_id, str(ts), current_file_id, name, json.dumps(card, ensure_ascii=False)),
+            )
     ok_any = any(c.get("ok") for c in cards)
     return {"ok": ok_any, "cards": cards, "message": "" if ok_any else "OCR 결과가 없습니다."}
+
+
+def get_message_image(conn, channel_id: str, ts: str, file_id: str) -> tuple[bytes, str, str]:
+    """Download one private Slack image for authenticated in-app preview."""
+    row = conn.execute(
+        "SELECT raw_payload FROM slack_raw_messages WHERE channel_id=? AND message_ts=?",
+        (channel_id, str(ts)),
+    ).fetchone()
+    if not row:
+        raise LookupError("원문을 찾을 수 없습니다")
+    try:
+        payload = json.loads(row["raw_payload"] or "{}")
+    except (ValueError, TypeError):
+        payload = {}
+    files = [f for f in payload.get("files", []) or [] if _is_image_file(f)]
+    target = next((f for f in files if str(f.get("id") or "") == file_id), None)
+    if target is None:
+        raise LookupError("명함 이미지 파일을 찾을 수 없습니다")
+    image, detected_mime = _download_slack_file(target)
+    mime = str(target.get("mimetype") or detected_mime or "image/jpeg")
+    name = str(target.get("name") or target.get("title") or file_id or "business-card")
+    return image, mime, name
 
 
 def _apply_inbound_event(conn, e: dict, require_review: bool, counts: dict) -> None:

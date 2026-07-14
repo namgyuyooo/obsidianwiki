@@ -18,7 +18,9 @@ import os
 import shutil
 import subprocess
 import tempfile
+import threading
 import time
+import atexit
 from pathlib import Path
 from typing import Any
 
@@ -169,6 +171,53 @@ class _McpProc:
                 pass
 
 
+# Vision 호출은 명함 큐에서 순차 실행된다. MCP 프로세스를 장마다 재기동하면 npx
+# 초기화/도구 조회 비용이 반복되므로 살아 있는 세션 하나를 직렬 재사용한다.
+_shared_lock = threading.Lock()
+_shared_client: _McpProc | None = None
+_shared_tools: dict[str, dict] = {}
+_shared_tool_name = ""
+_shared_key = ""
+
+
+def _close_shared() -> None:
+    global _shared_client, _shared_tools, _shared_tool_name, _shared_key
+    if _shared_client is not None:
+        _shared_client.close()
+    _shared_client = None
+    _shared_tools = {}
+    _shared_tool_name = ""
+    _shared_key = ""
+
+
+atexit.register(_close_shared)
+
+
+def _shared_session(logs: list[str] | None = None) -> tuple[_McpProc, dict, str]:
+    global _shared_client, _shared_tools, _shared_tool_name, _shared_key
+    current_key = _api_key()
+    alive = _shared_client is not None and _shared_client.proc.poll() is None
+    if alive and _shared_key == current_key and _shared_tool_name:
+        if logs is not None:
+            logs.append("    · Vision MCP 기존 세션 재사용")
+        return _shared_client, _shared_tools, _shared_tool_name
+    _close_shared()
+    if logs is not None:
+        logs.append("    · Vision MCP 서버 기동 중… (첫 장만 초기화)")
+    client = _McpProc()
+    client.initialize()
+    tools = {t.get("name"): t for t in client.list_tools() if t.get("name")}
+    name = next((t for t in _PREFERRED_TOOLS if t in tools), None)
+    if not name:
+        client.close()
+        raise RuntimeError(f"vision 도구 없음: {list(tools)}")
+    _shared_client = client
+    _shared_tools = tools
+    _shared_tool_name = name
+    _shared_key = current_key
+    return client, tools, name
+
+
 def _ext_for(mime: str) -> str:
     m = (mime or "").lower()
     if "png" in m:
@@ -234,6 +283,7 @@ def _text_from_result(result: dict) -> str:
 
 _CARD_PROMPT = (
     glm.BUSINESS_CARD_SYSTEM
+    + "\n이미지가 세로이거나 90/180/270도 돌아가 있을 수 있다. 글자 방향을 자동 판단해 읽어라."
     + "\n위 규칙에 따라 이 명함 이미지를 읽고 JSON만 반환해라."
 )
 
@@ -266,19 +316,26 @@ def analyze_business_card(
 
     tmp = Path(tempfile.gettempdir()) / f"rtm_card_{int(time.time() * 1000)}{_ext_for(mime_type)}"
     tmp.write_bytes(image_bytes)
-    cli: _McpProc | None = None
     try:
-        _log("    · Vision MCP 서버 기동 중… (첫 실행은 npx 다운로드로 수십 초 소요될 수 있음)")
-        cli = _McpProc()
-        cli.initialize()
-        tools = {t.get("name"): t for t in cli.list_tools() if t.get("name")}
-        _log(f"    · Vision MCP 도구: {', '.join(tools) or '(없음)'}")
-        name = next((t for t in _PREFERRED_TOOLS if t in tools), None)
-        if not name:
-            return {"_mode": "error", "message": f"vision 도구 없음: {list(tools)}"}
-        args = _build_args(tools[name], str(tmp), prompt)
-        _log(f"    · Vision MCP 호출: {name}")
-        result = cli.call_tool(name, args)
+        with _shared_lock:
+            last_exc: Exception | None = None
+            result: dict = {}
+            for attempt in range(2):
+                try:
+                    cli, tools, name = _shared_session(logs)
+                    if attempt == 0 and _shared_client is cli:
+                        _log(f"    · Vision MCP 도구 준비: {name}")
+                    args = _build_args(tools[name], str(tmp), prompt)
+                    _log(f"    · Vision MCP 호출: {name}")
+                    result = cli.call_tool(name, args)
+                    break
+                except Exception as exc:  # noqa: BLE001
+                    last_exc = exc
+                    _close_shared()
+                    if attempt == 0:
+                        _log(f"    · Vision MCP 연결 재시작: {str(exc)[:100]}")
+            else:
+                raise RuntimeError(str(last_exc or "MCP 호출 실패"))
         text = _text_from_result(result)
         data = glm._json_from_text(text) or {}
         if not data:
@@ -300,8 +357,6 @@ def analyze_business_card(
     except Exception as exc:  # noqa: BLE001
         return {"_mode": "error", "message": str(exc)}
     finally:
-        if cli is not None:
-            cli.close()
         try:
             tmp.unlink()
         except Exception:  # noqa: BLE001

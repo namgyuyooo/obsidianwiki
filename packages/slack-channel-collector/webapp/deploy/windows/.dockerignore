@@ -1,0 +1,10 @@
+data
+backups
+secrets
+certs
+server.env
+*.zip
+**/__pycache__
+**/*.pyc
+frontend/node_modules
+frontend/dist

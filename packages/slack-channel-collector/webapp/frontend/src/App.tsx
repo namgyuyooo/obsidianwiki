@@ -39,6 +39,7 @@ import { RawMessagesPanel } from "./components/RawMessagesPanel";
 import { AuditPanel } from "./components/AuditPanel";
 import { UnclassifiedPanel } from "./components/UnclassifiedPanel";
 import { AuthPanel } from "./components/AuthPanel";
+import { LoginScreen } from "./components/LoginScreen";
 
 const UI_KEY = "rtm-db-ui";
 
@@ -88,11 +89,14 @@ export default function App() {
   const [syncing, setSyncing] = useState(false);
   const [syncLog, setSyncLog] = useState<string[]>([]); // 실시간 진행 로그 (화면 표시)
   const [progressLabel, setProgressLabel] = useState("작업 진행 로그");
+  const [progress, setProgress] = useState<{ current: number; total: number; message: string } | null>(null);
+  const [jobElapsed, setJobElapsed] = useState(0);
   const [aiBusy, setAiBusy] = useState(false); // AI 동작 중복 방지 (한 번에 하나)
   const [batchInferBusy, setBatchInferBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [settings, setSettings] = useState<SyncSettings | null>(null);
   const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
+  const [authReady, setAuthReady] = useState(false);
   const [hasOpsKey, setHasOpsKey] = useState(() => Boolean(apiAuth.get()));
   const [glmConfigured, setGlmConfigured] = useState(false);
   const [glmEmails, setGlmEmails] = useState<Set<string> | null>(null);
@@ -100,6 +104,17 @@ export default function App() {
   const [colFilters, setColFilters] = useState<Record<string, string>>({});
   const [selectedCos, setSelectedCos] = useState<Set<string>>(new Set());
   const [mergeKeep, setMergeKeep] = useState("");
+
+  useEffect(() => {
+    if (!syncing) return;
+    const startedAt = Date.now();
+    setJobElapsed(0);
+    const timer = window.setInterval(
+      () => setJobElapsed(Math.floor((Date.now() - startedAt) / 1000)),
+      1000
+    );
+    return () => window.clearInterval(timer);
+  }, [syncing]);
   const [reviewsOpen, setReviewsOpen] = useState(false); // 정합성 확인: 모달 아닌 전체 창
   const [dupOpen, setDupOpen] = useState(false); // 유사 중복 병합 창
   const [rawOpen, setRawOpen] = useState(false); // Slack 원문 뷰어 창
@@ -141,6 +156,7 @@ export default function App() {
   }, []);
 
   useEffect(() => {
+    if (!authReady || !currentUser) return;
     (async () => {
       try {
         await Promise.all([
@@ -154,19 +170,24 @@ export default function App() {
         setError(e instanceof Error ? e.message : String(e));
       }
     })();
-  }, [loadCustomers, loadReviews]);
+  }, [authReady, currentUser, loadCustomers, loadReviews]);
 
   useEffect(() => {
-    if (!apiAuth.get()) return;
+    if (!apiAuth.get()) {
+      setAuthReady(true);
+      return;
+    }
     api.me()
       .then((res) => {
         setCurrentUser(res.user);
         setHasOpsKey(true);
       })
       .catch(() => {
+        apiAuth.set("");
         setCurrentUser(null);
         setHasOpsKey(false);
-      });
+      })
+      .finally(() => setAuthReady(true));
   }, []);
 
   const recs = data?.items ?? [];
@@ -217,6 +238,23 @@ export default function App() {
       showToast(`✅ 병합 완료 → ${companies[mergeKeep]?.name || mergeKeep}\n담당자 ${r.moved_contacts}·활동 ${r.moved_activities} 이관 (변경 이력에서 되돌리기 가능)`, "success", 6000);
     } catch (e) {
       showToast("⚠ 병합 실패: " + (e instanceof Error ? e.message : e), "error");
+    }
+  };
+  const deleteSelected = async () => {
+    const keys = [...selectedCos];
+    if (!keys.length) return;
+    const names = keys.map((k) => companies[k]?.name || k);
+    const preview = names.slice(0, 5).join(", ") + (names.length > 5 ? ` 외 ${names.length - 5}곳` : "");
+    if (!confirm(`선택한 ${keys.length}곳을 삭제할까요?\n${preview}\n(담당자·활동은 연결만 해제, 변경 이력에서 되돌리기 가능)`)) return;
+    showToast(`회사 일괄 삭제 중… ${keys.length}곳`, "loading");
+    try {
+      const r = await api.deleteCompanies(keys);
+      await loadCustomers();
+      clearSelection();
+      const miss = r.not_found?.length ? ` · 없음 ${r.not_found.length}건` : "";
+      showToast(`✅ ${r.deleted}곳 삭제됨${miss} (변경 이력에서 되돌리기 가능)`, "success", 6000);
+    } catch (e) {
+      showToast("⚠ 삭제 실패: " + (e instanceof Error ? e.message : e), "error");
     }
   };
   const total =
@@ -324,6 +362,29 @@ export default function App() {
     }
   };
 
+  // 백그라운드 작업(동기화/재클렌징/AI 일괄추정) 공통 폴링.
+  // 서버 단일 슬롯 상태를 1.2초마다 읽어 로그·진행률을 화면에 반영하고, 끝나면 결과를 반환.
+  const pollJob = useCallback(
+    async (emoji: string): Promise<Record<string, unknown> & { message?: string }> => {
+      let printed = 0;
+      // eslint-disable-next-line no-constant-condition
+      while (true) {
+        await new Promise((r) => setTimeout(r, 1200));
+        const st = await api.syncStatus();
+        for (; printed < st.logs.length; printed++) console.log(st.logs[printed]);
+        if (st.logs.length) setSyncLog(st.logs.slice(-40));
+        setProgress(st.progress && st.progress.total > 0 ? st.progress : null);
+        const last = st.logs[st.logs.length - 1];
+        if (last) showToast(emoji + " " + last, "loading");
+        if (!st.running) {
+          setProgress(null);
+          return (st.result || {}) as Record<string, unknown> & { message?: string };
+        }
+      }
+    },
+    [showToast]
+  );
+
   const runSync = useCallback(async (opts: { backfill?: boolean; onlyChannel?: string; label?: string } = {}) => {
     const { backfill = false, onlyChannel, label } = opts;
     setSyncing(true);
@@ -337,33 +398,24 @@ export default function App() {
     console.group(`🔄 ${label || "슬랙 동기화"} 로그 (실시간)`);
     setProgressLabel(`🔄 ${label || "슬랙 동기화"}`);
     setSyncLog([`⏳ ${label || "슬랙 동기화"} 시작 요청 중…`]);
-    let printed = 0;
     try {
-      await api.sync({ backfill, onlyChannel });
-      // 백그라운드 작업 상태를 폴링하며 로그를 실시간 콘솔 + 화면 패널에 출력
-      // eslint-disable-next-line no-constant-condition
-      while (true) {
-        await new Promise((r) => setTimeout(r, 1200));
-        const st = await api.syncStatus();
-        for (; printed < st.logs.length; printed++) console.log(st.logs[printed]);
-        if (st.logs.length) setSyncLog(st.logs.slice(-40));
-        const last = st.logs[st.logs.length - 1];
-        if (last) showToast("🔄 " + last, "loading");
-        if (!st.running) {
-          console.groupEnd();
-          const r = (st.result || {}) as Record<string, unknown> & { message?: string };
-          await Promise.all([loadCustomers(), loadReviews()]);
-          if (r.ok === false) {
-            showToast("ⓘ " + (r.message || "동기화 종료"), "info", 6000);
-          } else {
-            showToast(
-              `✅ ${r.message || "동기화 완료"}\n수집 ${r.collected ?? 0} · 신규 ${r.new_leads ?? 0} · 활동 ${r.new_activities ?? 0} · 검수 ${r.queued_reviews ?? 0}`,
-              "success",
-              6000
-            );
-          }
-          break;
-        }
+      const started = await api.sync({ backfill, onlyChannel });
+      if (started.started === false) {
+        console.groupEnd();
+        showToast("ⓘ " + (started.message || "이미 다른 작업이 진행 중입니다"), "info", 5000);
+        return;
+      }
+      const r = await pollJob("🔄");
+      console.groupEnd();
+      await Promise.all([loadCustomers(), loadReviews()]);
+      if (r.ok === false) {
+        showToast("ⓘ " + (r.message || "동기화 종료"), "info", 6000);
+      } else {
+        showToast(
+          `✅ ${r.message || "동기화 완료"}\n수집 ${r.collected ?? 0} · 신규 ${r.new_leads ?? 0} · 활동 ${r.new_activities ?? 0} · 검수 ${r.queued_reviews ?? 0}`,
+          "success",
+          6000
+        );
       }
     } catch (e) {
       console.groupEnd();
@@ -373,7 +425,7 @@ export default function App() {
       setAiBusy(false);
       setTimeout(() => setSyncLog([]), 4000);
     }
-  }, [showToast, loadCustomers, loadReviews]);
+  }, [showToast, loadCustomers, loadReviews, pollJob]);
 
   // Note: periodic collection runs server-side (see backend scheduler), so it
   // keeps working even when no dashboard tab is open. No client interval here.
@@ -385,25 +437,17 @@ export default function App() {
     console.group("♻️ 재클렌징 로그 (실시간)");
     setProgressLabel("♻️ 전체 재클렌징");
     setSyncLog(["⏳ 재클렌징 시작 요청 중…"]);
-    let printed = 0;
     try {
-      await api.recleanse();
-      // eslint-disable-next-line no-constant-condition
-      while (true) {
-        await new Promise((r) => setTimeout(r, 1200));
-        const st = await api.syncStatus();
-        for (; printed < st.logs.length; printed++) console.log(st.logs[printed]);
-        if (st.logs.length) setSyncLog(st.logs.slice(-40));
-        const last = st.logs[st.logs.length - 1];
-        if (last) showToast("♻️ " + last, "loading");
-        if (!st.running) {
-          console.groupEnd();
-          const r = (st.result || {}) as Record<string, unknown> & { message?: string };
-          await Promise.all([loadCustomers(), loadReviews()]);
-          showToast("✅ " + (r.message || "재클렌징 완료"), "success", 6000);
-          break;
-        }
+      const started = await api.recleanse();
+      if (started.started === false) {
+        console.groupEnd();
+        showToast("ⓘ " + (started.message || "이미 다른 작업이 진행 중입니다"), "info", 5000);
+        return;
       }
+      const r = await pollJob("♻️");
+      console.groupEnd();
+      await Promise.all([loadCustomers(), loadReviews()]);
+      showToast("✅ " + (r.message || "재클렌징 완료"), "success", 6000);
     } catch (e) {
       console.groupEnd();
       showToast("⚠ 재클렌징 실패: " + (e instanceof Error ? e.message : e), "error");
@@ -412,7 +456,7 @@ export default function App() {
       setSyncing(false);
       setTimeout(() => setSyncLog([]), 4000);
     }
-  }, [showToast, loadCustomers, loadReviews]);
+  }, [showToast, loadCustomers, loadReviews, pollJob]);
 
   // 단발성 외부 API(GLM/Slack) 작업의 진행상황을 동일 패널에 표시하는 헬퍼.
   const withProgress = useCallback(
@@ -496,10 +540,18 @@ export default function App() {
   };
 
   const reclassifyGlm = async (key: string) => {
+    if (aiBusy) return;
     setAiBusy(true);
     showToast("✨ GLM 자동 재분류 중… (원문에서 회사 추출)", "loading");
     try {
-      const r = await api.reclassifyGlm(key);
+      const r = await withProgress("✨ GLM 자동 재분류", async (log) => {
+        log("✓ 클릭 확인 — 재분류 요청 시작");
+        log("↻ 저장된 원문에서 회사 후보 추출 중…");
+        const result = await api.reclassifyGlm(key);
+        log(`✓ 재분류 결과 수신 · 이동 ${result.moved}건`);
+        return result;
+      });
+      if (!r) return;
       await loadCustomers();
       showToast(r.ok ? `✅ ${r.moved}건 재분류` : "ⓘ " + (r.message || "GLM 필요"), r.ok ? "success" : "info", 6000);
     } catch (e) {
@@ -567,10 +619,19 @@ export default function App() {
   };
 
   const inferCompany = async (key: string) => {
+    if (aiBusy) return null;
     setAiBusy(true);
     showToast(`✨ GLM 업종 추정 중… ${companies[key]?.name || key}`, "loading");
     try {
-      const res = await api.inferCompany(key);
+      const res = await withProgress("✨ GLM 회사 정보 추정", async (log) => {
+        log("✓ 클릭 확인 — 추론 요청 시작");
+        log(`↻ ${companies[key]?.name || key} 문맥 수집 중…`);
+        log("↻ GLM 업종·세부분야·설명 추론 중…");
+        const result = await api.inferCompany(key);
+        log("✓ 구조화 결과 수신");
+        return result;
+      });
+      if (!res) return null;
       const r = res.result as Record<string, string>;
       if (r._mode === "unavailable" || r._mode === "error") {
         showToast("⚠ " + (r.message || "GLM 추정을 사용할 수 없습니다"), "error");
@@ -595,30 +656,49 @@ export default function App() {
   };
 
   const batchInferCompanies = async () => {
+    if (aiBusy || batchInferBusy) return;
+    // 백그라운드 작업으로 시작하고 sync와 동일한 실시간 로그·진행률 패널로 표시.
     setBatchInferBusy(true);
-    showToast("✨ 회사 정보 일괄 자동추정 중…", "loading", 120000);
-    await withProgress("✨ 회사 정보 일괄 자동추정", async (log) => {
-      log("GLM에 회사 최대 30곳 업종/세부/설명 추정 요청 중…");
-      const r = await api.inferCompaniesBatch(30);
-      if (!r.ok) {
-        log(r.message || "사용 불가");
-        showToast("⚠ " + (r.message || "일괄 자동추정을 사용할 수 없습니다"), "error");
+    setSyncing(true);
+    setAiBusy(true);
+    showToast("✨ 회사 정보 일괄 자동추정 시작…", "loading");
+    console.group("✨ 회사 일괄 자동추정 로그 (실시간)");
+    setProgressLabel("✨ 회사 정보 일괄 자동추정");
+    setSyncLog(["⏳ 일괄 자동추정 시작 요청 중…"]);
+    try {
+      const started = await api.inferCompaniesBatch(30);
+      if (!started.ok) {
+        console.groupEnd();
+        showToast("⚠ " + (started.message || "일괄 자동추정을 사용할 수 없습니다 (GLM 미설정)"), "error");
         return;
       }
-      log(`스캔 ${r.scanned} · 업데이트 ${r.updated} · 건너뜀 ${r.skipped}`);
-      if (r.errors?.length) log(`오류 ${r.errors.length}건: ${r.errors[0]}`);
+      if (started.started === false) {
+        console.groupEnd();
+        showToast("ⓘ " + (started.message || "이미 다른 작업이 진행 중입니다"), "info", 5000);
+        return;
+      }
+      const r = await pollJob("✨");
+      console.groupEnd();
       await loadCustomers();
-      const err = r.errors?.length ? `\n오류 ${r.errors.length}건: ${r.errors[0]}` : "";
-      showToast(
-        `✅ 일괄 자동추정 완료\n스캔 ${r.scanned}곳 · 업데이트 ${r.updated}곳 · 건너뜀 ${r.skipped}곳${err}`,
-        "success",
-        8000
-      );
-    }).catch((e) => showToast("⚠ 일괄 자동추정 실패: " + (e instanceof Error ? e.message : e), "error"));
-    setBatchInferBusy(false);
+      if (r.ok === false) {
+        showToast("⚠ " + (r.message || "일괄 자동추정 실패"), "error");
+      } else {
+        const err = Array.isArray(r.errors) && r.errors.length ? `\n오류 ${(r.errors as unknown[]).length}건` : "";
+        showToast(`✅ ${r.message || "일괄 자동추정 완료"}${err}`, "success", 8000);
+      }
+    } catch (e) {
+      console.groupEnd();
+      showToast("⚠ 일괄 자동추정 실패: " + (e instanceof Error ? e.message : e), "error");
+    } finally {
+      setBatchInferBusy(false);
+      setSyncing(false);
+      setAiBusy(false);
+      setTimeout(() => setSyncLog([]), 4000);
+    }
   };
 
   const runGlmSearch = async () => {
+    if (aiBusy) return;
     const q = glmQuery.trim();
     if (!q) {
       setGlmEmails(null);
@@ -718,6 +798,7 @@ export default function App() {
           onReclassifyGlm={reclassifyGlm}
           onDelete={deleteCompany}
           aiBusy={aiBusy}
+          aiStatus={aiBusy ? `${progressLabel.replace(/^[^\s]+\s*/, "")} · ${jobElapsed}초` : ""}
         />
       );
   } else if (drawer?.type === "person") {
@@ -748,6 +829,7 @@ export default function App() {
         onResolveUsers={resolveUsers}
         onBatchInfer={batchInferCompanies}
         batchInferBusy={batchInferBusy}
+        batchInferElapsed={batchInferBusy ? jobElapsed : 0}
         onRecleanse={runRecleanse}
       />
     );
@@ -766,6 +848,19 @@ export default function App() {
   const wideDrawer =
     drawer?.type === "reviews" || drawer?.type === "guide" ||
     drawer?.type === "settings" || drawer?.type === "auth";
+
+  if (!authReady) return <div className="loading">인증 정보를 확인하는 중…</div>;
+  if (!currentUser) {
+    return (
+      <LoginScreen
+        onAuthenticated={(user) => {
+          setCurrentUser(user);
+          setHasOpsKey(true);
+          setError(null);
+        }}
+      />
+    );
+  }
 
   if (error) {
     return (
@@ -960,14 +1055,14 @@ export default function App() {
               전체 히스토리 수집
             </button>
           )}
-          {cardChannelId && can("sync.backfill") && (
+          {cardChannelId && can("sync.run") && (
             <button
-              className="btn"
-              onClick={() => runSync({ onlyChannel: cardChannelId, backfill: true, label: "명함 수집" })}
+              className={`btn ${syncing && progressLabel.includes("명함 수집") ? "working" : ""}`}
+              onClick={() => runSync({ onlyChannel: cardChannelId, backfill: false, label: "명함 수집" })}
               disabled={aiBusy}
-              title="#sales-명함 전체 이미지에서 명함 OCR 수집 (이미 반영된 명함은 UUID로 중복 제외)"
+              title="#sales-명함 새 이미지와 DB 대기 큐만 빠르게 순차 처리 (전체 과거 자료는 '전체 히스토리 수집' 사용)"
             >
-              🪪 명함 수집
+              {syncing && progressLabel.includes("명함 수집") ? <><span className="inline-spinner" /> 명함 수집 중 {jobElapsed}초</> : "🪪 명함 수집"}
             </button>
           )}
           {can("sync.run") && (
@@ -1078,7 +1173,7 @@ export default function App() {
           style={{ flex: 1, minWidth: 240 }}
         />
         <button className="btn primary" onClick={runGlmSearch} disabled={aiBusy}>
-          {aiBusy ? "AI 작업 중…" : glmConfigured ? "✨ AI 검색" : "🔍 스마트 검색"}
+          {aiBusy ? <><span className="inline-spinner" /> {progressLabel.replace(/^[^\s]+\s*/, "")} · {jobElapsed}초</> : glmConfigured ? "✨ AI 검색" : "🔍 스마트 검색"}
         </button>
         {glmEmails && (
           <button className="btn" onClick={clearGlmSearch}>
@@ -1087,16 +1182,25 @@ export default function App() {
         )}
       </div>
 
-      {ui.view === "company" && selectedCos.size >= 2 && (
+      {ui.view === "company" && selectedCos.size >= 1 && (
         <div className="controls" style={{ background: "var(--accent-soft)", padding: "8px 10px", borderRadius: 8 }}>
           <b>{selectedCos.size}곳 선택됨</b>
-          <span className="hint">남길 회사:</span>
-          <select value={mergeKeep} onChange={(e) => setMergeKeep(e.target.value)}>
-            {[...selectedCos].map((k) => (
-              <option key={k} value={k}>{companies[k]?.name || k}</option>
-            ))}
-          </select>
-          <button className="btn primary" onClick={mergeSelected}>선택한 회사 병합</button>
+          {selectedCos.size >= 2 && (
+            <>
+              <span className="hint">남길 회사:</span>
+              <select value={mergeKeep} onChange={(e) => setMergeKeep(e.target.value)}>
+                {[...selectedCos].map((k) => (
+                  <option key={k} value={k}>{companies[k]?.name || k}</option>
+                ))}
+              </select>
+              <button className="btn primary" onClick={mergeSelected}>선택한 회사 병합</button>
+            </>
+          )}
+          {can("data.delete") && (
+            <button className="btn danger" onClick={deleteSelected}>
+              선택 삭제 ({selectedCos.size})
+            </button>
+          )}
           <button className="btn" onClick={clearSelection}>선택 해제</button>
         </div>
       )}
@@ -1146,7 +1250,7 @@ export default function App() {
         </button>
       </div>
 
-      <div className={`drawer ${drawer ? "open" : ""} ${wideDrawer ? "wide" : ""}`}>
+      <div className={`drawer ${drawer ? "open" : ""} ${wideDrawer ? "wide" : ""} ${drawer?.type === "auth" ? "auth-admin" : ""}`}>
         <button className="close" onClick={() => setDrawer(null)}>
           ✕
         </button>
@@ -1165,8 +1269,24 @@ export default function App() {
           <div className="synclog-head">
             {syncing && <span className="spin" />}
             <b>{progressLabel}</b>
-            <span className="hint">{syncing ? "실행 중…" : "완료"}</span>
+            <span className="hint">
+              {progress ? `${progress.current}/${progress.total} · ${jobElapsed}초` : syncing ? `실행 중 · ${jobElapsed}초` : "완료"}
+            </span>
           </div>
+          {progress && progress.total > 0 && (
+            <div className="progress">
+              <div className="progress-bar">
+                <div
+                  className="progress-fill"
+                  style={{ width: `${Math.min(100, Math.round((progress.current / progress.total) * 100))}%` }}
+                />
+              </div>
+              <div className="progress-label">
+                {Math.round((progress.current / progress.total) * 100)}%
+                {progress.message ? ` · ${progress.message}` : ""}
+              </div>
+            </div>
+          )}
           <div className="synclog-body">
             {[...syncLog].reverse().map((line, i) => (
               <div className="synclog-line" key={syncLog.length - i}>{line}</div>

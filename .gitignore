@@ -25,6 +25,7 @@
 *.tar.gz
 *.rar
 *.7z
+*.exe
 
 # Obsidian user-specific files
 .obsidian/workspace.json
@@ -47,6 +48,9 @@ Thumbs.db
 ~$*
 __pycache__/
 *.py[cod]
+*.db-shm
+*.db-wal
+.fuse_hidden*
 
 # Local automation settings
 automation/drive_wikify/config/.env
@@ -55,8 +59,10 @@ automation/drive_wikify/runtime/
 automation/drive_wikify/runtime/*
 !automation/drive_wikify/runtime/README.md
 automation/wiki_api/runtime/
-docker/config/*
-!docker/config/.gitkeep
-!docker/config/rclone/
-docker/config/rclone/*
-!docker/config/rclone/.gitkeep
+
+# Docker
+docker/
+
+# Build packages and distributions
+packages/slack-channel-collector/webapp/dist/
+packages/slack-channel-collector/webapp/deploy/windows/installers/

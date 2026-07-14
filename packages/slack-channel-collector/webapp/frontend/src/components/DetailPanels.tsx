@@ -373,6 +373,7 @@ export function CompanyDetail({
   onReclassifyGlm,
   onDelete,
   aiBusy,
+  aiStatus,
 }: {
   group: CompanyGroup;
   companies: Record<string, CompanyProfile>;
@@ -383,6 +384,7 @@ export function CompanyDetail({
   onReclassifyGlm?: (key: string) => void;
   onDelete?: (key: string) => void;
   aiBusy?: boolean;
+  aiStatus?: string;
   onInfer: (key: string) => Promise<{
     industry?: string;
     sub_industry?: string;
@@ -431,7 +433,7 @@ export function CompanyDetail({
       {group.name.includes("미분류") && onReclassifyGlm && (
         <div className="field">
           <button className="btn" disabled={aiBusy} onClick={() => onReclassifyGlm(group.key)}>
-            ✨ GLM 자동 재분류 (원문에서 회사 추출)
+            {aiBusy ? <><span className="inline-spinner dark" /> {aiStatus || "GLM 처리 중…"}</> : "✨ GLM 자동 재분류 (원문에서 회사 추출)"}
           </button>
           <span className="hint"> 또는 아래 활동별 "↪ 회사 지정"으로 직접 이동</span>
         </div>
@@ -465,7 +467,7 @@ export function CompanyDetail({
               }}
               title="GLM으로 업종/설명 자동 추정"
             >
-              ✨ GLM 추정
+              {aiBusy ? <><span className="inline-spinner dark" /> {aiStatus || "추정 중…"}</> : "✨ GLM 추정"}
             </button>
           </label>
           <input

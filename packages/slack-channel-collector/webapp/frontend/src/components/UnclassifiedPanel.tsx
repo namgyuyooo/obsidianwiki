@@ -23,6 +23,7 @@ export function UnclassifiedPanel({
   const [vals, setVals] = useState<Record<number, string>>({});
   const [busy, setBusy] = useState<number | null>(null);
   const [glmBusy, setGlmBusy] = useState(false);
+  const [glmElapsed, setGlmElapsed] = useState(0);
 
   const load = async () => {
     setLoading(true);
@@ -39,6 +40,15 @@ export function UnclassifiedPanel({
   useEffect(() => {
     load();
   }, []);
+  useEffect(() => {
+    if (!glmBusy) return;
+    const startedAt = Date.now();
+    setGlmElapsed(0);
+    const timer = window.setInterval(
+      () => setGlmElapsed(Math.floor((Date.now() - startedAt) / 1000)), 1000
+    );
+    return () => window.clearInterval(timer);
+  }, [glmBusy]);
 
   const assign = async (it: Item) => {
     const co = (vals[it.id] || "").trim();
@@ -58,6 +68,7 @@ export function UnclassifiedPanel({
   };
 
   const glmBatch = async () => {
+    if (glmBusy) return;
     setGlmBusy(true);
     onToast?.("✨ GLM 자동 재분류 중…", "loading");
     try {
@@ -81,7 +92,7 @@ export function UnclassifiedPanel({
         <button className="btn" onClick={load}>새로고침</button>
         {glmConfigured && (
           <button className="btn" disabled={glmBusy} onClick={glmBatch}>
-            ✨ GLM 자동 재분류
+            {glmBusy ? <><span className="inline-spinner dark" /> 원문 분석 중 · {glmElapsed}초</> : "✨ GLM 자동 재분류"}
           </button>
         )}
       </div>

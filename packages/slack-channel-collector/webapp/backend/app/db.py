@@ -7,6 +7,7 @@ to stay thread-safe under uvicorn's worker model.
 from __future__ import annotations
 
 import sqlite3
+import time
 from contextlib import contextmanager
 from pathlib import Path
 from typing import Iterator
@@ -112,10 +113,18 @@ def _create_audit(conn: sqlite3.Connection) -> None:
 
 
 def _connect(db_path: Path) -> sqlite3.Connection:
-    conn = sqlite3.connect(db_path, timeout=30)
+    conn = sqlite3.connect(db_path, timeout=60)
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA foreign_keys = ON")
-    conn.execute("PRAGMA busy_timeout = 30000")
+    # WAL: 한 명의 writer와 다수 reader가 동시에 동작 → 백그라운드 동기화 중에도
+    # 대시보드 조회/쓰기가 "database is locked"로 막히는 것을 크게 줄인다.
+    try:
+        conn.execute("PRAGMA journal_mode = WAL")
+        conn.execute("PRAGMA synchronous = NORMAL")
+    except sqlite3.OperationalError:
+        pass  # WAL 미지원 환경(일부 네트워크 FS)에서는 기본 모드 유지
+    # writer 경합 시 최대 60초까지 잠금 해제를 기다렸다가 실패한다.
+    conn.execute("PRAGMA busy_timeout = 60000")
     return conn
 
 
@@ -179,6 +188,36 @@ def _run_migrations(conn: sqlite3.Connection) -> None:
     conn.execute(
         "CREATE INDEX IF NOT EXISTS idx_raw_thread ON slack_raw_messages(thread_ts)"
     )
+    # 한 Slack 메시지에 여러 명함 이미지가 첨부될 수 있으므로 파일 단위로
+    # OCR/반영 상태를 보존한다. 메시지의 applied는 모든 이미지가 반영된 때만 켠다.
+    conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS slack_card_items (
+          channel_id TEXT NOT NULL,
+          message_ts TEXT NOT NULL,
+          file_id TEXT NOT NULL,
+          file_name TEXT NOT NULL DEFAULT '',
+          status TEXT NOT NULL DEFAULT 'pending',
+          ocr_json TEXT NOT NULL DEFAULT '',
+          applied_at TEXT NOT NULL DEFAULT '',
+          updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          PRIMARY KEY (channel_id, message_ts, file_id)
+        )
+        """
+    )
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_slack_card_items_status "
+        "ON slack_card_items(status, updated_at)"
+    )
+    card_cols = [r[1] for r in conn.execute("PRAGMA table_info(slack_card_items)")]
+    if "archived" not in card_cols:
+        conn.execute("ALTER TABLE slack_card_items ADD COLUMN archived INTEGER NOT NULL DEFAULT 0")
+    if "attempts" not in card_cols:
+        conn.execute("ALTER TABLE slack_card_items ADD COLUMN attempts INTEGER NOT NULL DEFAULT 0")
+    if "last_error" not in card_cols:
+        conn.execute("ALTER TABLE slack_card_items ADD COLUMN last_error TEXT NOT NULL DEFAULT ''")
+    if "next_retry_at" not in card_cols:
+        conn.execute("ALTER TABLE slack_card_items ADD COLUMN next_retry_at TEXT NOT NULL DEFAULT ''")
     # Slack 유저 ID → 이름 매핑 (멘션 <@U..>을 이름으로 치환)
     conn.execute(
         """
@@ -265,6 +304,16 @@ def _run_migrations(conn: sqlite3.Connection) -> None:
     conn.execute("CREATE INDEX IF NOT EXISTS idx_auth_tokens_hash ON auth_api_tokens(token_hash)")
     conn.execute(
         """
+        CREATE TABLE IF NOT EXISTS app_runtime_settings (
+          key TEXT PRIMARY KEY,
+          value TEXT NOT NULL DEFAULT '',
+          updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          updated_by TEXT NOT NULL DEFAULT ''
+        )
+        """
+    )
+    conn.execute(
+        """
         CREATE TABLE IF NOT EXISTS auth_role_permissions (
           role TEXT NOT NULL,
           permission TEXT NOT NULL,
@@ -323,6 +372,25 @@ def _run_migrations(conn: sqlite3.Connection) -> None:
     conn.execute("CREATE INDEX IF NOT EXISTS idx_job_runs_type ON job_runs(job_type, started_at)")
 
 
+def _connect_with_retry(db_path: Path, attempts: int = 5) -> sqlite3.Connection:
+    """일시적 잠금/디스크 I/O 오류(동시 접속 폭주 시 WAL 경합 등)를 짧게 재시도한다.
+
+    커넥션 open + PRAGMA 설정 단계에서 나는 transient 오류를 흡수해 500을 막는다.
+    """
+    delay = 0.1
+    for i in range(attempts):
+        try:
+            return _connect(db_path)
+        except sqlite3.OperationalError as exc:
+            msg = str(exc).lower()
+            transient = "locked" in msg or "disk i/o" in msg or "busy" in msg
+            if not transient or i == attempts - 1:
+                raise
+            time.sleep(delay)
+            delay = min(delay * 2, 1.0)
+    raise sqlite3.OperationalError("failed to open database connection")  # pragma: no cover
+
+
 @contextmanager
 def get_conn() -> Iterator[sqlite3.Connection]:
     settings = get_settings()
@@ -331,7 +399,7 @@ def get_conn() -> Iterator[sqlite3.Connection]:
             f"Customer DB not found at {settings.db_path}. "
             "Build it via packages/customer-db or set RTM_CUSTOMER_DB."
         )
-    conn = _connect(settings.db_path)
+    conn = _connect_with_retry(settings.db_path)
     global _migrated
     if not _migrated:
         _run_migrations(conn)

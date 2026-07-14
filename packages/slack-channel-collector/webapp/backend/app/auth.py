@@ -5,11 +5,17 @@ import hashlib
 import hmac
 import os
 import secrets
+import time
 from dataclasses import dataclass
 from typing import Iterable
 
 import sqlite3
 from fastapi import HTTPException, Request
+
+# 토큰 사용시각(last_used_at) 텔레메트리는 요청마다 쓰면 DB 쓰기 폭주 → 잠금 유발.
+# 토큰별 최소 기록 간격을 두어, 폴링/병렬 요청이 많아도 쓰기는 드물게만 발생시킨다.
+_TOUCH_INTERVAL_SEC = 300.0
+_last_touch: dict[str, float] = {}
 
 
 @dataclass(frozen=True)
@@ -107,14 +113,18 @@ def actor_from_token(conn: sqlite3.Connection, token: str) -> Actor:
     ).fetchone()
     if row is None:
         raise HTTPException(status_code=401, detail="운영 API 키가 올바르지 않습니다")
-    conn.execute(
-        "UPDATE auth_api_tokens SET last_used_at=CURRENT_TIMESTAMP WHERE token_hash=?",
-        (token_hash,),
-    )
-    conn.execute(
-        "UPDATE auth_users SET last_login_at=CURRENT_TIMESTAMP WHERE id=?",
-        (row["id"],),
-    )
+    # 사용시각 기록은 스로틀링: 토큰당 최대 5분에 한 번만 DB에 쓴다(쓰기 폭주 방지).
+    now = time.time()
+    if now - _last_touch.get(token_hash, 0.0) > _TOUCH_INTERVAL_SEC:
+        _last_touch[token_hash] = now
+        conn.execute(
+            "UPDATE auth_api_tokens SET last_used_at=CURRENT_TIMESTAMP WHERE token_hash=?",
+            (token_hash,),
+        )
+        conn.execute(
+            "UPDATE auth_users SET last_login_at=CURRENT_TIMESTAMP WHERE id=?",
+            (row["id"],),
+        )
     return Actor(
         user_id=row["id"],
         email=row["email"],

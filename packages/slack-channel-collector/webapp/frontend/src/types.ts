@@ -76,6 +76,7 @@ export interface SyncSettings {
   slack_callback_reaction: string;
   auto_sync_enabled: boolean;
   auto_sync_interval_minutes: number;
+  business_card_batch_size: number;
   channel_state: Record<string, number>;
 }
 

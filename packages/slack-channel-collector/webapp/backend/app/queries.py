@@ -308,6 +308,12 @@ DEFAULT_CHANNELS = [
     {"id": "C0BGZKBLC4U", "name": "sales-명함", "strategy": "business_card", "enabled": True},
 ]
 
+
+def is_business_card_channel(channel_id: str) -> bool:
+    """명함 OCR이 허용된 단 하나의 Slack 채널인지 확인한다."""
+    allowed = get_settings().business_card_channel_id
+    return bool(allowed and str(channel_id) == allowed)
+
 DEFAULT_SYNC_SETTINGS: dict[str, Any] = {
     "channels": DEFAULT_CHANNELS,
     "lookback_hours": 24,
@@ -321,6 +327,7 @@ DEFAULT_SYNC_SETTINGS: dict[str, Any] = {
     "slack_callback_reaction": "database",
     "auto_sync_enabled": False,
     "auto_sync_interval_minutes": 30,
+    "business_card_batch_size": 10,  # 자동 실행 1회당 순차 OCR 최대 이미지 수
     "channel_state": {},  # {channel_id: last_synced_ts}
 }
 
@@ -381,6 +388,37 @@ def save_sync_settings(conn: sqlite3.Connection, patch: dict[str, Any]) -> dict[
     return current
 
 
+def _normalize_card_ocr(ocr: object) -> dict | None:
+    """저장된 명함 OCR JSON을 프런트가 쓰기 좋은 단일 형태로 정규화.
+
+    두 가지 저장 형태를 모두 흡수한다:
+      1) ocr_message_cards 저장분: {"ok":.., "provider":.., "fields":{...}}
+      2) 수집 반영 저장분: 최상위에 company/name/email/mobile/phone/... 가 바로 존재
+    항상 {ok, provider, confidence, evidence, rotation, fields:{...}} 로 반환한다.
+    """
+    if not isinstance(ocr, dict):
+        return None
+    raw = ocr.get("fields") if isinstance(ocr.get("fields"), dict) else ocr
+    fields = {
+        "company": str(raw.get("company") or "").strip(),
+        "name": str(raw.get("name") or "").strip(),
+        "email": str(raw.get("email") or "").strip(),
+        "department": str(raw.get("department") or "").strip(),
+        "title": str(raw.get("title") or "").strip(),
+        "phone": str(raw.get("phone") or raw.get("mobile") or "").strip(),
+    }
+    if not any(fields.values()):
+        return None
+    return {
+        "ok": bool(ocr.get("ok", True)),
+        "provider": str(ocr.get("provider") or ocr.get("_provider") or ""),
+        "confidence": float(ocr.get("confidence") or 0),
+        "evidence": str(ocr.get("evidence") or ""),
+        "rotation": int(ocr.get("rotation") or ocr.get("_rotation") or 0),
+        "fields": fields,
+    }
+
+
 def slack_messages(conn: sqlite3.Connection, limit: int = 300, q: str = "") -> list[dict]:
     """모든 수집 원문(부모 메시지)을 최신순으로 반환 — 파싱 성공 여부와 무관하게 출력.
 
@@ -391,6 +429,18 @@ def slack_messages(conn: sqlite3.Connection, limit: int = 300, q: str = "") -> l
     from zoneinfo import ZoneInfo
 
     usermap = load_user_map(conn)
+    # 저장된 명함 OCR 결과(ocr_json)까지 함께 로드해 프런트가 재파싱 없이 프리필할 수 있게 한다.
+    card_states: dict[tuple[str, str, str], tuple[str, bool, dict | None]] = {}
+    for x in conn.execute(
+        "SELECT channel_id, message_ts, file_id, status, archived, ocr_json FROM slack_card_items"
+    ).fetchall():
+        try:
+            ocr = json.loads(x["ocr_json"]) if x["ocr_json"] else None
+        except (ValueError, TypeError):
+            ocr = None
+        card_states[(str(x["channel_id"]), str(x["message_ts"]), str(x["file_id"]))] = (
+            str(x["status"]), bool(x["archived"]), ocr
+        )
     rows = [dict(r) for r in conn.execute(
         """
         SELECT channel_id, message_ts, user_id, text, raw_payload, thread_ts,
@@ -427,6 +477,11 @@ def slack_messages(conn: sqlite3.Connection, limit: int = 300, q: str = "") -> l
         for f in payload.get("files", []) or []:
             if not isinstance(f, dict):
                 continue
+            card_state = card_states.get(
+                (str(r["channel_id"]), str(r["message_ts"]), str(f.get("id") or "")),
+                ("applied" if r.get("applied") else "pending", False, None),
+            )
+            ocr = _normalize_card_ocr(card_state[2] if len(card_state) > 2 else None)
             files.append({
                 "id": str(f.get("id") or ""),
                 "name": str(f.get("name") or f.get("title") or ""),
@@ -435,6 +490,10 @@ def slack_messages(conn: sqlite3.Connection, limit: int = 300, q: str = "") -> l
                 "filetype": str(f.get("filetype") or ""),
                 "pretty_type": str(f.get("pretty_type") or ""),
                 "size": int(f.get("size") or 0),
+                "card_status": card_state[0],
+                "card_archived": card_state[1],
+                # 이전에 파싱해 저장한 OCR 결과(있으면, 정규화됨). 프런트에서 즉시 프리필용.
+                "card_ocr": ocr,
             })
         file_text = " ".join(f"{f['name']} {f['title']} {f['mimetype']} {f['filetype']}" for f in files)
         if ql and ql not in (text + " " + file_text).lower():
@@ -467,6 +526,7 @@ def slack_messages(conn: sqlite3.Connection, limit: int = 300, q: str = "") -> l
             "text": apply_user_names(text, usermap),
             "permalink": payload.get("permalink", ""),
             "files": files,
+            "is_business_card_channel": is_business_card_channel(r["channel_id"]),
             "comments": sorted(comments.values(), key=lambda c: c.get("text", "")),
             "applied": bool(r.get("applied")),
             "applied_kind": r.get("applied_kind") or "",

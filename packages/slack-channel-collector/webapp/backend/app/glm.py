@@ -11,24 +11,40 @@ import base64
 import json
 import os
 import re
+import sqlite3
 import ssl
 import time
 from typing import Any
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
+from .config import get_settings
+from . import secret_store
+
+
+def _runtime_config() -> dict[str, str]:
+    try:
+        conn = sqlite3.connect(get_settings().db_path)
+        rows = conn.execute("SELECT key, value FROM app_runtime_settings WHERE key LIKE 'glm.%'").fetchall()
+        conn.close()
+        return {str(key): str(value) for key, value in rows}
+    except (sqlite3.Error, OSError):
+        return {}
+
 
 def config() -> dict[str, str]:
-    url = os.environ.get("GLM_API_URL", "").strip()
+    runtime = _runtime_config()
+    url = runtime.get("glm.api_url", os.environ.get("GLM_API_URL", "")).strip()
     # z.ai '코딩 요금제' 엔드포인트(/api/coding/paas)는 비전 모델을 제공하지 않는다.
     # 비전(명함 OCR)은 표준 엔드포인트(/api/paas)로 자동 전환하되, 명시적 override 우선.
     vision_url = os.environ.get("GLM_VISION_API_URL", "").strip()
     if not vision_url:
         vision_url = url.replace("/api/coding/paas/", "/api/paas/") if "/api/coding/paas/" in url else url
     return {
+        "provider": runtime.get("glm.provider", "glm").strip() or "glm",
         "url": url,
-        "key": os.environ.get("GLM_API_KEY", "").strip(),
-        "model": os.environ.get("GLM_MODEL", "").strip() or "glm-4",
+        "key": secret_store.decrypt(runtime.get("glm.api_key", os.environ.get("GLM_API_KEY", ""))).strip(),
+        "model": runtime.get("glm.model", os.environ.get("GLM_MODEL", "")).strip() or "glm-4",
         "vision_model": os.environ.get("GLM_VISION_MODEL", "").strip() or "glm-4.5v",
         "vision_url": vision_url,
         "embedding_model": os.environ.get("GLM_EMBEDDING_MODEL", "").strip() or "embedding-3",
@@ -37,7 +53,14 @@ def config() -> dict[str, str]:
 
 def is_configured() -> bool:
     c = config()
-    return bool(c["url"] and c["key"])
+    return bool(c["url"] and (c["key"] or c["provider"] in {"ollama", "internal"}))
+
+
+def _headers(c: dict[str, str]) -> dict[str, str]:
+    headers = {"Content-Type": "application/json"}
+    if c.get("key"):
+        headers["Authorization"] = f"Bearer {c['key']}"
+    return headers
 
 
 def _endpoint(url: str) -> str:
@@ -58,7 +81,7 @@ def _embeddings_endpoint(url: str) -> str:
 
 def chat(system: str, user: str, max_tokens: int = 4096) -> str:
     c = config()
-    if not (c["url"] and c["key"]):
+    if not is_configured():
         raise RuntimeError("GLM not configured")
     body = json.dumps(
         {
@@ -74,10 +97,7 @@ def chat(system: str, user: str, max_tokens: int = 4096) -> str:
     req = Request(
         _endpoint(c["url"]),
         data=body,
-        headers={
-            "Authorization": f"Bearer {c['key']}",
-            "Content-Type": "application/json",
-        },
+        headers=_headers(c),
     )
     payload = _request_json(req, timeout=30)
     return payload["choices"][0]["message"]["content"]
@@ -88,7 +108,7 @@ def chat_messages(
     max_tokens: int = 2048, base_url: str | None = None,
 ) -> str:
     c = config()
-    if not (c["url"] and c["key"]):
+    if not is_configured():
         raise RuntimeError("GLM not configured")
     body = json.dumps(
         {
@@ -102,10 +122,7 @@ def chat_messages(
     req = Request(
         _endpoint(base_url or c["url"]),
         data=body,
-        headers={
-            "Authorization": f"Bearer {c['key']}",
-            "Content-Type": "application/json",
-        },
+        headers=_headers(c),
     )
     payload = _request_json(req, timeout=60)
     return payload["choices"][0]["message"]["content"]
@@ -114,17 +131,14 @@ def chat_messages(
 def embed_texts(texts: list[str]) -> list[list[float]]:
     """Return embeddings from an OpenAI-compatible /embeddings endpoint."""
     c = config()
-    if not (c["url"] and c["key"]):
+    if not is_configured():
         raise RuntimeError("GLM not configured")
     clean = [str(t or "")[:6000] for t in texts]
     body = json.dumps({"model": c["embedding_model"], "input": clean}).encode("utf-8")
     req = Request(
         _embeddings_endpoint(c["url"]),
         data=body,
-        headers={
-            "Authorization": f"Bearer {c['key']}",
-            "Content-Type": "application/json",
-        },
+        headers=_headers(c),
     )
     payload = _request_json(req, timeout=60)
     rows = payload.get("data") or []
